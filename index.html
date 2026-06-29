@@ -1,0 +1,1876 @@
+
+<title>Eron FOC App</title>
+<meta name="description" content="Protótipo do webapp Eron Ops Platform — gestão de contas bancárias, custos e conciliações.">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --e-darkest:#1b133c;--e-dark:#211b40;--e-navy:#292252;--e-mid:#4b368a;
+    --e-purple:#976ff4;--e-violet:#6f73f4;--e-lilac:#b7b9f9;--e-lavender:#ddc8f4;
+    --e-pale:#e5e6f8;--e-ghost:#f1f1fe;--e-muted:#9898c3;--e-pink:#c95aff;
+    --e-text:#1c1640;--e-sub:#5a5480;--sidebar-w:224px;
+  }
+  html,body{height:100%;font-family:system-ui,-apple-system,sans-serif;}
+
+  /* LOGIN */
+  #login-screen{position:fixed;inset:0;z-index:1000;background:var(--e-darkest);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.35;pointer-events:none;}
+  .orb-1{width:500px;height:500px;top:-120px;left:-100px;background:radial-gradient(circle,#c95aff,#2d62ff);}
+  .orb-2{width:400px;height:400px;bottom:-80px;right:-60px;background:radial-gradient(circle,#2d62ff,#976ff4);}
+  .orb-3{width:250px;height:250px;top:40%;left:60%;background:radial-gradient(circle,#976ff4,transparent);opacity:.2;}
+  .login-card{position:relative;z-index:2;background:rgba(41,34,82,.7);border:1px solid rgba(151,111,244,.25);border-radius:16px;padding:48px 44px 44px;width:360px;backdrop-filter:blur(20px);text-align:center;}
+  .login-logo{margin-bottom:4px;display:flex;justify-content:center;}
+  .login-logo img{height:56px;width:auto;background:#fff;border-radius:10px;padding:6px 12px;}
+  .login-sub{font-size:11px;color:var(--e-muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:36px;}
+  .login-headline{font-size:18px;font-weight:600;color:#fff;margin-bottom:8px;}
+  .login-desc{font-size:13px;color:var(--e-muted);margin-bottom:32px;line-height:1.55;}
+  .btn-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px 16px;background:#fff;color:#3c4043;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;font-family:inherit;transition:box-shadow .15s;}
+  .btn-google:hover{box-shadow:0 4px 16px rgba(0,0,0,.25);}
+  .login-note{margin-top:18px;font-size:11px;color:rgba(152,152,195,.6);}
+
+  /* APP */
+  #app{display:none;height:100vh;overflow:hidden;flex-direction:row;}
+  #app.visible{display:flex;}
+
+  /* SIDEBAR */
+  #sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--e-darkest);display:flex;flex-direction:column;border-right:1px solid rgba(151,111,244,.12);overflow-y:auto;overflow-x:hidden;}
+  .sb-header{padding:20px 18px 16px;border-bottom:1px solid rgba(151,111,244,.12);}
+  .sb-logo img{height:28px;width:auto;display:block;background:#fff;border-radius:6px;padding:3px 7px;}
+  .sb-tagline{font-size:10px;color:var(--e-muted);letter-spacing:.1em;text-transform:uppercase;margin-top:2px;}
+  .sb-nav{flex:1;padding:10px 0 16px;}
+  .sb-section-header{padding:10px 18px 6px;font-size:10px;font-weight:700;color:var(--e-muted);letter-spacing:.12em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;transition:color .15s;}
+  .sb-section-header:hover{color:var(--e-lilac);}
+  .sb-chevron{width:13px;height:13px;transition:transform .2s;color:var(--e-muted);flex-shrink:0;}
+  .sb-section-header.collapsed .sb-chevron{transform:rotate(-90deg);}
+  .sb-children.collapsed{display:none;}
+  .sb-item{display:flex;align-items:center;gap:9px;padding:7px 14px 7px 28px;font-size:13px;color:var(--e-muted);cursor:pointer;transition:color .15s,background .15s;border-left:3px solid transparent;}
+  .sb-item:hover{color:var(--e-lilac);background:rgba(151,111,244,.07);}
+  .sb-item.active{color:#fff;background:rgba(151,111,244,.14);border-left-color:var(--e-purple);}
+  .dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.45;flex-shrink:0;}
+  .sb-item.active .dot{background:var(--e-purple);opacity:1;}
+  .sb-item-label{flex:1;}
+  .sb-group-label{padding:14px 18px 4px;font-size:10px;font-weight:600;color:rgba(152,152,195,.4);letter-spacing:.12em;text-transform:uppercase;}
+  .sb-item.dim{opacity:.32;pointer-events:none;}
+  .soon-tag{font-size:9px;background:rgba(151,111,244,.18);color:var(--e-lilac);padding:2px 6px;border-radius:4px;margin-left:auto;white-space:nowrap;letter-spacing:.04em;}
+  .sb-divider{height:1px;background:rgba(151,111,244,.1);margin:6px 18px;}
+  .sb-footer{padding:13px 14px;border-top:1px solid rgba(151,111,244,.12);display:flex;align-items:center;gap:10px;}
+  .avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--e-purple),var(--e-violet));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
+  .user-info{flex:1;min-width:0;}
+  .user-name{font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .user-email{font-size:10px;color:var(--e-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .btn-logout{background:none;border:none;cursor:pointer;color:var(--e-muted);padding:4px;border-radius:4px;transition:color .15s;flex-shrink:0;}
+  .btn-logout:hover{color:#ef4444;}
+
+  /* MAIN */
+  #main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--e-ghost);}
+  .topbar{background:#fff;border-bottom:1px solid var(--e-pale);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+  .breadcrumb{font-size:13px;color:var(--e-sub);display:flex;align-items:center;gap:6px;}
+  .crumb-parent{color:var(--e-muted);}
+  .sep{color:var(--e-pale);}
+  .crumb-current{color:var(--e-text);font-weight:600;}
+
+  /* LANG SWITCHER */
+  .lang-switcher{display:flex;gap:2px;background:var(--e-ghost);border:1px solid var(--e-pale);border-radius:8px;padding:3px;}
+  .lang-btn{padding:3px 11px;border-radius:5px;border:none;background:none;cursor:pointer;font-size:11px;font-weight:600;color:var(--e-muted);font-family:inherit;transition:all .15s;letter-spacing:.06em;}
+  .lang-btn.active{background:#fff;color:var(--e-text);box-shadow:0 1px 3px rgba(0,0,0,.08);}
+
+  /* PAGES */
+  .page{flex:1;overflow-y:auto;padding:28px;display:none;}
+  .page.active{display:block;}
+
+  /* PAGE HEADER */
+  .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;}
+  .page-header-left{display:flex;flex-direction:column;gap:2px;}
+  .page-title-text{font-size:20px;font-weight:700;color:var(--e-text);}
+  .page-title-count{font-size:12px;color:var(--e-muted);}
+  .header-actions{display:flex;gap:8px;align-items:center;}
+
+  /* BUTTONS */
+  .btn-primary{background:var(--e-purple);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .15s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+  .btn-primary:hover{opacity:.88;}
+  .btn-secondary{background:#fff;color:var(--e-sub);border:1px solid var(--e-pale);border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:border-color .15s;white-space:nowrap;}
+  .btn-secondary:hover{border-color:var(--e-muted);}
+  .btn-danger{background:#ef4444;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .15s;white-space:nowrap;}
+  .btn-danger:hover{opacity:.88;}
+
+  /* FILTER ROW */
+  .filter-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+  .filter-row input,.filter-row select{border:1px solid var(--e-pale);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;color:var(--e-text);background:#fff;outline:none;transition:border-color .15s;}
+  .filter-row input{flex:1;min-width:160px;}
+  .filter-row input:focus,.filter-row select:focus{border-color:var(--e-purple);}
+  .filter-row select{min-width:150px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239898c3' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;}
+
+  /* TABLE */
+  .table-wrap{background:#fff;border:1px solid var(--e-pale);border-radius:12px;overflow:hidden;}
+  .table-scroll{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;}
+  thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--e-muted);text-transform:uppercase;letter-spacing:.07em;background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap;}
+  tbody tr{border-bottom:1px solid var(--e-pale);transition:background .1s;border-left:3px solid transparent;}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover{background:var(--e-ghost);}
+  tbody tr.row-ativa{border-left-color:#22c55e;}
+  tbody tr.row-encerrada{border-left-color:#d1d5db;opacity:.7;}
+  td{padding:10px 14px;font-size:13px;color:var(--e-text);white-space:nowrap;}
+  td.sub{color:var(--e-sub);}
+  td.mono{font-family:ui-monospace,'Cascadia Code',monospace;font-size:12px;}
+  td.actions{width:80px;}
+  .action-btn{background:none;border:1px solid var(--e-pale);border-radius:6px;cursor:pointer;padding:5px 7px;color:var(--e-muted);transition:all .15s;display:inline-flex;align-items:center;justify-content:center;}
+  .action-btn:hover{border-color:var(--e-purple);color:var(--e-purple);background:rgba(151,111,244,.06);}
+  .action-btn.del:hover{border-color:#ef4444;color:#ef4444;background:#fef2f2;}
+  .actions-cell{display:flex;gap:6px;align-items:center;}
+
+  /* CHIPS */
+  .chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;white-space:nowrap;}
+  .chip-green{background:#dcfce7;color:#15803d;}
+  .chip-grey{background:#f3f4f6;color:#6b7280;}
+  .chip-purple{background:rgba(151,111,244,.12);color:var(--e-mid);}
+  .chip-violet{background:rgba(111,115,244,.12);color:var(--e-violet);}
+  .chip-teal{background:#e0fdf4;color:#0f766e;}
+  .chip-amber{background:#fef9c3;color:#92400e;}
+  .chip-red{background:#fef2f2;color:#dc2626;}
+
+  /* EMPTY STATE */
+  .empty-state{padding:60px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;}
+  .empty-icon{font-size:34px;}
+  .empty-title{font-size:15px;font-weight:600;color:var(--e-text);}
+  .empty-sub{font-size:13px;color:var(--e-muted);max-width:280px;line-height:1.5;}
+
+  /* PLACEHOLDER PAGE */
+  .placeholder-page{height:58vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;}
+  .ph-section{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--e-muted);}
+  .ph-icon{width:58px;height:58px;border-radius:16px;background:rgba(151,111,244,.1);display:flex;align-items:center;justify-content:center;font-size:26px;}
+  .ph-title{font-size:19px;font-weight:700;color:var(--e-text);}
+  .ph-sub{font-size:13px;color:var(--e-muted);max-width:300px;line-height:1.55;}
+  .ph-badge{padding:4px 14px;border-radius:99px;background:rgba(151,111,244,.1);color:var(--e-purple);font-size:12px;font-weight:500;}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(28,22,64,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;padding:16px;}
+  .modal-overlay.open{opacity:1;pointer-events:all;}
+  .modal-card{background:#fff;border-radius:16px;width:480px;max-width:100%;max-height:calc(100vh - 64px);display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.18);transform:translateY(10px);transition:transform .2s;overflow:hidden;}
+  .modal-overlay.open .modal-card{transform:translateY(0);}
+  .modal-header{padding:22px 24px 18px;border-bottom:1px solid var(--e-pale);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+  .modal-title{font-size:16px;font-weight:700;color:var(--e-text);}
+  .modal-close{background:none;border:none;cursor:pointer;color:var(--e-muted);font-size:22px;line-height:1;padding:0 2px;transition:color .15s;}
+  .modal-close:hover{color:var(--e-text);}
+  .modal-body{padding:22px 24px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;}
+  .modal-footer{padding:16px 24px;border-top:1px solid var(--e-pale);display:flex;gap:10px;justify-content:flex-end;flex-shrink:0;}
+
+  /* FORM */
+  .form-field{display:flex;flex-direction:column;gap:5px;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .form-label{font-size:12px;font-weight:600;color:var(--e-sub);letter-spacing:.04em;}
+  .req{color:var(--e-purple);margin-left:2px;}
+  .form-input,.form-select{border:1px solid var(--e-pale);border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;color:var(--e-text);background:#fff;outline:none;transition:border-color .15s,box-shadow .15s;width:100%;appearance:none;}
+  .form-input:focus,.form-select:focus{border-color:var(--e-purple);box-shadow:0 0 0 3px rgba(151,111,244,.1);}
+  .form-input.err,.form-select.err{border-color:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.1);}
+  .form-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239898c3' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;}
+  .form-input.mono-in{font-family:ui-monospace,monospace;font-size:12px;letter-spacing:.04em;}
+
+  /* TOGGLE */
+  .toggle-divider{height:1px;background:var(--e-pale);margin:4px 0;}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:2px 0;}
+  .toggle-info{flex:1;}
+  .toggle-title{font-size:13px;font-weight:600;color:#dc2626;}
+  .toggle-desc{font-size:12px;color:var(--e-muted);margin-top:3px;line-height:1.4;}
+  .toggle-switch{position:relative;width:38px;height:22px;display:inline-block;flex-shrink:0;}
+  .toggle-switch input{opacity:0;width:0;height:0;}
+  .toggle-slider{position:absolute;inset:0;border-radius:99px;background:var(--e-pale);cursor:pointer;transition:background .2s;}
+  .toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.25);}
+  input:checked+.toggle-slider{background:#ef4444;}
+  input:checked+.toggle-slider::before{transform:translateX(16px);}
+
+  /* CONFIRM MODAL */
+  .confirm-card{background:#fff;border-radius:16px;width:420px;max-width:100%;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.18);transform:translateY(10px);transition:transform .2s;overflow:hidden;}
+  .modal-overlay.open .confirm-card{transform:translateY(0);}
+  .confirm-icon{width:44px;height:44px;border-radius:12px;background:#fef2f2;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+  .confirm-header-inner{display:flex;align-items:center;gap:12px;}
+  .confirm-title{font-size:16px;font-weight:700;color:#dc2626;}
+  .confirm-subtitle{font-size:13px;color:var(--e-sub);margin-top:2px;}
+  .confirm-checklist{display:flex;flex-direction:column;gap:10px;}
+  .confirm-item{display:flex;gap:10px;align-items:flex-start;}
+  .confirm-item-icon{width:20px;height:20px;border-radius:50%;background:#fef2f2;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+  .confirm-item-text{font-size:13px;color:var(--e-text);line-height:1.45;}
+
+  /* CADASTRO pais-tag */
+  .pais-tag{display:inline-flex;align-items:center;padding:2px 8px;background:var(--e-ghost);border:1px solid var(--e-pale);border-radius:6px;font-size:11px;color:var(--e-sub);}
+
+  /* CALENDAR */
+  .crono-filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+  .crono-filters select,.crono-filters input[type=date]{border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;color:var(--e-text);background:#fff;outline:none;transition:border-color .15s;}
+  .crono-filters select{min-width:140px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239898c3' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
+  .crono-filters input[type=date]{min-width:130px;}
+  .crono-filters select:focus,.crono-filters input[type=date]:focus{border-color:var(--e-purple);}
+  .crono-sep{color:var(--e-muted);font-size:13px;flex-shrink:0;padding:0 2px;}
+  .cal-wrap{background:#fff;border:1px solid var(--e-pale);border-radius:12px;overflow:hidden;}
+  .cal-scroll{overflow-x:auto;}
+  .cal-table{width:max-content;min-width:100%;border-collapse:collapse;}
+  .cal-table thead th{padding:8px 10px;text-align:center;font-size:11px;font-weight:600;color:var(--e-muted);text-transform:uppercase;letter-spacing:.06em;background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap;}
+  .cal-table thead th.col-info{text-align:left;padding:8px 14px;}
+  .cal-table thead th.col-day{min-width:36px;width:auto;padding:5px 3px;}
+  .cal-table thead th.weekend{background:#faf5ff;}
+  .cal-table tbody tr{border-bottom:1px solid var(--e-pale);border-left:3px solid transparent;}
+  .cal-table tbody tr:last-child{border-bottom:none;}
+  .cal-table tbody tr.row-ativa{border-left-color:#22c55e;}
+  .cal-table tbody tr.row-encerrada{border-left-color:#d1d5db;opacity:.6;}
+  .cal-table td{padding:7px 14px;font-size:12px;color:var(--e-text);white-space:nowrap;vertical-align:middle;}
+  .cal-table td.day-cell{padding:2px 1px;text-align:center;width:auto;min-width:36px;}
+  .day-dot{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin:0 auto;}
+  .day-dot.active-t1{background:rgba(111,115,244,.2);color:var(--e-violet);}
+  .day-dot.active-t2{background:rgba(151,111,244,.2);color:var(--e-mid);}
+  .day-dot.active-diario{background:#e0fdf4;color:#0f766e;}
+  .day-dot.active-once{background:#fef9c3;color:#92400e;}
+  .day-dot.inactive{width:6px;height:6px;background:var(--e-pale);border-radius:50%;margin:9px auto;}
+  .cal-sticky{position:sticky;left:0;background:#fff;z-index:2;border-right:1px solid var(--e-pale);}
+  .cal-table thead th.cal-sticky{background:var(--e-ghost);}
+  .chip-operacional{background:#ede9fe;color:#5b21b6;}
+  .chip-administrativa{background:#fce7f3;color:#9d174d;}
+  .chip-bbpix{background:#e0f2fe;color:#0369a1;}
+
+  /* ACCOUNT PICKER / LOGIN MODAL */
+  .picker-overlay{position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px;}
+  .picker-card{background:#fff;border-radius:16px;width:380px;max-width:100%;box-shadow:0 24px 60px rgba(0,0,0,.22);overflow:hidden;}
+  .picker-head{padding:24px 24px 16px;text-align:center;border-bottom:1px solid #f0f0f0;}
+  .picker-head svg{margin-bottom:10px;}
+  .picker-title{font-size:16px;font-weight:600;color:#202124;margin-bottom:4px;}
+  .picker-sub{font-size:13px;color:#5f6368;}
+  .picker-footer{padding:12px 20px;border-top:1px solid #f0f0f0;font-size:11px;color:#80868b;text-align:center;}
+  .picker-body{padding:20px 24px 24px;display:flex;flex-direction:column;gap:12px;}
+  .login-err{color:#dc2626;font-size:12px;display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px 12px;}
+
+  /* CALENDAR INTERACTIVE */
+  .day-cell{cursor:pointer;transition:background .1s;}
+  .day-cell:hover{background:rgba(151,111,244,.06);}
+  .cal-dropdown{position:fixed;z-index:600;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.14);overflow:hidden;min-width:170px;}
+  .cal-dd-item{padding:9px 14px;cursor:pointer;font-size:12px;font-weight:500;transition:opacity .1s;border-bottom:1px solid #f3f4f6;}
+  .cal-dd-item:last-child{border-bottom:none;}
+  .cal-dd-item:hover{opacity:.8;}
+  .day-filled{border-radius:4px;font-size:9px;font-weight:700;padding:2px 5px;text-align:center;white-space:nowrap;line-height:1.5;display:inline-block;}
+
+  /* PERMISSIONS MODAL */
+  .perm-btn{font-size:11px;padding:3px 10px;border-radius:5px;border:1px solid var(--e-pale);background:#fff;color:var(--e-muted);cursor:pointer;font-weight:500;transition:all .15s;}
+  .perm-btn.on-view{border-color:var(--e-purple)!important;background:rgba(151,111,244,.1)!important;color:var(--e-purple)!important;}
+  .perm-btn.on-edit{border-color:var(--e-violet)!important;background:rgba(111,115,244,.1)!important;color:var(--e-violet)!important;}
+
+  /* TOPBAR HISTORY BTN */
+  .btn-hist{display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--e-pale);border-radius:7px;background:#fff;color:var(--e-sub);font-size:12px;font-weight:500;cursor:pointer;transition:border-color .15s;font-family:inherit;}
+  .btn-hist:hover{border-color:var(--e-purple);color:var(--e-purple);}
+
+  /* PASSWORD */
+  .pwd-field-wrap{position:relative;}
+  .pwd-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--e-muted);padding:2px;font-size:16px;line-height:1;}
+  .cred-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;white-space:nowrap;}
+  .cred-active{background:#dcfce7;color:#15803d;}
+  .cred-pending{background:#fef9c3;color:#92400e;}
+  .cred-none{background:#f3f4f6;color:#6b7280;}
+  .gen-pwd-btn{font-size:11px;padding:4px 10px;border:1px solid var(--e-pale);border-radius:6px;background:var(--e-ghost);color:var(--e-sub);cursor:pointer;font-family:inherit;transition:all .15s;margin-top:4px;}
+  .gen-pwd-btn:hover{border-color:var(--e-purple);color:var(--e-purple);}
+  .pwd-hint{font-size:11px;color:var(--e-muted);margin-top:3px;}
+
+  /* FORCE CHANGE MODAL - deve sempre aparecer acima de tudo */
+  #modal-force-pwd{z-index:500;}
+
+  /* SIDEBAR CHANGE PASSWORD BUTTON */
+  .btn-change-pwd{background:none;border:none;cursor:pointer;color:var(--e-muted);padding:4px;border-radius:4px;transition:color .15s;flex-shrink:0;}
+  .btn-change-pwd:hover{color:var(--e-purple);}
+</style>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div>
+  <div class="login-card">
+    <div class="login-logo"><img src="data:image/png;base64,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" alt="ERON"></div>
+    <div class="login-sub" data-i18n="ops-platform">Ops Platform</div>
+    <div class="login-headline" data-i18n="login-welcome">Bem-vindo de volta</div>
+    <div class="login-desc" data-i18n="login-desc">Faça login com sua conta corporativa Eron para continuar.</div>
+    <button class="btn-google" onclick="showAccountPicker()">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z"/></svg>
+      <span data-i18n="login-btn">Continuar com Google</span>
+    </button>
+    <div class="login-note" data-i18n="login-note">Somente contas @eroninternational.com</div>
+  </div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="picker-overlay" id="account-picker" style="display:none">
+  <div class="picker-card">
+    <div class="picker-head">
+      <svg width="36" height="36" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z"/></svg>
+      <div class="picker-title">Fazer login</div>
+      <div class="picker-sub">Use sua conta Eron corporativa</div>
+    </div>
+    <div class="picker-body">
+      <div class="form-field">
+        <label class="form-label">Email corporativo</label>
+        <input class="form-input" type="email" id="login-email-input"
+          placeholder="nome@eroninternational.com"
+          onkeydown="if(event.key==='Enter')document.getElementById('login-pwd-input').focus()">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Senha</label>
+        <div class="pwd-field-wrap">
+          <input class="form-input" type="password" id="login-pwd-input"
+            placeholder="••••••••"
+            onkeydown="if(event.key==='Enter')tryLogin()" style="padding-right:36px">
+          <button class="pwd-toggle" onclick="togglePwdVisibility('login-pwd-input',this)" tabindex="-1">👁</button>
+        </div>
+      </div>
+      <div class="login-err" id="login-err"></div>
+      <button class="btn-primary" onclick="tryLogin()" style="width:100%;justify-content:center">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+        Entrar
+      </button>
+    </div>
+    <div class="picker-footer">Somente contas @eroninternational.com</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <nav id="sidebar">
+    <div class="sb-header">
+      <div class="sb-logo"><img src="data:image/png;base64,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" alt="ERON"></div>
+      <div class="sb-tagline" data-i18n="ops-platform">Ops Platform</div>
+    </div>
+    <div class="sb-nav">
+      <!-- CADASTRO (primeiro) -->
+      <div class="sb-section-header collapsed" id="cadastro-toggle" onclick="toggleSection('cadastro')">
+        <span data-i18n="nav-cadastro">Cadastro</span>
+        <svg class="sb-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 6l4 4 4-4"/></svg>
+      </div>
+      <div class="sb-children collapsed" id="cadastro-children">
+        <div class="sb-item" data-page="cadastro-pais" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-pais">País</span></div>
+        <div class="sb-item" data-page="cadastro-agente" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-agente">Agente</span></div>
+        <div class="sb-item" data-page="cadastro-banco" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-banco">Banco</span></div>
+        <div class="sb-item" data-page="cadastro-acessos" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-acessos">Acessos</span></div>
+      </div>
+      <div class="sb-divider"></div>
+      <!-- GERENCIAL (segundo) -->
+      <div class="sb-section-header collapsed" id="gerencial-toggle" onclick="toggleSection('gerencial')">
+        <span data-i18n="nav-gerencial">Gerencial</span>
+        <svg class="sb-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 6l4 4 4-4"/></svg>
+      </div>
+      <div class="sb-children collapsed" id="gerencial-children">
+        <div class="sb-item" data-page="gerencial-accounts" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-accounts">Accounts</span></div>
+        <div class="sb-item" data-page="gerencial-custos" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-custos">Custos</span></div>
+        <div class="sb-item" data-page="gerencial-conciliacoes" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-conciliacoes">Conciliações</span></div>
+      </div>
+      <div class="sb-divider"></div>
+      <!-- CRONOGRAMA (terceiro) -->
+      <div class="sb-section-header collapsed" id="cronograma-toggle" onclick="toggleSection('cronograma')">
+        <span data-i18n="nav-cronograma">Cronograma</span>
+        <svg class="sb-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 6l4 4 4-4"/></svg>
+      </div>
+      <div class="sb-children collapsed" id="cronograma-children">
+        <div class="sb-item" data-page="cronograma-accounts" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-accounts">Accounts</span></div>
+        <div class="sb-item" data-page="cronograma-custos" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-custos">Custos</span></div>
+        <div class="sb-item" data-page="cronograma-conciliacoes" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-conciliacoes">Conciliações</span></div>
+      </div>
+      <div class="sb-divider"></div>
+      <div class="sb-group-label" data-i18n="nav-soon">Em breve</div>
+      <div class="sb-item dim"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-hegi">HEGI</span><span class="soon-tag" data-i18n="soon-badge">Em breve</span></div>
+      <div class="sb-item dim"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-processadores">Processadores</span><span class="soon-tag" data-i18n="soon-badge">Em breve</span></div>
+      <div class="sb-item dim"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-relatorios">Relatórios</span><span class="soon-tag" data-i18n="soon-badge">Em breve</span></div>
+    </div>
+    <div class="sb-footer">
+      <div class="avatar" id="sb-avatar">?</div>
+      <div class="user-info">
+        <div class="user-name" id="sb-user-name">—</div>
+        <div class="user-email" id="sb-user-email">—</div>
+      </div>
+      <button class="btn-change-pwd" onclick="openChangePassword()" title="Alterar senha"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></button>
+      <button class="btn-logout" onclick="doLogout()" title="Sair"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>
+    </div>
+  </nav>
+
+  <div id="main">
+    <div class="topbar">
+      <div class="breadcrumb" id="breadcrumb-wrap"><span class="crumb-parent" id="bc-parent" style="display:none"></span><span class="sep" id="bc-sep" style="display:none">›</span><span class="crumb-current" id="bc-current">ERON Ops Platform</span></div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn-hist" onclick="openHistorico()" title="Ver log de alterações">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          Histórico
+        </button>
+        <div class="lang-switcher">
+          <button class="lang-btn active" onclick="setLang('pt-BR')" data-lang="pt-BR">🇧🇷 PT</button>
+          <button class="lang-btn" onclick="setLang('en')" data-lang="en">🇬🇧 EN</button>
+          <button class="lang-btn" onclick="setLang('es')" data-lang="es">🇪🇸 ES</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOME -->
+    <div class="page active" id="page-home">
+      <div class="placeholder-page" style="height:72vh;gap:18px">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div style="font-size:32px;font-weight:900;color:var(--e-text);letter-spacing:-.5px">ERON<span style="color:var(--e-purple)">.</span></div>
+          <div style="font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--e-muted)" data-i18n="ops-platform">FOC App</div>
+        </div>
+        <div style="width:48px;height:2px;background:linear-gradient(90deg,var(--e-purple),var(--e-violet));border-radius:99px"></div>
+        <div class="ph-sub" data-i18n="home-desc">Selecione uma seção no menu lateral para começar.</div>
+      </div>
+    </div>
+
+    <!-- GERENCIAL > ACCOUNTS -->
+    <div class="page" id="page-gerencial-accounts">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title-text" data-i18n="nav-accounts">Accounts</div>
+          <div class="page-title-count" id="accounts-count"></div>
+        </div>
+        <button class="btn-primary" onclick="openAddAccount()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          <span data-i18n="btn-add-account">Adicionar conta</span>
+        </button>
+      </div>
+      <div class="filter-row" id="accounts-filters" style="display:none">
+        <input type="search" id="acc-search" placeholder="Buscar país, agente, banco, sigla..." oninput="renderAccountsTable()">
+        <select id="acc-filter-status" onchange="renderAccountsTable()">
+          <option value="" data-i18n="filter-all-status">Todos os status</option>
+          <option value="ativa" data-i18n="status-ativa">Ativa</option>
+          <option value="encerrada" data-i18n="status-encerrada">Encerrada</option>
+        </select>
+      </div>
+      <div class="table-wrap" id="accounts-table-wrap">
+        <div id="accounts-empty" class="empty-state">
+          <div class="empty-icon">🏦</div>
+          <div class="empty-title" data-i18n="acc-empty-title">Nenhuma conta cadastrada</div>
+          <div class="empty-sub" data-i18n="acc-empty-sub">Clique em "Adicionar conta" para começar.</div>
+        </div>
+        <div class="table-scroll" id="accounts-table-inner" style="display:none">
+          <table>
+            <thead><tr>
+              <th data-i18n="col-pais">País</th>
+              <th data-i18n="col-agente">Agente</th>
+              <th data-i18n="col-banco">Banco</th>
+              <th data-i18n="col-sigla">Sigla</th>
+              <th data-i18n="col-num-conta">N° Conta</th>
+              <th data-i18n="col-agencia">Agência</th>
+              <th data-i18n="col-tipo">Frequência</th>
+              <th data-i18n="col-tipo-conta">Tipo</th>
+              <th data-i18n="col-status">Status</th>
+              <th data-i18n="col-actions">Ações</th>
+            </tr></thead>
+            <tbody id="accounts-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- GERENCIAL > CUSTOS -->
+    <div class="page" id="page-gerencial-custos"><div class="placeholder-page"><div class="ph-section" data-i18n="nav-gerencial">Gerencial</div><div class="ph-icon">💸</div><div class="ph-title" data-i18n="nav-custos">Custos</div><div class="ph-sub" data-i18n="ph-ger-cus-desc">Gestão de custos operacionais por agente, banco e período.</div><div class="ph-badge" data-i18n="dev-badge">Em desenvolvimento</div></div></div>
+    <!-- GERENCIAL > CONCILIAÇÕES -->
+    <div class="page" id="page-gerencial-conciliacoes"><div class="placeholder-page"><div class="ph-section" data-i18n="nav-gerencial">Gerencial</div><div class="ph-icon">🔗</div><div class="ph-title" data-i18n="nav-conciliacoes">Conciliações</div><div class="ph-sub" data-i18n="ph-ger-con-desc">Painel de conciliação entre extratos bancários e transações do sistema.</div><div class="ph-badge" data-i18n="dev-badge">Em desenvolvimento</div></div></div>
+    <!-- CRONOGRAMA > ACCOUNTS -->
+    <div class="page" id="page-cronograma-accounts">
+      <div class="page-header">
+        <div class="page-title-group">
+          <div class="page-title-text" data-i18n="nav-accounts">Accounts</div>
+          <div class="page-title-count" id="crono-accounts-count"></div>
+        </div>
+      </div>
+      <div class="crono-filters">
+        <select id="crono-f-pais" onchange="renderCronogramaAccounts()"></select>
+        <select id="crono-f-agente" onchange="renderCronogramaAccounts()"></select>
+        <select id="crono-f-banco" onchange="renderCronogramaAccounts()"></select>
+        <select id="crono-f-freq" onchange="renderCronogramaAccounts()">
+          <option value="" data-i18n="crono-all-freq">Todas as freq.</option>
+          <option value="T1">T1</option>
+          <option value="T2">T2</option>
+          <option value="Diário">Diário</option>
+          <option value="1 vez ao mês">1 vez ao mês</option>
+        </select>
+        <span class="crono-sep">De</span>
+        <input type="date" id="crono-date-start" onchange="renderCronogramaAccounts()">
+        <span class="crono-sep">→</span>
+        <input type="date" id="crono-date-end" onchange="renderCronogramaAccounts()">
+      </div>
+      <div id="crono-accounts-wrap">
+        <div id="crono-accounts-empty" class="empty-state" style="display:none">
+          <div class="empty-icon">📅</div>
+          <div class="empty-title" data-i18n="acc-empty-title">Nenhuma conta cadastrada</div>
+          <div class="empty-sub" data-i18n="crono-empty">Nenhuma conta para o período.</div>
+        </div>
+        <div class="cal-wrap" id="crono-cal-wrap" style="display:none">
+          <div class="cal-scroll">
+            <table class="cal-table" id="crono-cal-table"></table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- CRONOGRAMA > CUSTOS -->
+    <div class="page" id="page-cronograma-custos"><div class="placeholder-page"><div class="ph-section" data-i18n="nav-cronograma">Cronograma</div><div class="ph-icon">🗓️</div><div class="ph-title" data-i18n="nav-custos">Custos</div><div class="ph-sub" data-i18n="ph-crono-cus-desc">Agendamento e revisão de lançamentos de custos por período.</div><div class="ph-badge" data-i18n="dev-badge">Em desenvolvimento</div></div></div>
+    <!-- CRONOGRAMA > CONCILIAÇÕES -->
+    <div class="page" id="page-cronograma-conciliacoes"><div class="placeholder-page"><div class="ph-section" data-i18n="nav-cronograma">Cronograma</div><div class="ph-icon">⏰</div><div class="ph-title" data-i18n="nav-conciliacoes">Conciliações</div><div class="ph-sub" data-i18n="ph-crono-con-desc">Calendário de conciliações e prazos por processador.</div><div class="ph-badge" data-i18n="dev-badge">Em desenvolvimento</div></div></div>
+
+    <!-- CADASTRO > PAÍS -->
+    <div class="page" id="page-cadastro-pais">
+      <div class="page-header">
+        <div class="page-header-left"><div class="page-title-text" data-i18n="cad-pais-title">Países</div><div class="page-title-count" id="pais-count"></div></div>
+        <button class="btn-primary" onclick="openCadastroModal('pais')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn-add-pais">Adicionar país</span></button>
+      </div>
+      <div class="table-wrap"><div id="pais-empty" class="empty-state"><div class="empty-icon">🌎</div><div class="empty-title" data-i18n="pais-empty-title">Nenhum país cadastrado</div><div class="empty-sub" data-i18n="pais-empty-sub">Adicione países para alimentar os dropdowns do sistema.</div></div><div class="table-scroll" id="pais-table-inner" style="display:none"><table><thead><tr><th data-i18n="col-pais">País</th><th style="width:70px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="pais-tbody"></tbody></table></div></div>
+    </div>
+    <!-- CADASTRO > AGENTE -->
+    <div class="page" id="page-cadastro-agente">
+      <div class="page-header">
+        <div class="page-header-left"><div class="page-title-text" data-i18n="cad-agente-title">Agentes</div><div class="page-title-count" id="agente-count"></div></div>
+        <button class="btn-primary" onclick="openCadastroModal('agente')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn-add-agente">Adicionar agente</span></button>
+      </div>
+      <div class="table-wrap"><div id="agente-empty" class="empty-state"><div class="empty-icon">👤</div><div class="empty-title" data-i18n="agente-empty-title">Nenhum agente cadastrado</div><div class="empty-sub" data-i18n="agente-empty-sub">Adicione agentes vinculados a um país.</div></div><div class="table-scroll" id="agente-table-inner" style="display:none"><table><thead><tr><th data-i18n="nav-agente">Agente</th><th data-i18n="col-pais">País</th><th>Responsável</th><th style="width:70px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="agente-tbody"></tbody></table></div></div>
+    </div>
+    <!-- CADASTRO > BANCO -->
+    <div class="page" id="page-cadastro-banco">
+      <div class="page-header">
+        <div class="page-header-left"><div class="page-title-text" data-i18n="cad-banco-title">Bancos</div><div class="page-title-count" id="banco-count"></div></div>
+        <button class="btn-primary" onclick="openCadastroModal('banco')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn-add-banco">Adicionar banco</span></button>
+      </div>
+      <div class="table-wrap"><div id="banco-empty" class="empty-state"><div class="empty-icon">🏛️</div><div class="empty-title" data-i18n="banco-empty-title">Nenhum banco cadastrado</div><div class="empty-sub" data-i18n="banco-empty-sub">Adicione bancos ao sistema.</div></div><div class="table-scroll" id="banco-table-inner" style="display:none"><table><thead><tr><th data-i18n="nav-banco">Banco</th><th style="width:70px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="banco-tbody"></tbody></table></div></div>
+    </div>
+
+    <!-- CADASTRO > ACESSOS -->
+    <div class="page" id="page-cadastro-acessos">
+      <div class="page-header">
+        <div class="page-header-left"><div class="page-title-text" data-i18n="nav-acessos">Acessos</div><div class="page-title-count" id="acessos-count"></div></div>
+        <button class="btn-primary" id="btn-add-acesso" onclick="openAcessoModal()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn-add-acesso">Adicionar acesso</span></button>
+      </div>
+      <div id="acessos-admin-notice" class="empty-state" style="display:none">
+        <div class="empty-icon">🔒</div>
+        <div class="empty-title" data-i18n="acessos-no-perm">Acesso restrito</div>
+        <div class="empty-sub" data-i18n="acessos-no-perm-sub">Somente o administrador pode gerenciar acessos.</div>
+      </div>
+      <div id="acessos-content">
+        <div class="table-wrap"><div id="acessos-empty" class="empty-state"><div class="empty-icon">👤</div><div class="empty-title" data-i18n="acessos-empty-title">Nenhum acesso cadastrado</div><div class="empty-sub" data-i18n="acessos-empty-sub">Adicione responsáveis que aparecerão no sistema.</div></div><div class="table-scroll" id="acessos-table-inner" style="display:none"><table><thead><tr><th data-i18n="lbl-nome">Nome</th><th>Email</th><th style="width:60px">Sigla</th><th style="width:140px">Status</th><th style="width:150px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="acessos-tbody"></tbody></table></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: ADD / EDIT ACCOUNT ──────────────────────────────── -->
+<div class="modal-overlay" id="modal-account" onclick="if(event.target===this)closeModal('modal-account')">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title" id="account-modal-title">Adicionar conta</div>
+      <button class="modal-close" onclick="closeModal('modal-account')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-field">
+        <label class="form-label"><span data-i18n="lbl-pais">País</span><span class="req">*</span></label>
+        <select class="form-select" id="acc-pais" onchange="onAccountPaisChange()">
+          <option value="" data-i18n="sel-select">Selecione...</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label"><span data-i18n="lbl-agente">Agente</span><span class="req">*</span></label>
+          <select class="form-select" id="acc-agente"><option value="" data-i18n="sel-select">Selecione...</option></select>
+        </div>
+        <div class="form-field">
+          <label class="form-label"><span data-i18n="lbl-banco">Banco</span><span class="req">*</span></label>
+          <select class="form-select" id="acc-banco"><option value="" data-i18n="sel-select">Selecione...</option></select>
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label"><span data-i18n="lbl-sigla">Sigla Clearyn</span><span class="req">*</span></label>
+        <input class="form-input mono-in" type="text" id="acc-sigla" placeholder="Ex: BB_3 BR.Geral">
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label"><span data-i18n="lbl-tipo">Frequência</span><span class="req">*</span></label>
+          <select class="form-select" id="acc-tipo">
+            <option value="" data-i18n="sel-select">Selecione...</option>
+            <option value="T1">T1</option>
+            <option value="T2">T2</option>
+            <option value="Diário">Diário</option>
+            <option value="1 vez ao mês">1 vez ao mês</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label"><span data-i18n="lbl-tipo-conta">Tipo de conta</span><span class="req">*</span></label>
+          <select class="form-select" id="acc-tipo-conta">
+            <option value="" data-i18n="sel-select">Selecione...</option>
+            <option value="Operacional">Operacional</option>
+            <option value="Administrativa">Administrativa</option>
+            <option value="BB Pix">BB Pix</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label"><span data-i18n="lbl-num-conta">Número da conta</span><span class="req">*</span></label>
+          <input class="form-input mono-in" type="text" id="acc-num-conta" placeholder="Ex: 6538-2">
+        </div>
+        <div class="form-field" id="acc-agencia-field" style="display:none">
+          <label class="form-label"><span data-i18n="lbl-agencia">Agência</span><span class="req">*</span></label>
+          <input class="form-input mono-in" type="text" id="acc-agencia" placeholder="Ex: 7042-4">
+        </div>
+      </div>
+      <!-- Encerrar conta — só aparece no modo edição -->
+      <div id="acc-encerrar-section" style="display:none">
+        <div class="toggle-divider"></div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-title" data-i18n="lbl-encerrar">Encerrar conta</div>
+            <div class="toggle-desc" data-i18n="encerrar-desc">Marca a conta como inativa permanentemente.</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="acc-encerrar" onchange="onToggleEncerrar(this)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-account')" data-i18n="btn-cancel">Cancelar</button>
+      <button class="btn-primary" onclick="submitAccountForm()" data-i18n="btn-save">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: CONFIRMAR ENCERRAMENTO ─────────────────────────── -->
+<div class="modal-overlay" id="modal-confirm-encerrar" onclick="if(event.target===this)cancelEncerrar()">
+  <div class="confirm-card">
+    <div class="modal-header">
+      <div class="confirm-header-inner">
+        <div class="confirm-icon">⚠️</div>
+        <div>
+          <div class="confirm-title" data-i18n="confirm-encerrar-title">Encerrar conta</div>
+          <div class="confirm-subtitle" data-i18n="confirm-encerrar-sub">Esta ação é irreversível. Confirme antes de continuar.</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="confirm-checklist">
+        <div class="confirm-item">
+          <div class="confirm-item-icon">📋</div>
+          <div class="confirm-item-text" data-i18n="confirm-check-1">Todos os extratos do período foram conferidos e estão fechados.</div>
+        </div>
+        <div class="confirm-item">
+          <div class="confirm-item-icon">🔗</div>
+          <div class="confirm-item-text" data-i18n="confirm-check-2">Todas as conciliações foram finalizadas e não há divergências pendentes.</div>
+        </div>
+        <div class="confirm-item">
+          <div class="confirm-item-icon">💰</div>
+          <div class="confirm-item-text" data-i18n="confirm-check-3">O saldo foi zerado ou transferido para outra conta ativa.</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="cancelEncerrar()" data-i18n="btn-cancel">Cancelar</button>
+      <button class="btn-danger" onclick="confirmEncerrar()" data-i18n="btn-confirm-encerrar">Confirmar encerramento</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: CADASTRO GENÉRICO ───────────────────────────────── -->
+<div class="modal-overlay" id="modal-cadastro" onclick="if(event.target===this)closeModal('modal-cadastro')">
+  <div class="modal-card" style="width:380px">
+    <div class="modal-header">
+      <div class="modal-title" id="cad-modal-title">Adicionar</div>
+      <button class="modal-close" onclick="closeModal('modal-cadastro')">×</button>
+    </div>
+    <div class="modal-body" id="cad-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-cadastro')" data-i18n="btn-cancel">Cancelar</button>
+      <button class="btn-primary" id="cad-submit" data-i18n="btn-save">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ACESSO (ADD / EDIT) -->
+<div class="modal-overlay" id="modal-acesso" onclick="if(event.target===this)closeModal('modal-acesso')">
+  <div class="modal-card" style="width:420px">
+    <div class="modal-header">
+      <div class="modal-title" id="acesso-modal-title">Adicionar acesso</div>
+      <button class="modal-close" onclick="closeModal('modal-acesso')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-field">
+        <label class="form-label">Nome completo<span class="req">*</span></label>
+        <input class="form-input" type="text" id="acesso-nome" placeholder="Ex: João Silva">
+      </div>
+      <div class="form-field" id="acesso-email-field">
+        <label class="form-label">Email corporativo<span class="req">*</span></label>
+        <input class="form-input" type="email" id="acesso-email" placeholder="Ex: joao.silva@eroninternational.com">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Sigla pessoal<span class="req">*</span></label>
+        <input class="form-input mono-in" type="text" id="acesso-sigla" placeholder="Ex: CA" maxlength="6" oninput="this.value=this.value.toUpperCase()">
+      </div>
+      <!-- Campo de senha — só aparece no modo Adicionar -->
+      <div id="acesso-pwd-section">
+        <div class="form-field">
+          <label class="form-label">Senha inicial<span class="req">*</span></label>
+          <div class="pwd-field-wrap">
+            <input class="form-input" type="password" id="acesso-pwd" placeholder="Mínimo 6 caracteres" style="padding-right:36px">
+            <button class="pwd-toggle" onclick="togglePwdVisibility('acesso-pwd',this)" tabindex="-1">👁</button>
+          </div>
+          <button class="gen-pwd-btn" onclick="gerarSenhaInicial()">⚡ Gerar senha aleatória</button>
+        </div>
+        <div class="pwd-hint">O usuário será obrigado a trocar esta senha no primeiro acesso.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-acesso')">Cancelar</button>
+      <button class="btn-primary" onclick="submitAcesso()" id="acesso-submit-btn">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: REDEFINIR SENHA (admin) -->
+<div class="modal-overlay" id="modal-reset-pwd" onclick="if(event.target===this)closeModal('modal-reset-pwd')">
+  <div class="modal-card" style="width:380px">
+    <div class="modal-header">
+      <div class="modal-title">Redefinir senha</div>
+      <button class="modal-close" onclick="closeModal('modal-reset-pwd')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:13px;color:var(--e-sub);margin-bottom:4px">Usuário: <strong id="reset-pwd-user-name"></strong></div>
+      <div class="form-field">
+        <label class="form-label">Nova senha temporária<span class="req">*</span></label>
+        <div class="pwd-field-wrap">
+          <input class="form-input" type="password" id="reset-pwd-input" placeholder="Mínimo 6 caracteres" style="padding-right:36px">
+          <button class="pwd-toggle" onclick="togglePwdVisibility('reset-pwd-input',this)" tabindex="-1">👁</button>
+        </div>
+        <button class="gen-pwd-btn" onclick="gerarSenhaReset()">⚡ Gerar senha aleatória</button>
+      </div>
+      <div class="pwd-hint">O usuário será obrigado a trocar esta senha no próximo acesso.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-reset-pwd')">Cancelar</button>
+      <button class="btn-primary" onclick="submitResetPwd()">Confirmar redefinição</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: TROCA FORÇADA DE SENHA (primeiro acesso) -->
+<div class="modal-overlay" id="modal-force-pwd">
+  <div class="modal-card" style="width:400px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">🔐 Defina sua senha</div>
+        <div style="font-size:12px;color:var(--e-muted);margin-top:2px">Obrigatório no primeiro acesso</div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div style="background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;font-size:13px;color:#92400e;margin-bottom:4px">
+        Por segurança, você deve criar sua própria senha antes de continuar.
+      </div>
+      <div class="form-field">
+        <label class="form-label">Nova senha<span class="req">*</span></label>
+        <div class="pwd-field-wrap">
+          <input class="form-input" type="password" id="force-pwd-1" placeholder="Mínimo 6 caracteres" style="padding-right:36px" oninput="checkPwdStrength()">
+          <button class="pwd-toggle" onclick="togglePwdVisibility('force-pwd-1',this)" tabindex="-1">👁</button>
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Confirmar nova senha<span class="req">*</span></label>
+        <div class="pwd-field-wrap">
+          <input class="form-input" type="password" id="force-pwd-2" placeholder="Repita a senha" style="padding-right:36px" onkeydown="if(event.key==='Enter')submitForcePwd()">
+          <button class="pwd-toggle" onclick="togglePwdVisibility('force-pwd-2',this)" tabindex="-1">👁</button>
+        </div>
+      </div>
+      <div class="login-err" id="force-pwd-err"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" onclick="submitForcePwd()" style="width:100%;justify-content:center">Salvar minha senha</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ALTERAR SENHA (usuário logado) -->
+<div class="modal-overlay" id="modal-change-pwd" onclick="if(event.target===this)closeModal('modal-change-pwd')">
+  <div class="modal-card" style="width:400px">
+    <div class="modal-header">
+      <div class="modal-title">Alterar senha</div>
+      <button class="modal-close" onclick="closeModal('modal-change-pwd')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-field">
+        <label class="form-label">Senha atual<span class="req">*</span></label>
+        <div class="pwd-field-wrap">
+          <input class="form-input" type="password" id="change-pwd-current" placeholder="••••••••" style="padding-right:36px">
+          <button class="pwd-toggle" onclick="togglePwdVisibility('change-pwd-current',this)" tabindex="-1">👁</button>
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Nova senha<span class="req">*</span></label>
+        <div class="pwd-field-wrap">
+          <input class="form-input" type="password" id="change-pwd-new" placeholder="Mínimo 6 caracteres" style="padding-right:36px">
+          <button class="pwd-toggle" onclick="togglePwdVisibility('change-pwd-new',this)" tabindex="-1">👁</button>
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Confirmar nova senha<span class="req">*</span></label>
+        <div class="pwd-field-wrap">
+          <input class="form-input" type="password" id="change-pwd-confirm" placeholder="Repita a nova senha" style="padding-right:36px" onkeydown="if(event.key==='Enter')submitChangePwd()">
+          <button class="pwd-toggle" onclick="togglePwdVisibility('change-pwd-confirm',this)" tabindex="-1">👁</button>
+        </div>
+      </div>
+      <div class="login-err" id="change-pwd-err"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-change-pwd')">Cancelar</button>
+      <button class="btn-primary" onclick="submitChangePwd()">Salvar nova senha</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: HISTÓRICO DE ALTERAÇÕES -->
+<div class="modal-overlay" id="modal-historico" onclick="if(event.target===this)closeModal('modal-historico')">
+  <div class="modal-card" style="width:760px;max-width:98vw">
+    <div class="modal-header">
+      <div class="modal-title">Histórico de Alterações</div>
+      <button class="modal-close" onclick="closeModal('modal-historico')">×</button>
+    </div>
+    <div class="modal-body" style="padding:0;max-height:60vh">
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr>
+            <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap">Data/Hora</th>
+            <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale)">Usuário</th>
+            <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale)">Módulo</th>
+            <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale)">Ação</th>
+          </tr></thead>
+          <tbody id="historico-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-historico')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: PERMISSÕES DO USUÁRIO -->
+<div class="modal-overlay" id="modal-permissoes" onclick="if(event.target===this)closeModal('modal-permissoes')">
+  <div class="modal-card" style="width:520px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Permissões de Acesso</div>
+        <div style="font-size:12px;color:var(--e-muted);margin-top:2px" id="perm-modal-user"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-permissoes')">×</button>
+    </div>
+    <div class="modal-body" id="perm-modal-body" style="max-height:65vh;overflow-y:auto"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-permissoes')">Fechar</button>
+      <button class="btn-primary" onclick="closeModal('modal-permissoes')">Salvar permissões</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── I18N ─────────────────────────────────────────────────────────────────────
+const i18n = {
+  'pt-BR': {
+    'ops-platform':'FOC App','login-welcome':'Bem-vindo de volta',
+    'login-desc':'Faça login com sua conta corporativa Eron para continuar.',
+    'login-btn':'Continuar com Google','login-note':'Somente contas @eroninternational.com',
+    'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Cadastro',
+    'nav-accounts':'Accounts','nav-custos':'Custos','nav-conciliacoes':'Conciliações',
+    'nav-pais':'País','nav-agente':'Agente','nav-banco':'Banco',
+    'nav-soon':'Em breve','nav-hegi':'HEGI','nav-processadores':'Processadores','nav-relatorios':'Relatórios',
+    'soon-badge':'Em breve','dev-badge':'Em desenvolvimento',
+    'btn-add-account':'Adicionar conta','btn-edit-account':'Editar conta',
+    'btn-cancel':'Cancelar','btn-save':'Salvar','btn-confirm-encerrar':'Confirmar encerramento',
+    'lbl-pais':'País','lbl-agente':'Agente','lbl-banco':'Banco',
+    'lbl-sigla':'Sigla Clearyn','lbl-tipo':'Frequência','lbl-tipo-conta':'Tipo de conta','lbl-responsavel':'Responsável',
+    'lbl-num-conta':'Número da conta','lbl-agencia':'Agência',
+    'lbl-encerrar':'Encerrar conta','encerrar-desc':'Marca a conta como inativa permanentemente.',
+    'sel-select':'Selecione...',
+    'col-pais':'País','col-agente':'Agente','col-banco':'Banco','col-sigla':'Sigla',
+    'col-num-conta':'N° Conta','col-agencia':'Agência',
+    'col-tipo':'Frequência','col-tipo-conta':'Tipo','col-responsavel':'Responsável','col-status':'Status','col-actions':'Ações',
+    'crono-all-paises':'Todos os países','crono-all-agentes':'Todos os agentes','crono-all-bancos':'Todos os bancos','crono-all-freq':'Todas as freq.','crono-apply':'Aplicar','crono-empty':'Nenhuma conta para o período.',
+    'nav-acessos':'Acessos','btn-add-acesso':'Adicionar acesso','acessos-empty-title':'Nenhum acesso cadastrado','acessos-empty-sub':'Adicione responsáveis que aparecerão no sistema.','acessos-no-perm':'Acesso restrito','acessos-no-perm-sub':'Somente o administrador pode gerenciar acessos.',
+    'status-ativa':'Ativa','status-encerrada':'Encerrada',
+    'filter-all-status':'Todos os status',
+    'acc-empty-title':'Nenhuma conta cadastrada','acc-empty-sub':'Clique em "Adicionar conta" para começar.',
+    'cad-pais-title':'Países','cad-agente-title':'Agentes','cad-banco-title':'Bancos',
+    'btn-add-pais':'Adicionar país','btn-add-agente':'Adicionar agente','btn-add-banco':'Adicionar banco',
+    'pais-empty-title':'Nenhum país cadastrado','pais-empty-sub':'Adicione países para alimentar os dropdowns do sistema.',
+    'agente-empty-title':'Nenhum agente cadastrado','agente-empty-sub':'Adicione agentes vinculados a um país.',
+    'banco-empty-title':'Nenhum banco cadastrado','banco-empty-sub':'Adicione bancos vinculados a um país.',
+    'ph-ger-cus-desc':'Gestão de custos operacionais por agente, banco e período.',
+    'ph-ger-con-desc':'Painel de conciliação entre extratos bancários e transações do sistema.',
+    'ph-crono-acc-desc':'Acompanhamento das datas de extrato e janelas de atualização por conta bancária.',
+    'ph-crono-cus-desc':'Agendamento e revisão de lançamentos de custos por período.',
+    'ph-crono-con-desc':'Calendário de conciliações e prazos por processador.',
+    'lbl-nome':'Nome','lbl-pais-vinculo':'País vinculado',
+    'cad-pais-modal':'Adicionar país','cad-agente-modal':'Adicionar agente','cad-banco-modal':'Adicionar banco',
+    'confirm-encerrar-title':'Encerrar conta','confirm-encerrar-sub':'Esta ação é irreversível. Confirme antes de continuar.',
+    'confirm-check-1':'Todos os extratos do período foram conferidos e estão fechados.',
+    'confirm-check-2':'Todas as conciliações foram finalizadas e não há divergências pendentes.',
+    'confirm-check-3':'O saldo foi zerado ou transferido para outra conta ativa.',
+    'home-desc':'Selecione uma seção no menu lateral para começar.',
+    'count-conta':'conta','count-contas':'contas',
+    'count-pais':'país','count-paises':'países',
+    'count-agente':'agente','count-agentes':'agentes',
+    'count-banco':'banco','count-bancos':'bancos',
+  },
+  'en': {
+    'ops-platform':'FOC App','login-welcome':'Welcome back',
+    'login-desc':'Sign in with your Eron corporate account to continue.',
+    'login-btn':'Continue with Google','login-note':'@eroninternational.com accounts only',
+    'nav-gerencial':'Management','nav-cronograma':'Schedule','nav-cadastro':'Registry',
+    'nav-accounts':'Accounts','nav-custos':'Costs','nav-conciliacoes':'Reconciliations',
+    'nav-pais':'Country','nav-agente':'Agent','nav-banco':'Bank',
+    'nav-soon':'Coming soon','nav-hegi':'HEGI','nav-processadores':'Processors','nav-relatorios':'Reports',
+    'soon-badge':'Soon','dev-badge':'In development',
+    'btn-add-account':'Add account','btn-edit-account':'Edit account',
+    'btn-cancel':'Cancel','btn-save':'Save','btn-confirm-encerrar':'Confirm closure',
+    'lbl-pais':'Country','lbl-agente':'Agent','lbl-banco':'Bank',
+    'lbl-sigla':'Clearyn Code','lbl-tipo':'Frequency','lbl-tipo-conta':'Account type','lbl-responsavel':'Responsible',
+    'lbl-num-conta':'Account number','lbl-agencia':'Branch',
+    'lbl-encerrar':'Close account','encerrar-desc':'Permanently marks this account as inactive.',
+    'sel-select':'Select...',
+    'col-pais':'Country','col-agente':'Agent','col-banco':'Bank','col-sigla':'Code',
+    'col-num-conta':'Acct No.','col-agencia':'Branch',
+    'col-tipo':'Frequency','col-tipo-conta':'Type','col-responsavel':'Responsible','col-status':'Status','col-actions':'Actions',
+    'crono-all-paises':'All countries','crono-all-agentes':'All agents','crono-all-bancos':'All banks','crono-all-freq':'All freq.','crono-apply':'Apply','crono-empty':'No accounts for this period.',
+    'nav-acessos':'Access','btn-add-acesso':'Add access','acessos-empty-title':'No access registered','acessos-empty-sub':'Add users who will appear in the system.','acessos-no-perm':'Restricted access','acessos-no-perm-sub':'Only the administrator can manage access.',
+    'status-ativa':'Active','status-encerrada':'Closed',
+    'filter-all-status':'All statuses',
+    'acc-empty-title':'No accounts registered','acc-empty-sub':'Click "Add account" to get started.',
+    'cad-pais-title':'Countries','cad-agente-title':'Agents','cad-banco-title':'Banks',
+    'btn-add-pais':'Add country','btn-add-agente':'Add agent','btn-add-banco':'Add bank',
+    'pais-empty-title':'No countries registered','pais-empty-sub':'Add countries to populate system dropdowns.',
+    'agente-empty-title':'No agents registered','agente-empty-sub':'Add agents linked to a country.',
+    'banco-empty-title':'No banks registered','banco-empty-sub':'Add banks linked to a country.',
+    'ph-ger-cus-desc':'Operational cost management by agent, bank, and period.',
+    'ph-ger-con-desc':'Reconciliation panel between bank statements and system transactions.',
+    'ph-crono-acc-desc':'Statement date and update window tracking by bank account.',
+    'ph-crono-cus-desc':'Cost entry scheduling and review by period.',
+    'ph-crono-con-desc':'Reconciliation calendar and deadlines by processor.',
+    'lbl-nome':'Name','lbl-pais-vinculo':'Linked country',
+    'cad-pais-modal':'Add country','cad-agente-modal':'Add agent','cad-banco-modal':'Add bank',
+    'confirm-encerrar-title':'Close account','confirm-encerrar-sub':'This action is irreversible. Please confirm before proceeding.',
+    'confirm-check-1':'All statements for the period have been reviewed and closed.',
+    'confirm-check-2':'All reconciliations are finalized with no pending discrepancies.',
+    'confirm-check-3':'The balance has been zeroed or transferred to another active account.',
+    'home-desc':'Select a section from the sidebar to get started.',
+    'count-conta':'account','count-contas':'accounts',
+    'count-pais':'country','count-paises':'countries',
+    'count-agente':'agent','count-agentes':'agents',
+    'count-banco':'bank','count-bancos':'banks',
+  },
+  'es': {
+    'ops-platform':'FOC App','login-welcome':'Bienvenido de nuevo',
+    'login-desc':'Inicia sesión con tu cuenta corporativa Eron para continuar.',
+    'login-btn':'Continuar con Google','login-note':'Solo cuentas @eroninternational.com',
+    'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Registro',
+    'nav-accounts':'Cuentas','nav-custos':'Costos','nav-conciliacoes':'Conciliaciones',
+    'nav-pais':'País','nav-agente':'Agente','nav-banco':'Banco',
+    'nav-soon':'Próximamente','nav-hegi':'HEGI','nav-processadores':'Procesadores','nav-relatorios':'Informes',
+    'soon-badge':'Pronto','dev-badge':'En desarrollo',
+    'btn-add-account':'Agregar cuenta','btn-edit-account':'Editar cuenta',
+    'btn-cancel':'Cancelar','btn-save':'Guardar','btn-confirm-encerrar':'Confirmar cierre',
+    'lbl-pais':'País','lbl-agente':'Agente','lbl-banco':'Banco',
+    'lbl-sigla':'Sigla Clearyn','lbl-tipo':'Frecuencia','lbl-tipo-conta':'Tipo de cuenta','lbl-responsavel':'Responsable',
+    'lbl-num-conta':'Número de cuenta','lbl-agencia':'Agencia',
+    'lbl-encerrar':'Cerrar cuenta','encerrar-desc':'Marca la cuenta como inactiva permanentemente.',
+    'sel-select':'Seleccione...',
+    'col-pais':'País','col-agente':'Agente','col-banco':'Banco','col-sigla':'Sigla',
+    'col-num-conta':'N° Cuenta','col-agencia':'Agencia',
+    'col-tipo':'Frecuencia','col-tipo-conta':'Tipo','col-responsavel':'Responsable','col-status':'Estado','col-actions':'Acciones',
+    'crono-all-paises':'Todos los países','crono-all-agentes':'Todos los agentes','crono-all-bancos':'Todos los bancos','crono-all-freq':'Todas las freq.','crono-apply':'Aplicar','crono-empty':'Sin cuentas para el período.',
+    'nav-acessos':'Accesos','btn-add-acesso':'Agregar acceso','acessos-empty-title':'Sin accesos registrados','acessos-empty-sub':'Agrega usuarios que aparecerán en el sistema.','acessos-no-perm':'Acceso restringido','acessos-no-perm-sub':'Solo el administrador puede gestionar accesos.',
+    'status-ativa':'Activa','status-encerrada':'Cerrada',
+    'filter-all-status':'Todos los estados',
+    'acc-empty-title':'No hay cuentas registradas','acc-empty-sub':'Haz clic en "Agregar cuenta" para comenzar.',
+    'cad-pais-title':'Países','cad-agente-title':'Agentes','cad-banco-title':'Bancos',
+    'btn-add-pais':'Agregar país','btn-add-agente':'Agregar agente','btn-add-banco':'Agregar banco',
+    'pais-empty-title':'No hay países registrados','pais-empty-sub':'Agrega países para alimentar los desplegables del sistema.',
+    'agente-empty-title':'No hay agentes registrados','agente-empty-sub':'Agrega agentes vinculados a un país.',
+    'banco-empty-title':'No hay bancos registrados','banco-empty-sub':'Agrega bancos vinculados a un país.',
+    'ph-ger-cus-desc':'Gestión de costos operativos por agente, banco y período.',
+    'ph-ger-con-desc':'Panel de conciliación entre extractos bancarios y transacciones del sistema.',
+    'ph-crono-acc-desc':'Seguimiento de fechas de extracto y ventanas de actualización por cuenta bancaria.',
+    'ph-crono-cus-desc':'Programación y revisión de asientos de costos por período.',
+    'ph-crono-con-desc':'Calendario de conciliaciones y plazos por procesador.',
+    'lbl-nome':'Nombre','lbl-pais-vinculo':'País vinculado',
+    'cad-pais-modal':'Agregar país','cad-agente-modal':'Agregar agente','cad-banco-modal':'Agregar banco',
+    'confirm-encerrar-title':'Cerrar cuenta','confirm-encerrar-sub':'Esta acción es irreversible. Confirma antes de continuar.',
+    'confirm-check-1':'Todos los extractos del período fueron revisados y están cerrados.',
+    'confirm-check-2':'Todas las conciliaciones están finalizadas sin divergencias pendientes.',
+    'confirm-check-3':'El saldo fue saldado o transferido a otra cuenta activa.',
+    'home-desc':'Selecciona una sección en el menú lateral para comenzar.',
+    'count-conta':'cuenta','count-contas':'cuentas',
+    'count-pais':'país','count-paises':'países',
+    'count-agente':'agente','count-agentes':'agentes',
+    'count-banco':'banco','count-bancos':'bancos',
+  }
+};
+
+// ─── COUNTRY FLAGS ───────────────────────────────────────────────
+const FLAG_MAP={
+  'Bolivia':'🇧🇴','Brasil':'🇧🇷','Chile':'🇨🇱','Colombia':'🇨🇴','Peru':'🇵🇪',
+  'Argentina':'🇦🇷','México':'🇲🇽','Mexico':'🇲🇽','Equador':'🇪🇨','Ecuador':'🇪🇨',
+  'Paraguai':'🇵🇾','Paraguay':'🇵🇾','Uruguai':'🇺🇾','Uruguay':'🇺🇾','Venezuela':'🇻🇪',
+  'Estados Unidos':'🇺🇸','EUA':'🇺🇸','USA':'🇺🇸','Portugal':'🇵🇹','Espanha':'🇪🇸',
+  'España':'🇪🇸','Panama':'🇵🇦','Panamá':'🇵🇦','Costa Rica':'🇨🇷','Guatemala':'🇬🇹',
+};
+function countryFlag(name){ return FLAG_MAP[name]||'🌍'; }
+
+let currentLang = 'pt-BR';
+let currentPageId = 'home';
+let editingIdx = -1;
+
+function t(k){ return (i18n[currentLang]||i18n['pt-BR'])[k]||k; }
+function setLang(lang){
+  currentLang=lang;
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));
+  applyTranslations();
+  renderAll();
+}
+function applyTranslations(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ const v=t(el.dataset.i18n); if(v) el.textContent=v; });
+  updateBreadcrumb();
+  updateCounts();
+}
+
+// ─── STORE ───────────────────────────────────────────────────────
+const store = {
+  paises:['Bolivia','Brasil','Chile','Colombia','Peru'],
+  agentes:[
+    {nome:'BO.Cowgromo',pais:'Bolivia',responsavel:''},{nome:'BO.Rapidpagos',pais:'Bolivia',responsavel:''},
+    {nome:'BR.Geral',pais:'Brasil',responsavel:''},{nome:'BR.Loyal',pais:'Brasil',responsavel:''},{nome:'BR.Andromeda',pais:'Brasil',responsavel:''},{nome:'BR.Master',pais:'Brasil',responsavel:''},{nome:'BR.Morim',pais:'Brasil',responsavel:''},
+    {nome:'CL.BySolution',pais:'Chile',responsavel:''},{nome:'CL.Clmax',pais:'Chile',responsavel:''},{nome:'CL.Urigol',pais:'Chile',responsavel:''},
+    {nome:'CO.Colprocesa',pais:'Colombia',responsavel:''},{nome:'CO.Comercial',pais:'Colombia',responsavel:''},
+  ],
+  bancos:[
+    'Mercantil Santa Cruz','GanaNet','Banco Economico',
+    'Banco do Brasil','Sicoob','Caixa','Itaú',
+    'BICE','BCI','Banco Estado',
+    'Bancolombia','Banco de Occidente','AV Villas',
+  ],
+  responsaveis:[
+    {nome:'Caique Bruno',email:'caique.silva@eroninternational.com',sigla:'CA'},
+    {nome:'Jana Czaia',email:'janaine.czaia@eroninternational.com',sigla:'JC'},
+    {nome:'Leticia Sanglard',email:'leticia.gomes@eroninternational.com',sigla:'LS'},
+    {nome:'Marcos Ferreira',email:'marcos.ferreira@eroninternational.com',sigla:'MF'},
+    {nome:'Luciane Goes',email:'luciane.goes@eroninternational.com',sigla:'LG'},
+    {nome:'Larissa Chequim',email:'larissa.chequim@eroninternational.com',sigla:'LQ'},
+  ],
+  contas:[],
+  cronogramaData:{},
+  auditLog:[],
+  permissions:{},
+  credentials:{},
+  // credentials: { email: {hash:string, mustChange:bool} }
+};
+
+// ─── NAVIGATION ───────────────────────────────────────────────────
+const pagesMeta = {
+  'gerencial-accounts':{parentKey:'nav-gerencial',labelKey:'nav-accounts'},
+  'gerencial-custos':{parentKey:'nav-gerencial',labelKey:'nav-custos'},
+  'gerencial-conciliacoes':{parentKey:'nav-gerencial',labelKey:'nav-conciliacoes'},
+  'cronograma-accounts':{parentKey:'nav-cronograma',labelKey:'nav-accounts'},
+  'cronograma-custos':{parentKey:'nav-cronograma',labelKey:'nav-custos'},
+  'cronograma-conciliacoes':{parentKey:'nav-cronograma',labelKey:'nav-conciliacoes'},
+  'cadastro-pais':{parentKey:'nav-cadastro',labelKey:'nav-pais'},
+  'cadastro-agente':{parentKey:'nav-cadastro',labelKey:'nav-agente'},
+  'cadastro-banco':{parentKey:'nav-cadastro',labelKey:'nav-banco'},
+  'cadastro-acessos':{parentKey:'nav-cadastro',labelKey:'nav-acessos'},
+};
+function navigate(pageId){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.sb-item[data-page]').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+pageId).classList.add('active');
+  const item=document.querySelector('.sb-item[data-page="'+pageId+'"]');
+  if(item) item.classList.add('active');
+  currentPageId=pageId;
+  updateBreadcrumb();
+  if(pageId==='cronograma-accounts'){ initCronoDates(); initCronoFilters(); renderCronogramaAccounts(); }
+}
+function updateBreadcrumb(){
+  const m=pagesMeta[currentPageId];
+  const parent=document.getElementById('bc-parent');
+  const sep=document.getElementById('bc-sep');
+  const current=document.getElementById('bc-current');
+  if(!m){
+    parent.style.display='none'; sep.style.display='none';
+    current.textContent='Eron FOC App';
+  } else {
+    parent.style.display=''; sep.style.display='';
+    parent.textContent=t(m.parentKey);
+    current.textContent=t(m.labelKey);
+  }
+}
+function toggleSection(id){
+  document.getElementById(id+'-toggle').classList.toggle('collapsed');
+  document.getElementById(id+'-children').classList.toggle('collapsed');
+}
+
+// ─── AUTH ─────────────────────────────────────────────────────────
+function showAccountPicker(){
+  document.getElementById('login-email-input').value='';
+  document.getElementById('login-pwd-input').value='';
+  document.getElementById('login-err').style.display='none';
+  document.getElementById('account-picker').style.display='flex';
+  setTimeout(()=>document.getElementById('login-email-input').focus(),100);
+}
+function selectAccount(email){
+  window._loggedEmail=email;
+  document.getElementById('account-picker').style.display='none';
+  const user=store.responsaveis.find(r=>r.email===email)||{nome:email,email,sigla:'??'};
+  const initials=user.sigla||(user.nome.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase());
+  document.getElementById('sb-avatar').textContent=initials;
+  document.getElementById('sb-user-name').textContent=user.nome;
+  document.getElementById('sb-user-email').textContent=user.email;
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').classList.add('visible');
+  logAudit('auth','login',{email});
+  renderAcessos();
+}
+function doLogin(){ showAccountPicker(); }
+function doLogout(){
+  logAudit('auth','logout',{email:window._loggedEmail});
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('login-screen').style.display='flex';
+  window._loggedEmail='';
+}
+
+// ─── MODAL HELPERS ────────────────────────────────────────────────
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); document.querySelectorAll('.err').forEach(el=>el.classList.remove('err')); }
+function validate(ids){ let ok=true; ids.forEach(id=>{ const el=document.getElementById(id); const v=el?el.value.trim():''; if(!v){if(el)el.classList.add('err');ok=false;}else if(el)el.classList.remove('err'); }); return ok; }
+
+// ─── ACCOUNT MODAL ────────────────────────────────────────────────
+function openAddAccount(){
+  editingIdx=-1;
+  document.getElementById('account-modal-title').textContent=t('btn-add-account');
+  document.getElementById('acc-encerrar-section').style.display='none';
+  resetAccountForm();
+  openModal('modal-account');
+}
+function openEditAccount(idx){
+  editingIdx=idx;
+  const c=store.contas[idx];
+  document.getElementById('account-modal-title').textContent=t('btn-edit-account');
+  document.getElementById('acc-encerrar-section').style.display='';
+  resetAccountForm();
+  // pre-fill
+  document.getElementById('acc-pais').value=c.pais;
+  onAccountPaisChange();
+  document.getElementById('acc-agente').value=c.agente;
+  document.getElementById('acc-banco').value=c.banco;
+  document.getElementById('acc-sigla').value=c.sigla;
+  document.getElementById('acc-num-conta').value=c.numeroConta||'';
+  document.getElementById('acc-agencia').value=c.agencia||'';
+  document.getElementById('acc-tipo').value=c.tipo;
+  document.getElementById('acc-tipo-conta').value=c.tipoConta||'';
+  document.getElementById('acc-encerrar').checked=c.status==='encerrada';
+  openModal('modal-account');
+}
+function resetAccountForm(){
+  // País
+  const pSel=document.getElementById('acc-pais');
+  pSel.innerHTML=`<option value="">${t('sel-select')}</option>`;
+  store.paises.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=countryFlag(p)+' '+p; pSel.appendChild(o); });
+  pSel.value='';
+  refreshAgenteBanco('');
+  // clear text fields
+  document.getElementById('acc-sigla').value='';
+  document.getElementById('acc-num-conta').value='';
+  document.getElementById('acc-agencia').value='';
+  document.getElementById('acc-agencia-field').style.display='none';
+  document.getElementById('acc-tipo').value='';
+  document.getElementById('acc-tipo-conta').value='';
+  const toggle=document.getElementById('acc-encerrar');
+  if(toggle) toggle.checked=false;
+}
+function onAccountPaisChange(){
+  const pais=document.getElementById('acc-pais').value;
+  refreshAgenteBanco(pais);
+  document.getElementById('acc-agencia-field').style.display=pais==='Brasil'?'':'none';
+  if(pais!=='Brasil') document.getElementById('acc-agencia').value='';
+}
+function refreshAgenteBanco(pais){
+  const aSel=document.getElementById('acc-agente');
+  const bSel=document.getElementById('acc-banco');
+  const agentes=pais?store.agentes.filter(a=>a.pais===pais):store.agentes;
+  const bancos=store.bancos;
+  aSel.innerHTML=`<option value="">${t('sel-select')}</option>`;
+  agentes.forEach(a=>{ const o=document.createElement('option'); o.value=a.nome; o.textContent=a.nome; aSel.appendChild(o); });
+  bSel.innerHTML=`<option value="">${t('sel-select')}</option>`;
+  bancos.forEach(b=>{ const o=document.createElement('option'); o.value=b; o.textContent=b; bSel.appendChild(o); });
+}
+function submitAccountForm(){
+  const pais=document.getElementById('acc-pais').value;
+  const required=['acc-pais','acc-agente','acc-banco','acc-sigla','acc-num-conta','acc-tipo','acc-tipo-conta'];
+  if(pais==='Brasil') required.push('acc-agencia');
+  if(!validate(required)) return;
+  const encerrado=editingIdx>=0&&document.getElementById('acc-encerrar').checked;
+  const data={
+    pais,
+    agente:document.getElementById('acc-agente').value,
+    banco:document.getElementById('acc-banco').value,
+    sigla:document.getElementById('acc-sigla').value.trim().toUpperCase(),
+    numeroConta:document.getElementById('acc-num-conta').value.trim(),
+    agencia:pais==='Brasil'?document.getElementById('acc-agencia').value.trim():'',
+    tipo:document.getElementById('acc-tipo').value,
+    tipoConta:document.getElementById('acc-tipo-conta').value,
+    status:encerrado?'encerrada':'ativa',
+  };
+  if(editingIdx>=0){ logAudit('gerencial','edit-conta',{sigla:data.sigla}); store.contas[editingIdx]=data; }
+  else{ logAudit('gerencial','add-conta',{sigla:data.sigla,pais:data.pais}); store.contas.push(data); }
+  closeModal('modal-account');
+  saveStore();
+  renderAccountsTable();
+  renderCronogramaAccounts();
+  updateCounts();
+}
+function deleteAccount(idx){ logAudit('gerencial','delete-conta',{sigla:store.contas[idx]?.sigla}); store.contas.splice(idx,1); saveStore(); renderAccountsTable(); renderCronogramaAccounts(); updateCounts(); }
+
+// ─── TOGGLE ENCERRAR ──────────────────────────────────────────────
+function onToggleEncerrar(checkbox){
+  if(checkbox.checked){
+    checkbox.checked=false;
+    openModal('modal-confirm-encerrar');
+  }
+}
+function confirmEncerrar(){
+  document.getElementById('acc-encerrar').checked=true;
+  closeModal('modal-confirm-encerrar');
+}
+function cancelEncerrar(){ closeModal('modal-confirm-encerrar'); }
+
+// ─── RENDER ACCOUNTS TABLE ────────────────────────────────────────
+function renderAccountsTable(){
+  const q=(document.getElementById('acc-search')||{}).value?.toLowerCase()||'';
+  const sf=(document.getElementById('acc-filter-status')||{}).value||'';
+  const list=store.contas.filter(c=>{
+    const mq=!q||[c.pais,c.agente,c.banco,c.sigla].join(' ').toLowerCase().includes(q);
+    const ms=!sf||c.status===sf;
+    return mq&&ms;
+  });
+  const empty=document.getElementById('accounts-empty');
+  const inner=document.getElementById('accounts-table-inner');
+  const filters=document.getElementById('accounts-filters');
+  const tbody=document.getElementById('accounts-tbody');
+  const hasData=store.contas.length>0;
+  filters.style.display=hasData?'':'none';
+  if(!list.length){ empty.style.display=''; inner.style.display='none'; return; }
+  empty.style.display='none'; inner.style.display='';
+  tbody.innerHTML=list.map((c,i)=>{
+    const realIdx=store.contas.indexOf(c);
+    const rowCls='row-'+c.status;
+    const statusChip=c.status==='encerrada'
+      ?`<span class="chip chip-red">${t('status-encerrada')}</span>`
+      :`<span class="chip chip-green">${t('status-ativa')}</span>`;
+    return `<tr class="${rowCls}">
+      <td>${countryFlag(c.pais)} ${c.pais}</td>
+      <td class="sub">${c.agente}</td>
+      <td>${c.banco}</td>
+      <td class="mono">${c.sigla}</td>
+      <td class="mono">${c.numeroConta||'—'}</td>
+      <td class="mono">${c.agencia||'—'}</td>
+      <td>${tipoChip(c.tipo)}</td>
+      <td>${tipoContaChip(c.tipoConta)}</td>
+      <td>${statusChip}</td>
+      <td><div class="actions-cell">
+        <button class="action-btn" onclick="openEditAccount(${realIdx})" title="${t('btn-edit-account')}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="action-btn del" onclick="deleteAccount(${realIdx})" title="Remover">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+        </button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function tipoChip(tipo){
+  const map={'T1':'chip-violet','T2':'chip-purple','Diário':'chip-teal','1 vez ao mês':'chip-amber'};
+  return `<span class="chip ${map[tipo]||'chip-grey'}">${tipo}</span>`;
+}
+function tipoContaChip(tc){
+  const map={'Operacional':'chip-operacional','Administrativa':'chip-administrativa','BB Pix':'chip-bbpix'};
+  return tc?`<span class="chip ${map[tc]||'chip-grey'}">${tc}</span>`:'—';
+}
+
+// ─── CADASTRO ─────────────────────────────────────────────────────
+let cadastroType='';
+let _editCadIdx=-1;
+function openCadastroModal(type, editIdx=-1){
+  cadastroType=type;
+  _editCadIdx=editIdx;
+  const isEdit=editIdx>=0;
+  const titles={pais:t('cad-pais-modal'),agente:t('cad-agente-modal'),banco:t('cad-banco-modal')};
+  const phs={pais:'Ex: Bolivia',agente:'Ex: BO.Cowgromo',banco:'Ex: Banco do Brasil'};
+  document.getElementById('cad-modal-title').textContent=(isEdit?'Editar: ':'')+titles[type];
+  const body=document.getElementById('cad-modal-body');
+  const paisOpts=store.paises.map(p=>`<option value="${p}">${countryFlag(p)} ${p}</option>`).join('');
+  const respOpts=store.responsaveis.map(r=>`<option value="${r.email}">${r.nome} [${r.sigla||'?'}]</option>`).join('');
+  if(type==='pais'||type==='banco'){
+    const currentVal=isEdit?(type==='pais'?store.paises[editIdx]:store.bancos[editIdx]):'';
+    body.innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="cad-nome" placeholder="${phs[type]}" value="${currentVal}"></div>`;
+  } else {
+    const ag=isEdit?store.agentes[editIdx]:{};
+    body.innerHTML=`
+      <div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="cad-nome" placeholder="${phs[type]}" value="${ag.nome||''}"></div>
+      <div class="form-field"><label class="form-label">${t('lbl-pais-vinculo')}<span class="req">*</span></label><select class="form-select" id="cad-pais-vinculo"><option value="">${t('sel-select')}</option>${paisOpts}</select></div>
+      <div class="form-field"><label class="form-label">Responsável</label><select class="form-select" id="cad-responsavel"><option value="">Nenhum</option>${respOpts}</select></div>`;
+    if(ag.pais) setTimeout(()=>{const s=document.getElementById('cad-pais-vinculo');if(s)s.value=ag.pais;},0);
+    if(ag.responsavel) setTimeout(()=>{const s=document.getElementById('cad-responsavel');if(s)s.value=ag.responsavel;},0);
+  }
+  document.getElementById('cad-submit').onclick=submitCadastro;
+  openModal('modal-cadastro');
+}
+function submitCadastro(){
+  const req=(cadastroType==='pais'||cadastroType==='banco')?['cad-nome']:['cad-nome','cad-pais-vinculo'];
+  if(!validate(req)) return;
+  const nome=document.getElementById('cad-nome').value.trim();
+  const isEdit=_editCadIdx>=0;
+  if(cadastroType==='pais'){
+    if(isEdit) store.paises[_editCadIdx]=nome;
+    else if(!store.paises.includes(nome)) store.paises.push(nome);
+  } else if(cadastroType==='banco'){
+    if(isEdit) store.bancos[_editCadIdx]=nome;
+    else if(!store.bancos.includes(nome)) store.bancos.push(nome);
+  } else {
+    const pais=document.getElementById('cad-pais-vinculo').value;
+    const responsavel=document.getElementById('cad-responsavel')?.value||'';
+    if(isEdit){ store.agentes[_editCadIdx]={nome,pais,responsavel}; logAudit('cadastro','edit-agente',{nome,pais}); }
+    else{ store.agentes.push({nome,pais,responsavel}); logAudit('cadastro','add-agente',{nome,pais,responsavel}); }
+  }
+  closeModal('modal-cadastro');
+  saveStore();
+  renderCadastro(cadastroType);
+  updateCounts();
+}
+function deleteCadastro(type,idx){
+  if(type==='pais') store.paises.splice(idx,1);
+  else if(type==='agente') store.agentes.splice(idx,1);
+  else store.bancos.splice(idx,1);
+  logAudit('cadastro','delete-'+type,{idx});
+  saveStore();
+  renderCadastro(type); updateCounts();
+}
+const trashIcon=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>`;
+function renderCadastro(type){
+  if(type==='pais'){
+    const e=document.getElementById('pais-empty'),i=document.getElementById('pais-table-inner'),b=document.getElementById('pais-tbody');
+    if(!store.paises.length){e.style.display='';i.style.display='none';return;} e.style.display='none';i.style.display='';
+    b.innerHTML=store.paises.map((p,i)=>`<tr><td>${countryFlag(p)} ${p}</td><td><button class="action-btn del" onclick="deleteCadastro('pais',${i})">${trashIcon}</button></td></tr>`).join('');
+  } else if(type==='agente'){
+    const e=document.getElementById('agente-empty'),i=document.getElementById('agente-table-inner'),b=document.getElementById('agente-tbody');
+    if(!store.agentes.length){e.style.display='';i.style.display='none';return;} e.style.display='none';i.style.display='';
+    b.innerHTML=store.agentes.map((a,ai)=>{
+      const resp=store.responsaveis.find(r=>r.email===a.responsavel);
+      const respCell=resp?`<span style="font-size:12px;color:var(--e-text)">${resp.nome} <span style="font-family:monospace;background:var(--e-ghost);padding:1px 5px;border-radius:3px;font-weight:700;color:var(--e-mid)">${resp.sigla||''}</span></span>`:`<span style="color:var(--e-muted);font-size:12px">—</span>`;
+      return `<tr><td>${a.nome}</td><td><span class="pais-tag">${countryFlag(a.pais)} ${a.pais}</span></td><td>${respCell}</td><td><div class="actions-cell"><button class="action-btn" onclick="openCadastroModal('agente',${ai})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteCadastro('agente',${ai})">${trashIcon}</button></div></td></tr>`;
+    }).join('');
+  } else {
+    const e=document.getElementById('banco-empty'),i=document.getElementById('banco-table-inner'),b=document.getElementById('banco-tbody');
+    if(!store.bancos.length){e.style.display='';i.style.display='none';return;} e.style.display='none';i.style.display='';
+    b.innerHTML=store.bancos.map((bk,i)=>`<tr><td>${bk}</td><td><button class="action-btn del" onclick="deleteCadastro('banco',${i})">${trashIcon}</button></td></tr>`).join('');
+  }
+}
+function isActiveDay(date, freq){
+  const d=date.getDate();
+  const last=new Date(date.getFullYear(),date.getMonth()+1,0).getDate();
+  if(freq==='Diário') return true;
+  if(freq==='T1') return d<=15;
+  if(freq==='T2') return d>15;
+  if(freq==='1 vez ao mês') return d===1;
+  return false;
+}
+function dayDotClass(freq){ return {T1:'active-t1',T2:'active-t2','Diário':'active-diario','1 vez ao mês':'active-once'}[freq]||''; }
+function buildCronoDates(){
+  const s=document.getElementById('crono-date-start');
+  const e=document.getElementById('crono-date-end');
+  if(!s||!e||!s.value||!e.value) return null;
+  const start=new Date(s.value+'T00:00:00');
+  const end=new Date(e.value+'T00:00:00');
+  if(end<start) return null;
+  const days=[];
+  const cur=new Date(start);
+  while(cur<=end){ days.push(new Date(cur)); cur.setDate(cur.getDate()+1); }
+  return days;
+}
+function initCronoFilters(){
+  const fp=document.getElementById('crono-f-pais');
+  const fa=document.getElementById('crono-f-agente');
+  const fb=document.getElementById('crono-f-banco');
+  if(!fp) return;
+  const pv=fp.value, av=fa.value, bv=fb.value;
+  fp.innerHTML=`<option value="">${t('crono-all-paises')}</option>`+[...new Set(store.contas.map(c=>c.pais))].map(p=>`<option value="${p}">${countryFlag(p)} ${p}</option>`).join('');
+  fa.innerHTML=`<option value="">${t('crono-all-agentes')}</option>`+[...new Set(store.contas.map(c=>c.agente))].map(a=>`<option value="${a}">${a}</option>`).join('');
+  fb.innerHTML=`<option value="">${t('crono-all-bancos')}</option>`+[...new Set(store.contas.map(c=>c.banco))].map(b=>`<option value="${b}">${b}</option>`).join('');
+  fp.value=pv; fa.value=av; fb.value=bv;
+}
+function renderCronogramaAccounts(){
+  const countEl=document.getElementById('crono-accounts-count');
+  const emptyEl=document.getElementById('crono-accounts-empty');
+  const calWrap=document.getElementById('crono-cal-wrap');
+  const tbl=document.getElementById('crono-cal-table');
+  if(!tbl) return;
+  initCronoFilters();
+  const fp=document.getElementById('crono-f-pais')?.value||'';
+  const fa=document.getElementById('crono-f-agente')?.value||'';
+  const fb=document.getElementById('crono-f-banco')?.value||'';
+  const ff=document.getElementById('crono-f-freq')?.value||'';
+  const days=buildCronoDates();
+  const list=store.contas.filter(c=>
+    (!fp||c.pais===fp)&&(!fa||c.agente===fa)&&(!fb||c.banco===fb)&&(!ff||c.tipo===ff)
+  );
+  if(countEl) countEl.textContent=list.length+' '+(list.length===1?t('count-conta'):t('count-contas'));
+  if(!list.length||!days){
+    emptyEl.style.display=''; calWrap.style.display='none'; return;
+  }
+  emptyEl.style.display='none'; calWrap.style.display='';
+  const wd=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const INFO_COLS=9;
+  const dayHeaders=days.map(d=>{
+    const isWk=d.getDay()===0||d.getDay()===6;
+    return `<th class="col-day${isWk?' weekend':''}">${String(d.getDate()).padStart(2,'0')}</th>`;
+  }).join('');
+  const wdHeaders=days.map(d=>{
+    const isWk=d.getDay()===0||d.getDay()===6;
+    return `<th class="col-day${isWk?' weekend':''}" style="font-size:9px;color:var(--e-muted);background:${isWk?'#faf5ff':'var(--e-ghost)'}">${wd[d.getDay()]}</th>`;
+  }).join('');
+  const colInfos=`<th class="col-info cal-sticky">${t('col-sigla')}</th><th class="col-info">${t('col-pais')}</th><th class="col-info">${t('col-agente')}</th><th class="col-info">Resp.</th><th class="col-info">${t('col-banco')}</th><th class="col-info">${t('col-num-conta')}</th><th class="col-info">${t('col-tipo')}</th><th class="col-info">${t('col-tipo-conta')}</th><th class="col-info">${t('col-status')}</th>`;
+  const emptyInfoCols='<th class="col-info cal-sticky" style="background:var(--e-ghost)"></th>'+'<th class="col-info" style="background:var(--e-ghost)"></th>'.repeat(INFO_COLS-1);
+  const fmtDate=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  tbl.innerHTML=`<thead><tr>${colInfos}${dayHeaders}</tr><tr>${emptyInfoCols}${wdHeaders}</tr></thead><tbody>${
+    list.map(c=>{
+      const contaKey=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
+      const agente=store.agentes.find(a=>a.nome===c.agente);
+      const resp=agente?.responsavel?store.responsaveis.find(r=>r.email===agente.responsavel):null;
+      const respCell=resp?`<span style="font-family:monospace;font-size:10px;font-weight:700;background:rgba(151,111,244,.1);color:var(--e-mid);padding:1px 5px;border-radius:3px">${resp.sigla}</span>`:'<span style="color:var(--e-muted);font-size:11px">—</span>';
+      const statusChip=c.status==='encerrada'?`<span class="chip chip-red">${t('status-encerrada')}</span>`:`<span class="chip chip-green">${t('status-ativa')}</span>`;
+      const dotCls=dayDotClass(c.tipo);
+      const cells=days.map(d=>{
+        const dateStr=fmtDate(d);
+        const active=isActiveDay(d,c.tipo);
+        const storeKey=`${contaKey}_${dateStr}`;
+        const entry=store.cronogramaData[storeKey];
+        if(entry){
+          const cfg={
+            concluido:{bg:'#dcfce7',color:'#15803d',lbl:entry.sigla},
+            sem_movimento:{bg:'#ede9fe',color:'#5b21b6',lbl:entry.sigla+' s/m'},
+            sem_acesso:{bg:'#fef2f2',color:'#dc2626',lbl:entry.sigla+' s/a'},
+          }[entry.status]||{bg:'#f3f4f6',color:'#6b7280',lbl:entry.sigla};
+          return `<td class="day-cell" onclick="onDayCellClick(event,'${contaKey}','${dateStr}',${active})" style="cursor:pointer;padding:2px 1px">
+            <div class="day-filled" style="background:${cfg.bg};color:${cfg.color}">${cfg.lbl}</div></td>`;
+        } else if(active){
+          return `<td class="day-cell" onclick="onDayCellClick(event,'${contaKey}','${dateStr}',${active})" style="cursor:pointer">
+            <div class="day-dot ${dotCls}" style="opacity:.55;font-size:8px">·</div></td>`;
+        } else {
+          return `<td class="day-cell" onclick="onDayCellClick(event,'${contaKey}','${dateStr}',false)" style="cursor:pointer">
+            <div class="day-dot inactive"></div></td>`;
+        }
+      }).join('');
+      return `<tr class="row-${c.status}"><td class="cal-sticky" style="font-family:ui-monospace,monospace;font-size:12px">${c.sigla}</td><td>${countryFlag(c.pais)} ${c.pais}</td><td class="sub">${c.agente}</td><td>${respCell}</td><td>${c.banco}</td><td class="mono">${c.numeroConta||'—'}</td><td>${tipoChip(c.tipo)}</td><td>${tipoContaChip(c.tipoConta)}</td><td>${statusChip}</td>${cells}</tr>`;
+    }).join('')
+  }</tbody>`;
+}
+function initCronoDates(){
+  const now=new Date();
+  const y=now.getFullYear(), m=now.getMonth();
+  const pad=n=>String(n).padStart(2,'0');
+  const s=document.getElementById('crono-date-start');
+  const e=document.getElementById('crono-date-end');
+  if(s&&!s.value) s.value=`${y}-${pad(m+1)}-01`;
+  if(e&&!e.value){ const last=new Date(y,m+1,0); e.value=`${y}-${pad(m+1)}-${pad(last.getDate())}`; }
+}
+// ─── ACESSOS ─────────────────────────────────────────────────────
+const ADMIN_EMAIL='caique.silva@eroninternational.com';
+function isAdmin(){ return (window._loggedEmail||'')=== ADMIN_EMAIL; }
+let _editAcessoIdx=-1;
+function openAcessoModal(){
+  if(!isAdmin()){ alert(t('acessos-no-perm-sub')); return; }
+  _editAcessoIdx=-1;
+  document.getElementById('acesso-modal-title').textContent='Adicionar acesso';
+  document.getElementById('acesso-nome').value='';
+  document.getElementById('acesso-email').value='';
+  document.getElementById('acesso-email-field').style.display='';
+  document.getElementById('acesso-email').readOnly=false;
+  document.getElementById('acesso-sigla').value='';
+  document.getElementById('acesso-pwd').value='';
+  document.getElementById('acesso-pwd-section').style.display='';
+  document.getElementById('acesso-submit-btn').textContent='Adicionar';
+  openModal('modal-acesso');
+}
+function editAcesso(idx){
+  if(!isAdmin()) return;
+  _editAcessoIdx=idx;
+  const r=store.responsaveis[idx];
+  document.getElementById('acesso-modal-title').textContent='Editar acesso — '+r.nome;
+  document.getElementById('acesso-nome').value=r.nome;
+  document.getElementById('acesso-email').value=r.email;
+  document.getElementById('acesso-email-field').style.display='';
+  document.getElementById('acesso-email').readOnly=true;
+  document.getElementById('acesso-sigla').value=r.sigla||'';
+  document.getElementById('acesso-pwd-section').style.display='none';
+  document.getElementById('acesso-submit-btn').textContent='Salvar alterações';
+  openModal('modal-acesso');
+}
+async function submitAcesso(){
+  if(_editAcessoIdx>=0){
+    // Modo edição — só nome e sigla
+    if(!validate(['acesso-nome','acesso-sigla'])) return;
+    const nome=document.getElementById('acesso-nome').value.trim();
+    const sigla=document.getElementById('acesso-sigla').value.trim().toUpperCase();
+    const r=store.responsaveis[_editAcessoIdx];
+    r.nome=nome; r.sigla=sigla;
+    logAudit('acessos','edit-user',{email:r.email,nome,sigla});
+  } else {
+    // Modo adição
+    if(!validate(['acesso-nome','acesso-email','acesso-sigla','acesso-pwd'])) return;
+    const nome=document.getElementById('acesso-nome').value.trim();
+    const email=document.getElementById('acesso-email').value.trim().toLowerCase();
+    const sigla=document.getElementById('acesso-sigla').value.trim().toUpperCase();
+    const pwd=document.getElementById('acesso-pwd').value;
+    if(!email.endsWith('@eroninternational.com')){alert('O email deve ser @eroninternational.com');return;}
+    if(pwd.length<6){alert('A senha deve ter pelo menos 6 caracteres.');return;}
+    const existing=store.responsaveis.find(r=>r.email===email);
+    if(existing){existing.nome=nome;existing.sigla=sigla;}
+    else store.responsaveis.push({nome,email,sigla});
+    store.credentials[email]={hash:await hashPwd(pwd),mustChange:true};
+    logAudit('acessos','add-user',{nome,email,sigla});
+  }
+  closeModal('modal-acesso');
+  saveStore();
+  renderAcessos();
+  updateCounts();
+}
+function deleteAcesso(idx){
+  if(!isAdmin()) return;
+  const r=store.responsaveis[idx];
+  if(r.email===ADMIN_EMAIL){alert('Não é possível remover o administrador.');return;}
+  logAudit('acessos','delete-user',{nome:r?.nome,email:r?.email});
+  store.responsaveis.splice(idx,1);
+  saveStore();
+  renderAcessos(); updateCounts();
+}
+function renderAcessos(){
+  const isAdm=isAdmin();
+  document.getElementById('acessos-admin-notice').style.display=isAdm?'none':'';
+  document.getElementById('acessos-content').style.display=isAdm?'':'none';
+  document.getElementById('btn-add-acesso').style.display=isAdm?'':'none';
+  const el=document.getElementById('acessos-count');
+  if(el) el.textContent=store.responsaveis.length+' acesso'+(store.responsaveis.length===1?'':'s');
+  const e=document.getElementById('acessos-empty');
+  const i=document.getElementById('acessos-table-inner');
+  const b=document.getElementById('acessos-tbody');
+  if(!store.responsaveis.length){e.style.display='';i.style.display='none';return;}
+  e.style.display='none';i.style.display='';
+  b.innerHTML=store.responsaveis.map((r,idx)=>{
+    const cred=store.credentials[r.email];
+    const credBadge=!cred?`<span class="cred-badge cred-none">Sem senha</span>`:
+      cred.mustChange?`<span class="cred-badge cred-pending">⏳ Aguardando troca</span>`:
+      `<span class="cred-badge cred-active">✓ Ativo</span>`;
+    const isAdminUser=r.email===ADMIN_EMAIL;
+    const actions=isAdm?`<div class="actions-cell">
+      <button class="action-btn" onclick="editAcesso(${idx})" title="Editar" style="font-size:10px;padding:4px 8px">✏️</button>
+      <button class="action-btn" onclick="openPermissoes(${idx})" title="Permissões" style="font-size:10px;padding:4px 8px">🔐</button>
+      <button class="action-btn" onclick="openResetPassword(${idx})" title="Redefinir senha" style="font-size:10px;padding:4px 8px">🔑</button>
+      ${!isAdminUser?`<button class="action-btn del" onclick="deleteAcesso(${idx})">${trashIcon}</button>`:''}
+    </div>`:'';
+    return `<tr>
+      <td>${r.nome}${isAdminUser?' <span style="font-size:10px;color:var(--e-purple)">ADM</span>':''}</td>
+      <td class="sub">${r.email}</td>
+      <td><span style="font-family:ui-monospace,monospace;font-size:12px;font-weight:700;background:var(--e-ghost);padding:2px 7px;border-radius:4px;color:var(--e-mid)">${r.sigla||'—'}</span></td>
+      <td>${credBadge}</td>
+      <td>${actions}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── PERMISSÕES ──────────────────────────────────────────────────
+const MENU_PERMS_TREE=[
+  {id:'gerencial',label:'Gerencial',children:[{id:'gerencial-accounts',label:'Accounts'},{id:'gerencial-custos',label:'Custos'},{id:'gerencial-conciliacoes',label:'Conciliações'}]},
+  {id:'cronograma',label:'Cronograma',children:[{id:'cronograma-accounts',label:'Accounts'},{id:'cronograma-custos',label:'Custos'},{id:'cronograma-conciliacoes',label:'Conciliações'}]},
+  {id:'cadastro',label:'Cadastro',children:[{id:'cadastro-pais',label:'País'},{id:'cadastro-agente',label:'Agente'},{id:'cadastro-banco',label:'Banco'},{id:'cadastro-acessos',label:'Acessos'}]},
+];
+let _permEditEmail='';
+function openPermissoes(idx){
+  if(!isAdmin()) return;
+  const user=store.responsaveis[idx];
+  if(!user) return;
+  _permEditEmail=user.email;
+  document.getElementById('perm-modal-user').textContent=user.nome+' — '+user.email;
+  if(!store.permissions[user.email]){
+    store.permissions[user.email]={};
+    MENU_PERMS_TREE.forEach(s=>s.children.forEach(item=>{store.permissions[user.email][item.id]={view:true,edit:false};}));
+  }
+  const perms=store.permissions[user.email];
+  document.getElementById('perm-modal-body').innerHTML=MENU_PERMS_TREE.map(section=>`
+    <div style="margin-bottom:14px">
+      <div style="font-size:10px;font-weight:700;color:var(--e-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--e-pale)">${section.label}</div>
+      ${section.children.map(item=>{
+        const p=perms[item.id]||{view:false,edit:false};
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--e-ghost)">
+          <span style="font-size:13px;color:var(--e-text)">${item.label}</span>
+          <div style="display:flex;gap:6px">
+            <button class="perm-btn${p.view?' on-view':''}" onclick="togglePerm('${item.id}','view')" id="pbt-${item.id}-view">Visualizar</button>
+            <button class="perm-btn${p.edit?' on-edit':''}" onclick="togglePerm('${item.id}','edit')" id="pbt-${item.id}-edit">Editar</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+  openModal('modal-permissoes');
+}
+function togglePerm(itemId,type){
+  if(!store.permissions[_permEditEmail]) return;
+  if(!store.permissions[_permEditEmail][itemId]) store.permissions[_permEditEmail][itemId]={view:false,edit:false};
+  const cur=store.permissions[_permEditEmail][itemId];
+  cur[type]=!cur[type];
+  const btn=document.getElementById(`pbt-${itemId}-${type}`);
+  if(btn){
+    if(type==='view'){btn.classList.toggle('on-view',cur.view);}
+    else{btn.classList.toggle('on-edit',cur.edit);}
+  }
+  logAudit('acessos','toggle-perm',{user:_permEditEmail,page:itemId,type,value:cur[type]});
+  saveStore();
+}
+
+// ─── AUDITORIA ───────────────────────────────────────────────────
+function logAudit(modulo,acao,detalhes){
+  const user=store.responsaveis.find(r=>r.email===window._loggedEmail);
+  store.auditLog.push({ts:new Date().toLocaleString('pt-BR'),userName:user?.nome||window._loggedEmail||'Sistema',userSigla:user?.sigla||'?',modulo,acao,detalhes:JSON.stringify(detalhes)});
+}
+function openHistorico(){
+  const tbody=document.getElementById('historico-tbody');
+  if(!store.auditLog.length){
+    tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--e-muted);padding:32px">Nenhuma ação registrada ainda.</td></tr>';
+  } else {
+    tbody.innerHTML=[...store.auditLog].reverse().map(e=>`<tr style="border-bottom:1px solid var(--e-pale)">
+      <td style="padding:9px 14px;font-size:11px;color:var(--e-muted);white-space:nowrap">${e.ts}</td>
+      <td style="padding:9px 14px"><span style="font-weight:600;color:var(--e-text);font-size:13px">${e.userName}</span> <span style="font-size:11px;color:var(--e-muted);background:var(--e-ghost);padding:1px 5px;border-radius:3px;font-family:monospace">${e.userSigla}</span></td>
+      <td style="padding:9px 14px"><span class="pais-tag">${e.modulo}</span></td>
+      <td style="padding:9px 14px;font-size:12px;color:var(--e-sub)">${e.acao}: <span style="color:var(--e-text)">${e.detalhes}</span></td>
+    </tr>`).join('');
+  }
+  openModal('modal-historico');
+}
+// ─── CALENDÁRIO INTERATIVO ────────────────────────────────────────
+function closeCalDropdown(){ document.querySelectorAll('.cal-dropdown').forEach(d=>d.remove()); }
+document.addEventListener('click', closeCalDropdown);
+function onDayCellClick(event, contaKey, dateStr, active){
+  closeCalDropdown();
+  const user=store.responsaveis.find(r=>r.email===window._loggedEmail);
+  const sigla=user?.sigla||(user?.nome?.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase())||'??';
+  const storeKey=`${contaKey}_${dateStr}`;
+  const existing=store.cronogramaData[storeKey];
+  const cell=event.currentTarget;
+  const rect=cell.getBoundingClientRect();
+  const dd=document.createElement('div');
+  dd.className='cal-dropdown';
+  const left=Math.min(rect.left, window.innerWidth-180);
+  const top=rect.bottom+4>window.innerHeight-140?rect.top-144:rect.bottom+4;
+  dd.style.cssText=`left:${left}px;top:${top}px;`;
+  const opts=[];
+  if(active){
+    opts.push({status:'concluido',label:`Concluído`,sub:sigla,bg:'#dcfce7',color:'#15803d'});
+    opts.push({status:'sem_movimento',label:`Sem movimento`,sub:sigla+' s/m',bg:'#ede9fe',color:'#5b21b6'});
+    opts.push({status:'sem_acesso',label:`Sem acesso`,sub:sigla+' s/a',bg:'#fef2f2',color:'#dc2626'});
+  }
+  if(existing) opts.push({status:'clear',label:'Limpar',sub:'',bg:'transparent',color:'#6b7280'});
+  if(!opts.length){ dd.remove(); return; }
+  dd.innerHTML=opts.map(o=>`<div class="cal-dd-item" onclick="setCronoDayStatus('${contaKey}','${dateStr}','${o.status}',event)" style="color:${o.color};background:${o.bg}">
+    <div style="font-weight:600">${o.label}</div>${o.sub?`<div style="font-size:10px;opacity:.8;font-family:monospace">${o.sub}</div>`:''}
+  </div>`).join('');
+  document.body.appendChild(dd);
+  event.stopPropagation();
+}
+function setCronoDayStatus(contaKey, dateStr, status, event){
+  event.stopPropagation();
+  const storeKey=`${contaKey}_${dateStr}`;
+  const user=store.responsaveis.find(r=>r.email===window._loggedEmail);
+  const sigla=user?.sigla||(user?.nome?.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase())||'??';
+  if(status==='clear'){
+    delete store.cronogramaData[storeKey];
+    logAudit('cronograma','limpar',{conta:contaKey,data:dateStr});
+  } else {
+    store.cronogramaData[storeKey]={status,sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')};
+    logAudit('cronograma',status,{conta:contaKey,data:dateStr,sigla});
+  }
+  closeCalDropdown();
+  saveStore();
+  renderCronogramaAccounts();
+}
+
+// ─── PERSISTÊNCIA localStorage ────────────────────────────────────
+const STORE_KEY='eron-foc-v1';
+function saveStore(){
+  try{ localStorage.setItem(STORE_KEY,JSON.stringify({
+    paises:store.paises,agentes:store.agentes,bancos:store.bancos,
+    responsaveis:store.responsaveis,contas:store.contas,
+    cronogramaData:store.cronogramaData,auditLog:store.auditLog,
+    permissions:store.permissions,credentials:store.credentials
+  })); } catch(e){}
+}
+function loadStore(){
+  try{
+    const raw=localStorage.getItem(STORE_KEY);
+    if(!raw) return;
+    const saved=JSON.parse(raw);
+    if(saved.paises) store.paises=saved.paises;
+    if(saved.agentes) store.agentes=saved.agentes;
+    if(saved.bancos) store.bancos=saved.bancos;
+    if(saved.responsaveis) store.responsaveis=saved.responsaveis;
+    if(saved.contas) store.contas=saved.contas;
+    if(saved.cronogramaData) store.cronogramaData=saved.cronogramaData;
+    if(saved.auditLog) store.auditLog=saved.auditLog;
+    if(saved.permissions) store.permissions=saved.permissions;
+    if(saved.credentials) store.credentials=saved.credentials;
+  } catch(e){}
+}
+loadStore();
+
+// ─── SENHAS ──────────────────────────────────────────────────────
+async function hashPwd(pwd){
+  try{
+    const data=new TextEncoder().encode(pwd+':eron-foc-2026');
+    const buf=await crypto.subtle.digest('SHA-256',data);
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }catch(e){
+    // Fallback para ambientes sem crypto.subtle
+    let h=0x811c9dc5; const s=pwd+':eron-foc-2026';
+    for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}
+    return h.toString(16);
+  }
+}
+function gerarSenhaAleatoria(){
+  const chars='ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#';
+  return Array.from({length:10},()=>chars[Math.floor(Math.random()*chars.length)]).join('');
+}
+function gerarSenhaInicial(){
+  const s=gerarSenhaAleatoria();
+  const el=document.getElementById('acesso-pwd');
+  if(el){el.value=s;el.type='text'; setTimeout(()=>el.type='password',2500);}
+  alert('Senha gerada: '+s+'\n\nAnote esta senha para entregar ao usuário.');
+}
+function gerarSenhaReset(){
+  const s=gerarSenhaAleatoria();
+  const el=document.getElementById('reset-pwd-input');
+  if(el){el.value=s;el.type='text'; setTimeout(()=>el.type='password',2500);}
+  alert('Senha gerada: '+s+'\n\nAnote esta senha para entregar ao usuário.');
+}
+function togglePwdVisibility(inputId,btn){
+  const el=document.getElementById(inputId);
+  if(!el) return;
+  const show=el.type==='password';
+  el.type=show?'text':'password';
+  btn.textContent=show?'🙈':'👁';
+}
+function checkPwdStrength(){
+  // Placeholder — pode expandir
+}
+
+// Inicializa credencial do admin na primeira carga
+async function initAdminCredentials(){
+  if(!store.credentials[ADMIN_EMAIL]){
+    store.credentials[ADMIN_EMAIL]={hash:await hashPwd('Eron@2026'),mustChange:true};
+    saveStore();
+  }
+}
+initAdminCredentials();
+
+// ─── AUTH ATUALIZADA ─────────────────────────────────────────────
+async function tryLogin(){
+  const email=document.getElementById('login-email-input').value.trim().toLowerCase();
+  const pwd=document.getElementById('login-pwd-input').value;
+  const errEl=document.getElementById('login-err');
+  if(!email){errEl.style.display='';errEl.textContent='Informe seu email.';return;}
+  if(!email.endsWith('@eroninternational.com')){errEl.style.display='';errEl.textContent='Somente contas @eroninternational.com.';return;}
+  const user=store.responsaveis.find(r=>r.email===email);
+  if(!user){errEl.style.display='';errEl.textContent='Usuário não cadastrado. Solicite acesso ao administrador.';return;}
+  const cred=store.credentials[email];
+  if(!cred){errEl.style.display='';errEl.textContent='Senha não configurada para este usuário. Contate o administrador.';return;}
+  const inputHash=await hashPwd(pwd);
+  if(inputHash!==cred.hash){errEl.style.display='';errEl.textContent='Senha incorreta.';return;}
+  errEl.style.display='none';
+  document.getElementById('account-picker').style.display='none';
+  if(cred.mustChange){
+    window._pendingLoginEmail=email;
+    document.getElementById('force-pwd-1').value='';
+    document.getElementById('force-pwd-2').value='';
+    document.getElementById('force-pwd-err').style.display='none';
+    openModal('modal-force-pwd');
+  } else {
+    selectAccount(email);
+  }
+}
+
+async function submitForcePwd(){
+  const p1=document.getElementById('force-pwd-1').value;
+  const p2=document.getElementById('force-pwd-2').value;
+  const errEl=document.getElementById('force-pwd-err');
+  if(p1.length<6){errEl.style.display='';errEl.textContent='A senha deve ter pelo menos 6 caracteres.';return;}
+  if(p1!==p2){errEl.style.display='';errEl.textContent='As senhas não coincidem.';return;}
+  const email=window._pendingLoginEmail;
+  store.credentials[email]={hash:await hashPwd(p1),mustChange:false};
+  saveStore();
+  closeModal('modal-force-pwd');
+  logAudit('auth','password-changed-first',{email});
+  selectAccount(email);
+}
+
+async function submitChangePwd(){
+  const curr=document.getElementById('change-pwd-current').value;
+  const p1=document.getElementById('change-pwd-new').value;
+  const p2=document.getElementById('change-pwd-confirm').value;
+  const errEl=document.getElementById('change-pwd-err');
+  const email=window._loggedEmail;
+  const cred=store.credentials[email];
+  if(!cred){errEl.style.display='';errEl.textContent='Erro: credenciais não encontradas.';return;}
+  const currHash=await hashPwd(curr);
+  if(currHash!==cred.hash){errEl.style.display='';errEl.textContent='Senha atual incorreta.';return;}
+  if(p1.length<6){errEl.style.display='';errEl.textContent='A nova senha deve ter pelo menos 6 caracteres.';return;}
+  if(p1!==p2){errEl.style.display='';errEl.textContent='As novas senhas não coincidem.';return;}
+  store.credentials[email]={hash:await hashPwd(p1),mustChange:false};
+  saveStore();
+  closeModal('modal-change-pwd');
+  logAudit('auth','password-changed',{email});
+  alert('Senha alterada com sucesso!');
+}
+
+function openChangePassword(){
+  document.getElementById('change-pwd-current').value='';
+  document.getElementById('change-pwd-new').value='';
+  document.getElementById('change-pwd-confirm').value='';
+  document.getElementById('change-pwd-err').style.display='none';
+  openModal('modal-change-pwd');
+}
+
+let _resetPwdIdx=-1;
+function openResetPassword(idx){
+  if(!isAdmin()) return;
+  _resetPwdIdx=idx;
+  const user=store.responsaveis[idx];
+  document.getElementById('reset-pwd-user-name').textContent=user?.nome||'';
+  document.getElementById('reset-pwd-input').value='';
+  openModal('modal-reset-pwd');
+}
+async function submitResetPwd(){
+  const pwd=document.getElementById('reset-pwd-input').value;
+  if(pwd.length<6){alert('A senha deve ter pelo menos 6 caracteres.');return;}
+  const user=store.responsaveis[_resetPwdIdx];
+  if(!user) return;
+  store.credentials[user.email]={hash:await hashPwd(pwd),mustChange:true};
+  saveStore();
+  closeModal('modal-reset-pwd');
+  logAudit('acessos','password-reset',{email:user.email,by:window._loggedEmail});
+  renderAcessos();
+}
+
+function renderAll(){ renderAccountsTable(); initCronoDates(); renderCronogramaAccounts(); renderCadastro('pais'); renderCadastro('agente'); renderCadastro('banco'); renderAcessos(); }
+
+// ─── COUNTS ───────────────────────────────────────────────────────
+function updateCounts(){
+  const n=(n,s,p)=>n===1?`${n} ${s}`:`${n} ${p}`;
+  const el=(id,txt)=>{const e=document.getElementById(id);if(e)e.textContent=txt;};
+  el('accounts-count',n(store.contas.length,t('count-conta'),t('count-contas')));
+  el('pais-count',n(store.paises.length,t('count-pais'),t('count-paises')));
+  el('agente-count',n(store.agentes.length,t('count-agente'),t('count-agentes')));
+  el('banco-count',n(store.bancos.length,t('count-banco'),t('count-bancos')));
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────
+renderAll();
+updateCounts();
+applyTranslations();
+</script>
