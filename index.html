@@ -559,6 +559,10 @@
           <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
           Baixar CSV
         </button>
+        <button class="btn-bulk-apply" id="btn-clear-filters" onclick="clearCronoFilters()" style="background:var(--e-ghost);color:var(--e-muted);border-color:var(--e-pale);display:none" title="Limpar todos os filtros">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          Limpar filtros
+        </button>
       </div>
       <div class="crono-d1-panel" id="crono-d1-panel">
         <div class="d1-stat-card d1-stat-concluida"><div class="d1-stat-num" id="d1-count-concluida">—</div><div class="d1-stat-lbl">Concluída</div></div>
@@ -1698,6 +1702,7 @@ function renderCronogramaAccounts(){
   const bulkBtn=document.getElementById('btn-bulk-apply');
   if(bulkBtn) bulkBtn.style.display=canEdit()?'flex':'none';
   initCronoFilters();
+  _updateClearBtn();
   const fp=document.getElementById('crono-f-pais')?.value||'';
   const fa=document.getElementById('crono-f-agente')?.value||'';
   const fb=document.getElementById('crono-f-banco')?.value||'';
@@ -1785,6 +1790,31 @@ function renderCronogramaAccounts(){
       return `<tr class="row-${c.status}"><td class="cal-sticky" style="font-family:ui-monospace,monospace;font-size:12px">${c.sigla}</td><td>${countryFlag(c.pais)} ${c.pais}</td><td class="sub">${c.agente}</td><td>${respCell}</td><td>${c.banco}</td><td class="mono">${c.numeroConta||'—'}</td><td>${tipoChip(c.tipo)}</td><td>${tipoContaChip(c.tipoConta)}</td><td>${statusChip}</td>${d1Cell}${cells}</tr>`;
     }).join('')
   }</tbody>`;
+}
+function _hasCronoFilters(){
+  const fp=document.getElementById('crono-f-pais')?.value||'';
+  const fa=document.getElementById('crono-f-agente')?.value||'';
+  const fb=document.getElementById('crono-f-banco')?.value||'';
+  const hasFreq=document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active').length>0;
+  const hasD1=document.querySelectorAll('#crono-d1-filter .d1-toggle.active').length>0;
+  const hasSearch=(document.getElementById('crono-search')?.value||'').trim()!=='';
+  return !!(fp||fa||fb||hasFreq||hasD1||hasSearch);
+}
+function _updateClearBtn(){
+  const btn=document.getElementById('btn-clear-filters');
+  if(btn) btn.style.display=_hasCronoFilters()?'flex':'none';
+}
+function clearCronoFilters(){
+  const sel=id=>document.getElementById(id);
+  if(sel('crono-f-pais')) sel('crono-f-pais').value='';
+  if(sel('crono-f-agente')) sel('crono-f-agente').value='';
+  if(sel('crono-f-banco')) sel('crono-f-banco').value='';
+  document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active').forEach(b=>b.classList.remove('active'));
+  _updateFreqLabel();
+  document.querySelectorAll('#crono-d1-filter .d1-toggle.active').forEach(b=>b.classList.remove('active'));
+  _updateD1Label();
+  if(sel('crono-search')){sel('crono-search').value='';updateCronoSearchClear();}
+  renderCronogramaAccounts();
 }
 function toggleFreqDropdown(e){
   e.stopPropagation();
