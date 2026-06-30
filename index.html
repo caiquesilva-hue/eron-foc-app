@@ -199,6 +199,29 @@
   .crono-filters select,.crono-filters input[type=date]{border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;color:var(--e-text);background:#fff;outline:none;transition:border-color .15s;}
   .crono-filters select{min-width:140px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239898c3' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
   .crono-filters input[type=date]{min-width:130px;}
+  .freq-toggle-group{display:flex;gap:4px;align-items:center;flex-wrap:wrap;}
+  .freq-toggle{border:1px solid var(--e-pale);border-radius:8px;padding:6px 11px;font-size:12px;font-weight:500;background:#fff;color:var(--e-muted);cursor:pointer;transition:all .15s;white-space:nowrap;font-family:inherit;}
+  .freq-toggle:hover{border-color:var(--e-purple);color:var(--e-purple);}
+  .freq-toggle.active.ft-t1{border-color:var(--e-violet);background:rgba(111,115,244,.12);color:var(--e-violet);}
+  .freq-toggle.active.ft-t2{border-color:var(--e-purple);background:rgba(151,111,244,.12);color:var(--e-mid);}
+  .freq-toggle.active.ft-diario{border-color:#0f766e;background:#e0fdf4;color:#0f766e;}
+  .freq-toggle.active.ft-mensal{border-color:#92400e;background:#fef9c3;color:#92400e;}
+  .d1-status-filter{display:flex;gap:6px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+  .d1-status-filter-label{font-size:12px;color:var(--e-muted);font-weight:600;margin-right:2px;}
+  .d1-toggle{border:1px solid var(--e-pale);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:500;background:#fff;color:var(--e-muted);cursor:pointer;transition:all .15s;font-family:inherit;}
+  .d1-toggle:hover{opacity:.8;}
+  .d1-toggle.active.dt-concluida{border-color:#15803d;background:#dcfce7;color:#15803d;}
+  .d1-toggle.active.dt-sem-mov{border-color:#5b21b6;background:#ede9fe;color:#5b21b6;}
+  .d1-toggle.active.dt-sem-acesso{border-color:#dc2626;background:#fef2f2;color:#dc2626;}
+  .d1-toggle.active.dt-pendente{border-color:#d97706;background:#fef9c3;color:#d97706;}
+  .crono-d1-panel{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .d1-stat-card{background:#fff;border:1px solid var(--e-pale);border-radius:10px;padding:8px 14px;display:flex;align-items:center;gap:8px;}
+  .d1-stat-num{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;}
+  .d1-stat-lbl{font-size:11px;color:var(--e-muted);font-weight:500;}
+  .d1-stat-concluida .d1-stat-num{color:#15803d;}
+  .d1-stat-sem-mov .d1-stat-num{color:#5b21b6;}
+  .d1-stat-sem-acesso .d1-stat-num{color:#dc2626;}
+  .d1-stat-pendente .d1-stat-num{color:#d97706;}
   .crono-filters select:focus,.crono-filters input[type=date]:focus{border-color:var(--e-purple);}
   .crono-sep{color:var(--e-muted);font-size:13px;flex-shrink:0;padding:0 2px;}
   .cal-wrap{background:#fff;border:1px solid var(--e-pale);border-radius:12px;overflow:hidden;}
@@ -501,13 +524,12 @@
         <select id="crono-f-pais" onchange="renderCronogramaAccounts()"></select>
         <select id="crono-f-agente" onchange="renderCronogramaAccounts()"></select>
         <select id="crono-f-banco" onchange="renderCronogramaAccounts()"></select>
-        <select id="crono-f-freq" onchange="renderCronogramaAccounts()">
-          <option value="" data-i18n="crono-all-freq">Todas as freq.</option>
-          <option value="T1">T1</option>
-          <option value="T2">T2</option>
-          <option value="Diário">Diário</option>
-          <option value="1 vez ao mês">1 vez ao mês</option>
-        </select>
+        <div class="freq-toggle-group" id="crono-f-freq-wrap">
+          <button class="freq-toggle ft-t1" data-freq="T1" onclick="toggleFreqFilter(this)">T1</button>
+          <button class="freq-toggle ft-t2" data-freq="T2" onclick="toggleFreqFilter(this)">T2</button>
+          <button class="freq-toggle ft-diario" data-freq="Diário" onclick="toggleFreqFilter(this)">Diário</button>
+          <button class="freq-toggle ft-mensal" data-freq="1 vez ao mês" onclick="toggleFreqFilter(this)">1×/mês</button>
+        </div>
         <span class="crono-sep">De</span>
         <input type="date" id="crono-date-start" onchange="renderCronogramaAccounts()">
         <span class="crono-sep">→</span>
@@ -539,6 +561,19 @@
             <div class="sh-row"><code>pais:Peru banco:BCP</code><span>combine múltiplos operadores</span></div>
           </div>
         </div>
+      </div>
+      <div class="d1-status-filter" id="crono-d1-filter">
+        <span class="d1-status-filter-label">D-1:</span>
+        <button class="d1-toggle dt-concluida" data-d1="concluido" onclick="toggleD1Filter(this)">Concluída</button>
+        <button class="d1-toggle dt-sem-mov" data-d1="sem_movimento" onclick="toggleD1Filter(this)">Sem Movimento</button>
+        <button class="d1-toggle dt-sem-acesso" data-d1="sem_acesso" onclick="toggleD1Filter(this)">Sem Acesso</button>
+        <button class="d1-toggle dt-pendente" data-d1="pendente" onclick="toggleD1Filter(this)">Pendente</button>
+      </div>
+      <div class="crono-d1-panel" id="crono-d1-panel">
+        <div class="d1-stat-card d1-stat-concluida"><div class="d1-stat-num" id="d1-count-concluida">—</div><div class="d1-stat-lbl">Concluída</div></div>
+        <div class="d1-stat-card d1-stat-sem-mov"><div class="d1-stat-num" id="d1-count-sem-mov">—</div><div class="d1-stat-lbl">Sem Movimento</div></div>
+        <div class="d1-stat-card d1-stat-sem-acesso"><div class="d1-stat-num" id="d1-count-sem-acesso">—</div><div class="d1-stat-lbl">Sem Acesso</div></div>
+        <div class="d1-stat-card d1-stat-pendente"><div class="d1-stat-num" id="d1-count-pendente">—</div><div class="d1-stat-lbl">Pendente</div></div>
       </div>
       <div id="crono-accounts-wrap">
         <div id="crono-accounts-empty" class="empty-state" style="display:none">
@@ -1648,21 +1683,44 @@ function renderCronogramaAccounts(){
   const fp=document.getElementById('crono-f-pais')?.value||'';
   const fa=document.getElementById('crono-f-agente')?.value||'';
   const fb=document.getElementById('crono-f-banco')?.value||'';
-  const ff=document.getElementById('crono-f-freq')?.value||'';
+  const activeFreqs=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')].map(b=>b.dataset.freq);
+  const activeD1=[...document.querySelectorAll('#crono-d1-filter .d1-toggle.active')].map(b=>b.dataset.d1);
   const days=buildCronoDates();
   const searchQ=document.getElementById('crono-search')?.value||'';
   const searchFilters=parseCronoSearch(searchQ);
-  const list=store.contas.filter(c=>
-    (!fp||c.pais===fp)&&(!fa||c.agente===fa)&&(!fb||c.banco===fb)&&(!ff||c.tipo===ff)&&
+  const _fmtD=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const _nowD=new Date();
+  const _d1obj=new Date(_nowD.getFullYear(),_nowD.getMonth(),_nowD.getDate()-1);
+  const d1Str=_fmtD(_d1obj);
+  const _getD1s=(ck,c)=>{
+    const e=store.cronogramaData[`${ck}_${d1Str}`];
+    if(e) return e.status;
+    if(isActiveDay(_d1obj,c.tipo)) return 'pendente';
+    return null;
+  };
+  const listBase=store.contas.filter(c=>
+    (!fp||c.pais===fp)&&(!fa||c.agente===fa)&&(!fb||c.banco===fb)&&
+    (!activeFreqs.length||activeFreqs.includes(c.tipo))&&
     (!searchFilters||matchesCronoSearch(c,searchFilters))
   );
+  const d1Map={};
+  listBase.forEach(c=>{const ck=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');d1Map[ck]=_getD1s(ck,c);});
+  const d1C={concluido:0,sem_movimento:0,sem_acesso:0,pendente:0};
+  Object.values(d1Map).forEach(s=>{if(s&&Object.prototype.hasOwnProperty.call(d1C,s))d1C[s]++;});
+  const _upd=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  _upd('d1-count-concluida',d1C.concluido);_upd('d1-count-sem-mov',d1C.sem_movimento);
+  _upd('d1-count-sem-acesso',d1C.sem_acesso);_upd('d1-count-pendente',d1C.pendente);
+  const list=activeD1.length?listBase.filter(c=>{
+    const ck=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
+    return activeD1.includes(d1Map[ck]);
+  }):listBase;
   if(countEl) countEl.textContent=list.length+' '+(list.length===1?t('count-conta'):t('count-contas'));
   if(!list.length||!days){
     emptyEl.style.display=''; calWrap.style.display='none'; return;
   }
   emptyEl.style.display='none'; calWrap.style.display='';
   const wd=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-  const INFO_COLS=9;
+  const INFO_COLS=10;
   const dayHeaders=days.map(d=>{
     const isWk=d.getDay()===0||d.getDay()===6;
     return `<th class="col-day${isWk?' weekend':''}">${String(d.getDate()).padStart(2,'0')}</th>`;
@@ -1671,7 +1729,7 @@ function renderCronogramaAccounts(){
     const isWk=d.getDay()===0||d.getDay()===6;
     return `<th class="col-day${isWk?' weekend':''}" style="font-size:9px;color:var(--e-muted);background:${isWk?'#faf5ff':'var(--e-ghost)'}">${wd[d.getDay()]}</th>`;
   }).join('');
-  const colInfos=`<th class="col-info cal-sticky">${t('col-sigla')}</th><th class="col-info">${t('col-pais')}</th><th class="col-info">${t('col-agente')}</th><th class="col-info">Resp.</th><th class="col-info">${t('col-banco')}</th><th class="col-info">${t('col-num-conta')}</th><th class="col-info">${t('col-tipo')}</th><th class="col-info">${t('col-tipo-conta')}</th><th class="col-info">${t('col-status')}</th>`;
+  const colInfos=`<th class="col-info cal-sticky">${t('col-sigla')}</th><th class="col-info">${t('col-pais')}</th><th class="col-info">${t('col-agente')}</th><th class="col-info">Resp.</th><th class="col-info">${t('col-banco')}</th><th class="col-info">${t('col-num-conta')}</th><th class="col-info">${t('col-tipo')}</th><th class="col-info">${t('col-tipo-conta')}</th><th class="col-info">${t('col-status')}</th><th class="col-info" style="white-space:nowrap">D-1</th>`;
   const emptyInfoCols='<th class="col-info cal-sticky" style="background:var(--e-ghost)"></th>'+'<th class="col-info" style="background:var(--e-ghost)"></th>'.repeat(INFO_COLS-1);
   const fmtDate=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   tbl.innerHTML=`<thead><tr>${colInfos}${dayHeaders}</tr><tr>${emptyInfoCols}${wdHeaders}</tr></thead><tbody>${
@@ -1682,6 +1740,9 @@ function renderCronogramaAccounts(){
       const respCell=resp?`<span style="font-family:monospace;font-size:10px;font-weight:700;background:rgba(151,111,244,.1);color:var(--e-mid);padding:1px 5px;border-radius:3px">${resp.sigla}</span>`:'<span style="color:var(--e-muted);font-size:11px">—</span>';
       const statusChip=c.status==='encerrada'?`<span class="chip chip-red">${t('status-encerrada')}</span>`:`<span class="chip chip-green">${t('status-ativa')}</span>`;
       const dotCls=dayDotClass(c.tipo);
+      const _d1s=d1Map[contaKey];
+      const _d1chipHtml={concluido:'<span class="chip chip-green" style="font-size:10px">Concluída</span>',sem_movimento:'<span class="chip chip-purple" style="font-size:10px">Sem Mov.</span>',sem_acesso:'<span class="chip chip-red" style="font-size:10px">Sem Acesso</span>',pendente:'<span class="chip chip-amber" style="font-size:10px">Pendente</span>'}[_d1s]||'<span style="color:var(--e-muted);font-size:11px">—</span>';
+      const d1Cell=`<td style="white-space:nowrap;padding:4px 8px">${_d1chipHtml}</td>`;
       const cells=days.map(d=>{
         const dateStr=fmtDate(d);
         const active=isActiveDay(d,c.tipo);
@@ -1703,10 +1764,12 @@ function renderCronogramaAccounts(){
             <div class="day-dot inactive"></div></td>`;
         }
       }).join('');
-      return `<tr class="row-${c.status}"><td class="cal-sticky" style="font-family:ui-monospace,monospace;font-size:12px">${c.sigla}</td><td>${countryFlag(c.pais)} ${c.pais}</td><td class="sub">${c.agente}</td><td>${respCell}</td><td>${c.banco}</td><td class="mono">${c.numeroConta||'—'}</td><td>${tipoChip(c.tipo)}</td><td>${tipoContaChip(c.tipoConta)}</td><td>${statusChip}</td>${cells}</tr>`;
+      return `<tr class="row-${c.status}"><td class="cal-sticky" style="font-family:ui-monospace,monospace;font-size:12px">${c.sigla}</td><td>${countryFlag(c.pais)} ${c.pais}</td><td class="sub">${c.agente}</td><td>${respCell}</td><td>${c.banco}</td><td class="mono">${c.numeroConta||'—'}</td><td>${tipoChip(c.tipo)}</td><td>${tipoContaChip(c.tipoConta)}</td><td>${statusChip}</td>${d1Cell}${cells}</tr>`;
     }).join('')
   }</tbody>`;
 }
+function toggleFreqFilter(btn){btn.classList.toggle('active');renderCronogramaAccounts();}
+function toggleD1Filter(btn){btn.classList.toggle('active');renderCronogramaAccounts();}
 function initCronoDates(){
   const now=new Date();
   const y=now.getFullYear(), m=now.getMonth();
