@@ -275,7 +275,24 @@
   .login-form-input:focus{border-color:var(--e-purple)!important;background:rgba(255,255,255,.12)!important;outline:none;}
 
   /* ROLE BADGES */
-  .bulk-opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1.5px solid #e5e7eb;cursor:pointer;transition:border-color .15s,background .15s;}
+  .crono-search-wrap{margin:0 0 10px;position:relative;}
+.crono-search-inner{display:flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #e0e2f0;border-radius:9px;padding:6px 10px;transition:border-color .15s;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.crono-search-inner:focus-within{border-color:var(--e-purple);box-shadow:0 0 0 3px rgba(151,111,244,.1);}
+.crono-search-icon{color:var(--e-muted);flex-shrink:0;}
+.crono-search-input{flex:1;border:none;outline:none;font-size:13px;color:var(--e-text);background:transparent;font-family:inherit;min-width:0;}
+.crono-search-input::placeholder{color:#b0b4c8;font-size:12px;}
+.crono-search-clear{background:none;border:none;cursor:pointer;color:var(--e-muted);font-size:16px;line-height:1;padding:0 2px;border-radius:4px;}
+.crono-search-clear:hover{color:var(--e-text);background:var(--e-ghost);}
+.crono-search-help-btn{background:none;border:1.5px solid #dde0f0;border-radius:50%;width:22px;height:22px;font-size:11px;font-weight:700;color:var(--e-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color .15s,color .15s;}
+.crono-search-help-btn:hover{border-color:var(--e-purple);color:var(--e-purple);}
+.crono-search-help{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#fff;border:1.5px solid #e0e2f0;border-radius:10px;padding:14px 16px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.1);}
+.sh-title{font-size:11px;font-weight:700;color:var(--e-muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;}
+.sh-grid{display:flex;flex-direction:column;gap:7px;}
+.sh-row{display:flex;align-items:baseline;gap:10px;font-size:12px;flex-wrap:wrap;}
+.sh-row code{font-family:ui-monospace,monospace;font-size:11.5px;background:#f1f1fe;color:var(--e-mid);padding:2px 6px;border-radius:4px;white-space:nowrap;}
+.sh-row span{color:var(--e-sub);}
+.sh-sep{color:var(--e-purple);font-weight:700;}
+.bulk-opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1.5px solid #e5e7eb;cursor:pointer;transition:border-color .15s,background .15s;}
 .bulk-opt:hover{background:var(--e-ghost);}
 .bulk-opt input[type=radio]{accent-color:var(--e-purple);width:14px;height:14px;flex-shrink:0;}
 .bulk-opt:has(input:checked){border-color:var(--e-purple);background:rgba(151,111,244,.06);}
@@ -499,6 +516,29 @@
           <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 16l2 2 4-4"/></svg>
           Aplicar em massa
         </button>
+      </div>
+      <div class="crono-search-wrap">
+        <div class="crono-search-inner">
+          <svg class="crono-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
+          <input type="text" id="crono-search" class="crono-search-input"
+            placeholder="Buscar contas... ex: in:BCP_3 PE.Onlinepro;BCP_1 PE.Onlinepro  |  pais:Peru  |  banco:BCP  |  agente:PE.Onlinepro  |  status:ativa  |  tipo:Diário"
+            oninput="renderCronogramaAccounts();updateCronoSearchClear()">
+          <button class="crono-search-clear" id="crono-search-clear" onclick="clearCronoSearch()" style="display:none" title="Limpar busca">×</button>
+          <button class="crono-search-help-btn" onclick="toggleSearchHelp(event)" title="Sintaxe de busca">?</button>
+        </div>
+        <div class="crono-search-help" id="crono-search-help" style="display:none">
+          <div class="sh-title">Operadores de busca</div>
+          <div class="sh-grid">
+            <div class="sh-row"><code>in:BCP_3 PE.Onlinepro<span class="sh-sep">;</span>BCP_1 PE.Onlinepro</code><span>inclui exatamente essas contas (separadas por <b>;</b>)</span></div>
+            <div class="sh-row"><code>pais:Peru</code><span>filtra por país</span></div>
+            <div class="sh-row"><code>agente:PE.Onlinepro</code><span>filtra por agente</span></div>
+            <div class="sh-row"><code>banco:BCP</code><span>filtra por banco</span></div>
+            <div class="sh-row"><code>status:ativa</code> <code>status:encerrada</code><span>filtra por status da conta</span></div>
+            <div class="sh-row"><code>tipo:Diário</code> <code>tipo:T1</code><span>filtra por frequência</span></div>
+            <div class="sh-row"><code>BCP Peru</code><span>texto livre — busca em todos os campos</span></div>
+            <div class="sh-row"><code>pais:Peru banco:BCP</code><span>combine múltiplos operadores</span></div>
+          </div>
+        </div>
       </div>
       <div id="crono-accounts-wrap">
         <div id="crono-accounts-empty" class="empty-state" style="display:none">
@@ -1607,8 +1647,11 @@ function renderCronogramaAccounts(){
   const fb=document.getElementById('crono-f-banco')?.value||'';
   const ff=document.getElementById('crono-f-freq')?.value||'';
   const days=buildCronoDates();
+  const searchQ=document.getElementById('crono-search')?.value||'';
+  const searchFilters=parseCronoSearch(searchQ);
   const list=store.contas.filter(c=>
-    (!fp||c.pais===fp)&&(!fa||c.agente===fa)&&(!fb||c.banco===fb)&&(!ff||c.tipo===ff)
+    (!fp||c.pais===fp)&&(!fa||c.agente===fa)&&(!fb||c.banco===fb)&&(!ff||c.tipo===ff)&&
+    (!searchFilters||matchesCronoSearch(c,searchFilters))
   );
   if(countEl) countEl.textContent=list.length+' '+(list.length===1?t('count-conta'):t('count-contas'));
   if(!list.length||!days){
@@ -1670,6 +1713,72 @@ function initCronoDates(){
   if(s&&!s.value) s.value=`${y}-${pad(m+1)}-01`;
   if(e&&!e.value){ const last=new Date(y,m+1,0); e.value=`${y}-${pad(m+1)}-${pad(last.getDate())}`; }
 }
+// ─── BUSCA AVANÇADA CRONOGRAMA ───────────────────────────────────
+function parseCronoSearch(q){
+  if(!q.trim()) return null;
+  const result={};
+  const OPERATORS=['in','pais','agente','banco','status','tipo','sigla','conta','freq'];
+  const pat=new RegExp('\\b('+OPERATORS.join('|')+'):','gi');
+  const tokens=q.split(pat).filter(s=>s!==undefined);
+  // tokens alternates: [freeText, opName, opValue, opName, opValue, ...]
+  let freeText=tokens[0].trim();
+  for(let i=1;i<tokens.length;i+=2){
+    const key=tokens[i].toLowerCase();
+    const val=(tokens[i+1]||'').trim();
+    result[key]=val;
+  }
+  if(freeText) result._text=freeText;
+  return result;
+}
+function matchesCronoSearch(conta,filters){
+  if(!filters) return true;
+  const norm=s=>(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  const siglaAgente=norm(conta.sigla+' '+conta.agente);
+  // in: — inclui exatamente as contas listadas (OR entre elas)
+  if(filters.in){
+    const vals=filters.in.split(';').map(v=>norm(v.trim())).filter(Boolean);
+    return vals.some(v=>siglaAgente===v||norm(conta.sigla)===v||siglaAgente.startsWith(v)||siglaAgente.includes(v));
+  }
+  // campo: filtros (AND)
+  if(filters.pais&&!norm(conta.pais).includes(norm(filters.pais))) return false;
+  if(filters.agente&&!norm(conta.agente).includes(norm(filters.agente))) return false;
+  if(filters.banco&&!norm(conta.banco).includes(norm(filters.banco))) return false;
+  if(filters.status&&!norm(conta.status).includes(norm(filters.status))) return false;
+  if(filters.tipo&&!norm(conta.tipo).includes(norm(filters.tipo))) return false;
+  if(filters.freq&&!norm(conta.tipo).includes(norm(filters.freq))) return false;
+  if(filters.sigla&&!norm(conta.sigla).includes(norm(filters.sigla))) return false;
+  if(filters.conta&&!(conta.numeroConta||'').toLowerCase().includes(filters.conta.toLowerCase())) return false;
+  // texto livre: busca em todos os campos
+  if(filters._text){
+    const words=filters._text.toLowerCase().split(/\s+/).filter(Boolean);
+    const haystack=norm([conta.sigla,conta.agente,conta.banco,conta.pais,conta.numeroConta,conta.tipo,conta.status].join(' '));
+    if(!words.every(w=>haystack.includes(norm(w)))) return false;
+  }
+  return true;
+}
+function updateCronoSearchClear(){
+  const val=document.getElementById('crono-search')?.value||'';
+  const btn=document.getElementById('crono-search-clear');
+  if(btn) btn.style.display=val?'':'none';
+}
+function clearCronoSearch(){
+  const el=document.getElementById('crono-search');
+  if(el){el.value='';el.focus();}
+  updateCronoSearchClear();
+  renderCronogramaAccounts();
+}
+function toggleSearchHelp(e){
+  e.stopPropagation();
+  const p=document.getElementById('crono-search-help');
+  if(!p) return;
+  const showing=p.style.display!=='none';
+  p.style.display=showing?'none':'';
+  if(!showing){
+    const close=()=>{p.style.display='none';document.removeEventListener('click',close);};
+    setTimeout(()=>document.addEventListener('click',close),10);
+  }
+}
+
 // ─── APLICAR EM MASSA ────────────────────────────────────────────
 const LOCKED_STATUSES=['concluido','sem_movimento'];
 function _getFilteredCronoContext(){
