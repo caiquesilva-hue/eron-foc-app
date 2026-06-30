@@ -275,7 +275,15 @@
   .login-form-input:focus{border-color:var(--e-purple)!important;background:rgba(255,255,255,.12)!important;outline:none;}
 
   /* ROLE BADGES */
-  .role-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap;}
+  .bulk-opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1.5px solid #e5e7eb;cursor:pointer;transition:border-color .15s,background .15s;}
+.bulk-opt:hover{background:var(--e-ghost);}
+.bulk-opt input[type=radio]{accent-color:var(--e-purple);width:14px;height:14px;flex-shrink:0;}
+.bulk-opt:has(input:checked){border-color:var(--e-purple);background:rgba(151,111,244,.06);}
+.bulk-chip{font-size:12px;font-weight:600;padding:2px 9px;border-radius:4px;white-space:nowrap;}
+.btn-bulk-apply{display:none;align-items:center;gap:6px;padding:6px 14px;border-radius:7px;border:1.5px solid rgba(151,111,244,.4);background:rgba(151,111,244,.08);color:var(--e-purple);font-size:12px;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s;}
+.btn-bulk-apply:hover{background:rgba(151,111,244,.16);border-color:var(--e-purple);}
+.day-cell.locked-cell{cursor:not-allowed!important;opacity:.85;}
+.role-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap;}
   .role-super-admin{background:rgba(109,40,217,.25);color:#c4b5fd;}
   .role-admin{background:rgba(37,99,235,.2);color:#93c5fd;}
   .role-analista{background:rgba(4,120,87,.2);color:#6ee7b7;}
@@ -487,6 +495,10 @@
         <input type="date" id="crono-date-start" onchange="renderCronogramaAccounts()">
         <span class="crono-sep">→</span>
         <input type="date" id="crono-date-end" onchange="renderCronogramaAccounts()">
+        <button id="btn-bulk-apply" class="btn-bulk-apply" onclick="openBulkApply()" data-requires-edit="1">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 16l2 2 4-4"/></svg>
+          Aplicar em massa
+        </button>
       </div>
       <div id="crono-accounts-wrap">
         <div id="crono-accounts-empty" class="empty-state" style="display:none">
@@ -755,6 +767,50 @@
   </div>
 </div>
 
+<!-- MODAL: APLICAR EM MASSA -->
+<div class="modal-overlay" id="modal-bulk-apply" onclick="if(event.target===this)closeModal('modal-bulk-apply')">
+  <div class="modal-card" style="width:440px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Aplicar em massa</div>
+        <div style="font-size:12px;color:var(--e-muted);margin-top:2px">Aplica um status a todos os dias ativos do filtro atual</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-bulk-apply')">×</button>
+    </div>
+    <div class="modal-body" style="padding:20px 24px">
+      <div id="bulk-preview" style="background:var(--e-ghost);border-radius:8px;padding:10px 14px;margin-bottom:18px;font-size:13px;color:var(--e-sub)"></div>
+      <div style="font-size:12px;color:var(--e-sub);font-weight:600;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em">Status a aplicar</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+        <label class="bulk-opt" style="--opt-bg:#dcfce7;--opt-color:#15803d">
+          <input type="radio" name="bulk-status" value="concluido">
+          <span class="bulk-chip" style="background:#dcfce7;color:#15803d">Concluído</span>
+          <span style="font-size:12px;color:var(--e-sub)">Marca todos os dias ativos como concluídos</span>
+        </label>
+        <label class="bulk-opt" style="--opt-bg:#ede9fe;--opt-color:#5b21b6">
+          <input type="radio" name="bulk-status" value="sem_movimento">
+          <span class="bulk-chip" style="background:#ede9fe;color:#5b21b6">Sem movimento</span>
+          <span style="font-size:12px;color:var(--e-sub)">Registra que não houve movimentação</span>
+        </label>
+        <label class="bulk-opt" style="--opt-bg:#fef2f2;--opt-color:#dc2626">
+          <input type="radio" name="bulk-status" value="sem_acesso">
+          <span class="bulk-chip" style="background:#fef2f2;color:#dc2626">Sem acesso</span>
+          <span style="font-size:12px;color:var(--e-sub)">Indica impossibilidade de acessar no período</span>
+        </label>
+        <label class="bulk-opt" style="--opt-bg:#f3f4f6;--opt-color:#6b7280;border-style:dashed">
+          <input type="radio" name="bulk-status" value="clear">
+          <span class="bulk-chip" style="background:#f3f4f6;color:#6b7280">Limpar</span>
+          <span style="font-size:12px;color:var(--e-sub)">Remove todos os registros do período</span>
+        </label>
+      </div>
+      <div id="bulk-err" style="display:none;color:#dc2626;font-size:12px;margin-bottom:8px;padding:8px 12px;background:#fef2f2;border-radius:6px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-bulk-apply')">Cancelar</button>
+      <button class="btn-primary" onclick="submitBulkApply()" style="background:#976ff4">Aplicar em massa</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: TROCA FORÇADA DE SENHA (primeiro acesso) -->
 <div class="modal-overlay" id="modal-force-pwd">
   <div class="modal-card" style="width:400px">
@@ -829,6 +885,34 @@
 </div>
 
 <!-- MODAL: HISTÓRICO DE ALTERAÇÕES -->
+<!-- MODAL: SENHA GERADA -->
+<div class="modal-overlay" id="modal-pwd-gerada" onclick="if(event.target===this)closeModal('modal-pwd-gerada')" style="z-index:1300">
+  <div class="modal-card" style="width:380px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">🔑 Senha gerada</div>
+        <div style="font-size:12px;color:var(--e-muted);margin-top:2px">Copie e entregue ao usuário</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-pwd-gerada')">×</button>
+    </div>
+    <div class="modal-body" style="padding:20px 24px">
+      <div style="font-size:12px;color:var(--e-sub);margin-bottom:8px">Senha temporária:</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="modal-pwd-gerada-val" type="text" readonly
+          style="flex:1;font-family:ui-monospace,monospace;font-size:18px;font-weight:700;letter-spacing:.12em;padding:10px 14px;border-radius:8px;border:2px solid var(--e-purple);background:rgba(151,111,244,.07);color:var(--e-text);cursor:text;user-select:all">
+        <button onclick="copyGeradaPwd()" id="copy-gerada-btn"
+          style="padding:10px 14px;border-radius:8px;border:1.5px solid rgba(151,111,244,.4);background:rgba(151,111,244,.1);color:var(--e-purple);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">Copiar</button>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:var(--e-muted);background:var(--e-ghost);padding:8px 12px;border-radius:6px">
+        O usuário será obrigado a trocar esta senha no próximo acesso.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" onclick="closeModal('modal-pwd-gerada')" style="background:var(--e-purple)">OK, entendido</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-historico" onclick="if(event.target===this)closeModal('modal-historico')">
   <div class="modal-card" style="width:760px;max-width:98vw">
     <div class="modal-header">
@@ -1216,7 +1300,8 @@ function updateSidebarForRole(){
   if(acessosItem) acessosItem.style.display=canViewAcessos()?'':'none';
   // Show/hide edit action buttons
   document.querySelectorAll('[data-requires-edit]').forEach(el=>{
-    el.style.display=canEdit()?'':'none';
+    const isInline=el.tagName==='BUTTON'&&el.classList.contains('btn-bulk-apply');
+    el.style.display=canEdit()?(isInline?'flex':''):'none';
   });
   // Add/update role badge in sidebar footer
   const userInfo=document.getElementById('sb-user-name')?.parentNode;
@@ -1586,6 +1671,83 @@ function initCronoDates(){
   if(s&&!s.value) s.value=`${y}-${pad(m+1)}-01`;
   if(e&&!e.value){ const last=new Date(y,m+1,0); e.value=`${y}-${pad(m+1)}-${pad(last.getDate())}`; }
 }
+// ─── APLICAR EM MASSA ────────────────────────────────────────────
+const LOCKED_STATUSES=['concluido','sem_movimento'];
+function _getFilteredCronoContext(){
+  const fp=document.getElementById('crono-f-pais')?.value||'';
+  const fa=document.getElementById('crono-f-agente')?.value||'';
+  const fb=document.getElementById('crono-f-banco')?.value||'';
+  const ff=document.getElementById('crono-f-freq')?.value||'';
+  const days=buildCronoDates();
+  const list=store.contas.filter(c=>(!fp||c.pais===fp)&&(!fa||c.agente===fa)&&(!fb||c.banco===fb)&&(!ff||c.tipo===ff));
+  const fmtDate=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  return {days,list,fmtDate};
+}
+function openBulkApply(){
+  if(!canEdit()) return;
+  const {days,list,fmtDate}=_getFilteredCronoContext();
+  const totalActive=list.reduce((acc,c)=>acc+days.filter(d=>isActiveDay(d,c.tipo)).length,0);
+  const totalExisting=list.reduce((acc,c)=>acc+days.filter(d=>{
+    const key=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'')+'_'+fmtDate(d);
+    return !!store.cronogramaData[key];
+  }).length,0);
+  const locked=!isAdmin()?list.reduce((acc,c)=>acc+days.filter(d=>{
+    const key=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'')+'_'+fmtDate(d);
+    const e=store.cronogramaData[key];
+    return e&&LOCKED_STATUSES.includes(e.status);
+  }).length,0):0;
+  const prev=document.getElementById('bulk-preview');
+  const period=`${document.getElementById('crono-date-start')?.value||'?'} → ${document.getElementById('crono-date-end')?.value||'?'}`;
+  prev.innerHTML=`<strong>${list.length}</strong> conta${list.length!==1?'s':''} · <strong>${days.length}</strong> dias · <strong>${totalActive}</strong> dia${totalActive!==1?'s':''} ativos`+
+    (locked?` · <span style="color:#dc2626"><strong>${locked}</strong> travado${locked!==1?'s':''} (só Admin)</span>`:'')+
+    `<div style="margin-top:4px;opacity:.7">Período: ${period}</div>`;
+  document.querySelectorAll('input[name="bulk-status"]').forEach(r=>r.checked=false);
+  document.getElementById('bulk-err').style.display='none';
+  openModal('modal-bulk-apply');
+}
+function submitBulkApply(){
+  const status=document.querySelector('input[name="bulk-status"]:checked')?.value;
+  const errEl=document.getElementById('bulk-err');
+  if(!status){errEl.style.display='block';errEl.textContent='Selecione um status para aplicar.';return;}
+  const {days,list,fmtDate}=_getFilteredCronoContext();
+  const user=store.responsaveis.find(r=>r.email===window._loggedEmail);
+  const sigla=user?.sigla||(user?.nome?.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase())||'??';
+  const totalActive=list.reduce((acc,c)=>acc+days.filter(d=>isActiveDay(d,c.tipo)).length,0);
+  const lockedCount=!isAdmin()?list.reduce((acc,c)=>acc+days.filter(d=>{
+    const key=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'')+'_'+fmtDate(d);
+    const e=store.cronogramaData[key];
+    return e&&LOCKED_STATUSES.includes(e.status);
+  }).length,0):0;
+  const affectedLabel=status==='clear'
+    ? list.reduce((acc,c)=>acc+days.filter(d=>!!store.cronogramaData[`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'')+'_'+fmtDate(d)]).length,0)
+    : totalActive;
+  const skipMsg=lockedCount&&!isAdmin()?`\n(${lockedCount} célula${lockedCount!==1?'s':''} travada${lockedCount!==1?'s':''} serão ignoradas)`:'';
+  const labelMap={concluido:'Concluído',sem_movimento:'Sem movimento',sem_acesso:'Sem acesso',clear:'Limpar'};
+  const confirmed=confirm(`Aplicar "${labelMap[status]}" em ${affectedLabel} célula${affectedLabel!==1?'s':''}?${skipMsg}\n\nEsta ação não pode ser desfeita facilmente.`);
+  if(!confirmed) return;
+  let changed=0,skipped=0;
+  list.forEach(c=>{
+    const contaKey=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
+    days.forEach(d=>{
+      if(status!=='clear'&&!isActiveDay(d,c.tipo)) return;
+      const dateStr=fmtDate(d);
+      const storeKey=`${contaKey}_${dateStr}`;
+      const existing=store.cronogramaData[storeKey];
+      if(existing&&LOCKED_STATUSES.includes(existing.status)&&!isAdmin()){skipped++;return;}
+      if(status==='clear'){
+        if(existing){delete store.cronogramaData[storeKey];changed++;}
+      } else {
+        store.cronogramaData[storeKey]={status,sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')};
+        changed++;
+      }
+    });
+  });
+  saveStore();
+  logAudit('cronograma','bulk-apply',{status,changed,skipped});
+  closeModal('modal-bulk-apply');
+  renderCronogramaAccounts();
+}
+
 // ─── ACESSOS ─────────────────────────────────────────────────────
 const ADMIN_EMAIL='caique.silva@eroninternational.com';
 
@@ -1802,22 +1964,35 @@ function closeCalDropdown(){ document.querySelectorAll('.cal-dropdown').forEach(
 document.addEventListener('click', closeCalDropdown);
 function onDayCellClick(event, contaKey, dateStr, active){
   closeCalDropdown();
+  if(!canEdit()){ event.stopPropagation(); return; }
   const user=store.responsaveis.find(r=>r.email===window._loggedEmail);
   const sigla=user?.sigla||(user?.nome?.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase())||'??';
   const storeKey=`${contaKey}_${dateStr}`;
   const existing=store.cronogramaData[storeKey];
+  const isLocked=existing&&LOCKED_STATUSES.includes(existing.status)&&!isAdmin();
   const cell=event.currentTarget;
   const rect=cell.getBoundingClientRect();
   const dd=document.createElement('div');
   dd.className='cal-dropdown';
-  const left=Math.min(rect.left, window.innerWidth-180);
-  const top=rect.bottom+4>window.innerHeight-140?rect.top-144:rect.bottom+4;
+  const left=Math.min(rect.left, window.innerWidth-200);
+  const top=rect.bottom+4>window.innerHeight-160?rect.top-164:rect.bottom+4;
   dd.style.cssText=`left:${left}px;top:${top}px;`;
+  if(isLocked){
+    const statusLabel={concluido:'Concluído',sem_movimento:'Sem movimento'}[existing.status]||existing.status;
+    dd.innerHTML=`<div style="padding:10px 14px;max-width:200px">
+      <div style="font-size:11px;font-weight:700;color:#92400e;margin-bottom:4px">🔒 Status travado</div>
+      <div style="font-size:11px;color:var(--e-sub)">"${statusLabel}" só pode ser alterado por Admin ou Super Admin.</div>
+      <div style="font-size:10px;color:var(--e-muted);margin-top:6px">Registrado por <b>${existing.sigla}</b> em ${existing.ts}</div>
+    </div>`;
+    document.body.appendChild(dd);
+    event.stopPropagation();
+    return;
+  }
   const opts=[];
   if(active){
-    opts.push({status:'concluido',label:`Concluído`,sub:sigla,bg:'#dcfce7',color:'#15803d'});
-    opts.push({status:'sem_movimento',label:`Sem movimento`,sub:sigla+' s/m',bg:'#ede9fe',color:'#5b21b6'});
-    opts.push({status:'sem_acesso',label:`Sem acesso`,sub:sigla+' s/a',bg:'#fef2f2',color:'#dc2626'});
+    opts.push({status:'concluido',label:'Concluído',sub:sigla,bg:'#dcfce7',color:'#15803d'});
+    opts.push({status:'sem_movimento',label:'Sem movimento',sub:sigla+' s/m',bg:'#ede9fe',color:'#5b21b6'});
+    opts.push({status:'sem_acesso',label:'Sem acesso',sub:sigla+' s/a',bg:'#fef2f2',color:'#dc2626'});
   }
   if(existing) opts.push({status:'clear',label:'Limpar',sub:'',bg:'transparent',color:'#6b7280'});
   if(!opts.length){ dd.remove(); return; }
@@ -1829,7 +2004,10 @@ function onDayCellClick(event, contaKey, dateStr, active){
 }
 function setCronoDayStatus(contaKey, dateStr, status, event){
   event.stopPropagation();
+  if(!canEdit()){ closeCalDropdown(); return; }
   const storeKey=`${contaKey}_${dateStr}`;
+  const existing=store.cronogramaData[storeKey];
+  if(existing&&LOCKED_STATUSES.includes(existing.status)&&!isAdmin()){ closeCalDropdown(); return; }
   const user=store.responsaveis.find(r=>r.email===window._loggedEmail);
   const sigla=user?.sigla||(user?.nome?.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase())||'??';
   if(status==='clear'){
@@ -1895,17 +2073,34 @@ function gerarSenhaAleatoria(){
   const chars='ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#';
   return Array.from({length:10},()=>chars[Math.floor(Math.random()*chars.length)]).join('');
 }
+function showPwdGerada(s){
+  const el=document.getElementById('modal-pwd-gerada-val');
+  if(el){ el.value=s; }
+  document.getElementById('copy-gerada-btn').textContent='Copiar';
+  navigator.clipboard?.writeText(s).catch(()=>{});
+  openModal('modal-pwd-gerada');
+  setTimeout(()=>el?.select(),100);
+}
+function copyGeradaPwd(){
+  const el=document.getElementById('modal-pwd-gerada-val');
+  if(!el) return;
+  el.select();
+  navigator.clipboard?.writeText(el.value).catch(()=>{ try{document.execCommand('copy');}catch(e){} });
+  const btn=document.getElementById('copy-gerada-btn');
+  btn.textContent='✓ Copiado!';
+  setTimeout(()=>btn.textContent='Copiar',2000);
+}
 function gerarSenhaInicial(){
   const s=gerarSenhaAleatoria();
   const el=document.getElementById('acesso-pwd');
-  if(el){el.value=s;el.type='text'; setTimeout(()=>el.type='password',2500);}
-  alert('Senha gerada: '+s+'\n\nAnote esta senha para entregar ao usuário.');
+  if(el){el.value=s;el.type='text';}
+  showPwdGerada(s);
 }
 function gerarSenhaReset(){
   const s=gerarSenhaAleatoria();
   const el=document.getElementById('reset-pwd-input');
-  if(el){el.value=s;el.type='text'; setTimeout(()=>el.type='password',2500);}
-  alert('Senha gerada: '+s+'\n\nAnote esta senha para entregar ao usuário.');
+  if(el){el.value=s;el.type='text';}
+  showPwdGerada(s);
 }
 function togglePwdVisibility(inputId,btn){
   const el=document.getElementById(inputId);
