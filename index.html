@@ -303,7 +303,8 @@
   .login-form-input:focus{border-color:var(--e-purple)!important;background:rgba(255,255,255,.12)!important;outline:none;}
 
   /* ROLE BADGES */
-  .crono-search-wrap{margin:0 0 10px;position:relative;}
+  .crono-search-wrap{margin:0 0 10px;display:flex;gap:8px;align-items:flex-start;}
+  .crono-search-col{flex:1;position:relative;}
 .crono-search-inner{display:flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #e0e2f0;border-radius:9px;padding:6px 10px;transition:border-color .15s;box-shadow:0 1px 4px rgba(0,0,0,.04);}
 .crono-search-inner:focus-within{border-color:var(--e-purple);box-shadow:0 0 0 3px rgba(151,111,244,.1);}
 .crono-search-icon{color:var(--e-muted);flex-shrink:0;}
@@ -524,10 +525,6 @@
           <div class="page-title-text" data-i18n="nav-accounts">Accounts</div>
           <div class="page-title-count" id="crono-accounts-count"></div>
         </div>
-        <button class="btn-bulk-apply" onclick="downloadCronoCSV()" style="background:var(--e-ghost);color:var(--e-sub);border-color:var(--e-pale)" title="Baixar CSV com os filtros aplicados">
-          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
-          Baixar CSV
-        </button>
       </div>
       <div class="crono-filters">
         <select id="crono-f-pais" onchange="renderCronogramaAccounts()"></select>
@@ -571,27 +568,33 @@
         <div class="d1-stat-card d1-stat-pendente"><div class="d1-stat-num" id="d1-count-pendente">—</div><div class="d1-stat-lbl">Pendente</div></div>
       </div>
       <div class="crono-search-wrap">
-        <div class="crono-search-inner">
-          <svg class="crono-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
-          <input type="text" id="crono-search" class="crono-search-input"
-            placeholder="Buscar contas... ex: in:BCP_3 PE.Onlinepro;BCP_1 PE.Onlinepro  |  pais:Peru  |  banco:BCP  |  agente:PE.Onlinepro  |  status:ativa  |  tipo:Diário"
-            oninput="renderCronogramaAccounts();updateCronoSearchClear()">
-          <button class="crono-search-clear" id="crono-search-clear" onclick="clearCronoSearch()" style="display:none" title="Limpar busca">×</button>
-          <button class="crono-search-help-btn" onclick="toggleSearchHelp(event)" title="Sintaxe de busca">?</button>
-        </div>
-        <div class="crono-search-help" id="crono-search-help" style="display:none">
-          <div class="sh-title">Operadores de busca</div>
-          <div class="sh-grid">
-            <div class="sh-row"><code>in:BCP_3 PE.Onlinepro<span class="sh-sep">;</span>BCP_1 PE.Onlinepro</code><span>inclui exatamente essas contas (separadas por <b>;</b>)</span></div>
-            <div class="sh-row"><code>pais:Peru</code><span>filtra por país</span></div>
-            <div class="sh-row"><code>agente:PE.Onlinepro</code><span>filtra por agente</span></div>
-            <div class="sh-row"><code>banco:BCP</code><span>filtra por banco</span></div>
-            <div class="sh-row"><code>status:ativa</code> <code>status:encerrada</code><span>filtra por status da conta</span></div>
-            <div class="sh-row"><code>tipo:Diário</code> <code>tipo:T1</code><span>filtra por frequência</span></div>
-            <div class="sh-row"><code>BCP Peru</code><span>texto livre — busca em todos os campos</span></div>
-            <div class="sh-row"><code>pais:Peru banco:BCP</code><span>combine múltiplos operadores</span></div>
+        <div class="crono-search-col">
+          <div class="crono-search-inner">
+            <svg class="crono-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" id="crono-search" class="crono-search-input"
+              placeholder="Buscar contas... ex: in:BCP_3 PE.Onlinepro;BCP_1 PE.Onlinepro  |  pais:Peru  |  banco:BCP  |  agente:PE.Onlinepro  |  status:ativa  |  tipo:Diário"
+              oninput="renderCronogramaAccounts();updateCronoSearchClear()">
+            <button class="crono-search-clear" id="crono-search-clear" onclick="clearCronoSearch()" style="display:none" title="Limpar busca">×</button>
+            <button class="crono-search-help-btn" onclick="toggleSearchHelp(event)" title="Sintaxe de busca">?</button>
+          </div>
+          <div class="crono-search-help" id="crono-search-help" style="display:none">
+            <div class="sh-title">Operadores de busca</div>
+            <div class="sh-grid">
+              <div class="sh-row"><code>in:BCP_3 PE.Onlinepro<span class="sh-sep">;</span>BCP_1 PE.Onlinepro</code><span>inclui exatamente essas contas (separadas por <b>;</b>)</span></div>
+              <div class="sh-row"><code>pais:Peru</code><span>filtra por país</span></div>
+              <div class="sh-row"><code>agente:PE.Onlinepro</code><span>filtra por agente</span></div>
+              <div class="sh-row"><code>banco:BCP</code><span>filtra por banco</span></div>
+              <div class="sh-row"><code>status:ativa</code> <code>status:encerrada</code><span>filtra por status da conta</span></div>
+              <div class="sh-row"><code>tipo:Diário</code> <code>tipo:T1</code><span>filtra por frequência</span></div>
+              <div class="sh-row"><code>BCP Peru</code><span>texto livre — busca em todos os campos</span></div>
+              <div class="sh-row"><code>pais:Peru banco:BCP</code><span>combine múltiplos operadores</span></div>
+            </div>
           </div>
         </div>
+        <button class="btn-bulk-apply" onclick="downloadCronoCSV()" style="background:var(--e-ghost);color:var(--e-sub);border-color:var(--e-pale);flex-shrink:0" title="Baixar CSV com os filtros aplicados">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+          Baixar CSV
+        </button>
       </div>
       <div id="crono-accounts-wrap">
         <div id="crono-accounts-empty" class="empty-state" style="display:none">
