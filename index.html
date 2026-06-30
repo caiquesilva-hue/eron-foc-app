@@ -1060,9 +1060,6 @@
   </div>
 </div>
 
-<!-- EmailJS SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-
 <!-- Firebase SDK (compat) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -2475,27 +2472,27 @@ async function submitForgotPassword(){
   document.getElementById('forgot-result').style.display='';
   if(btn){btn.disabled=false;btn.textContent='Gerar link';}
 }
-// Envio de email via EmailJS — preencher com credenciais após configurar conta
-const _EMAILJS_SERVICE  = '';   // ex: 'service_xxxxxxx'
-const _EMAILJS_TEMPLATE = '';   // ex: 'template_xxxxxxx'
-const _EMAILJS_PUBKEY   = '';   // ex: 'xxxxxxxxxxxxxxxxxxxx'
+// Google Apps Script — colar URL após implantar o script em script.google.com
+const _GAS_URL=''; // ex: 'https://script.google.com/macros/s/XXXXXXX/exec'
+
 async function _sendResetEmail(toEmail, resetLink){
-  if(!_EMAILJS_SERVICE||!_EMAILJS_TEMPLATE||!_EMAILJS_PUBKEY){
-    // EmailJS não configurado ainda — fallback para mailto
+  const user=store.responsaveis.find(r=>r.email===toEmail);
+  const userName=user?user.nome:'usuário';
+  if(!_GAS_URL){
+    // GAS não configurado ainda — fallback mailto
     const subj=encodeURIComponent('Redefinição de senha — Eron FOC App');
     const body=encodeURIComponent('Olá,\n\nClique no link abaixo para redefinir sua senha (válido por 1 hora):\n\n'+resetLink+'\n\nEron FOC App');
     window.location.href='mailto:'+toEmail+'?subject='+subj+'&body='+body;
     return;
   }
-  try{
-    await emailjs.send(_EMAILJS_SERVICE,_EMAILJS_TEMPLATE,{to_email:toEmail,reset_link:resetLink,app_name:'Eron FOC App'},_EMAILJS_PUBKEY);
-  }catch(e){
-    console.warn('[EmailJS]',e);
-    // fallback
-    const subj=encodeURIComponent('Redefinição de senha — Eron FOC App');
-    const body=encodeURIComponent('Olá,\n\nClique no link abaixo para redefinir sua senha (válido por 1 hora):\n\n'+resetLink+'\n\nEron FOC App');
-    window.location.href='mailto:'+toEmail+'?subject='+subj+'&body='+body;
-  }
+  const res=await fetch(_GAS_URL,{
+    method:'POST',
+    redirect:'follow',
+    headers:{'Content-Type':'text/plain'},
+    body:JSON.stringify({to_email:toEmail,reset_link:resetLink,user_name:userName})
+  });
+  const data=await res.json().catch(()=>({}));
+  if(data.ok===false) throw new Error(data.error||'Erro ao enviar email');
 }
 async function submitResetFromLink(){
   const p1=document.getElementById('reset-link-pwd-1').value;
