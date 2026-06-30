@@ -1548,7 +1548,12 @@ function submitAccountForm(){
   renderCronogramaAccounts();
   updateCounts();
 }
-function deleteAccount(idx){ logAudit('gerencial','delete-conta',{sigla:store.contas[idx]?.sigla}); store.contas.splice(idx,1); saveStore(); renderAccountsTable(); renderCronogramaAccounts(); updateCounts(); }
+function deleteAccount(idx){
+  const c=store.contas[idx];
+  if(!c) return;
+  if(!confirm(`Excluir a conta "${c.sigla}" (${c.banco} · ${c.numeroConta})?\n\nEsta ação não pode ser desfeita.`)) return;
+  logAudit('gerencial','delete-conta',{sigla:c.sigla}); store.contas.splice(idx,1); saveStore(); renderAccountsTable(); renderCronogramaAccounts(); updateCounts();
+}
 
 // ─── TOGGLE ENCERRAR ──────────────────────────────────────────────
 function onToggleEncerrar(checkbox){
@@ -1667,6 +1672,10 @@ function submitCadastro(){
   updateCounts();
 }
 function deleteCadastro(type,idx){
+  const labels={'pais':'país','agente':'agente','banco':'banco'};
+  const names={'pais':store.paises[idx],'agente':store.agentes[idx]?.nome,'banco':store.bancos[idx]?.nome};
+  const name=names[type]||'este item';
+  if(!confirm(`Excluir o ${labels[type]||type} "${name}"?\n\nEsta ação não pode ser desfeita.`)) return;
   if(type==='pais') store.paises.splice(idx,1);
   else if(type==='agente') store.agentes.splice(idx,1);
   else store.bancos.splice(idx,1);
@@ -2224,6 +2233,7 @@ function deleteAcesso(idx){
   if(!isAdmin()) return;
   const r=store.responsaveis[idx];
   if(r.email===ADMIN_EMAIL){alert('Não é possível remover o administrador.');return;}
+  if(!confirm(`Excluir o acesso de "${r.nome}" (${r.email})?\n\nEsta ação não pode ser desfeita.`)) return;
   logAudit('acessos','delete-user',{nome:r?.nome,email:r?.email});
   store.responsaveis.splice(idx,1);
   saveStore();
