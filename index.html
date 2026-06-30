@@ -2218,6 +2218,9 @@ function openForgotPassword(){
   document.getElementById('forgot-email-input').value=emailVal;
   document.getElementById('forgot-result').style.display='none';
   document.getElementById('forgot-err').style.display='none';
+  const m=document.getElementById('modal-forgot-pwd');
+  m.querySelector('.modal-title').textContent='🔑 Esqueci minha senha';
+  m.querySelector('[style*="margin-top:2px"]').textContent='Gera um link seguro para redefinir sua senha';
   openModal('modal-forgot-pwd');
 }
 async function submitForgotPassword(){
@@ -2263,7 +2266,16 @@ async function tryLogin(){
   const user=store.responsaveis.find(r=>r.email===email);
   if(!user){errEl.style.display='block';errEl.textContent='Usuário não cadastrado. Solicite acesso ao administrador.';return;}
   const cred=store.credentials[email];
-  if(!cred){errEl.style.display='block';errEl.textContent='Senha não configurada. Use "Esqueci a senha" para criar sua senha de acesso.';return;}
+  if(!cred){
+    // Primeiro acesso: abre configuração de senha automaticamente
+    document.getElementById('forgot-email-input').value=email;
+    document.getElementById('forgot-result').style.display='none';
+    document.getElementById('forgot-err').style.display='none';
+    document.getElementById('modal-forgot-pwd').querySelector('.modal-title').textContent='🔐 Primeiro acesso';
+    document.getElementById('modal-forgot-pwd').querySelector('[style*="margin-top:2px"]').textContent='Configure sua senha para continuar.';
+    openModal('modal-forgot-pwd');
+    return;
+  }
   const inputHash=await hashPwd(pwd);
   if(inputHash!==cred.hash){errEl.style.display='block';errEl.textContent='Senha incorreta.';return;}
   errEl.style.display='none';
