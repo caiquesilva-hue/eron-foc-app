@@ -2500,29 +2500,30 @@ async function _sendResetEmail(toEmail, resetLink){
   if(data.ok===false) throw new Error(data.error||'Erro ao enviar email');
 }
 async function submitResetFromLink(){
-  const p1=document.getElementById('reset-link-pwd-1').value;
-  const p2=document.getElementById('reset-link-pwd-2').value;
   const errEl=document.getElementById('reset-link-err');
   const btn=document.querySelector('#modal-reset-link .btn-primary');
-  errEl.style.display='none';
-  if(p1.length<6){errEl.style.display='block';errEl.textContent='A senha deve ter pelo menos 6 caracteres.';return;}
-  if(p1!==p2){errEl.style.display='block';errEl.textContent='As senhas não coincidem.';return;}
-  const email=window._resetEmail;
-  if(!email){errEl.style.display='block';errEl.textContent='Sessão expirada — reabra o link do email.';return;}
-  if(!store.responsaveis.find(r=>r.email===email)){errEl.style.display='block';errEl.textContent='Usuário não encontrado.';return;}
+  const showErr=msg=>{if(errEl){errEl.style.display='block';errEl.textContent=msg;}else{alert(msg);}if(btn){btn.disabled=false;btn.textContent='Salvar nova senha';}};
   try{
+    const p1=document.getElementById('reset-link-pwd-1').value;
+    const p2=document.getElementById('reset-link-pwd-2').value;
+    if(errEl) errEl.style.display='none';
+    if(p1.length<6){showErr('A senha deve ter pelo menos 6 caracteres.');return;}
+    if(p1!==p2){showErr('As senhas não coincidem.');return;}
+    const email=window._resetEmail;
+    if(!email){showErr('Sessão expirada — reabra o link do email.');return;}
+    if(!store.responsaveis.find(r=>r.email===email)){showErr('Usuário não encontrado: '+email);return;}
     if(btn){btn.disabled=true;btn.textContent='Salvando...';}
     const hash=await hashPwd(p1);
     store.credentials[email]={hash,mustChange:false};
     if(!Array.isArray(store.auditLog)) store.auditLog=[];
     saveStore();
-    closeModal('modal-reset-link');
+    if(!Array.isArray(store.auditLog)) store.auditLog=[];
     logAudit('auth','password-reset-via-link',{email});
+    // Fecha modal DEPOIS de tudo — erros ainda serão visíveis
+    closeModal('modal-reset-link');
     selectAccount(email);
   }catch(e){
-    errEl.style.display='block';
-    errEl.textContent='Erro ao salvar: '+e.message;
-    if(btn){btn.disabled=false;btn.textContent='Salvar nova senha';}
+    showErr('Erro: '+(e&&e.message?e.message:String(e)));
   }
 }
 
