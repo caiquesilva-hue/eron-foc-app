@@ -2203,14 +2203,19 @@ let _fbListening=false,_ownWrite=false;
 const _encK=e=>btoa(unescape(encodeURIComponent(e))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
 const _decK=k=>{try{return decodeURIComponent(escape(atob(k.replace(/-/g,'+').replace(/_/g,'/'))));}catch(e){return k;}};
 const _fbArr=v=>{if(!v)return[];if(Array.isArray(v))return v;return Object.values(v);};
+// Firebase proíbe . # $ / [ ] em chaves — codifica com vírgula (permitida)
+const _encFbKey=k=>k.replace(/\./g,',');
+const _decFbKey=k=>k.replace(/,/g,'.');
 
 function _storeToFb(){
   const creds={};
   Object.entries(store.credentials).forEach(([e,v])=>creds[_encK(e)]=v);
+  const crono={};
+  Object.entries(store.cronogramaData||{}).forEach(([k,v])=>crono[_encFbKey(k)]=v);
   return {
     paises:store.paises,agentes:store.agentes,bancos:store.bancos,
     responsaveis:store.responsaveis,contas:store.contas,
-    cronogramaData:store.cronogramaData,
+    cronogramaData:crono,
     auditLog:store.auditLog.slice(-500),
     permissions:store.permissions,credentials:creds
   };
@@ -2234,7 +2239,11 @@ function _applyFbData(saved){
     can.forEach(u=>{if(!store.responsaveis.find(r=>r.email===u.email))store.responsaveis.push(u);});
   }
   if(saved.contas)store.contas=_fbArr(saved.contas);
-  if(saved.cronogramaData)store.cronogramaData=saved.cronogramaData;
+  if(saved.cronogramaData){
+    const crono={};
+    Object.entries(saved.cronogramaData).forEach(([k,v])=>crono[_decFbKey(k)]=v);
+    store.cronogramaData=crono;
+  }
   if(saved.auditLog)store.auditLog=_fbArr(saved.auditLog);
   if(saved.permissions)store.permissions=saved.permissions;
   if(saved.credentials){
