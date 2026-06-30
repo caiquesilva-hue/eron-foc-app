@@ -995,17 +995,17 @@
       </div>
       <div class="login-err" id="forgot-err"></div>
       <div id="forgot-result" style="display:none;margin-top:12px">
-        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px 16px">
-          <div style="font-size:13px;font-weight:600;color:#15803d;margin-bottom:4px">✓ Link de redefinição gerado!</div>
-          <div style="font-size:12px;color:#166534;margin-bottom:14px">Válido por <strong>1 hora</strong>. Envie o link por email para o usuário.</div>
-          <input type="hidden" id="forgot-reset-link">
-          <div id="forgot-sent-msg" style="font-size:13px;color:#15803d;font-weight:600;text-align:center;padding:6px 0">✓ Link enviado para <span id="forgot-sent-email"></span></div>
+        <input type="hidden" id="forgot-reset-link">
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:18px 16px;text-align:center">
+          <div style="font-size:32px;margin-bottom:8px">✅</div>
+          <div style="font-size:14px;font-weight:700;color:#15803d;margin-bottom:4px">Link enviado</div>
+          <div id="forgot-sent-email" style="font-size:12px;color:#166534"></div>
         </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('modal-forgot-pwd')">Cancelar</button>
-      <button class="btn-primary" id="btn-gerar-link" onclick="submitForgotPassword()">Gerar link</button>
+      <button class="btn-secondary" id="btn-cancelar-forgot" onclick="closeModal('modal-forgot-pwd')">Cancelar</button>
+      <button class="btn-primary" id="btn-gerar-link" onclick="submitForgotPassword()">Enviar link</button>
     </div>
   </div>
 </div>
@@ -2449,6 +2449,10 @@ function openForgotPassword(){
   document.getElementById('forgot-email-input').value=emailVal;
   document.getElementById('forgot-result').style.display='none';
   document.getElementById('forgot-err').style.display='none';
+  const gerarBtn=document.getElementById('btn-gerar-link');
+  if(gerarBtn){gerarBtn.style.display='';gerarBtn.disabled=false;gerarBtn.textContent='Enviar link';}
+  const cancelBtn=document.getElementById('btn-cancelar-forgot');
+  if(cancelBtn)cancelBtn.textContent='Cancelar';
   const m=document.getElementById('modal-forgot-pwd');
   m.querySelector('.modal-title').textContent='🔑 Esqueci minha senha';
   m.querySelector('[style*="margin-top:2px"]').textContent='Gera um link seguro para redefinir sua senha';
@@ -2465,12 +2469,13 @@ async function submitForgotPassword(){
   if(btn){btn.disabled=true;btn.textContent='Gerando...';}
   const link=await generateResetLink(email);
   document.getElementById('forgot-reset-link').value=link;
-  const sentEmail=document.getElementById('forgot-sent-email');
-  if(sentEmail)sentEmail.textContent=email;
-  // EmailJS: envia o link por email automaticamente (aguardando configuração)
   await _sendResetEmail(email, link);
   document.getElementById('forgot-result').style.display='';
-  if(btn){btn.disabled=false;btn.textContent='Gerar link';}
+  const sentEmail=document.getElementById('forgot-sent-email');
+  if(sentEmail)sentEmail.textContent=email;
+  if(btn){btn.style.display='none';}
+  const cancelBtn=document.getElementById('btn-cancelar-forgot');
+  if(cancelBtn)cancelBtn.textContent='Fechar';
 }
 // Google Apps Script — colar URL após implantar o script em script.google.com
 const _GAS_URL='https://script.google.com/macros/s/AKfycbyqf88WWleiqdRFuNWIg3qJLCYCHx9xMVXWE8lMfWoNjPVo3PgTLULgf8f3UqplY6s1VQ/exec';
