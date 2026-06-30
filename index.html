@@ -1897,7 +1897,7 @@ function _getFilteredCronoContext(){
   const fp=document.getElementById('crono-f-pais')?.value||'';
   const fa=document.getElementById('crono-f-agente')?.value||'';
   const fb=document.getElementById('crono-f-banco')?.value||'';
-  const ff=document.getElementById('crono-f-freq')?.value||'';
+  const activeFreqs=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')].map(b=>b.dataset.freq);
   const searchQ=(document.getElementById('crono-search')?.value||'').trim();
   const searchFilters=searchQ?parseCronoSearch(searchQ):null;
   const days=buildCronoDates();
@@ -1905,7 +1905,7 @@ function _getFilteredCronoContext(){
     (!fp||c.pais===fp)&&
     (!fa||c.agente===fa)&&
     (!fb||c.banco===fb)&&
-    (!ff||c.tipo===ff)&&
+    (!activeFreqs.length||activeFreqs.includes(c.tipo))&&
     (!searchFilters||matchesCronoSearch(c,searchFilters))
   );
   const fmtDate=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
