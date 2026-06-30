@@ -199,8 +199,13 @@
   .crono-filters select,.crono-filters input[type=date]{border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;color:var(--e-text);background:#fff;outline:none;transition:border-color .15s;}
   .crono-filters select{min-width:140px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239898c3' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
   .crono-filters input[type=date]{min-width:130px;}
-  .freq-toggle-group{display:flex;gap:4px;align-items:center;flex-wrap:wrap;}
-  .freq-toggle{border:1px solid var(--e-pale);border-radius:8px;padding:6px 11px;font-size:12px;font-weight:500;background:#fff;color:var(--e-muted);cursor:pointer;transition:all .15s;white-space:nowrap;font-family:inherit;}
+  .freq-dd{position:relative;}
+  .freq-dd-btn{border:1px solid var(--e-pale);border-radius:8px;padding:7px 28px 7px 12px;font-size:13px;font-family:inherit;color:var(--e-text);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239898c3' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;cursor:pointer;white-space:nowrap;min-width:140px;text-align:left;transition:border-color .15s;outline:none;}
+  .freq-dd-btn:hover,.freq-dd-btn:focus{border-color:var(--e-purple);}
+  .freq-dd-btn.has-active{border-color:var(--e-purple);color:var(--e-purple);}
+  .freq-dd-panel{position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid var(--e-pale);border-radius:10px;padding:8px;display:none;flex-direction:column;gap:4px;z-index:200;box-shadow:0 4px 16px rgba(27,19,60,.1);min-width:160px;}
+  .freq-dd-panel.open{display:flex;}
+  .freq-toggle{border:1px solid var(--e-pale);border-radius:7px;padding:6px 11px;font-size:12px;font-weight:500;background:#fff;color:var(--e-muted);cursor:pointer;transition:all .15s;white-space:nowrap;font-family:inherit;text-align:left;}
   .freq-toggle:hover{border-color:var(--e-purple);color:var(--e-purple);}
   .freq-toggle.active.ft-t1{border-color:var(--e-violet);background:rgba(111,115,244,.12);color:var(--e-violet);}
   .freq-toggle.active.ft-t2{border-color:var(--e-purple);background:rgba(151,111,244,.12);color:var(--e-mid);}
@@ -524,11 +529,14 @@
         <select id="crono-f-pais" onchange="renderCronogramaAccounts()"></select>
         <select id="crono-f-agente" onchange="renderCronogramaAccounts()"></select>
         <select id="crono-f-banco" onchange="renderCronogramaAccounts()"></select>
-        <div class="freq-toggle-group" id="crono-f-freq-wrap">
-          <button class="freq-toggle ft-t1" data-freq="T1" onclick="toggleFreqFilter(this)">T1</button>
-          <button class="freq-toggle ft-t2" data-freq="T2" onclick="toggleFreqFilter(this)">T2</button>
-          <button class="freq-toggle ft-diario" data-freq="Diário" onclick="toggleFreqFilter(this)">Diário</button>
-          <button class="freq-toggle ft-mensal" data-freq="1 vez ao mês" onclick="toggleFreqFilter(this)">1×/mês</button>
+        <div class="freq-dd" id="crono-f-freq-dd">
+          <button class="freq-dd-btn" id="crono-freq-btn" onclick="toggleFreqDropdown(event)">Todas as freq.</button>
+          <div class="freq-dd-panel" id="crono-f-freq-wrap">
+            <button class="freq-toggle ft-t1" data-freq="T1" onclick="toggleFreqFilter(this)">T1</button>
+            <button class="freq-toggle ft-t2" data-freq="T2" onclick="toggleFreqFilter(this)">T2</button>
+            <button class="freq-toggle ft-diario" data-freq="Diário" onclick="toggleFreqFilter(this)">Diário</button>
+            <button class="freq-toggle ft-mensal" data-freq="1 vez ao mês" onclick="toggleFreqFilter(this)">1×/mês</button>
+          </div>
         </div>
         <span class="crono-sep">De</span>
         <input type="date" id="crono-date-start" onchange="renderCronogramaAccounts()">
@@ -563,7 +571,7 @@
         </div>
       </div>
       <div class="d1-status-filter" id="crono-d1-filter">
-        <span class="d1-status-filter-label">D-1:</span>
+        <span class="d1-status-filter-label">Acompanhamento:</span>
         <button class="d1-toggle dt-concluida" data-d1="concluido" onclick="toggleD1Filter(this)">Concluída</button>
         <button class="d1-toggle dt-sem-mov" data-d1="sem_movimento" onclick="toggleD1Filter(this)">Sem Movimento</button>
         <button class="d1-toggle dt-sem-acesso" data-d1="sem_acesso" onclick="toggleD1Filter(this)">Sem Acesso</button>
@@ -1729,7 +1737,7 @@ function renderCronogramaAccounts(){
     const isWk=d.getDay()===0||d.getDay()===6;
     return `<th class="col-day${isWk?' weekend':''}" style="font-size:9px;color:var(--e-muted);background:${isWk?'#faf5ff':'var(--e-ghost)'}">${wd[d.getDay()]}</th>`;
   }).join('');
-  const colInfos=`<th class="col-info cal-sticky">${t('col-sigla')}</th><th class="col-info">${t('col-pais')}</th><th class="col-info">${t('col-agente')}</th><th class="col-info">Resp.</th><th class="col-info">${t('col-banco')}</th><th class="col-info">${t('col-num-conta')}</th><th class="col-info">${t('col-tipo')}</th><th class="col-info">${t('col-tipo-conta')}</th><th class="col-info">${t('col-status')}</th><th class="col-info" style="white-space:nowrap">D-1</th>`;
+  const colInfos=`<th class="col-info cal-sticky">${t('col-sigla')}</th><th class="col-info">${t('col-pais')}</th><th class="col-info">${t('col-agente')}</th><th class="col-info">Resp.</th><th class="col-info">${t('col-banco')}</th><th class="col-info">${t('col-num-conta')}</th><th class="col-info">${t('col-tipo')}</th><th class="col-info">${t('col-tipo-conta')}</th><th class="col-info">${t('col-status')}</th><th class="col-info" style="white-space:nowrap">Acompanhamento</th>`;
   const emptyInfoCols='<th class="col-info cal-sticky" style="background:var(--e-ghost)"></th>'+'<th class="col-info" style="background:var(--e-ghost)"></th>'.repeat(INFO_COLS-1);
   const fmtDate=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   tbl.innerHTML=`<thead><tr>${colInfos}${dayHeaders}</tr><tr>${emptyInfoCols}${wdHeaders}</tr></thead><tbody>${
@@ -1768,7 +1776,24 @@ function renderCronogramaAccounts(){
     }).join('')
   }</tbody>`;
 }
-function toggleFreqFilter(btn){btn.classList.toggle('active');renderCronogramaAccounts();}
+function toggleFreqDropdown(e){
+  e.stopPropagation();
+  const p=document.getElementById('crono-f-freq-wrap');
+  if(p) p.classList.toggle('open');
+}
+function _closeFreqDropdown(){
+  const p=document.getElementById('crono-f-freq-wrap');
+  if(p) p.classList.remove('open');
+}
+document.addEventListener('click',function(e){if(!e.target.closest('#crono-f-freq-dd'))_closeFreqDropdown();});
+function _updateFreqLabel(){
+  const active=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')];
+  const btn=document.getElementById('crono-freq-btn');
+  if(!btn) return;
+  if(!active.length){btn.textContent='Todas as freq.';btn.classList.remove('has-active');}
+  else{btn.textContent=active.map(b=>b.dataset.freq).join(', ');btn.classList.add('has-active');}
+}
+function toggleFreqFilter(btn){btn.classList.toggle('active');_updateFreqLabel();renderCronogramaAccounts();}
 function toggleD1Filter(btn){btn.classList.toggle('active');renderCronogramaAccounts();}
 function initCronoDates(){
   const now=new Date();
