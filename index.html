@@ -2498,15 +2498,27 @@ async function submitResetFromLink(){
   const p1=document.getElementById('reset-link-pwd-1').value;
   const p2=document.getElementById('reset-link-pwd-2').value;
   const errEl=document.getElementById('reset-link-err');
+  const btn=document.querySelector('#modal-reset-link .btn-primary');
+  errEl.style.display='none';
   if(p1.length<6){errEl.style.display='block';errEl.textContent='A senha deve ter pelo menos 6 caracteres.';return;}
   if(p1!==p2){errEl.style.display='block';errEl.textContent='As senhas não coincidem.';return;}
   const email=window._resetEmail;
+  if(!email){errEl.style.display='block';errEl.textContent='Sessão expirada — reabra o link do email.';return;}
   if(!store.responsaveis.find(r=>r.email===email)){errEl.style.display='block';errEl.textContent='Usuário não encontrado.';return;}
-  store.credentials[email]={hash:await hashPwd(p1),mustChange:false};
-  saveStore();
-  closeModal('modal-reset-link');
-  logAudit('auth','password-reset-via-link',{email});
-  selectAccount(email);
+  try{
+    if(btn){btn.disabled=true;btn.textContent='Salvando...';}
+    const hash=await hashPwd(p1);
+    store.credentials[email]={hash,mustChange:false};
+    if(!Array.isArray(store.auditLog)) store.auditLog=[];
+    saveStore();
+    closeModal('modal-reset-link');
+    logAudit('auth','password-reset-via-link',{email});
+    selectAccount(email);
+  }catch(e){
+    errEl.style.display='block';
+    errEl.textContent='Erro ao salvar: '+e.message;
+    if(btn){btn.disabled=false;btn.textContent='Salvar nova senha';}
+  }
 }
 
 // ─── AUTH ATUALIZADA ─────────────────────────────────────────────
