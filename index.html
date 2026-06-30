@@ -2045,6 +2045,18 @@ function loadStore(){
       store.responsaveis.forEach(r=>{
         if(!r.role) r.role=r.email==='caique.silva@eroninternational.com'?'super_admin':'visualizacao';
       });
+      // Migração: usuários do código que não estão no localStorage são adicionados
+      // (evita "Usuário não cadastrado" quando o localStorage é de versão antiga)
+      const canonical=[
+        {nome:'Caique Bruno',email:'caique.silva@eroninternational.com',sigla:'CA',role:'super_admin'},
+        {nome:'Jana Czaia',email:'janaine.czaia@eroninternational.com',sigla:'JC',role:'admin'},
+        {nome:'Leticia Sanglard',email:'leticia.gomes@eroninternational.com',sigla:'LS',role:'analista'},
+        {nome:'Luciane Goes',email:'luciane.goes@eroninternational.com',sigla:'LG',role:'admin'},
+        {nome:'Larissa Chequim',email:'larissa.chequim@eroninternational.com',sigla:'LQ',role:'admin'},
+      ];
+      canonical.forEach(u=>{
+        if(!store.responsaveis.find(r=>r.email===u.email)) store.responsaveis.push(u);
+      });
     }
     if(saved.contas) store.contas=saved.contas;
     if(saved.cronogramaData) store.cronogramaData=saved.cronogramaData;
@@ -2238,7 +2250,7 @@ async function tryLogin(){
   const user=store.responsaveis.find(r=>r.email===email);
   if(!user){errEl.style.display='block';errEl.textContent='Usuário não cadastrado. Solicite acesso ao administrador.';return;}
   const cred=store.credentials[email];
-  if(!cred){errEl.style.display='block';errEl.textContent='Senha não configurada para este usuário. Contate o administrador.';return;}
+  if(!cred){errEl.style.display='block';errEl.textContent='Senha não configurada. Use "Esqueci a senha" para criar sua senha de acesso.';return;}
   const inputHash=await hashPwd(pwd);
   if(inputHash!==cred.hash){errEl.style.display='block';errEl.textContent='Senha incorreta.';return;}
   errEl.style.display='none';
