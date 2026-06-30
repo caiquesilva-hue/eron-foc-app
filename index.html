@@ -266,7 +266,19 @@
   .pwd-hint{font-size:11px;color:var(--e-muted);margin-top:3px;}
 
   /* FORCE CHANGE MODAL - deve sempre aparecer acima de tudo */
-  #modal-force-pwd{z-index:500;}
+  #modal-force-pwd{z-index:1200;}
+
+  /* LOGIN FORM INPUTS (dark background) */
+  .login-form-input{background:rgba(255,255,255,.09)!important;border-color:rgba(151,111,244,.3)!important;color:#fff!important;}
+  .login-form-input::placeholder{color:rgba(152,152,195,.45)!important;}
+  .login-form-input:focus{border-color:var(--e-purple)!important;background:rgba(255,255,255,.12)!important;outline:none;}
+
+  /* ROLE BADGES */
+  .role-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap;}
+  .role-super-admin{background:rgba(109,40,217,.25);color:#c4b5fd;}
+  .role-admin{background:rgba(37,99,235,.2);color:#93c5fd;}
+  .role-analista{background:rgba(4,120,87,.2);color:#6ee7b7;}
+  .role-visualizacao{background:rgba(107,114,128,.15);color:#d1d5db;}
 
   /* SIDEBAR CHANGE PASSWORD BUTTON */
   .btn-change-pwd{background:none;border:none;cursor:pointer;color:var(--e-muted);padding:4px;border-radius:4px;transition:color .15s;flex-shrink:0;}
@@ -280,48 +292,33 @@
     <div class="login-logo"><img src="data:image/png;base64,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" alt="ERON"></div>
     <div class="login-sub" data-i18n="ops-platform">Ops Platform</div>
     <div class="login-headline" data-i18n="login-welcome">Bem-vindo de volta</div>
-    <div class="login-desc" data-i18n="login-desc">Faça login com sua conta corporativa Eron para continuar.</div>
-    <button class="btn-google" onclick="showAccountPicker()">
-      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z"/></svg>
-      <span data-i18n="login-btn">Continuar com Google</span>
+    <div class="login-desc" style="margin-bottom:22px">Use sua conta corporativa Eron para continuar.</div>
+    <div class="form-field" style="text-align:left;margin-bottom:12px">
+      <label class="form-label" style="color:rgba(185,185,230,.7);margin-bottom:5px">Email corporativo</label>
+      <input class="form-input login-form-input" type="email" id="login-email-input"
+        placeholder="nome@eroninternational.com"
+        onkeydown="if(event.key==='Enter')document.getElementById('login-pwd-input').focus()" autocomplete="email">
+    </div>
+    <div class="form-field" style="text-align:left;margin-bottom:8px">
+      <label class="form-label" style="color:rgba(185,185,230,.7);margin-bottom:5px">Senha</label>
+      <div class="pwd-field-wrap">
+        <input class="form-input login-form-input" type="password" id="login-pwd-input"
+          placeholder="••••••••"
+          onkeydown="if(event.key==='Enter')tryLogin()" style="padding-right:36px" autocomplete="current-password">
+        <button class="pwd-toggle" onclick="togglePwdVisibility('login-pwd-input',this)" tabindex="-1" style="color:rgba(185,185,230,.5)">👁</button>
+      </div>
+    </div>
+    <div class="login-err" id="login-err" style="text-align:left;margin-bottom:8px;display:none"></div>
+    <button class="btn-primary" onclick="tryLogin()" style="width:100%;justify-content:center;padding:12px;margin-top:8px">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+      Entrar
     </button>
     <div class="login-note" data-i18n="login-note">Somente contas @eroninternational.com</div>
   </div>
 </div>
 
-<!-- LOGIN MODAL -->
-<div class="picker-overlay" id="account-picker" style="display:none">
-  <div class="picker-card">
-    <div class="picker-head">
-      <svg width="36" height="36" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z"/></svg>
-      <div class="picker-title">Fazer login</div>
-      <div class="picker-sub">Use sua conta Eron corporativa</div>
-    </div>
-    <div class="picker-body">
-      <div class="form-field">
-        <label class="form-label">Email corporativo</label>
-        <input class="form-input" type="email" id="login-email-input"
-          placeholder="nome@eroninternational.com"
-          onkeydown="if(event.key==='Enter')document.getElementById('login-pwd-input').focus()">
-      </div>
-      <div class="form-field">
-        <label class="form-label">Senha</label>
-        <div class="pwd-field-wrap">
-          <input class="form-input" type="password" id="login-pwd-input"
-            placeholder="••••••••"
-            onkeydown="if(event.key==='Enter')tryLogin()" style="padding-right:36px">
-          <button class="pwd-toggle" onclick="togglePwdVisibility('login-pwd-input',this)" tabindex="-1">👁</button>
-        </div>
-      </div>
-      <div class="login-err" id="login-err"></div>
-      <button class="btn-primary" onclick="tryLogin()" style="width:100%;justify-content:center">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
-        Entrar
-      </button>
-    </div>
-    <div class="picker-footer">Somente contas @eroninternational.com</div>
-  </div>
-</div>
+<!-- picker-overlay removido — mantido apenas para compatibilidade JS -->
+<div id="account-picker" style="display:none"></div>
 
 <!-- APP -->
 <div id="app">
@@ -416,7 +413,7 @@
           <div class="page-title-text" data-i18n="nav-accounts">Accounts</div>
           <div class="page-title-count" id="accounts-count"></div>
         </div>
-        <button class="btn-primary" onclick="openAddAccount()">
+        <button class="btn-primary" onclick="openAddAccount()" data-requires-edit>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
           <span data-i18n="btn-add-account">Adicionar conta</span>
         </button>
@@ -505,7 +502,7 @@
     <div class="page" id="page-cadastro-pais">
       <div class="page-header">
         <div class="page-header-left"><div class="page-title-text" data-i18n="cad-pais-title">Países</div><div class="page-title-count" id="pais-count"></div></div>
-        <button class="btn-primary" onclick="openCadastroModal('pais')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn-add-pais">Adicionar país</span></button>
+        <button class="btn-primary" onclick="openCadastroModal('pais')" data-requires-edit><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn-add-pais">Adicionar país</span></button>
       </div>
       <div class="table-wrap"><div id="pais-empty" class="empty-state"><div class="empty-icon">🌎</div><div class="empty-title" data-i18n="pais-empty-title">Nenhum país cadastrado</div><div class="empty-sub" data-i18n="pais-empty-sub">Adicione países para alimentar os dropdowns do sistema.</div></div><div class="table-scroll" id="pais-table-inner" style="display:none"><table><thead><tr><th data-i18n="col-pais">País</th><th style="width:70px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="pais-tbody"></tbody></table></div></div>
     </div>
@@ -513,7 +510,7 @@
     <div class="page" id="page-cadastro-agente">
       <div class="page-header">
         <div class="page-header-left"><div class="page-title-text" data-i18n="cad-agente-title">Agentes</div><div class="page-title-count" id="agente-count"></div></div>
-        <button class="btn-primary" onclick="openCadastroModal('agente')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn-add-agente">Adicionar agente</span></button>
+        <button class="btn-primary" onclick="openCadastroModal('agente')" data-requires-edit><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn-add-agente">Adicionar agente</span></button>
       </div>
       <div class="table-wrap"><div id="agente-empty" class="empty-state"><div class="empty-icon">👤</div><div class="empty-title" data-i18n="agente-empty-title">Nenhum agente cadastrado</div><div class="empty-sub" data-i18n="agente-empty-sub">Adicione agentes vinculados a um país.</div></div><div class="table-scroll" id="agente-table-inner" style="display:none"><table><thead><tr><th data-i18n="nav-agente">Agente</th><th data-i18n="col-pais">País</th><th>Responsável</th><th style="width:70px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="agente-tbody"></tbody></table></div></div>
     </div>
@@ -521,7 +518,7 @@
     <div class="page" id="page-cadastro-banco">
       <div class="page-header">
         <div class="page-header-left"><div class="page-title-text" data-i18n="cad-banco-title">Bancos</div><div class="page-title-count" id="banco-count"></div></div>
-        <button class="btn-primary" onclick="openCadastroModal('banco')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn-add-banco">Adicionar banco</span></button>
+        <button class="btn-primary" onclick="openCadastroModal('banco')" data-requires-edit><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn-add-banco">Adicionar banco</span></button>
       </div>
       <div class="table-wrap"><div id="banco-empty" class="empty-state"><div class="empty-icon">🏛️</div><div class="empty-title" data-i18n="banco-empty-title">Nenhum banco cadastrado</div><div class="empty-sub" data-i18n="banco-empty-sub">Adicione bancos ao sistema.</div></div><div class="table-scroll" id="banco-table-inner" style="display:none"><table><thead><tr><th data-i18n="nav-banco">Banco</th><th style="width:70px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="banco-tbody"></tbody></table></div></div>
     </div>
@@ -538,7 +535,7 @@
         <div class="empty-sub" data-i18n="acessos-no-perm-sub">Somente o administrador pode gerenciar acessos.</div>
       </div>
       <div id="acessos-content">
-        <div class="table-wrap"><div id="acessos-empty" class="empty-state"><div class="empty-icon">👤</div><div class="empty-title" data-i18n="acessos-empty-title">Nenhum acesso cadastrado</div><div class="empty-sub" data-i18n="acessos-empty-sub">Adicione responsáveis que aparecerão no sistema.</div></div><div class="table-scroll" id="acessos-table-inner" style="display:none"><table><thead><tr><th data-i18n="lbl-nome">Nome</th><th>Email</th><th style="width:60px">Sigla</th><th style="width:140px">Status</th><th style="width:150px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="acessos-tbody"></tbody></table></div></div>
+        <div class="table-wrap"><div id="acessos-empty" class="empty-state"><div class="empty-icon">👤</div><div class="empty-title" data-i18n="acessos-empty-title">Nenhum acesso cadastrado</div><div class="empty-sub" data-i18n="acessos-empty-sub">Adicione responsáveis que aparecerão no sistema.</div></div><div class="table-scroll" id="acessos-table-inner" style="display:none"><table><thead><tr><th data-i18n="lbl-nome">Nome</th><th>Email</th><th style="width:60px">Sigla</th><th style="width:130px">Perfil</th><th style="width:140px">Status</th><th style="width:130px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="acessos-tbody"></tbody></table></div></div>
       </div>
     </div>
   </div>
@@ -694,6 +691,15 @@
       <div class="form-field">
         <label class="form-label">Sigla pessoal<span class="req">*</span></label>
         <input class="form-input mono-in" type="text" id="acesso-sigla" placeholder="Ex: CA" maxlength="6" oninput="this.value=this.value.toUpperCase()">
+      </div>
+      <div class="form-field" id="acesso-role-section">
+        <label class="form-label">Perfil de acesso<span class="req">*</span></label>
+        <select class="form-select" id="acesso-role">
+          <option value="visualizacao">👁 Visualização — somente leitura</option>
+          <option value="analista">📊 Analista — visualiza e edita (sem Acessos)</option>
+          <option value="admin">🔑 Admin — gerencia acessos e dados</option>
+          <option value="super_admin">👑 Super Admin — controle total</option>
+        </select>
       </div>
       <!-- Campo de senha — só aparece no modo Adicionar -->
       <div id="acesso-pwd-section">
@@ -1044,12 +1050,12 @@ const store = {
     'Bancolombia','Banco de Occidente','AV Villas',
   ],
   responsaveis:[
-    {nome:'Caique Bruno',email:'caique.silva@eroninternational.com',sigla:'CA'},
-    {nome:'Jana Czaia',email:'janaine.czaia@eroninternational.com',sigla:'JC'},
-    {nome:'Leticia Sanglard',email:'leticia.gomes@eroninternational.com',sigla:'LS'},
-    {nome:'Marcos Ferreira',email:'marcos.ferreira@eroninternational.com',sigla:'MF'},
-    {nome:'Luciane Goes',email:'luciane.goes@eroninternational.com',sigla:'LG'},
-    {nome:'Larissa Chequim',email:'larissa.chequim@eroninternational.com',sigla:'LQ'},
+    {nome:'Caique Bruno',email:'caique.silva@eroninternational.com',sigla:'CA',role:'super_admin'},
+    {nome:'Jana Czaia',email:'janaine.czaia@eroninternational.com',sigla:'JC',role:'visualizacao'},
+    {nome:'Leticia Sanglard',email:'leticia.gomes@eroninternational.com',sigla:'LS',role:'visualizacao'},
+    {nome:'Marcos Ferreira',email:'marcos.ferreira@eroninternational.com',sigla:'MF',role:'visualizacao'},
+    {nome:'Luciane Goes',email:'luciane.goes@eroninternational.com',sigla:'LG',role:'visualizacao'},
+    {nome:'Larissa Chequim',email:'larissa.chequim@eroninternational.com',sigla:'LQ',role:'visualizacao'},
   ],
   contas:[],
   cronogramaData:{},
@@ -1073,6 +1079,7 @@ const pagesMeta = {
   'cadastro-acessos':{parentKey:'nav-cadastro',labelKey:'nav-acessos'},
 };
 function navigate(pageId){
+  if(pageId==='cadastro-acessos'&&!canViewAcessos()) return;
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.sb-item[data-page]').forEach(el=>el.classList.remove('active'));
   document.getElementById('page-'+pageId).classList.add('active');
@@ -1103,16 +1110,18 @@ function toggleSection(id){
 
 // ─── AUTH ─────────────────────────────────────────────────────────
 function showAccountPicker(){
-  document.getElementById('login-email-input').value='';
-  document.getElementById('login-pwd-input').value='';
-  document.getElementById('login-err').style.display='none';
-  document.getElementById('account-picker').style.display='flex';
-  setTimeout(()=>document.getElementById('login-email-input').focus(),100);
+  // Form now lives directly in login-screen card
+  const email=document.getElementById('login-email-input');
+  const pwd=document.getElementById('login-pwd-input');
+  const err=document.getElementById('login-err');
+  if(email) email.value='';
+  if(pwd) pwd.value='';
+  if(err){ err.style.display='none'; err.textContent=''; }
+  setTimeout(()=>email?.focus(),100);
 }
 function selectAccount(email){
   window._loggedEmail=email;
-  document.getElementById('account-picker').style.display='none';
-  const user=store.responsaveis.find(r=>r.email===email)||{nome:email,email,sigla:'??'};
+  const user=store.responsaveis.find(r=>r.email===email)||{nome:email,email,sigla:'??',role:'visualizacao'};
   const initials=user.sigla||(user.nome.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase());
   document.getElementById('sb-avatar').textContent=initials;
   document.getElementById('sb-user-name').textContent=user.nome;
@@ -1120,7 +1129,31 @@ function selectAccount(email){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').classList.add('visible');
   logAudit('auth','login',{email});
+  updateSidebarForRole();
   renderAcessos();
+}
+function updateSidebarForRole(){
+  const role=getUserRole();
+  // Show/hide Acessos in sidebar
+  const acessosItem=document.querySelector('.sb-item[data-page="cadastro-acessos"]');
+  if(acessosItem) acessosItem.style.display=canViewAcessos()?'':'none';
+  // Show/hide edit action buttons
+  document.querySelectorAll('[data-requires-edit]').forEach(el=>{
+    el.style.display=canEdit()?'':'none';
+  });
+  // Add/update role badge in sidebar footer
+  const userInfo=document.getElementById('sb-user-name')?.parentNode;
+  if(userInfo){
+    let badge=document.getElementById('sb-role-badge');
+    if(!badge){
+      badge=document.createElement('div');
+      badge.id='sb-role-badge';
+      badge.style.marginTop='2px';
+      userInfo.appendChild(badge);
+    }
+    badge.className='role-badge '+getRoleClass(role);
+    badge.textContent=getRoleBadge(role)+' '+getRoleLabel(role);
+  }
 }
 function doLogin(){ showAccountPicker(); }
 function doLogout(){
@@ -1268,14 +1301,14 @@ function renderAccountsTable(){
       <td>${tipoChip(c.tipo)}</td>
       <td>${tipoContaChip(c.tipoConta)}</td>
       <td>${statusChip}</td>
-      <td><div class="actions-cell">
+      <td>${canEdit()?`<div class="actions-cell">
         <button class="action-btn" onclick="openEditAccount(${realIdx})" title="${t('btn-edit-account')}">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
         <button class="action-btn del" onclick="deleteAccount(${realIdx})" title="Remover">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
         </button>
-      </div></td>
+      </div>`:''}</td>
     </tr>`;
   }).join('');
 }
@@ -1348,22 +1381,23 @@ function deleteCadastro(type,idx){
 }
 const trashIcon=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>`;
 function renderCadastro(type){
+  const edit=canEdit();
   if(type==='pais'){
     const e=document.getElementById('pais-empty'),i=document.getElementById('pais-table-inner'),b=document.getElementById('pais-tbody');
     if(!store.paises.length){e.style.display='';i.style.display='none';return;} e.style.display='none';i.style.display='';
-    b.innerHTML=store.paises.map((p,i)=>`<tr><td>${countryFlag(p)} ${p}</td><td><button class="action-btn del" onclick="deleteCadastro('pais',${i})">${trashIcon}</button></td></tr>`).join('');
+    b.innerHTML=store.paises.map((p,i)=>`<tr><td>${countryFlag(p)} ${p}</td><td>${edit?`<button class="action-btn del" onclick="deleteCadastro('pais',${i})">${trashIcon}</button>`:''}</td></tr>`).join('');
   } else if(type==='agente'){
     const e=document.getElementById('agente-empty'),i=document.getElementById('agente-table-inner'),b=document.getElementById('agente-tbody');
     if(!store.agentes.length){e.style.display='';i.style.display='none';return;} e.style.display='none';i.style.display='';
     b.innerHTML=store.agentes.map((a,ai)=>{
       const resp=store.responsaveis.find(r=>r.email===a.responsavel);
       const respCell=resp?`<span style="font-size:12px;color:var(--e-text)">${resp.nome} <span style="font-family:monospace;background:var(--e-ghost);padding:1px 5px;border-radius:3px;font-weight:700;color:var(--e-mid)">${resp.sigla||''}</span></span>`:`<span style="color:var(--e-muted);font-size:12px">—</span>`;
-      return `<tr><td>${a.nome}</td><td><span class="pais-tag">${countryFlag(a.pais)} ${a.pais}</span></td><td>${respCell}</td><td><div class="actions-cell"><button class="action-btn" onclick="openCadastroModal('agente',${ai})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteCadastro('agente',${ai})">${trashIcon}</button></div></td></tr>`;
+      return `<tr><td>${a.nome}</td><td><span class="pais-tag">${countryFlag(a.pais)} ${a.pais}</span></td><td>${respCell}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openCadastroModal('agente',${ai})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteCadastro('agente',${ai})">${trashIcon}</button></div>`:''}</td></tr>`;
     }).join('');
   } else {
     const e=document.getElementById('banco-empty'),i=document.getElementById('banco-table-inner'),b=document.getElementById('banco-tbody');
     if(!store.bancos.length){e.style.display='';i.style.display='none';return;} e.style.display='none';i.style.display='';
-    b.innerHTML=store.bancos.map((bk,i)=>`<tr><td>${bk}</td><td><button class="action-btn del" onclick="deleteCadastro('banco',${i})">${trashIcon}</button></td></tr>`).join('');
+    b.innerHTML=store.bancos.map((bk,i)=>`<tr><td>${bk}</td><td>${edit?`<button class="action-btn del" onclick="deleteCadastro('banco',${i})">${trashIcon}</button>`:''}</td></tr>`).join('');
   }
 }
 function isActiveDay(date, freq){
@@ -1476,7 +1510,25 @@ function initCronoDates(){
 }
 // ─── ACESSOS ─────────────────────────────────────────────────────
 const ADMIN_EMAIL='caique.silva@eroninternational.com';
-function isAdmin(){ return (window._loggedEmail||'')=== ADMIN_EMAIL; }
+
+const ROLES={
+  super_admin:{label:'Super Admin',badge:'👑',cssClass:'role-super-admin'},
+  admin:{label:'Admin',badge:'🔑',cssClass:'role-admin'},
+  analista:{label:'Analista',badge:'📊',cssClass:'role-analista'},
+  visualizacao:{label:'Visualização',badge:'👁',cssClass:'role-visualizacao'},
+};
+function getUserRole(){
+  if(!window._loggedEmail) return 'visualizacao';
+  return store.responsaveis.find(r=>r.email===window._loggedEmail)?.role||'visualizacao';
+}
+function isSuperAdmin(){ return getUserRole()==='super_admin'; }
+function isAdmin(){ return ['super_admin','admin'].includes(getUserRole()); }
+function canEdit(){ return ['super_admin','admin','analista'].includes(getUserRole()); }
+function canViewAcessos(){ return ['super_admin','admin'].includes(getUserRole()); }
+function canManagePasswords(){ return getUserRole()==='super_admin'; }
+function getRoleLabel(role){ return ROLES[role]?.label||'Visualização'; }
+function getRoleBadge(role){ return ROLES[role]?.badge||'👁'; }
+function getRoleClass(role){ return ROLES[role]?.cssClass||'role-visualizacao'; }
 let _editAcessoIdx=-1;
 function openAcessoModal(){
   if(!isAdmin()){ alert(t('acessos-no-perm-sub')); return; }
@@ -1490,6 +1542,10 @@ function openAcessoModal(){
   document.getElementById('acesso-pwd').value='';
   document.getElementById('acesso-pwd-section').style.display='';
   document.getElementById('acesso-submit-btn').textContent='Adicionar';
+  const roleSection=document.getElementById('acesso-role-section');
+  if(roleSection){ roleSection.style.display=isSuperAdmin()?'':'none'; }
+  const roleEl=document.getElementById('acesso-role');
+  if(roleEl) roleEl.value='visualizacao';
   openModal('modal-acesso');
 }
 function editAcesso(idx){
@@ -1504,17 +1560,26 @@ function editAcesso(idx){
   document.getElementById('acesso-sigla').value=r.sigla||'';
   document.getElementById('acesso-pwd-section').style.display='none';
   document.getElementById('acesso-submit-btn').textContent='Salvar alterações';
+  const roleSection=document.getElementById('acesso-role-section');
+  if(roleSection){ roleSection.style.display=isSuperAdmin()?'':'none'; }
+  const roleEl=document.getElementById('acesso-role');
+  if(roleEl) roleEl.value=r.role||'visualizacao';
   openModal('modal-acesso');
 }
 async function submitAcesso(){
   if(_editAcessoIdx>=0){
-    // Modo edição — só nome e sigla
+    // Modo edição — nome, sigla, e role (se super_admin)
     if(!validate(['acesso-nome','acesso-sigla'])) return;
     const nome=document.getElementById('acesso-nome').value.trim();
     const sigla=document.getElementById('acesso-sigla').value.trim().toUpperCase();
     const r=store.responsaveis[_editAcessoIdx];
     r.nome=nome; r.sigla=sigla;
-    logAudit('acessos','edit-user',{email:r.email,nome,sigla});
+    if(isSuperAdmin()){
+      const novoRole=document.getElementById('acesso-role')?.value||r.role||'visualizacao';
+      if(r.email===ADMIN_EMAIL&&novoRole!=='super_admin'){alert('Não é possível remover o Super Admin de si mesmo.');return;}
+      r.role=novoRole;
+    }
+    logAudit('acessos','edit-user',{email:r.email,nome,sigla,role:r.role});
   } else {
     // Modo adição
     if(!validate(['acesso-nome','acesso-email','acesso-sigla','acesso-pwd'])) return;
@@ -1522,13 +1587,14 @@ async function submitAcesso(){
     const email=document.getElementById('acesso-email').value.trim().toLowerCase();
     const sigla=document.getElementById('acesso-sigla').value.trim().toUpperCase();
     const pwd=document.getElementById('acesso-pwd').value;
+    const role=isSuperAdmin()?(document.getElementById('acesso-role')?.value||'visualizacao'):'visualizacao';
     if(!email.endsWith('@eroninternational.com')){alert('O email deve ser @eroninternational.com');return;}
     if(pwd.length<6){alert('A senha deve ter pelo menos 6 caracteres.');return;}
     const existing=store.responsaveis.find(r=>r.email===email);
-    if(existing){existing.nome=nome;existing.sigla=sigla;}
-    else store.responsaveis.push({nome,email,sigla});
+    if(existing){existing.nome=nome;existing.sigla=sigla;existing.role=role;}
+    else store.responsaveis.push({nome,email,sigla,role});
     store.credentials[email]={hash:await hashPwd(pwd),mustChange:true};
-    logAudit('acessos','add-user',{nome,email,sigla});
+    logAudit('acessos','add-user',{nome,email,sigla,role});
   }
   closeModal('modal-acesso');
   saveStore();
@@ -1546,8 +1612,10 @@ function deleteAcesso(idx){
 }
 function renderAcessos(){
   const isAdm=isAdmin();
-  document.getElementById('acessos-admin-notice').style.display=isAdm?'none':'';
-  document.getElementById('acessos-content').style.display=isAdm?'':'none';
+  const isSA=isSuperAdmin();
+  const canView=canViewAcessos();
+  document.getElementById('acessos-admin-notice').style.display=canView?'none':'';
+  document.getElementById('acessos-content').style.display=canView?'':'none';
   document.getElementById('btn-add-acesso').style.display=isAdm?'':'none';
   const el=document.getElementById('acessos-count');
   if(el) el.textContent=store.responsaveis.length+' acesso'+(store.responsaveis.length===1?'':'s');
@@ -1561,17 +1629,23 @@ function renderAcessos(){
     const credBadge=!cred?`<span class="cred-badge cred-none">Sem senha</span>`:
       cred.mustChange?`<span class="cred-badge cred-pending">⏳ Aguardando troca</span>`:
       `<span class="cred-badge cred-active">✓ Ativo</span>`;
+    const roleKey=r.role||'visualizacao';
+    const roleBadgeHtml=`<span class="role-badge ${getRoleClass(roleKey)}">${getRoleBadge(roleKey)} ${getRoleLabel(roleKey)}</span>`;
+    const isSelf=r.email===window._loggedEmail;
     const isAdminUser=r.email===ADMIN_EMAIL;
-    const actions=isAdm?`<div class="actions-cell">
-      <button class="action-btn" onclick="editAcesso(${idx})" title="Editar" style="font-size:10px;padding:4px 8px">✏️</button>
-      <button class="action-btn" onclick="openPermissoes(${idx})" title="Permissões" style="font-size:10px;padding:4px 8px">🔐</button>
-      <button class="action-btn" onclick="openResetPassword(${idx})" title="Redefinir senha" style="font-size:10px;padding:4px 8px">🔑</button>
-      ${!isAdminUser?`<button class="action-btn del" onclick="deleteAcesso(${idx})">${trashIcon}</button>`:''}
-    </div>`:'';
+    let actions='';
+    if(isAdm){
+      actions=`<div class="actions-cell">
+        <button class="action-btn" onclick="editAcesso(${idx})" title="Editar" style="font-size:10px;padding:4px 8px">✏️</button>
+        ${isSA?`<button class="action-btn" onclick="openResetPassword(${idx})" title="Redefinir senha" style="font-size:10px;padding:4px 8px">🔑</button>`:''}
+        ${!isAdminUser&&!isSelf?`<button class="action-btn del" onclick="deleteAcesso(${idx})">${trashIcon}</button>`:''}
+      </div>`;
+    }
     return `<tr>
-      <td>${r.nome}${isAdminUser?' <span style="font-size:10px;color:var(--e-purple)">ADM</span>':''}</td>
+      <td>${r.nome}${isAdminUser?' <span style="font-size:10px;color:var(--e-purple)">👑</span>':''}</td>
       <td class="sub">${r.email}</td>
       <td><span style="font-family:ui-monospace,monospace;font-size:12px;font-weight:700;background:var(--e-ghost);padding:2px 7px;border-radius:4px;color:var(--e-mid)">${r.sigla||'—'}</span></td>
+      <td>${roleBadgeHtml}</td>
       <td>${credBadge}</td>
       <td>${actions}</td>
     </tr>`;
@@ -1710,7 +1784,13 @@ function loadStore(){
     if(saved.paises) store.paises=saved.paises;
     if(saved.agentes) store.agentes=saved.agentes;
     if(saved.bancos) store.bancos=saved.bancos;
-    if(saved.responsaveis) store.responsaveis=saved.responsaveis;
+    if(saved.responsaveis){
+      store.responsaveis=saved.responsaveis;
+      // Migração: garante que todos têm role definido
+      store.responsaveis.forEach(r=>{
+        if(!r.role) r.role=r.email==='caique.silva@eroninternational.com'?'super_admin':'visualizacao';
+      });
+    }
     if(saved.contas) store.contas=saved.contas;
     if(saved.cronogramaData) store.cronogramaData=saved.cronogramaData;
     if(saved.auditLog) store.auditLog=saved.auditLog;
@@ -1774,14 +1854,14 @@ async function tryLogin(){
   const email=document.getElementById('login-email-input').value.trim().toLowerCase();
   const pwd=document.getElementById('login-pwd-input').value;
   const errEl=document.getElementById('login-err');
-  if(!email){errEl.style.display='';errEl.textContent='Informe seu email.';return;}
-  if(!email.endsWith('@eroninternational.com')){errEl.style.display='';errEl.textContent='Somente contas @eroninternational.com.';return;}
+  if(!email){errEl.style.display='block';errEl.textContent='Informe seu email.';return;}
+  if(!email.endsWith('@eroninternational.com')){errEl.style.display='block';errEl.textContent='Somente contas @eroninternational.com.';return;}
   const user=store.responsaveis.find(r=>r.email===email);
-  if(!user){errEl.style.display='';errEl.textContent='Usuário não cadastrado. Solicite acesso ao administrador.';return;}
+  if(!user){errEl.style.display='block';errEl.textContent='Usuário não cadastrado. Solicite acesso ao administrador.';return;}
   const cred=store.credentials[email];
-  if(!cred){errEl.style.display='';errEl.textContent='Senha não configurada para este usuário. Contate o administrador.';return;}
+  if(!cred){errEl.style.display='block';errEl.textContent='Senha não configurada para este usuário. Contate o administrador.';return;}
   const inputHash=await hashPwd(pwd);
-  if(inputHash!==cred.hash){errEl.style.display='';errEl.textContent='Senha incorreta.';return;}
+  if(inputHash!==cred.hash){errEl.style.display='block';errEl.textContent='Senha incorreta.';return;}
   errEl.style.display='none';
   document.getElementById('account-picker').style.display='none';
   if(cred.mustChange){
@@ -1799,8 +1879,8 @@ async function submitForcePwd(){
   const p1=document.getElementById('force-pwd-1').value;
   const p2=document.getElementById('force-pwd-2').value;
   const errEl=document.getElementById('force-pwd-err');
-  if(p1.length<6){errEl.style.display='';errEl.textContent='A senha deve ter pelo menos 6 caracteres.';return;}
-  if(p1!==p2){errEl.style.display='';errEl.textContent='As senhas não coincidem.';return;}
+  if(p1.length<6){errEl.style.display='block';errEl.textContent='A senha deve ter pelo menos 6 caracteres.';return;}
+  if(p1!==p2){errEl.style.display='block';errEl.textContent='As senhas não coincidem.';return;}
   const email=window._pendingLoginEmail;
   store.credentials[email]={hash:await hashPwd(p1),mustChange:false};
   saveStore();
@@ -1816,11 +1896,11 @@ async function submitChangePwd(){
   const errEl=document.getElementById('change-pwd-err');
   const email=window._loggedEmail;
   const cred=store.credentials[email];
-  if(!cred){errEl.style.display='';errEl.textContent='Erro: credenciais não encontradas.';return;}
+  if(!cred){errEl.style.display='block';errEl.textContent='Erro: credenciais não encontradas.';return;}
   const currHash=await hashPwd(curr);
-  if(currHash!==cred.hash){errEl.style.display='';errEl.textContent='Senha atual incorreta.';return;}
-  if(p1.length<6){errEl.style.display='';errEl.textContent='A nova senha deve ter pelo menos 6 caracteres.';return;}
-  if(p1!==p2){errEl.style.display='';errEl.textContent='As novas senhas não coincidem.';return;}
+  if(currHash!==cred.hash){errEl.style.display='block';errEl.textContent='Senha atual incorreta.';return;}
+  if(p1.length<6){errEl.style.display='block';errEl.textContent='A nova senha deve ter pelo menos 6 caracteres.';return;}
+  if(p1!==p2){errEl.style.display='block';errEl.textContent='As novas senhas não coincidem.';return;}
   store.credentials[email]={hash:await hashPwd(p1),mustChange:false};
   saveStore();
   closeModal('modal-change-pwd');
@@ -1838,7 +1918,7 @@ function openChangePassword(){
 
 let _resetPwdIdx=-1;
 function openResetPassword(idx){
-  if(!isAdmin()) return;
+  if(!canManagePasswords()) return;
   _resetPwdIdx=idx;
   const user=store.responsaveis[idx];
   document.getElementById('reset-pwd-user-name').textContent=user?.nome||'';
