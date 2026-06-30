@@ -1063,6 +1063,16 @@
   </div>
 </div>
 
+<!-- Firebase SDK (compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<!-- Loading overlay while Firebase connects -->
+<div id="_fb-loading" style="position:fixed;inset:0;background:#1b133c;display:flex;align-items:center;justify-content:center;z-index:99999;flex-direction:column;gap:14px;">
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="20" stroke="rgba(151,111,244,.3)" stroke-width="4"/><path d="M24 4a20 20 0 0 1 20 20" stroke="#976ff4" stroke-width="4" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 24 24" to="360 24 24" dur="0.9s" repeatCount="indefinite"/></path></svg>
+  <div style="color:rgba(255,255,255,.55);font-size:13px;letter-spacing:.03em;">Conectando...</div>
+</div>
+
 <script>
 // ─── I18N ─────────────────────────────────────────────────────────────────────
 const i18n = {
@@ -2133,12 +2143,16 @@ function setCronoDayStatus(contaKey, dateStr, status, event){
 // ─── PERSISTÊNCIA localStorage ────────────────────────────────────
 const STORE_KEY='eron-foc-v1';
 function saveStore(){
-  try{ localStorage.setItem(STORE_KEY,JSON.stringify({
-    paises:store.paises,agentes:store.agentes,bancos:store.bancos,
+  const _ls={paises:store.paises,agentes:store.agentes,bancos:store.bancos,
     responsaveis:store.responsaveis,contas:store.contas,
     cronogramaData:store.cronogramaData,auditLog:store.auditLog,
-    permissions:store.permissions,credentials:store.credentials
-  })); } catch(e){}
+    permissions:store.permissions,credentials:store.credentials};
+  try{localStorage.setItem(STORE_KEY,JSON.stringify(_ls));}catch(e){}
+  if(typeof _fbRef!=='undefined'){
+    _ownWrite=true;setTimeout(()=>_ownWrite=false,3000);
+    _syncBadge('syncing');
+    _fbRef.set(_storeToFb()).then(()=>_syncBadge('synced')).catch(()=>_syncBadge('offline'));
+  }
 }
 function loadStore(){
   try{
@@ -2174,7 +2188,119 @@ function loadStore(){
     if(saved.credentials) store.credentials=saved.credentials;
   } catch(e){}
 }
-loadStore();
+// ─── FIREBASE REALTIME DATABASE ──────────────────────────────────
+const _FB_CFG={
+  apiKey:"AIzaSyB-Fhj-aoMq-BK4p3wRZSFnTHc-VLaUBUQ",
+  authDomain:"eron-foc-app-da755.firebaseapp.com",
+  databaseURL:"https://eron-foc-app-da755-default-rtdb.firebaseio.com",
+  projectId:"eron-foc-app-da755",
+  storageBucket:"eron-foc-app-da755.firebasestorage.app",
+  messagingSenderId:"786560486412",
+  appId:"1:786560486412:web:f2dd8d4d9977bac495f229"
+};
+const _fbApp=firebase.initializeApp(_FB_CFG);
+const _fbRef=firebase.database(_fbApp).ref('store');
+let _fbListening=false,_ownWrite=false;
+
+// Email → chave Firebase-safe (Firebase proíbe '.' em chaves)
+const _encK=e=>btoa(unescape(encodeURIComponent(e))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+const _decK=k=>{try{return decodeURIComponent(escape(atob(k.replace(/-/g,'+').replace(/_/g,'/'))));}catch(e){return k;}};
+const _fbArr=v=>{if(!v)return[];if(Array.isArray(v))return v;return Object.values(v);};
+
+function _storeToFb(){
+  const creds={};
+  Object.entries(store.credentials).forEach(([e,v])=>creds[_encK(e)]=v);
+  return {
+    paises:store.paises,agentes:store.agentes,bancos:store.bancos,
+    responsaveis:store.responsaveis,contas:store.contas,
+    cronogramaData:store.cronogramaData,
+    auditLog:store.auditLog.slice(-500),
+    permissions:store.permissions,credentials:creds
+  };
+}
+
+function _applyFbData(saved){
+  if(!saved)return;
+  if(saved.paises)store.paises=_fbArr(saved.paises);
+  if(saved.agentes)store.agentes=_fbArr(saved.agentes);
+  if(saved.bancos)store.bancos=_fbArr(saved.bancos);
+  if(saved.responsaveis){
+    store.responsaveis=_fbArr(saved.responsaveis);
+    store.responsaveis.forEach(r=>{if(!r.role)r.role=r.email===ADMIN_EMAIL?'super_admin':'visualizacao';});
+    const can=[
+      {nome:'Caique Bruno',email:'caique.silva@eroninternational.com',sigla:'CA',role:'super_admin'},
+      {nome:'Jana Czaia',email:'janaine.czaia@eroninternational.com',sigla:'JC',role:'admin'},
+      {nome:'Leticia Sanglard',email:'leticia.gomes@eroninternational.com',sigla:'LS',role:'analista'},
+      {nome:'Luciane Goes',email:'luciane.goes@eroninternational.com',sigla:'LG',role:'admin'},
+      {nome:'Larissa Chequim',email:'larissa.chequim@eroninternational.com',sigla:'LQ',role:'admin'},
+    ];
+    can.forEach(u=>{if(!store.responsaveis.find(r=>r.email===u.email))store.responsaveis.push(u);});
+  }
+  if(saved.contas)store.contas=_fbArr(saved.contas);
+  if(saved.cronogramaData)store.cronogramaData=saved.cronogramaData;
+  if(saved.auditLog)store.auditLog=_fbArr(saved.auditLog);
+  if(saved.permissions)store.permissions=saved.permissions;
+  if(saved.credentials){
+    const creds={};
+    Object.entries(saved.credentials).forEach(([k,v])=>creds[_decK(k)]=v);
+    store.credentials=creds;
+  }
+}
+
+function _syncBadge(state){
+  let b=document.getElementById('_fb-badge');
+  if(!b){
+    b=document.createElement('div');b.id='_fb-badge';
+    b.style.cssText='position:fixed;bottom:10px;right:14px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:10px;z-index:9998;pointer-events:none;transition:opacity .4s;';
+    document.body.appendChild(b);
+  }
+  const m={
+    syncing:{bg:'rgba(251,191,36,.18)',c:'#92400e',l:'↑ Sincronizando…'},
+    synced:{bg:'rgba(5,150,105,.14)',c:'#065f46',l:'✓ Sincronizado'},
+    offline:{bg:'rgba(220,38,38,.13)',c:'#991b1b',l:'● Offline'}
+  }[state]||{};
+  Object.assign(b.style,{background:m.bg,color:m.c,opacity:'1'});
+  b.textContent=m.l;
+  if(state==='synced')setTimeout(()=>b.style.opacity='0',3000);
+}
+
+async function startFirebaseSync(){
+  _syncBadge('syncing');
+  try{
+    const snap=await Promise.race([
+      _fbRef.once('value'),
+      new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),7000))
+    ]);
+    const fbData=snap.val();
+    if(fbData){
+      _applyFbData(fbData);
+      try{localStorage.setItem(STORE_KEY,JSON.stringify({
+        paises:store.paises,agentes:store.agentes,bancos:store.bancos,
+        responsaveis:store.responsaveis,contas:store.contas,
+        cronogramaData:store.cronogramaData,auditLog:store.auditLog,
+        permissions:store.permissions,credentials:store.credentials
+      }));}catch(e){}
+    }
+    _syncBadge('synced');
+    if(!_fbListening){
+      _fbListening=true;
+      _fbRef.on('value',snap=>{
+        if(_ownWrite)return;
+        const d=snap.val();if(!d)return;
+        const noModal=!document.querySelector('.modal-overlay.open');
+        _applyFbData(d);
+        if(noModal){renderAll();updateCounts();}
+      });
+    }
+    return true;
+  }catch(e){
+    console.warn('[Firebase]',e);
+    _syncBadge('offline');
+    return false;
+  }
+}
+
+
 
 // ─── SENHAS ──────────────────────────────────────────────────────
 async function hashPwd(pwd){
@@ -2253,7 +2379,6 @@ async function initAdminCredentials(){
   }
   if(changed) saveStore();
 }
-initAdminCredentials();
 
 // ─── LEMBRAR SESSÃO ──────────────────────────────────────────────
 const SESSION_KEY='eron-foc-session';
@@ -2476,12 +2601,20 @@ function updateCounts(){
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────
-renderAll();
-updateCounts();
-applyTranslations();
-if(new URLSearchParams(window.location.search).has('r')){
-  checkResetLink();
-} else {
-  checkRememberedSession();
+async function _initApp(){
+  loadStore();         // localStorage rápido
+  renderAll();
+  applyTranslations();
+  await startFirebaseSync();       // dados autoritativos do Firebase
+  await initAdminCredentials();    // preenche credenciais ausentes
+  renderAll();updateCounts();
+  const fbLoading=document.getElementById('_fb-loading');
+  if(fbLoading)fbLoading.style.display='none';
+  if(new URLSearchParams(window.location.search).has('r')){
+    checkResetLink();
+  } else {
+    checkRememberedSession();
+  }
 }
+_initApp();
 </script>
