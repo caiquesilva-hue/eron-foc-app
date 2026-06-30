@@ -309,7 +309,14 @@
       </div>
     </div>
     <div class="login-err" id="login-err" style="text-align:left;margin-bottom:8px;display:none"></div>
-    <button class="btn-primary" onclick="tryLogin()" style="width:100%;justify-content:center;padding:12px;margin-top:8px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:6px 0 14px">
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;color:rgba(185,185,230,.7);user-select:none">
+        <input type="checkbox" id="login-remember" style="accent-color:var(--e-purple);width:14px;height:14px;cursor:pointer">
+        Lembrar por 24h
+      </label>
+      <button type="button" onclick="openForgotPassword()" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--e-lilac);padding:0;font-family:inherit">Esqueci a senha</button>
+    </div>
+    <button class="btn-primary" onclick="tryLogin()" style="width:100%;justify-content:center;padding:12px">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
       Entrar
     </button>
@@ -846,6 +853,76 @@
   </div>
 </div>
 
+<!-- MODAL: ESQUECI MINHA SENHA -->
+<div class="modal-overlay" id="modal-forgot-pwd" onclick="if(event.target===this)closeModal('modal-forgot-pwd')" style="z-index:1200">
+  <div class="modal-card" style="width:440px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">🔑 Esqueci minha senha</div>
+        <div style="font-size:12px;color:var(--e-muted);margin-top:2px">Gera um link seguro para redefinir sua senha</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-forgot-pwd')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-field">
+        <label class="form-label">Seu email corporativo<span class="req">*</span></label>
+        <input class="form-input" type="email" id="forgot-email-input" placeholder="nome@eroninternational.com" onkeydown="if(event.key==='Enter')submitForgotPassword()">
+      </div>
+      <div class="login-err" id="forgot-err"></div>
+      <div id="forgot-result" style="display:none;margin-top:12px">
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px 16px">
+          <div style="font-size:13px;font-weight:600;color:#15803d;margin-bottom:4px">✓ Link gerado com sucesso!</div>
+          <div style="font-size:12px;color:#166534;margin-bottom:12px">Válido por 1 hora. Copie e abra no mesmo navegador, ou envie para seu email.</div>
+          <div style="display:flex;gap:6px;margin-bottom:10px">
+            <input class="form-input" type="text" id="forgot-reset-link" readonly style="font-size:11px;font-family:monospace;flex:1;min-width:0">
+            <button class="btn-secondary" id="copy-link-btn" onclick="copyResetLink()" style="white-space:nowrap;flex-shrink:0">Copiar</button>
+          </div>
+          <div style="display:flex;gap:8px">
+            <a id="forgot-mailto-link" href="#" class="btn-secondary" style="flex:1;text-align:center;text-decoration:none;font-size:13px;padding:9px 12px;display:block;font-weight:600;color:var(--e-sub)">📧 Enviar por email</a>
+            <button class="btn-primary" onclick="useResetLinkNow()" style="flex:1;justify-content:center">Usar agora →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-forgot-pwd')">Cancelar</button>
+      <button class="btn-primary" onclick="submitForgotPassword()">Gerar link</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: REDEFINIR SENHA VIA LINK -->
+<div class="modal-overlay" id="modal-reset-link" style="z-index:1200">
+  <div class="modal-card" style="width:400px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">🔐 Redefinir senha</div>
+        <div style="font-size:12px;color:var(--e-muted);margin-top:2px" id="reset-link-user-email"></div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="form-field">
+        <label class="form-label">Nova senha<span class="req">*</span></label>
+        <div class="pwd-field-wrap">
+          <input class="form-input" type="password" id="reset-link-pwd-1" placeholder="Mínimo 6 caracteres" style="padding-right:36px">
+          <button class="pwd-toggle" onclick="togglePwdVisibility('reset-link-pwd-1',this)" tabindex="-1">👁</button>
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Confirmar senha<span class="req">*</span></label>
+        <div class="pwd-field-wrap">
+          <input class="form-input" type="password" id="reset-link-pwd-2" placeholder="Repita a nova senha" style="padding-right:36px" onkeydown="if(event.key==='Enter')submitResetFromLink()">
+          <button class="pwd-toggle" onclick="togglePwdVisibility('reset-link-pwd-2',this)" tabindex="-1">👁</button>
+        </div>
+      </div>
+      <div class="login-err" id="reset-link-err"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" onclick="submitResetFromLink()" style="width:100%;justify-content:center">Salvar nova senha</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: PERMISSÕES DO USUÁRIO -->
 <div class="modal-overlay" id="modal-permissoes" onclick="if(event.target===this)closeModal('modal-permissoes')">
   <div class="modal-card" style="width:520px">
@@ -1051,11 +1128,10 @@ const store = {
   ],
   responsaveis:[
     {nome:'Caique Bruno',email:'caique.silva@eroninternational.com',sigla:'CA',role:'super_admin'},
-    {nome:'Jana Czaia',email:'janaine.czaia@eroninternational.com',sigla:'JC',role:'visualizacao'},
-    {nome:'Leticia Sanglard',email:'leticia.gomes@eroninternational.com',sigla:'LS',role:'visualizacao'},
-    {nome:'Marcos Ferreira',email:'marcos.ferreira@eroninternational.com',sigla:'MF',role:'visualizacao'},
-    {nome:'Luciane Goes',email:'luciane.goes@eroninternational.com',sigla:'LG',role:'visualizacao'},
-    {nome:'Larissa Chequim',email:'larissa.chequim@eroninternational.com',sigla:'LQ',role:'visualizacao'},
+    {nome:'Jana Czaia',email:'janaine.czaia@eroninternational.com',sigla:'JC',role:'admin'},
+    {nome:'Leticia Sanglard',email:'leticia.gomes@eroninternational.com',sigla:'LS',role:'analista'},
+    {nome:'Luciane Goes',email:'luciane.goes@eroninternational.com',sigla:'LG',role:'admin'},
+    {nome:'Larissa Chequim',email:'larissa.chequim@eroninternational.com',sigla:'LQ',role:'admin'},
   ],
   contas:[],
   cronogramaData:{},
@@ -1130,7 +1206,7 @@ function selectAccount(email){
   document.getElementById('app').classList.add('visible');
   logAudit('auth','login',{email});
   updateSidebarForRole();
-  renderAcessos();
+  renderAll();
 }
 function updateSidebarForRole(){
   const role=getUserRole();
@@ -1157,6 +1233,7 @@ function updateSidebarForRole(){
 }
 function doLogin(){ showAccountPicker(); }
 function doLogout(){
+  clearSession();
   logAudit('auth','logout',{email:window._loggedEmail});
   document.getElementById('app').classList.remove('visible');
   document.getElementById('login-screen').style.display='flex';
@@ -1849,6 +1926,134 @@ async function initAdminCredentials(){
 }
 initAdminCredentials();
 
+// ─── LEMBRAR SESSÃO ──────────────────────────────────────────────
+const SESSION_KEY='eron-foc-session';
+function saveSession(email){
+  try{ localStorage.setItem(SESSION_KEY,JSON.stringify({email,expiry:Date.now()+86400000})); }catch(e){}
+}
+function clearSession(){ try{ localStorage.removeItem(SESSION_KEY); }catch(e){} }
+function checkRememberedSession(){
+  try{
+    const raw=localStorage.getItem(SESSION_KEY);
+    if(!raw) return false;
+    const s=JSON.parse(raw);
+    if(!s.email||Date.now()>s.expiry){clearSession();return false;}
+    const user=store.responsaveis.find(r=>r.email===s.email);
+    if(!user){clearSession();return false;}
+    const cred=store.credentials[s.email];
+    if(!cred||cred.mustChange){clearSession();return false;}
+    selectAccount(s.email);
+    return true;
+  }catch(e){clearSession();return false;}
+}
+
+// ─── RESET DE SENHA VIA LINK ─────────────────────────────────────
+const RESET_SECRET='eron-foc-reset-2026';
+async function _genSig(data){
+  try{
+    const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(data));
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,24);
+  }catch(e){
+    let h=0x811c9dc5;
+    for(let i=0;i<data.length;i++){h^=data.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}
+    return h.toString(16).padStart(8,'0');
+  }
+}
+async function generateResetLink(email){
+  const exp=Date.now()+3600000;
+  const sig=await _genSig(email+':'+exp+':'+RESET_SECRET);
+  const base=window.location.origin+window.location.pathname;
+  return base+'?r='+encodeURIComponent(btoa(email))+'&exp='+exp+'&sig='+sig;
+}
+async function validateResetToken(encodedEmail,exp,sig){
+  try{
+    if(Date.now()>exp) return null;
+    const email=atob(decodeURIComponent(encodedEmail));
+    const expected=await _genSig(email+':'+exp+':'+RESET_SECRET);
+    return sig===expected?email:null;
+  }catch(e){return null;}
+}
+async function checkResetLink(){
+  const params=new URLSearchParams(window.location.search);
+  const r=params.get('r');
+  const exp=parseInt(params.get('exp')||'0');
+  const sig=params.get('sig')||'';
+  if(!r||!exp||!sig) return;
+  const email=await validateResetToken(r,exp,sig);
+  if(!email){
+    const errEl=document.getElementById('login-err');
+    if(errEl){errEl.style.display='block';errEl.textContent='Link de redefinição inválido ou expirado.';}
+    return;
+  }
+  window._resetEmail=email;
+  document.getElementById('reset-link-user-email').textContent=email;
+  document.getElementById('reset-link-pwd-1').value='';
+  document.getElementById('reset-link-pwd-2').value='';
+  document.getElementById('reset-link-err').style.display='none';
+  openModal('modal-reset-link');
+  window.history.replaceState({},'',window.location.pathname);
+}
+function openForgotPassword(){
+  const emailVal=document.getElementById('login-email-input')?.value.trim()||'';
+  document.getElementById('forgot-email-input').value=emailVal;
+  document.getElementById('forgot-result').style.display='none';
+  document.getElementById('forgot-err').style.display='none';
+  openModal('modal-forgot-pwd');
+}
+async function submitForgotPassword(){
+  const email=document.getElementById('forgot-email-input').value.trim().toLowerCase();
+  const errEl=document.getElementById('forgot-err');
+  errEl.style.display='none';
+  if(!email.endsWith('@eroninternational.com')){errEl.style.display='block';errEl.textContent='Somente contas @eroninternational.com.';return;}
+  const user=store.responsaveis.find(r=>r.email===email);
+  if(!user){errEl.style.display='block';errEl.textContent='Este email não está cadastrado no sistema.';return;}
+  const link=await generateResetLink(email);
+  document.getElementById('forgot-reset-link').value=link;
+  document.getElementById('forgot-result').style.display='';
+  const subj=encodeURIComponent('Redefinição de senha — Eron FOC App');
+  const body=encodeURIComponent('Olá,\n\nClique no link abaixo para redefinir sua senha (válido por 1 hora):\n\n'+link+'\n\nSe você não solicitou isso, ignore este email.\n\nEron FOC App');
+  document.getElementById('forgot-mailto-link').href='mailto:'+email+'?subject='+subj+'&body='+body;
+}
+function copyResetLink(){
+  const el=document.getElementById('forgot-reset-link');
+  el.select();
+  navigator.clipboard?.writeText(el.value).catch(()=>{});
+  const btn=document.getElementById('copy-link-btn');
+  btn.textContent='✓ Copiado!';
+  setTimeout(()=>btn.textContent='Copiar',2000);
+}
+function useResetLinkNow(){
+  const link=document.getElementById('forgot-reset-link').value;
+  try{
+    const url=new URL(link);
+    const p=url.searchParams;
+    validateResetToken(p.get('r'),parseInt(p.get('exp')||'0'),p.get('sig')||'').then(email=>{
+      if(!email){alert('Link inválido.');return;}
+      closeModal('modal-forgot-pwd');
+      window._resetEmail=email;
+      document.getElementById('reset-link-user-email').textContent=email;
+      document.getElementById('reset-link-pwd-1').value='';
+      document.getElementById('reset-link-pwd-2').value='';
+      document.getElementById('reset-link-err').style.display='none';
+      openModal('modal-reset-link');
+    });
+  }catch(e){alert('Link inválido.');}
+}
+async function submitResetFromLink(){
+  const p1=document.getElementById('reset-link-pwd-1').value;
+  const p2=document.getElementById('reset-link-pwd-2').value;
+  const errEl=document.getElementById('reset-link-err');
+  if(p1.length<6){errEl.style.display='block';errEl.textContent='A senha deve ter pelo menos 6 caracteres.';return;}
+  if(p1!==p2){errEl.style.display='block';errEl.textContent='As senhas não coincidem.';return;}
+  const email=window._resetEmail;
+  if(!store.responsaveis.find(r=>r.email===email)){errEl.style.display='block';errEl.textContent='Usuário não encontrado.';return;}
+  store.credentials[email]={hash:await hashPwd(p1),mustChange:false};
+  saveStore();
+  closeModal('modal-reset-link');
+  logAudit('auth','password-reset-via-link',{email});
+  selectAccount(email);
+}
+
 // ─── AUTH ATUALIZADA ─────────────────────────────────────────────
 async function tryLogin(){
   const email=document.getElementById('login-email-input').value.trim().toLowerCase();
@@ -1871,6 +2076,7 @@ async function tryLogin(){
     document.getElementById('force-pwd-err').style.display='none';
     openModal('modal-force-pwd');
   } else {
+    if(document.getElementById('login-remember')?.checked) saveSession(email);
     selectAccount(email);
   }
 }
@@ -1953,4 +2159,9 @@ function updateCounts(){
 renderAll();
 updateCounts();
 applyTranslations();
+if(new URLSearchParams(window.location.search).has('r')){
+  checkResetLink();
+} else {
+  checkRememberedSession();
+}
 </script>
