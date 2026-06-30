@@ -328,6 +328,8 @@
 .bulk-chip{font-size:12px;font-weight:600;padding:2px 9px;border-radius:4px;white-space:nowrap;}
 .btn-bulk-apply{display:none;align-items:center;gap:6px;padding:6px 14px;border-radius:7px;border:1.5px solid rgba(151,111,244,.4);background:rgba(151,111,244,.08);color:var(--e-purple);font-size:12px;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s;}
 .btn-bulk-apply:hover{background:rgba(151,111,244,.16);border-color:var(--e-purple);}
+  .btn-csv{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:7px;border:1.5px solid var(--e-pale);background:var(--e-ghost);color:var(--e-sub);font-size:12px;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s;font-family:inherit;white-space:nowrap;flex-shrink:0;}
+  .btn-csv:hover{border-color:var(--e-purple);color:var(--e-purple);background:#fff;}
 .day-cell.locked-cell{cursor:not-allowed!important;opacity:.85;}
 .role-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap;}
   .role-super-admin{background:rgba(109,40,217,.25);color:#c4b5fd;}
@@ -591,7 +593,7 @@
             </div>
           </div>
         </div>
-        <button class="btn-bulk-apply" onclick="downloadCronoCSV()" style="display:flex;background:var(--e-ghost);color:var(--e-sub);border-color:var(--e-pale);flex-shrink:0" title="Baixar CSV com os filtros aplicados">
+        <button class="btn-csv" onclick="downloadCronoCSV()" title="Baixar CSV com os filtros aplicados">
           <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
           Baixar CSV
         </button>
@@ -1029,7 +1031,7 @@
       </div>
     </div>
     <div class="modal-footer" style="justify-content:space-between">
-      <button class="btn-secondary" onclick="downloadHistoricoCSV()" style="display:flex;align-items:center;gap:6px">
+      <button class="btn-csv" onclick="downloadHistoricoCSV()">
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
         Baixar CSV
       </button>
