@@ -2124,12 +2124,25 @@ function checkPwdStrength(){
   // Placeholder — pode expandir
 }
 
-// Inicializa credencial do admin na primeira carga
+// Inicializa credenciais de todos os usuários canônicos na primeira carga
+// Garante que qualquer dispositivo, mesmo sem localStorage prévio, já tem senha inicial
 async function initAdminCredentials(){
-  if(!store.credentials[ADMIN_EMAIL]){
-    store.credentials[ADMIN_EMAIL]={hash:await hashPwd('Eron@2026'),mustChange:true};
-    saveStore();
+  const DEFAULT_PWD='Eron@2026';
+  const canonical=[
+    ADMIN_EMAIL,
+    'janaine.czaia@eroninternational.com',
+    'leticia.gomes@eroninternational.com',
+    'luciane.goes@eroninternational.com',
+    'larissa.chequim@eroninternational.com',
+  ];
+  let changed=false;
+  for(const email of canonical){
+    if(!store.credentials[email]){
+      store.credentials[email]={hash:await hashPwd(DEFAULT_PWD),mustChange:true};
+      changed=true;
+    }
   }
+  if(changed) saveStore();
 }
 initAdminCredentials();
 
