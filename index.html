@@ -1609,12 +1609,8 @@ function renderCadastro(type){
 }
 function isActiveDay(date, freq){
   const d=date.getDate();
-  const last=new Date(date.getFullYear(),date.getMonth()+1,0).getDate();
-  if(freq==='Diário') return true;
-  if(freq==='T1') return d<=15;
-  if(freq==='T2') return d>15;
   if(freq==='1 vez ao mês') return d===1;
-  return false;
+  return true; // Diário, T1, T2 e qualquer outro = todos os dias ativos
 }
 function dayDotClass(freq){ return {T1:'active-t1',T2:'active-t2','Diário':'active-diario','1 vez ao mês':'active-once'}[freq]||''; }
 function buildCronoDates(){
@@ -1793,8 +1789,16 @@ function _getFilteredCronoContext(){
   const fa=document.getElementById('crono-f-agente')?.value||'';
   const fb=document.getElementById('crono-f-banco')?.value||'';
   const ff=document.getElementById('crono-f-freq')?.value||'';
+  const searchQ=(document.getElementById('crono-search')?.value||'').trim();
+  const searchFilters=searchQ?parseCronoSearch(searchQ):null;
   const days=buildCronoDates();
-  const list=store.contas.filter(c=>(!fp||c.pais===fp)&&(!fa||c.agente===fa)&&(!fb||c.banco===fb)&&(!ff||c.tipo===ff));
+  const list=store.contas.filter(c=>
+    (!fp||c.pais===fp)&&
+    (!fa||c.agente===fa)&&
+    (!fb||c.banco===fb)&&
+    (!ff||c.tipo===ff)&&
+    (!searchFilters||matchesCronoSearch(c,searchFilters))
+  );
   const fmtDate=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   return {days,list,fmtDate};
 }
