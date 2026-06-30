@@ -524,6 +524,10 @@
           <div class="page-title-text" data-i18n="nav-accounts">Accounts</div>
           <div class="page-title-count" id="crono-accounts-count"></div>
         </div>
+        <button class="btn-bulk-apply" onclick="downloadCronoCSV()" style="background:var(--e-ghost);color:var(--e-sub);border-color:var(--e-pale)" title="Baixar CSV com os filtros aplicados">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+          Baixar CSV
+        </button>
       </div>
       <div class="crono-filters">
         <select id="crono-f-pais" onchange="renderCronogramaAccounts()"></select>
@@ -554,10 +558,6 @@
         <button id="btn-bulk-apply" class="btn-bulk-apply" onclick="openBulkApply()" data-requires-edit="1">
           <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 16l2 2 4-4"/></svg>
           Aplicar em massa
-        </button>
-        <button class="btn-bulk-apply" onclick="downloadCronoCSV()" style="background:var(--e-ghost);color:var(--e-sub);border-color:var(--e-pale)" title="Baixar CSV com os filtros aplicados">
-          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
-          Baixar CSV
         </button>
         <button class="btn-bulk-apply" id="btn-clear-filters" onclick="clearCronoFilters()" style="background:var(--e-ghost);color:var(--e-muted);border-color:var(--e-pale);display:none" title="Limpar todos os filtros">
           <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
