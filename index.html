@@ -999,13 +999,7 @@
           <div style="font-size:13px;font-weight:600;color:#15803d;margin-bottom:4px">✓ Link de redefinição gerado!</div>
           <div style="font-size:12px;color:#166534;margin-bottom:14px">Válido por <strong>1 hora</strong>. Envie o link por email para o usuário.</div>
           <input type="hidden" id="forgot-reset-link">
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <button class="btn-primary" onclick="sendForgotByEmail()" style="font-size:13px;padding:10px 12px;font-weight:600">📧 Abrir cliente de email</button>
-            <button id="forgot-copy-btn" class="btn-secondary" onclick="copyForgotLink()" style="font-size:12px;padding:8px 12px">📋 Copiar link (para enviar manualmente)</button>
-          </div>
-          <div id="forgot-copy-warn" style="display:none;margin-top:8px;font-size:11px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 10px">
-            ⚠️ Link copiado. Envie <strong>somente por email</strong> para <span id="forgot-copy-email-label"></span> — nunca compartilhe em chat ou grupos.
-          </div>
+          <div id="forgot-sent-msg" style="font-size:13px;color:#15803d;font-weight:600;text-align:center;padding:6px 0">✓ Link enviado para <span id="forgot-sent-email"></span></div>
         </div>
       </div>
     </div>
@@ -1065,6 +1059,9 @@
     </div>
   </div>
 </div>
+
+<!-- EmailJS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
 <!-- Firebase SDK (compat) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -2471,29 +2468,34 @@ async function submitForgotPassword(){
   if(btn){btn.disabled=true;btn.textContent='Gerando...';}
   const link=await generateResetLink(email);
   document.getElementById('forgot-reset-link').value=link;
-  const lbl=document.getElementById('forgot-copy-email-label');
-  if(lbl)lbl.textContent=email;
-  document.getElementById('forgot-copy-warn').style.display='none';
-  document.getElementById('forgot-copy-btn').textContent='📋 Copiar link (para enviar manualmente)';
+  const sentEmail=document.getElementById('forgot-sent-email');
+  if(sentEmail)sentEmail.textContent=email;
+  // EmailJS: envia o link por email automaticamente (aguardando configuração)
+  await _sendResetEmail(email, link);
   document.getElementById('forgot-result').style.display='';
   if(btn){btn.disabled=false;btn.textContent='Gerar link';}
 }
-function sendForgotByEmail(){
-  const email=document.getElementById('forgot-email-input').value.trim().toLowerCase();
-  const link=document.getElementById('forgot-reset-link').value;
-  const subj=encodeURIComponent('Redefinição de senha — Eron FOC App');
-  const body=encodeURIComponent('Olá,\n\nClique no link abaixo para redefinir sua senha (válido por 1 hora):\n\n'+link+'\n\nSe você não solicitou isso, ignore este email.\n\nEron FOC App');
-  const mailtoHref='mailto:'+email+'?subject='+subj+'&body='+body;
-  window.location.href=mailtoHref;
-}
-function copyForgotLink(){
-  const link=document.getElementById('forgot-reset-link').value;
-  if(!link)return;
-  navigator.clipboard?.writeText(link).catch(()=>{
-    try{const t=document.createElement('textarea');t.value=link;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);}catch(e){}
-  });
-  document.getElementById('forgot-copy-btn').textContent='✓ Copiado!';
-  document.getElementById('forgot-copy-warn').style.display='';
+// Envio de email via EmailJS — preencher com credenciais após configurar conta
+const _EMAILJS_SERVICE  = '';   // ex: 'service_xxxxxxx'
+const _EMAILJS_TEMPLATE = '';   // ex: 'template_xxxxxxx'
+const _EMAILJS_PUBKEY   = '';   // ex: 'xxxxxxxxxxxxxxxxxxxx'
+async function _sendResetEmail(toEmail, resetLink){
+  if(!_EMAILJS_SERVICE||!_EMAILJS_TEMPLATE||!_EMAILJS_PUBKEY){
+    // EmailJS não configurado ainda — fallback para mailto
+    const subj=encodeURIComponent('Redefinição de senha — Eron FOC App');
+    const body=encodeURIComponent('Olá,\n\nClique no link abaixo para redefinir sua senha (válido por 1 hora):\n\n'+resetLink+'\n\nEron FOC App');
+    window.location.href='mailto:'+toEmail+'?subject='+subj+'&body='+body;
+    return;
+  }
+  try{
+    await emailjs.send(_EMAILJS_SERVICE,_EMAILJS_TEMPLATE,{to_email:toEmail,reset_link:resetLink,app_name:'Eron FOC App'},_EMAILJS_PUBKEY);
+  }catch(e){
+    console.warn('[EmailJS]',e);
+    // fallback
+    const subj=encodeURIComponent('Redefinição de senha — Eron FOC App');
+    const body=encodeURIComponent('Olá,\n\nClique no link abaixo para redefinir sua senha (válido por 1 hora):\n\n'+resetLink+'\n\nEron FOC App');
+    window.location.href='mailto:'+toEmail+'?subject='+subj+'&body='+body;
+  }
 }
 async function submitResetFromLink(){
   const p1=document.getElementById('reset-link-pwd-1').value;
