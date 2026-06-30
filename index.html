@@ -2148,7 +2148,11 @@ function saveStore(){
   if(typeof _fbRef!=='undefined'){
     _ownWrite=true;setTimeout(()=>_ownWrite=false,3000);
     _syncBadge('syncing');
-    _fbRef.set(_storeToFb()).then(()=>_syncBadge('synced')).catch(()=>_syncBadge('offline'));
+    try{
+      _fbRef.set(_storeToFb())
+        .then(()=>_syncBadge('synced'))
+        .catch(e=>{console.warn('[FB write]',e);_syncBadge('offline');});
+    }catch(e){console.warn('[FB set sync]',e);_syncBadge('offline');}
   }
 }
 function loadStore(){
