@@ -538,6 +538,15 @@
             <button class="freq-toggle ft-mensal" data-freq="1 vez ao mês" onclick="toggleFreqFilter(this)">1×/mês</button>
           </div>
         </div>
+        <div class="freq-dd" id="crono-d1-dd">
+          <button class="freq-dd-btn" id="crono-d1-btn" onclick="toggleD1Dropdown(event)">Acompanhamento</button>
+          <div class="freq-dd-panel" id="crono-d1-filter">
+            <button class="d1-toggle dt-concluida" data-d1="concluido" onclick="toggleD1Filter(this)">Concluída</button>
+            <button class="d1-toggle dt-sem-mov" data-d1="sem_movimento" onclick="toggleD1Filter(this)">Sem Movimento</button>
+            <button class="d1-toggle dt-sem-acesso" data-d1="sem_acesso" onclick="toggleD1Filter(this)">Sem Acesso</button>
+            <button class="d1-toggle dt-pendente" data-d1="pendente" onclick="toggleD1Filter(this)">Pendente</button>
+          </div>
+        </div>
         <span class="crono-sep">De</span>
         <input type="date" id="crono-date-start" onchange="renderCronogramaAccounts()">
         <span class="crono-sep">→</span>
@@ -569,13 +578,6 @@
             <div class="sh-row"><code>pais:Peru banco:BCP</code><span>combine múltiplos operadores</span></div>
           </div>
         </div>
-      </div>
-      <div class="d1-status-filter" id="crono-d1-filter">
-        <span class="d1-status-filter-label">Acompanhamento:</span>
-        <button class="d1-toggle dt-concluida" data-d1="concluido" onclick="toggleD1Filter(this)">Concluída</button>
-        <button class="d1-toggle dt-sem-mov" data-d1="sem_movimento" onclick="toggleD1Filter(this)">Sem Movimento</button>
-        <button class="d1-toggle dt-sem-acesso" data-d1="sem_acesso" onclick="toggleD1Filter(this)">Sem Acesso</button>
-        <button class="d1-toggle dt-pendente" data-d1="pendente" onclick="toggleD1Filter(this)">Pendente</button>
       </div>
       <div class="crono-d1-panel" id="crono-d1-panel">
         <div class="d1-stat-card d1-stat-concluida"><div class="d1-stat-num" id="d1-count-concluida">—</div><div class="d1-stat-lbl">Concluída</div></div>
@@ -1785,7 +1787,10 @@ function _closeFreqDropdown(){
   const p=document.getElementById('crono-f-freq-wrap');
   if(p) p.classList.remove('open');
 }
-document.addEventListener('click',function(e){if(!e.target.closest('#crono-f-freq-dd'))_closeFreqDropdown();});
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#crono-f-freq-dd'))_closeFreqDropdown();
+  if(!e.target.closest('#crono-d1-dd'))_closeD1Dropdown();
+});
 function _updateFreqLabel(){
   const active=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')];
   const btn=document.getElementById('crono-freq-btn');
@@ -1794,7 +1799,23 @@ function _updateFreqLabel(){
   else{btn.textContent=active.map(b=>b.dataset.freq).join(', ');btn.classList.add('has-active');}
 }
 function toggleFreqFilter(btn){btn.classList.toggle('active');_updateFreqLabel();renderCronogramaAccounts();}
-function toggleD1Filter(btn){btn.classList.toggle('active');renderCronogramaAccounts();}
+function toggleD1Dropdown(e){
+  e.stopPropagation();
+  const p=document.getElementById('crono-d1-filter');
+  if(p) p.classList.toggle('open');
+}
+function _closeD1Dropdown(){
+  const p=document.getElementById('crono-d1-filter');
+  if(p) p.classList.remove('open');
+}
+function _updateD1Label(){
+  const active=[...document.querySelectorAll('#crono-d1-filter .d1-toggle.active')];
+  const btn=document.getElementById('crono-d1-btn');
+  if(!btn) return;
+  if(!active.length){btn.textContent='Acompanhamento';btn.classList.remove('has-active');}
+  else{btn.textContent=active.map(b=>b.textContent).join(', ');btn.classList.add('has-active');}
+}
+function toggleD1Filter(btn){btn.classList.toggle('active');_updateD1Label();renderCronogramaAccounts();}
 function initCronoDates(){
   const now=new Date();
   const y=now.getFullYear(), m=now.getMonth();
