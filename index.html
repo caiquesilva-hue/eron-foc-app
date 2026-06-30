@@ -480,14 +480,16 @@
           <div class="page-title-text" data-i18n="nav-accounts">Accounts</div>
           <div class="page-title-count" id="accounts-count"></div>
         </div>
-        <button class="btn-primary" onclick="openAddAccount()" data-requires-edit>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-          <span data-i18n="btn-add-account">Adicionar conta</span>
-        </button>
-        <button class="btn-csv" id="btn-import-sheet" onclick="importContasFromSheet()" title="Importar 199 contas do Google Sheets (apenas admin)" style="display:none">
-          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-          Importar planilha
-        </button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn-csv" id="btn-import-sheet" onclick="importContasFromSheet()" title="Importar 199 contas do Google Sheets (apenas admin)" style="display:none">
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Importar planilha
+          </button>
+          <button class="btn-primary" onclick="openAddAccount()" data-requires-edit>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            <span data-i18n="btn-add-account">Adicionar conta</span>
+          </button>
+        </div>
       </div>
       <div class="filter-row" id="accounts-filters" style="display:none">
         <input type="search" id="acc-search" placeholder="Buscar país, agente, banco, sigla..." oninput="renderAccountsTable()">
@@ -539,11 +541,10 @@
         <select id="crono-f-pais" onchange="renderCronogramaAccounts()"></select>
         <select id="crono-f-agente" onchange="renderCronogramaAccounts()"></select>
         <select id="crono-f-banco" onchange="renderCronogramaAccounts()"></select>
-        <div class="freq-dd" id="crono-sigla-dd">
-          <button class="freq-dd-btn" id="crono-sigla-btn" onclick="toggleSiglaDropdown(event)">Sigla</button>
-          <div class="freq-dd-panel sigla-dd-panel" id="crono-sigla-panel">
-            <input type="text" id="crono-sigla-search" placeholder="Buscar sigla..." class="sigla-search-input" oninput="filterSiglaToggles(this.value)">
-            <div id="crono-sigla-toggles"></div>
+        <div class="freq-dd" id="crono-resp-dd">
+          <button class="freq-dd-btn" id="crono-resp-btn" onclick="toggleRespDropdown(event)">Responsável</button>
+          <div class="freq-dd-panel" id="crono-resp-panel">
+            <div id="crono-resp-toggles"></div>
           </div>
         </div>
         <div class="freq-dd" id="crono-f-freq-dd">
@@ -1711,13 +1712,10 @@ function initCronoFilters(){
   fa.innerHTML=`<option value="">${t('crono-all-agentes')}</option>`+[...new Set(store.contas.map(c=>c.agente))].map(a=>`<option value="${a}">${a}</option>`).join('');
   fb.innerHTML=`<option value="">${t('crono-all-bancos')}</option>`+[...new Set(store.contas.map(c=>c.banco))].map(b=>`<option value="${b}">${b}</option>`).join('');
   fp.value=pv; fa.value=av; fb.value=bv;
-  const st=document.getElementById('crono-sigla-toggles');
-  if(st){
-    const activeSiglas=[...document.querySelectorAll('#crono-sigla-toggles .freq-toggle.active')].map(b=>b.dataset.sigla);
-    const siglas=[...new Set(store.contas.map(c=>c.sigla))].sort();
-    st.innerHTML=siglas.map(s=>`<button class="freq-toggle${activeSiglas.includes(s)?' active':''}" data-sigla="${s}" onclick="toggleSiglaFilter(this)">${s}</button>`).join('');
-    const sq=document.getElementById('crono-sigla-search')?.value||'';
-    if(sq) filterSiglaToggles(sq);
+  const rt=document.getElementById('crono-resp-toggles');
+  if(rt){
+    const activeResps=[...document.querySelectorAll('#crono-resp-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
+    rt.innerHTML=store.responsaveis.map(r=>`<button class="freq-toggle${activeResps.includes(r.sigla)?' active':''}" data-resp="${r.sigla}" onclick="toggleRespFilter(this)" title="${r.nome}">${r.sigla}</button>`).join('');
   }
 }
 function renderCronogramaAccounts(){
@@ -1737,7 +1735,7 @@ function renderCronogramaAccounts(){
   const fb=document.getElementById('crono-f-banco')?.value||'';
   const activeFreqs=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')].map(b=>b.dataset.freq);
   const activeD1=[...document.querySelectorAll('#crono-d1-filter .d1-toggle.active')].map(b=>b.dataset.d1);
-  const activeSiglas=[...document.querySelectorAll('#crono-sigla-toggles .freq-toggle.active')].map(b=>b.dataset.sigla);
+  const activeResps=[...document.querySelectorAll('#crono-resp-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
   const days=buildCronoDates();
   const searchQ=document.getElementById('crono-search')?.value||'';
   const searchFilters=parseCronoSearch(searchQ);
@@ -1751,12 +1749,19 @@ function renderCronogramaAccounts(){
     if(isActiveDay(_d1obj,c.tipo)) return 'pendente';
     return null;
   };
-  const listBase=store.contas.filter(c=>
-    (!fp||c.pais===fp)&&(!fa||c.agente===fa)&&(!fb||c.banco===fb)&&
-    (!activeFreqs.length||activeFreqs.includes(c.tipo))&&
-    (!activeSiglas.length||activeSiglas.includes(c.sigla))&&
-    (!searchFilters||matchesCronoSearch(c,searchFilters))
-  );
+  const listBase=store.contas.filter(c=>{
+    if(fp&&c.pais!==fp) return false;
+    if(fa&&c.agente!==fa) return false;
+    if(fb&&c.banco!==fb) return false;
+    if(activeFreqs.length&&!activeFreqs.includes(c.tipo)) return false;
+    if(searchFilters&&!matchesCronoSearch(c,searchFilters)) return false;
+    if(activeResps.length){
+      const ck=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
+      const hit=days&&days.some(d=>{const e=store.cronogramaData[`${ck}_${_fmtD(d)}`];return e&&activeResps.includes(e.sigla);});
+      if(!hit) return false;
+    }
+    return true;
+  });
   const d1Map={};
   listBase.forEach(c=>{const ck=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');d1Map[ck]=_getD1s(ck,c);});
   const d1C={concluido:0,sem_movimento:0,sem_acesso:0,pendente:0};
@@ -1828,9 +1833,9 @@ function _hasCronoFilters(){
   const fb=document.getElementById('crono-f-banco')?.value||'';
   const hasFreq=document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active').length>0;
   const hasD1=document.querySelectorAll('#crono-d1-filter .d1-toggle.active').length>0;
-  const hasSigla=document.querySelectorAll('#crono-sigla-toggles .freq-toggle.active').length>0;
+  const hasResp=document.querySelectorAll('#crono-resp-toggles .freq-toggle.active').length>0;
   const hasSearch=(document.getElementById('crono-search')?.value||'').trim()!=='';
-  return !!(fp||fa||fb||hasFreq||hasD1||hasSigla||hasSearch);
+  return !!(fp||fa||fb||hasFreq||hasD1||hasResp||hasSearch);
 }
 function _updateClearBtn(){
   const btn=document.getElementById('btn-clear-filters');
@@ -1845,10 +1850,8 @@ function clearCronoFilters(){
   _updateFreqLabel();
   document.querySelectorAll('#crono-d1-filter .d1-toggle.active').forEach(b=>b.classList.remove('active'));
   _updateD1Label();
-  document.querySelectorAll('#crono-sigla-toggles .freq-toggle.active').forEach(b=>b.classList.remove('active'));
-  _updateSiglaLabel();
-  if(sel('crono-sigla-search')) sel('crono-sigla-search').value='';
-  filterSiglaToggles('');
+  document.querySelectorAll('#crono-resp-toggles .freq-toggle.active').forEach(b=>b.classList.remove('active'));
+  _updateRespLabel();
   if(sel('crono-search')){sel('crono-search').value='';updateCronoSearchClear();}
   renderCronogramaAccounts();
 }
@@ -1864,7 +1867,7 @@ function _closeFreqDropdown(){
 document.addEventListener('click',function(e){
   if(!e.target.closest('#crono-f-freq-dd'))_closeFreqDropdown();
   if(!e.target.closest('#crono-d1-dd'))_closeD1Dropdown();
-  if(!e.target.closest('#crono-sigla-dd'))_closeSiglaDropdown();
+  if(!e.target.closest('#crono-resp-dd'))_closeRespDropdown();
 });
 function _updateFreqLabel(){
   const active=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')];
@@ -1891,22 +1894,16 @@ function _updateD1Label(){
   else{btn.textContent=active.map(b=>b.textContent).join(', ');btn.classList.add('has-active');}
 }
 function toggleD1Filter(btn){btn.classList.toggle('active');_updateD1Label();renderCronogramaAccounts();}
-function toggleSiglaDropdown(e){e.stopPropagation();const p=document.getElementById('crono-sigla-panel');if(p)p.classList.toggle('open');}
-function _closeSiglaDropdown(){const p=document.getElementById('crono-sigla-panel');if(p)p.classList.remove('open');}
-function _updateSiglaLabel(){
-  const active=[...document.querySelectorAll('#crono-sigla-toggles .freq-toggle.active')];
-  const btn=document.getElementById('crono-sigla-btn');
+function toggleRespDropdown(e){e.stopPropagation();const p=document.getElementById('crono-resp-panel');if(p)p.classList.toggle('open');}
+function _closeRespDropdown(){const p=document.getElementById('crono-resp-panel');if(p)p.classList.remove('open');}
+function _updateRespLabel(){
+  const active=[...document.querySelectorAll('#crono-resp-toggles .freq-toggle.active')];
+  const btn=document.getElementById('crono-resp-btn');
   if(!btn) return;
-  if(!active.length){btn.textContent='Sigla';btn.classList.remove('has-active');}
-  else{btn.textContent=active.map(b=>b.dataset.sigla).join(', ');btn.classList.add('has-active');}
+  if(!active.length){btn.textContent='Responsável';btn.classList.remove('has-active');}
+  else{btn.textContent=active.map(b=>b.dataset.resp).join(', ');btn.classList.add('has-active');}
 }
-function toggleSiglaFilter(btn){btn.classList.toggle('active');_updateSiglaLabel();renderCronogramaAccounts();}
-function filterSiglaToggles(q){
-  const nrm=s=>s.toLowerCase();
-  document.querySelectorAll('#crono-sigla-toggles .freq-toggle').forEach(btn=>{
-    btn.style.display=(!q||nrm(btn.dataset.sigla).includes(nrm(q)))?'':'none';
-  });
-}
+function toggleRespFilter(btn){btn.classList.toggle('active');_updateRespLabel();renderCronogramaAccounts();}
 function initCronoDates(){
   const now=new Date();
   const y=now.getFullYear(), m=now.getMonth();
@@ -2006,18 +2003,24 @@ function _getFilteredCronoContext(){
   const fa=document.getElementById('crono-f-agente')?.value||'';
   const fb=document.getElementById('crono-f-banco')?.value||'';
   const activeFreqs=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')].map(b=>b.dataset.freq);
-  const activeSiglas=[...document.querySelectorAll('#crono-sigla-toggles .freq-toggle.active')].map(b=>b.dataset.sigla);
+  const activeResps=[...document.querySelectorAll('#crono-resp-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
   const searchQ=(document.getElementById('crono-search')?.value||'').trim();
   const searchFilters=searchQ?parseCronoSearch(searchQ):null;
   const days=buildCronoDates();
-  const list=store.contas.filter(c=>
-    (!fp||c.pais===fp)&&
-    (!fa||c.agente===fa)&&
-    (!fb||c.banco===fb)&&
-    (!activeFreqs.length||activeFreqs.includes(c.tipo))&&
-    (!activeSiglas.length||activeSiglas.includes(c.sigla))&&
-    (!searchFilters||matchesCronoSearch(c,searchFilters))
-  );
+  const fmtDateCtx=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const list=store.contas.filter(c=>{
+    if(fp&&c.pais!==fp) return false;
+    if(fa&&c.agente!==fa) return false;
+    if(fb&&c.banco!==fb) return false;
+    if(activeFreqs.length&&!activeFreqs.includes(c.tipo)) return false;
+    if(searchFilters&&!matchesCronoSearch(c,searchFilters)) return false;
+    if(activeResps.length){
+      const ck=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
+      const hit=days&&days.some(d=>{const e=store.cronogramaData[`${ck}_${fmtDateCtx(d)}`];return e&&activeResps.includes(e.sigla);});
+      if(!hit) return false;
+    }
+    return true;
+  });
   const fmtDate=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   return {days,list,fmtDate};
 }
