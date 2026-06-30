@@ -2009,7 +2009,20 @@ function submitBulkApply(){
     });
   });
   saveStore();
-  logAudit('cronograma','bulk-apply',{status,changed,skipped});
+  const _bfp=document.getElementById('crono-f-pais')?.value||'';
+  const _bfa=document.getElementById('crono-f-agente')?.value||'';
+  const _bfb=document.getElementById('crono-f-banco')?.value||'';
+  const _bff=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')].map(b=>b.dataset.freq).join(', ');
+  const _bfd1=[...document.querySelectorAll('#crono-d1-filter .d1-toggle.active')].map(b=>b.textContent.trim()).join(', ');
+  const _bfs=(document.getElementById('crono-search')?.value||'').trim();
+  const _bfstart=document.getElementById('crono-date-start')?.value||'';
+  const _bfend=document.getElementById('crono-date-end')?.value||'';
+  const _filtros=[
+    _bfp&&`país: ${_bfp}`,_bfa&&`agente: ${_bfa}`,_bfb&&`banco: ${_bfb}`,
+    _bff&&`freq: ${_bff}`,_bfd1&&`acompanhamento: ${_bfd1}`,_bfs&&`busca: ${_bfs}`,
+    `período: ${_bfstart} → ${_bfend}`,`contas: ${list.length}`
+  ].filter(Boolean).join(' | ');
+  logAudit('cronograma','bulk-apply',{status,changed,skipped,filtros:_filtros});
   closeModal('modal-bulk-apply');
   renderCronogramaAccounts();
 }
