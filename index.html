@@ -956,22 +956,19 @@
       <div class="login-err" id="forgot-err"></div>
       <div id="forgot-result" style="display:none;margin-top:12px">
         <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px 16px">
-          <div style="font-size:13px;font-weight:600;color:#15803d;margin-bottom:4px">✓ Link gerado com sucesso!</div>
-          <div style="font-size:12px;color:#166534;margin-bottom:12px">Válido por 1 hora. Copie e abra no mesmo navegador, ou envie para seu email.</div>
-          <div style="display:flex;gap:6px;margin-bottom:10px">
-            <input class="form-input" type="text" id="forgot-reset-link" readonly style="font-size:11px;font-family:monospace;flex:1;min-width:0">
-            <button class="btn-secondary" id="copy-link-btn" onclick="copyResetLink()" style="white-space:nowrap;flex-shrink:0">Copiar</button>
-          </div>
+          <div style="font-size:13px;font-weight:600;color:#15803d;margin-bottom:4px">✓ Link de redefinição gerado!</div>
+          <div style="font-size:12px;color:#166534;margin-bottom:14px">O link foi preparado e está pronto para ser enviado. Válido por <strong>1 hora</strong>.</div>
+          <input type="hidden" id="forgot-reset-link">
           <div style="display:flex;gap:8px">
-            <a id="forgot-mailto-link" href="#" class="btn-secondary" style="flex:1;text-align:center;text-decoration:none;font-size:13px;padding:9px 12px;display:block;font-weight:600;color:var(--e-sub)">📧 Enviar por email</a>
-            <button class="btn-primary" onclick="useResetLinkNow()" style="flex:1;justify-content:center">Usar agora →</button>
+            <a id="forgot-mailto-link" href="#" class="btn-primary" onclick="closeModal('modal-forgot-pwd')" style="flex:1;text-align:center;text-decoration:none;font-size:13px;padding:10px 12px;display:block;font-weight:600;color:#fff;background:var(--e-purple);border-radius:8px;border:none">📧 Enviar por email</a>
           </div>
+          <div style="margin-top:10px;font-size:11px;color:#166534;opacity:.7">O link abrirá seu cliente de email com a mensagem pronta para envio.</div>
         </div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('modal-forgot-pwd')">Cancelar</button>
-      <button class="btn-primary" onclick="submitForgotPassword()">Gerar link</button>
+      <button class="btn-primary" id="btn-gerar-link" onclick="submitForgotPassword()">Gerar link</button>
     </div>
   </div>
 </div>
@@ -2205,37 +2202,16 @@ async function submitForgotPassword(){
   if(!email.endsWith('@eroninternational.com')){errEl.style.display='block';errEl.textContent='Somente contas @eroninternational.com.';return;}
   const user=store.responsaveis.find(r=>r.email===email);
   if(!user){errEl.style.display='block';errEl.textContent='Este email não está cadastrado no sistema.';return;}
+  const btn=document.getElementById('btn-gerar-link');
+  if(btn){btn.disabled=true;btn.textContent='Gerando...';}
   const link=await generateResetLink(email);
   document.getElementById('forgot-reset-link').value=link;
-  document.getElementById('forgot-result').style.display='';
   const subj=encodeURIComponent('Redefinição de senha — Eron FOC App');
   const body=encodeURIComponent('Olá,\n\nClique no link abaixo para redefinir sua senha (válido por 1 hora):\n\n'+link+'\n\nSe você não solicitou isso, ignore este email.\n\nEron FOC App');
-  document.getElementById('forgot-mailto-link').href='mailto:'+email+'?subject='+subj+'&body='+body;
-}
-function copyResetLink(){
-  const el=document.getElementById('forgot-reset-link');
-  el.select();
-  navigator.clipboard?.writeText(el.value).catch(()=>{});
-  const btn=document.getElementById('copy-link-btn');
-  btn.textContent='✓ Copiado!';
-  setTimeout(()=>btn.textContent='Copiar',2000);
-}
-function useResetLinkNow(){
-  const link=document.getElementById('forgot-reset-link').value;
-  try{
-    const url=new URL(link);
-    const p=url.searchParams;
-    validateResetToken(p.get('r'),parseInt(p.get('exp')||'0'),p.get('sig')||'').then(email=>{
-      if(!email){alert('Link inválido.');return;}
-      closeModal('modal-forgot-pwd');
-      window._resetEmail=email;
-      document.getElementById('reset-link-user-email').textContent=email;
-      document.getElementById('reset-link-pwd-1').value='';
-      document.getElementById('reset-link-pwd-2').value='';
-      document.getElementById('reset-link-err').style.display='none';
-      openModal('modal-reset-link');
-    });
-  }catch(e){alert('Link inválido.');}
+  const mailtoHref='mailto:'+email+'?subject='+subj+'&body='+body;
+  document.getElementById('forgot-mailto-link').href=mailtoHref;
+  document.getElementById('forgot-result').style.display='';
+  if(btn){btn.disabled=false;btn.textContent='Gerar link';}
 }
 async function submitResetFromLink(){
   const p1=document.getElementById('reset-link-pwd-1').value;
