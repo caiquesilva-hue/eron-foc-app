@@ -1989,17 +1989,25 @@ function importContasFromSheet(){
   d.agentes.forEach(a=>{if(!store.agentes.find(x=>x.nome===a)){store.agentes.push({nome:a,responsavel:'',pais:''});addedA++;}});
   d.bancos.forEach(b=>{if(!store.bancos.find(x=>x.nome===b.nome&&x.pais===b.pais)){store.bancos.push({nome:b.nome,pais:b.pais});addedB++;}});
   const ck=c=>`${c.agente}||${c.banco}||${c.numeroConta}`;
-  // Step 1: deduplica contas existentes por agente+banco+numeroConta, mantendo sigla mais curta (formato padrão)
+  const fmtSigla=(sigla,agente)=>sigla.includes(' ')?sigla:`${sigla} ${agente.toUpperCase()}`;
+  // Step 0: garante formato "SIGLA AGENTE_MAIÚSCULO" em todas as contas existentes sem agente
+  let fixedSiglas=0;
+  store.contas.forEach(c=>{if(c.sigla&&!c.sigla.includes(' ')){c.sigla=fmtSigla(c.sigla,c.agente);fixedSiglas++;}});
+  // Step 1: deduplica contas existentes por agente+banco+numeroConta (remove duplicatas do import anterior)
   const seen=new Map();
-  store.contas.forEach(c=>{const k=ck(c);if(!seen.has(k)||c.sigla.length<seen.get(k).sigla.length)seen.set(k,c);});
+  store.contas.forEach(c=>{const k=ck(c);if(!seen.has(k))seen.set(k,c);});
   const before=store.contas.length;
   store.contas=store.contas.filter(c=>seen.get(ck(c))===c);
   removedDups=before-store.contas.length;
-  // Step 2: adiciona novas contas não cobertas pela chave agente+banco+numeroConta
-  d.contas.forEach(c=>{if(!seen.has(ck(c))){store.contas.push(c);seen.set(ck(c),c);addedC++;}});
+  // Step 2: adiciona novas contas do IMPORT_DATA com formato correto de sigla
+  d.contas.forEach(c=>{
+    const conta={...c,sigla:fmtSigla(c.sigla,c.agente)};
+    if(!seen.has(ck(conta))){store.contas.push(conta);seen.set(ck(conta),conta);addedC++;}
+  });
   saveStore();renderAll();updateCounts();
+  const fixMsg=fixedSiglas?`\n• ${fixedSiglas} sigla(s) normalizadas (agente adicionado)`:'';
   const dupMsg=removedDups?`\n• ${removedDups} duplicata(s) removida(s)`:'';
-  alert(`Importação concluída!\n\nAdicionados:\n• ${addedP} país(es)\n• ${addedA} agente(s)\n• ${addedB} banco(s)\n• ${addedC} conta(s)${dupMsg}\n\nJá existentes foram ignorados.`);
+  alert(`Importação concluída!\n\nAdicionados:\n• ${addedP} país(es)\n• ${addedA} agente(s)\n• ${addedB} banco(s)\n• ${addedC} conta(s)${dupMsg}${fixMsg}\n\nJá existentes foram ignorados.`);
 }
 
 // ─── APLICAR EM MASSA ────────────────────────────────────────────
