@@ -2473,7 +2473,7 @@ async function submitForgotPassword(){
   if(btn){btn.disabled=false;btn.textContent='Gerar link';}
 }
 // Google Apps Script — colar URL após implantar o script em script.google.com
-const _GAS_URL=''; // ex: 'https://script.google.com/macros/s/XXXXXXX/exec'
+const _GAS_URL='https://script.google.com/macros/s/AKfycbyqf88WWleiqdRFuNWIg3qJLCYCHx9xMVXWE8lMfWoNjPVo3PgTLULgf8f3UqplY6s1VQ/exec';
 
 async function _sendResetEmail(toEmail, resetLink){
   const user=store.responsaveis.find(r=>r.email===toEmail);
