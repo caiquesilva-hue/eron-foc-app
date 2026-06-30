@@ -764,6 +764,25 @@
   </div>
 </div>
 
+<!-- ── MODAL: CONFIRMAR EXCLUSÃO (genérico) ───────────────────── -->
+<div class="modal-overlay" id="modal-delete-confirm" onclick="if(event.target===this)_cancelDelete()">
+  <div class="confirm-card">
+    <div class="modal-header">
+      <div class="confirm-header-inner">
+        <div class="confirm-icon" style="background:#fef2f2">🗑️</div>
+        <div>
+          <div class="confirm-title" id="del-confirm-title">Excluir item</div>
+          <div class="confirm-subtitle" id="del-confirm-subtitle">Esta ação não pode ser desfeita.</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="_cancelDelete()">Cancelar</button>
+      <button class="btn-danger" id="del-confirm-btn" onclick="_doDelete()">Excluir</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── MODAL: CONFIRMAR ENCERRAMENTO ─────────────────────────── -->
 <div class="modal-overlay" id="modal-confirm-encerrar" onclick="if(event.target===this)cancelEncerrar()">
   <div class="confirm-card">
@@ -1547,11 +1566,22 @@ function submitAccountForm(){
   renderCronogramaAccounts();
   updateCounts();
 }
+let _deleteCallback=null;
+function showDeleteConfirm(title,subtitle,onConfirm){
+  document.getElementById('del-confirm-title').textContent=title;
+  document.getElementById('del-confirm-subtitle').textContent=subtitle;
+  _deleteCallback=onConfirm;
+  document.getElementById('modal-delete-confirm').classList.add('open');
+}
+function _cancelDelete(){document.getElementById('modal-delete-confirm').classList.remove('open');_deleteCallback=null;}
+function _doDelete(){const cb=_deleteCallback;_cancelDelete();if(cb)cb();}
+
 function deleteAccount(idx){
   const c=store.contas[idx];
   if(!c) return;
-  if(!confirm(`Excluir a conta "${c.sigla}" (${c.banco} · ${c.numeroConta})?\n\nEsta ação não pode ser desfeita.`)) return;
-  logAudit('gerencial','delete-conta',{sigla:c.sigla}); store.contas.splice(idx,1); saveStore(); renderAccountsTable(); renderCronogramaAccounts(); updateCounts();
+  showDeleteConfirm(`Excluir conta "${c.sigla}"`,`${c.banco} · ${c.numeroConta}`,()=>{
+    logAudit('gerencial','delete-conta',{sigla:c.sigla}); store.contas.splice(idx,1); saveStore(); renderAccountsTable(); renderCronogramaAccounts(); updateCounts();
+  });
 }
 
 // ─── TOGGLE ENCERRAR ──────────────────────────────────────────────
@@ -1674,13 +1704,14 @@ function deleteCadastro(type,idx){
   const labels={'pais':'país','agente':'agente','banco':'banco'};
   const names={'pais':store.paises[idx],'agente':store.agentes[idx]?.nome,'banco':store.bancos[idx]?.nome};
   const name=names[type]||'este item';
-  if(!confirm(`Excluir o ${labels[type]||type} "${name}"?\n\nEsta ação não pode ser desfeita.`)) return;
-  if(type==='pais') store.paises.splice(idx,1);
-  else if(type==='agente') store.agentes.splice(idx,1);
-  else store.bancos.splice(idx,1);
-  logAudit('cadastro','delete-'+type,{idx});
-  saveStore();
-  renderCadastro(type); updateCounts();
+  showDeleteConfirm(`Excluir ${labels[type]||type} "${name}"`,`Esta ação não pode ser desfeita.`,()=>{
+    if(type==='pais') store.paises.splice(idx,1);
+    else if(type==='agente') store.agentes.splice(idx,1);
+    else store.bancos.splice(idx,1);
+    logAudit('cadastro','delete-'+type,{idx});
+    saveStore();
+    renderCadastro(type); updateCounts();
+  });
 }
 const trashIcon=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>`;
 function renderCadastro(type){
@@ -2232,11 +2263,12 @@ function deleteAcesso(idx){
   if(!isAdmin()) return;
   const r=store.responsaveis[idx];
   if(r.email===ADMIN_EMAIL){alert('Não é possível remover o administrador.');return;}
-  if(!confirm(`Excluir o acesso de "${r.nome}" (${r.email})?\n\nEsta ação não pode ser desfeita.`)) return;
-  logAudit('acessos','delete-user',{nome:r?.nome,email:r?.email});
-  store.responsaveis.splice(idx,1);
-  saveStore();
-  renderAcessos(); updateCounts();
+  showDeleteConfirm(`Excluir acesso de "${r.nome}"`,r.email,()=>{
+    logAudit('acessos','delete-user',{nome:r?.nome,email:r?.email});
+    store.responsaveis.splice(idx,1);
+    saveStore();
+    renderAcessos(); updateCounts();
+  });
 }
 function renderAcessos(){
   const isAdm=isAdmin();
