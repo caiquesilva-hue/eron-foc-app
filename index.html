@@ -1602,6 +1602,8 @@ function renderCronogramaAccounts(){
   const calWrap=document.getElementById('crono-cal-wrap');
   const tbl=document.getElementById('crono-cal-table');
   if(!tbl) return;
+  const bulkBtn=document.getElementById('btn-bulk-apply');
+  if(bulkBtn) bulkBtn.style.display=canEdit()?'flex':'none';
   initCronoFilters();
   const fp=document.getElementById('crono-f-pais')?.value||'';
   const fa=document.getElementById('crono-f-agente')?.value||'';
