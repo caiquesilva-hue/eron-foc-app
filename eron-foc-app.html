@@ -35,7 +35,7 @@
   /* SIDEBAR */
   #sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--e-darkest);display:flex;flex-direction:column;border-right:1px solid rgba(151,111,244,.12);overflow-y:auto;overflow-x:hidden;}
   .sb-header{padding:20px 18px 16px;border-bottom:1px solid rgba(151,111,244,.12);}
-  .sb-logo img{height:28px;width:auto;display:block;}
+  .sb-logo img{height:28px;width:auto;display:block;max-width:160px;object-fit:contain;object-position:left center;}
   .sb-tagline{font-size:10px;color:var(--e-muted);letter-spacing:.1em;text-transform:uppercase;margin-top:2px;}
   .sb-nav{flex:1;padding:10px 0 16px;}
   .sb-section-header{padding:10px 18px 6px;font-size:10px;font-weight:700;color:var(--e-muted);letter-spacing:.12em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;transition:color .15s;}
@@ -2666,7 +2666,7 @@ function setCronoDayStatus(contaKey, dateStr, status, event){
   };
   if((status==='sem_acesso'||status==='aguardando_extrato')&&status!=='clear'){
     closeCalDropdown();
-    _showReportLinkModal(status,existing?.reportLink||null,_doSave);
+    setTimeout(()=>_showReportLinkModal(status,existing?.reportLink||null,_doSave),10);
   } else {
     closeCalDropdown();
     _doSave(null);
