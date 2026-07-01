@@ -542,9 +542,9 @@
           <div class="page-title-count" id="accounts-count"></div>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
-          <button class="btn-csv" id="btn-import-sheet" onclick="importContasFromSheet()" title="Importar 199 contas do Google Sheets (apenas admin)" style="display:none">
-            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-            Importar planilha
+          <button class="btn-bulk-apply" id="btn-bulk-freq" onclick="openBulkFreq()" data-requires-edit="1" style="display:none">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/></svg>
+            Alterar frequência
           </button>
           <button class="btn-primary" onclick="openAddAccount()" data-requires-edit>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
@@ -1070,6 +1070,30 @@
     <div class="modal-footer">
       <button class="btn-secondary" onclick="_skipReportLink()">Pular</button>
       <button class="btn-primary" onclick="_confirmReportLink()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ALTERAR FREQUÊNCIA EM MASSA -->
+<div class="modal-overlay" id="modal-bulk-freq" onclick="if(event.target===this)closeModal('modal-bulk-freq')">
+  <div class="modal-card" style="width:420px">
+    <div class="modal-header">
+      <div class="modal-title">Alterar frequência em massa</div>
+      <button class="modal-close" onclick="closeModal('modal-bulk-freq')">×</button>
+    </div>
+    <div style="padding:20px 24px">
+      <p id="bulk-freq-desc" style="font-size:13px;color:var(--e-sub);margin-bottom:14px"></p>
+      <label class="form-label">Nova frequência</label>
+      <select id="bulk-freq-select" class="form-input" style="width:100%">
+        <option value="T1">T1</option>
+        <option value="T2">T2</option>
+        <option value="Diário">Diário</option>
+        <option value="1 vez ao mês">1 vez ao mês</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-bulk-freq')">Cancelar</button>
+      <button class="btn-primary" onclick="submitBulkFreq()">Aplicar</button>
     </div>
   </div>
 </div>
@@ -1762,6 +1786,8 @@ function renderAccountsTable(){
   const tbody=document.getElementById('accounts-tbody');
   const hasData=store.contas.length>0;
   filters.style.display=hasData?'':'none';
+  const bfBtn=document.getElementById('btn-bulk-freq');
+  if(bfBtn) bfBtn.style.display=(canEdit()&&list.length>0)?'flex':'none';
   if(!list.length){ empty.style.display=''; inner.style.display='none'; return; }
   empty.style.display='none'; inner.style.display='';
   tbody.innerHTML=list.map((c,i)=>{
@@ -1790,6 +1816,37 @@ function renderAccountsTable(){
       </div>`:''}</td>
     </tr>`;
   }).join('');
+}
+function openBulkFreq(){
+  const q=(document.getElementById('acc-search')||{}).value?.toLowerCase()||'';
+  const sf=(document.getElementById('acc-filter-status')||{}).value||'';
+  const list=store.contas.filter(c=>{
+    const mq=!q||[c.pais,c.agente,c.banco,c.sigla].join(' ').toLowerCase().includes(q);
+    const ms=!sf||c.status===sf;
+    return mq&&ms;
+  });
+  const desc=document.getElementById('bulk-freq-desc');
+  if(desc) desc.textContent=`Aplicar nova frequência a ${list.length} conta${list.length!==1?'s':''} filtrada${list.length!==1?'s':''}.`;
+  openModal('modal-bulk-freq');
+}
+function submitBulkFreq(){
+  const novaFreq=document.getElementById('bulk-freq-select')?.value;
+  if(!novaFreq) return;
+  const q=(document.getElementById('acc-search')||{}).value?.toLowerCase()||'';
+  const sf=(document.getElementById('acc-filter-status')||{}).value||'';
+  const list=store.contas.filter(c=>{
+    const mq=!q||[c.pais,c.agente,c.banco,c.sigla].join(' ').toLowerCase().includes(q);
+    const ms=!sf||c.status===sf;
+    return mq&&ms;
+  });
+  if(!list.length) return;
+  if(!confirm(`Alterar frequência de ${list.length} conta${list.length!==1?'s':''} para "${novaFreq}"?`)) return;
+  list.forEach(c=>{ const idx=store.contas.indexOf(c); if(idx>=0) store.contas[idx].tipo=novaFreq; });
+  logAudit('gerencial','bulk-freq',{novaFreq,count:list.length});
+  saveStore();
+  closeModal('modal-bulk-freq');
+  renderAccountsTable();
+  renderCronogramaAccounts();
 }
 function tipoChip(tipo){
   const map={'T1':'chip-violet','T2':'chip-purple','Diário':'chip-teal','1 vez ao mês':'chip-amber'};
@@ -1886,7 +1943,7 @@ function renderCadastro(type){
 }
 function isActiveDay(date, freq){
   const d=date.getDate();
-  if(freq==='1 vez ao mês') return d===1;
+  if(freq==='1 vez ao mês') return true;
   return true; // Diário, T1, T2 e qualquer outro = todos os dias ativos
 }
 function dayDotClass(freq){ return {T1:'active-t1',T2:'active-t2','Diário':'active-diario','1 vez ao mês':'active-once'}[freq]||''; }
@@ -1926,8 +1983,6 @@ function renderCronogramaAccounts(){
   if(!tbl) return;
   const bulkBtn=document.getElementById('btn-bulk-apply');
   if(bulkBtn) bulkBtn.style.display=canEdit()?'flex':'none';
-  const importBtn=document.getElementById('btn-import-sheet');
-  if(importBtn) importBtn.style.display=isAdmin()?'flex':'none';
   initCronoFilters();
   _updateClearBtn();
   const fp=document.getElementById('crono-f-pais')?.value||'';
