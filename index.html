@@ -2564,8 +2564,8 @@ function setCronoDayStatus(contaKey, dateStr, status, event){
 
 // ─── CRONOGRAMA > ACCOUNTS – CIERRE ─────────────────────────────
 function _isCierreExcluded(c){
-  const t=(c.tipo||'').toUpperCase();
-  return t==='MON'||t==='STP';
+  const s=(c.sigla||'').toUpperCase();
+  return s.startsWith('MON')||s.startsWith('STP');
 }
 function _cierreKey(c,mes){
   return `${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'')+`_${mes}`;
