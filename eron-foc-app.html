@@ -2909,9 +2909,9 @@ function loadStore(){
     const raw=localStorage.getItem(STORE_KEY);
     if(!raw) return;
     const saved=JSON.parse(raw);
-    if(saved.paises) store.paises=saved.paises;
-    if(saved.agentes) store.agentes=saved.agentes;
-    if(saved.bancos) store.bancos=saved.bancos;
+    if(saved.paises) store.paises=(Array.isArray(saved.paises)?saved.paises:Object.values(saved.paises)).filter(Boolean);
+    if(saved.agentes) store.agentes=(Array.isArray(saved.agentes)?saved.agentes:Object.values(saved.agentes)).filter(Boolean);
+    if(saved.bancos) store.bancos=(Array.isArray(saved.bancos)?saved.bancos:Object.values(saved.bancos)).filter(Boolean);
     if(saved.responsaveis){
       store.responsaveis=saved.responsaveis;
       // Migração: garante que todos têm role definido
@@ -2931,10 +2931,10 @@ function loadStore(){
         if(!store.responsaveis.find(r=>r.email===u.email)) store.responsaveis.push(u);
       });
     }
-    if(saved.contas) store.contas=saved.contas;
+    if(saved.contas) store.contas=(Array.isArray(saved.contas)?saved.contas:Object.values(saved.contas)).filter(Boolean);
     if(saved.cronogramaData) store.cronogramaData=saved.cronogramaData;
     if(saved.cierreData) store.cierreData=saved.cierreData;
-    if(saved.auditLog) store.auditLog=saved.auditLog;
+    if(saved.auditLog) store.auditLog=(Array.isArray(saved.auditLog)?saved.auditLog:Object.values(saved.auditLog)).filter(Boolean);
     if(saved.permissions) store.permissions=saved.permissions;
     if(saved.credentials) store.credentials=saved.credentials;
   } catch(e){}
@@ -3410,11 +3410,11 @@ function updateCounts(){
 // ─── INIT ─────────────────────────────────────────────────────────
 async function _initApp(){
   loadStore();         // localStorage rápido
-  renderAll();
+  try{renderAll();}catch(e){console.warn('[renderAll pre-sync]',e);}
   applyTranslations();
   await startFirebaseSync();       // dados autoritativos do Firebase
   await initAdminCredentials();    // preenche credenciais ausentes
-  renderAll();updateCounts();
+  try{renderAll();updateCounts();}catch(e){console.warn('[renderAll post-sync]',e);}
   const fbLoading=document.getElementById('_fb-loading');
   if(fbLoading)fbLoading.style.display='none';
   if(new URLSearchParams(window.location.search).has('r')){
