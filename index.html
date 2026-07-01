@@ -342,27 +342,33 @@
 
   /* CIERRE */
   #page-cronograma-cierre.active{display:flex;flex-direction:column;overflow-y:hidden;}
-  .cierre-wrap{flex:1;min-height:0;overflow-y:auto;}
-  .cierre-table-wrap{background:#fff;border:1px solid var(--e-pale);border-radius:12px;overflow-x:auto;}
+  .cierre-outer{flex:1;min-height:0;display:flex;flex-direction:column;}
+  .cierre-scroll-wrap{flex:1;min-height:0;background:#fff;border:1px solid var(--e-pale);border-radius:12px;}
+  .cierre-scroll{overflow:scroll;height:100%;}
+  .cierre-scroll::-webkit-scrollbar{width:8px;height:8px;}
+  .cierre-scroll::-webkit-scrollbar-track{background:var(--e-pale);}
+  .cierre-scroll::-webkit-scrollbar-thumb{background:var(--e-muted);border-radius:4px;}
+  .cierre-scroll::-webkit-scrollbar-thumb:hover{background:var(--e-purple);}
+  .cierre-scroll::-webkit-scrollbar-corner{background:var(--e-pale);}
   .cierre-table{width:max-content;min-width:100%;border-collapse:collapse;}
-  .cierre-table thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--e-muted);text-transform:uppercase;letter-spacing:.07em;background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap;}
+  .cierre-table thead th{padding:9px 12px;text-align:left;font-size:10px;font-weight:600;color:var(--e-muted);text-transform:uppercase;letter-spacing:.07em;background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap;position:sticky;top:0;z-index:2;}
   .cierre-table tbody tr{border-bottom:1px solid var(--e-pale);transition:background .1s;}
   .cierre-table tbody tr:last-child{border-bottom:none;}
   .cierre-table tbody tr:hover{background:rgba(241,241,254,.5);}
-  .cierre-table td{padding:8px 14px;font-size:13px;color:var(--e-text);vertical-align:middle;white-space:nowrap;}
-  .cierre-ap-select{border:1px solid var(--e-pale);border-radius:7px;padding:5px 28px 5px 10px;font-size:12px;font-family:inherit;color:var(--e-text);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239898c3' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center;appearance:none;outline:none;transition:border-color .15s;min-width:140px;cursor:pointer;}
+  .cierre-table td{padding:7px 12px;font-size:12px;color:var(--e-text);vertical-align:middle;white-space:nowrap;}
+  .cierre-ap-select{border:1px solid var(--e-pale);border-radius:7px;padding:4px 26px 4px 9px;font-size:12px;font-family:inherit;color:var(--e-text);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239898c3' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 7px center;appearance:none;outline:none;transition:border-color .15s;min-width:130px;cursor:pointer;}
   .cierre-ap-select:focus{border-color:var(--e-purple);}
   .cierre-ap-select.has-val{border-color:var(--e-violet);color:var(--e-violet);font-weight:500;}
-  .cierre-comment-input{border:1px solid var(--e-pale);border-radius:7px;padding:5px 10px;font-size:12px;font-family:inherit;color:var(--e-text);background:#fff;outline:none;transition:border-color .15s;width:210px;}
+  .cierre-comment-input{border:1px solid var(--e-pale);border-radius:7px;padding:4px 9px;font-size:12px;font-family:inherit;color:var(--e-text);background:#fff;outline:none;transition:border-color .15s;width:170px;}
   .cierre-comment-input:focus{border-color:var(--e-purple);box-shadow:0 0 0 2px rgba(151,111,244,.08);}
   .cierre-comment-input.has-val{border-color:var(--e-lilac);}
-  .cierre-check-cell{text-align:center;width:80px;}
+  .cierre-check-cell{text-align:center;width:64px;}
   .cierre-cb{width:16px;height:16px;accent-color:var(--e-purple);cursor:pointer;}
   .chip-cierre-pendente{background:#f3f4f6;color:#6b7280;}
   .chip-cierre-verificando{background:#fef9c3;color:#92400e;}
   .chip-cierre-concluido{background:#dcfce7;color:#15803d;}
   .cierre-sigla-cell{display:flex;align-items:center;gap:7px;}
-  .cierre-stats-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .cierre-stats-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;flex-shrink:0;}
   .cierre-stat{background:#fff;border:1px solid var(--e-pale);border-radius:10px;padding:7px 14px;display:flex;align-items:center;gap:8px;}
   .cierre-stat-num{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;}
   .cierre-stat-lbl{font-size:11px;color:var(--e-muted);font-weight:500;}
@@ -698,14 +704,16 @@
           </div>
         </div>
       </div>
-      <div class="cierre-wrap">
+      <div class="cierre-outer">
         <div id="cierre-empty" class="empty-state" style="display:none">
           <div class="empty-icon">📋</div>
           <div class="empty-title">Nenhuma conta encontrada</div>
           <div class="empty-sub">Tente ajustar os filtros.</div>
         </div>
-        <div class="cierre-table-wrap" id="cierre-table-wrap" style="display:none">
-          <table class="cierre-table" id="cierre-table"></table>
+        <div class="cierre-scroll-wrap" id="cierre-table-wrap" style="display:none">
+          <div class="cierre-scroll">
+            <table class="cierre-table" id="cierre-table"></table>
+          </div>
         </div>
       </div>
     </div>
@@ -2640,8 +2648,8 @@ function renderCierreTable(){
   const edit=canEdit();
   const dis=edit?'':'disabled';
   tbl.innerHTML=`<thead><tr>
-    <th>Sigla</th><th>País</th><th>Agente</th><th>Responsável</th><th>Banco</th><th>Nº Conta</th>
-    <th>Apontamento</th><th>Status</th><th>Comentário</th><th style="text-align:center">Concluído</th>
+    <th>Sigla</th><th>País</th><th>Responsável</th><th>Banco</th><th>Nº Conta</th>
+    <th>Apontamento</th><th>Status</th><th>Comentário</th><th style="text-align:center">✓</th>
   </tr></thead><tbody>${contas.map(c=>{
     const ck=_cierreKey(c,mes);
     const entry=store.cierreData[ck]||{};
@@ -2655,7 +2663,7 @@ function renderCierreTable(){
     const respCell=resp?`<span class="chip chip-purple" title="${resp.nome}">${resp.sigla}</span>`:`<span style="color:var(--e-muted);font-size:11px">—</span>`;
     return `<tr>
       <td><div class="cierre-sigla-cell">${flag}<strong>${c.sigla||''}</strong></div></td>
-      <td class="sub">${c.pais||''}</td><td class="sub">${c.agente||''}</td>
+      <td class="sub">${c.pais||''}</td>
       <td>${respCell}</td>
       <td class="sub">${c.banco||''}</td><td class="mono">${c.numeroConta||''}</td>
       <td><select class="cierre-ap-select${hasAp}" ${dis} onchange="updateCierreField('${ck}','apontamento',this.value,this)">${aOpts}</select></td>
