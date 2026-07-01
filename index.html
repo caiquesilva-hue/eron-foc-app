@@ -687,6 +687,16 @@
         </select>
       </div>
       <div class="cierre-stats-row" id="cierre-stats"></div>
+      <div class="crono-search-wrap">
+        <div class="crono-search-col">
+          <div class="crono-search-inner">
+            <svg class="crono-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" id="cierre-search" class="crono-search-input" placeholder="Buscar sigla, banco, agente, nº conta..."
+              oninput="renderCierreTable();updateCierreSearchClear()">
+            <button class="crono-search-clear" id="cierre-search-clear" onclick="clearCierreSearch()" style="display:none" title="Limpar busca">×</button>
+          </div>
+        </div>
+      </div>
       <div class="cierre-wrap">
         <div id="cierre-empty" class="empty-state" style="display:none">
           <div class="empty-icon">📋</div>
@@ -2602,11 +2612,13 @@ function renderCierreTable(){
   const fAgente=document.getElementById('cierre-f-agente')?.value||'';
   const fBanco=document.getElementById('cierre-f-banco')?.value||'';
   const fStatus=document.getElementById('cierre-f-status')?.value||'';
+  const q=(document.getElementById('cierre-search')?.value||'').toLowerCase().trim();
   let contas=store.contas.filter(c=>c.status!=='encerrada'&&!_isCierreExcluded(c));
   if(fPais) contas=contas.filter(c=>c.pais===fPais);
   if(fAgente) contas=contas.filter(c=>c.agente===fAgente);
   if(fBanco) contas=contas.filter(c=>c.banco===fBanco);
   if(fStatus) contas=contas.filter(c=>_cierreStatus(store.cierreData[_cierreKey(c,mes)])===fStatus);
+  if(q) contas=contas.filter(c=>[c.sigla,c.pais,c.agente,c.banco,c.numeroConta].some(v=>(v||'').toLowerCase().includes(q)));
   document.getElementById('cierre-stats').innerHTML=_cierreStatsHtml(mes);
   document.getElementById('cierre-count-header').textContent=`${contas.length} conta(s)`;
   const empty=document.getElementById('cierre-empty');
@@ -2638,6 +2650,14 @@ function renderCierreTable(){
       <td class="cierre-check-cell"><input type="checkbox" class="cierre-cb" ${dis} ${entry.concluido?' checked':''} onchange="updateCierreField('${ck}','concluido',this.checked,this)"></td>
     </tr>`;
   }).join('')}</tbody>`;
+}
+function updateCierreSearchClear(){
+  const el=document.getElementById('cierre-search-clear');
+  if(el) el.style.display=document.getElementById('cierre-search')?.value?'':'none';
+}
+function clearCierreSearch(){
+  const el=document.getElementById('cierre-search');
+  if(el){el.value='';renderCierreTable();updateCierreSearchClear();}
 }
 function updateCierreField(ck,field,value,el){
   if(!store.cierreData[ck])store.cierreData[ck]={apontamento:'',comentario:'',concluido:false};
