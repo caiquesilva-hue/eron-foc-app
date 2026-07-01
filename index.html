@@ -2296,40 +2296,49 @@ function submitBulkApply(){
   const labelMap={concluido:'Concluído',sem_movimento:'Sem movimento',sem_acesso:'Sem acesso',aguardando_extrato:'Aguardando extrato',clear:'Limpar'};
   const confirmed=confirm(`Aplicar "${labelMap[status]}" em ${affectedLabel} célula${affectedLabel!==1?'s':''}?${skipMsg}\n\nEsta ação não pode ser desfeita facilmente.`);
   if(!confirmed) return;
-  let changed=0,skipped=0;
-  list.forEach(c=>{
-    const contaKey=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
-    days.forEach(d=>{
-      if(status!=='clear'&&!isActiveDay(d,c.tipo)) return;
-      const dateStr=fmtDate(d);
-      const storeKey=`${contaKey}_${dateStr}`;
-      const existing=store.cronogramaData[storeKey];
-      if(existing&&LOCKED_STATUSES.includes(existing.status)&&!isAdmin()){skipped++;return;}
-      if(status==='clear'){
-        if(existing){delete store.cronogramaData[storeKey];changed++;}
-      } else {
-        store.cronogramaData[storeKey]={status,sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')};
-        changed++;
-      }
+  const _applyBulk=(reportLink)=>{
+    let changed=0,skipped=0;
+    list.forEach(c=>{
+      const contaKey=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
+      days.forEach(d=>{
+        if(status!=='clear'&&!isActiveDay(d,c.tipo)) return;
+        const dateStr=fmtDate(d);
+        const storeKey=`${contaKey}_${dateStr}`;
+        const existing=store.cronogramaData[storeKey];
+        if(existing&&LOCKED_STATUSES.includes(existing.status)&&!isAdmin()){skipped++;return;}
+        if(status==='clear'){
+          if(existing){delete store.cronogramaData[storeKey];changed++;}
+        } else {
+          const entry={status,sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')};
+          if(reportLink) entry.reportLink=reportLink;
+          store.cronogramaData[storeKey]=entry;
+          changed++;
+        }
+      });
     });
-  });
-  saveStore();
-  const _bfp=document.getElementById('crono-f-pais')?.value||'';
-  const _bfa=document.getElementById('crono-f-agente')?.value||'';
-  const _bfb=document.getElementById('crono-f-banco')?.value||'';
-  const _bff=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')].map(b=>b.dataset.freq).join(', ');
-  const _bfd1=[...document.querySelectorAll('#crono-d1-filter .d1-toggle.active')].map(b=>b.textContent.trim()).join(', ');
-  const _bfs=(document.getElementById('crono-search')?.value||'').trim();
-  const _bfstart=document.getElementById('crono-date-start')?.value||'';
-  const _bfend=document.getElementById('crono-date-end')?.value||'';
-  const _filtros=[
-    _bfp&&`país: ${_bfp}`,_bfa&&`agente: ${_bfa}`,_bfb&&`banco: ${_bfb}`,
-    _bff&&`freq: ${_bff}`,_bfd1&&`acompanhamento: ${_bfd1}`,_bfs&&`busca: ${_bfs}`,
-    `período: ${_bfstart} → ${_bfend}`,`contas: ${list.length}`
-  ].filter(Boolean).join(' | ');
-  logAudit('cronograma','bulk-apply',{status,changed,skipped,filtros:_filtros});
-  closeModal('modal-bulk-apply');
-  renderCronogramaAccounts();
+    saveStore();
+    const _bfp=document.getElementById('crono-f-pais')?.value||'';
+    const _bfa=document.getElementById('crono-f-agente')?.value||'';
+    const _bfb=document.getElementById('crono-f-banco')?.value||'';
+    const _bff=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')].map(b=>b.dataset.freq).join(', ');
+    const _bfd1=[...document.querySelectorAll('#crono-d1-filter .d1-toggle.active')].map(b=>b.textContent.trim()).join(', ');
+    const _bfs=(document.getElementById('crono-search')?.value||'').trim();
+    const _bfstart=document.getElementById('crono-date-start')?.value||'';
+    const _bfend=document.getElementById('crono-date-end')?.value||'';
+    const _filtros=[
+      _bfp&&`país: ${_bfp}`,_bfa&&`agente: ${_bfa}`,_bfb&&`banco: ${_bfb}`,
+      _bff&&`freq: ${_bff}`,_bfd1&&`acompanhamento: ${_bfd1}`,_bfs&&`busca: ${_bfs}`,
+      `período: ${_bfstart} → ${_bfend}`,`contas: ${list.length}`
+    ].filter(Boolean).join(' | ');
+    logAudit('cronograma','bulk-apply',{status,changed,skipped,filtros:_filtros});
+    closeModal('modal-bulk-apply');
+    renderCronogramaAccounts();
+  };
+  if(status==='sem_acesso'||status==='aguardando_extrato'){
+    _showReportLinkModal(status,null,_applyBulk);
+  } else {
+    _applyBulk(null);
+  }
 }
 
 // ─── ACESSOS ─────────────────────────────────────────────────────
