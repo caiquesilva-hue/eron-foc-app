@@ -228,6 +228,7 @@
   .d1-toggle.active.dt-sem-mov{border-color:#5b21b6;background:#ede9fe;color:#5b21b6;}
   .d1-toggle.active.dt-sem-acesso{border-color:#dc2626;background:#fef2f2;color:#dc2626;}
   .d1-toggle.active.dt-pendente{border-color:#d97706;background:#fef9c3;color:#d97706;}
+  .d1-toggle.active.dt-ag-extrato{border-color:#0369a1;background:#e0f2fe;color:#0369a1;}
   .crono-d1-panel{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
   .d1-stat-card{background:#fff;border:1px solid var(--e-pale);border-radius:10px;padding:8px 14px;display:flex;align-items:center;gap:8px;}
   .d1-stat-num{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;}
@@ -236,6 +237,7 @@
   .d1-stat-sem-mov .d1-stat-num{color:#5b21b6;}
   .d1-stat-sem-acesso .d1-stat-num{color:#dc2626;}
   .d1-stat-pendente .d1-stat-num{color:#d97706;}
+  .d1-stat-ag-extrato .d1-stat-num{color:#0369a1;}
   .crono-filters select:focus,.crono-filters input[type=date]:focus{border-color:var(--e-purple);}
   .crono-sep{color:var(--e-muted);font-size:13px;flex-shrink:0;padding:0 2px;}
   .cal-wrap{background:#fff;border:1px solid var(--e-pale);border-radius:12px;}
@@ -613,6 +615,7 @@
             <button class="d1-toggle dt-sem-mov" data-d1="sem_movimento" onclick="toggleD1Filter(this)">Sem Movimento</button>
             <button class="d1-toggle dt-sem-acesso" data-d1="sem_acesso" onclick="toggleD1Filter(this)">Sem Acesso</button>
             <button class="d1-toggle dt-pendente" data-d1="pendente" onclick="toggleD1Filter(this)">Pendente</button>
+            <button class="d1-toggle dt-ag-extrato" data-d1="aguardando_extrato" onclick="toggleD1Filter(this)">Ag. Extrato</button>
           </div>
         </div>
         <span class="crono-sep">De</span>
@@ -633,6 +636,7 @@
         <div class="d1-stat-card d1-stat-sem-mov"><div class="d1-stat-num" id="d1-count-sem-mov">—</div><div class="d1-stat-lbl">Sem Movimento</div></div>
         <div class="d1-stat-card d1-stat-sem-acesso"><div class="d1-stat-num" id="d1-count-sem-acesso">—</div><div class="d1-stat-lbl">Sem Acesso</div></div>
         <div class="d1-stat-card d1-stat-pendente"><div class="d1-stat-num" id="d1-count-pendente">—</div><div class="d1-stat-lbl">Pendente</div></div>
+        <div class="d1-stat-card d1-stat-ag-extrato"><div class="d1-stat-num" id="d1-count-ag-extrato">—</div><div class="d1-stat-lbl">Ag. Extrato</div></div>
       </div>
       <div class="crono-search-wrap">
         <div class="crono-search-col">
@@ -1022,6 +1026,11 @@
           <input type="radio" name="bulk-status" value="sem_acesso">
           <span class="bulk-chip" style="background:#fef2f2;color:#dc2626">Sem acesso</span>
           <span style="font-size:12px;color:var(--e-sub)">Indica impossibilidade de acessar no período</span>
+        </label>
+        <label class="bulk-opt" style="--opt-bg:#e0f2fe;--opt-color:#0369a1">
+          <input type="radio" name="bulk-status" value="aguardando_extrato">
+          <span class="bulk-chip" style="background:#e0f2fe;color:#0369a1">Ag. Extrato</span>
+          <span style="font-size:12px;color:var(--e-sub)">Conta aguardando extrato bancário — não depende do time de accounts</span>
         </label>
         <label class="bulk-opt" style="--opt-bg:#f3f4f6;--opt-color:#6b7280;border-style:dashed">
           <input type="radio" name="bulk-status" value="clear">
@@ -1883,6 +1892,15 @@ function renderCronogramaAccounts(){
   const _d1obj=new Date(_nowD.getFullYear(),_nowD.getMonth(),_nowD.getDate()-1);
   const d1Str=_fmtD(_d1obj);
   const _getD1s=(ck,c)=>{
+    if(c.tipo==='1 vez ao mês'){
+      const prev=new Date(_nowD.getFullYear(),_nowD.getMonth()-1,1);
+      const yr=prev.getFullYear(), mo=String(prev.getMonth()+1).padStart(2,'0');
+      const dim=new Date(yr,prev.getMonth()+1,0).getDate();
+      for(let d=1;d<=dim;d++){
+        if(store.cronogramaData[`${ck}_${yr}-${mo}-${String(d).padStart(2,'0')}`]) return null;
+      }
+      return 'pendente';
+    }
     const e=store.cronogramaData[`${ck}_${d1Str}`];
     if(e) return e.status;
     if(isActiveDay(_d1obj,c.tipo)) return 'pendente';
@@ -1903,11 +1921,12 @@ function renderCronogramaAccounts(){
   });
   const d1Map={};
   listBase.forEach(c=>{const ck=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');d1Map[ck]=_getD1s(ck,c);});
-  const d1C={concluido:0,sem_movimento:0,sem_acesso:0,pendente:0};
+  const d1C={concluido:0,sem_movimento:0,sem_acesso:0,pendente:0,aguardando_extrato:0};
   Object.values(d1Map).forEach(s=>{if(s&&Object.prototype.hasOwnProperty.call(d1C,s))d1C[s]++;});
   const _upd=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
   _upd('d1-count-concluida',d1C.concluido);_upd('d1-count-sem-mov',d1C.sem_movimento);
   _upd('d1-count-sem-acesso',d1C.sem_acesso);_upd('d1-count-pendente',d1C.pendente);
+  _upd('d1-count-ag-extrato',d1C.aguardando_extrato);
   const list=activeD1.length?listBase.filter(c=>{
     const ck=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
     return activeD1.includes(d1Map[ck]);
@@ -1939,7 +1958,7 @@ function renderCronogramaAccounts(){
       const statusChip=c.status==='encerrada'?`<span class="chip chip-red">${t('status-encerrada')}</span>`:`<span class="chip chip-green">${t('status-ativa')}</span>`;
       const dotCls=dayDotClass(c.tipo);
       const _d1s=d1Map[contaKey];
-      const _d1chipHtml={concluido:'<span class="chip chip-green" style="font-size:10px">Concluída</span>',sem_movimento:'<span class="chip chip-purple" style="font-size:10px">Sem Mov.</span>',sem_acesso:'<span class="chip chip-red" style="font-size:10px">Sem Acesso</span>',pendente:'<span class="chip chip-amber" style="font-size:10px">Pendente</span>'}[_d1s]||'<span style="color:var(--e-muted);font-size:11px">—</span>';
+      const _d1chipHtml={concluido:'<span class="chip chip-green" style="font-size:10px">Concluída</span>',sem_movimento:'<span class="chip chip-purple" style="font-size:10px">Sem Mov.</span>',sem_acesso:'<span class="chip chip-red" style="font-size:10px">Sem Acesso</span>',pendente:'<span class="chip chip-amber" style="font-size:10px">Pendente</span>',aguardando_extrato:'<span class="chip chip-bbpix" style="font-size:10px">Ag. Extrato</span>'}[_d1s]||'<span style="color:var(--e-muted);font-size:11px">—</span>';
       const d1Cell=`<td style="white-space:nowrap;padding:4px 8px">${_d1chipHtml}</td>`;
       const cells=days.map(d=>{
         const dateStr=fmtDate(d);
@@ -1951,6 +1970,7 @@ function renderCronogramaAccounts(){
             concluido:{bg:'#dcfce7',color:'#15803d',lbl:entry.sigla},
             sem_movimento:{bg:'#ede9fe',color:'#5b21b6',lbl:entry.sigla+' s/m'},
             sem_acesso:{bg:'#fef2f2',color:'#dc2626',lbl:entry.sigla+' s/a'},
+            aguardando_extrato:{bg:'#e0f2fe',color:'#0369a1',lbl:entry.sigla+' ag.'},
           }[entry.status]||{bg:'#f3f4f6',color:'#6b7280',lbl:entry.sigla};
           return `<td class="day-cell" onclick="onDayCellClick(event,'${contaKey}','${dateStr}',${active})" style="cursor:pointer;padding:2px 1px">
             <div class="day-filled" style="background:${cfg.bg};color:${cfg.color}">${cfg.lbl}</div></td>`;
@@ -2216,7 +2236,7 @@ function submitBulkApply(){
     ? list.reduce((acc,c)=>acc+days.filter(d=>!!store.cronogramaData[`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'')+'_'+fmtDate(d)]).length,0)
     : totalActive;
   const skipMsg=lockedCount&&!isAdmin()?`\n(${lockedCount} célula${lockedCount!==1?'s':''} travada${lockedCount!==1?'s':''} serão ignoradas)`:'';
-  const labelMap={concluido:'Concluído',sem_movimento:'Sem movimento',sem_acesso:'Sem acesso',clear:'Limpar'};
+  const labelMap={concluido:'Concluído',sem_movimento:'Sem movimento',sem_acesso:'Sem acesso',aguardando_extrato:'Aguardando extrato',clear:'Limpar'};
   const confirmed=confirm(`Aplicar "${labelMap[status]}" em ${affectedLabel} célula${affectedLabel!==1?'s':''}?${skipMsg}\n\nEsta ação não pode ser desfeita facilmente.`);
   if(!confirmed) return;
   let changed=0,skipped=0;
@@ -2479,7 +2499,7 @@ function downloadCronoCSV(){
   const _now=new Date();
   const _d1=new Date(_now.getFullYear(),_now.getMonth(),_now.getDate()-1);
   const d1Str=fmtDate(_d1);
-  const STATUS_LBL={concluido:'Concluída',sem_movimento:'Sem Movimento',sem_acesso:'Sem Acesso'};
+  const STATUS_LBL={concluido:'Concluída',sem_movimento:'Sem Movimento',sem_acesso:'Sem Acesso',aguardando_extrato:'Ag. Extrato'};
   const dateHeaders=days?days.map(d=>fmtDate(d)):[];
   const headers=['Sigla','País','Agente','Banco','Nº Conta','Frequência','Tipo','Status','Acompanhamento',...dateHeaders];
   const rows=[headers];
@@ -2546,6 +2566,7 @@ function onDayCellClick(event, contaKey, dateStr, active){
     opts.push({status:'concluido',label:'Concluído',sub:sigla,bg:'#dcfce7',color:'#15803d'});
     opts.push({status:'sem_movimento',label:'Sem movimento',sub:sigla+' s/m',bg:'#ede9fe',color:'#5b21b6'});
     opts.push({status:'sem_acesso',label:'Sem acesso',sub:sigla+' s/a',bg:'#fef2f2',color:'#dc2626'});
+    opts.push({status:'aguardando_extrato',label:'Aguardando extrato',sub:sigla+' ag.',bg:'#e0f2fe',color:'#0369a1'});
   }
   if(existing) opts.push({status:'clear',label:'Limpar',sub:'',bg:'transparent',color:'#6b7280'});
   if(!opts.length){ dd.remove(); return; }
