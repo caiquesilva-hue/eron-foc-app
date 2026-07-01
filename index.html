@@ -339,6 +339,36 @@
 .btn-bulk-apply:hover{background:rgba(151,111,244,.16);border-color:var(--e-purple);}
   .btn-csv{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:7px;border:1.5px solid var(--e-pale);background:var(--e-ghost);color:var(--e-sub);font-size:12px;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s;font-family:inherit;white-space:nowrap;flex-shrink:0;}
   .btn-csv:hover{border-color:var(--e-purple);color:var(--e-purple);background:#fff;}
+
+  /* CIERRE */
+  #page-cronograma-cierre.active{display:flex;flex-direction:column;overflow-y:hidden;}
+  .cierre-wrap{flex:1;min-height:0;overflow-y:auto;}
+  .cierre-table-wrap{background:#fff;border:1px solid var(--e-pale);border-radius:12px;overflow:hidden;}
+  .cierre-table{width:100%;border-collapse:collapse;}
+  .cierre-table thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--e-muted);text-transform:uppercase;letter-spacing:.07em;background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap;}
+  .cierre-table tbody tr{border-bottom:1px solid var(--e-pale);transition:background .1s;}
+  .cierre-table tbody tr:last-child{border-bottom:none;}
+  .cierre-table tbody tr:hover{background:rgba(241,241,254,.5);}
+  .cierre-table td{padding:8px 14px;font-size:13px;color:var(--e-text);vertical-align:middle;white-space:nowrap;}
+  .cierre-ap-select{border:1px solid var(--e-pale);border-radius:7px;padding:5px 28px 5px 10px;font-size:12px;font-family:inherit;color:var(--e-text);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239898c3' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center;appearance:none;outline:none;transition:border-color .15s;min-width:140px;cursor:pointer;}
+  .cierre-ap-select:focus{border-color:var(--e-purple);}
+  .cierre-ap-select.has-val{border-color:var(--e-violet);color:var(--e-violet);font-weight:500;}
+  .cierre-comment-input{border:1px solid var(--e-pale);border-radius:7px;padding:5px 10px;font-size:12px;font-family:inherit;color:var(--e-text);background:#fff;outline:none;transition:border-color .15s;width:210px;}
+  .cierre-comment-input:focus{border-color:var(--e-purple);box-shadow:0 0 0 2px rgba(151,111,244,.08);}
+  .cierre-comment-input.has-val{border-color:var(--e-lilac);}
+  .cierre-check-cell{text-align:center;width:80px;}
+  .cierre-cb{width:16px;height:16px;accent-color:var(--e-purple);cursor:pointer;}
+  .chip-cierre-pendente{background:#f3f4f6;color:#6b7280;}
+  .chip-cierre-verificando{background:#fef9c3;color:#92400e;}
+  .chip-cierre-concluido{background:#dcfce7;color:#15803d;}
+  .cierre-sigla-cell{display:flex;align-items:center;gap:7px;}
+  .cierre-stats-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .cierre-stat{background:#fff;border:1px solid var(--e-pale);border-radius:10px;padding:7px 14px;display:flex;align-items:center;gap:8px;}
+  .cierre-stat-num{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .cierre-stat-lbl{font-size:11px;color:var(--e-muted);font-weight:500;}
+  .cierre-stat-pendente .cierre-stat-num{color:#6b7280;}
+  .cierre-stat-verificando .cierre-stat-num{color:#92400e;}
+  .cierre-stat-concluido .cierre-stat-num{color:#15803d;}
 .day-cell.locked-cell{cursor:not-allowed!important;opacity:.85;}
 .role-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap;}
   .role-super-admin{background:rgba(109,40,217,.25);color:#c4b5fd;}
@@ -434,6 +464,7 @@
       </div>
       <div class="sb-children collapsed" id="cronograma-children">
         <div class="sb-item" data-page="cronograma-accounts" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-accounts">Accounts</span></div>
+        <div class="sb-item" data-page="cronograma-cierre" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label">Accounts – Cierre</span></div>
         <div class="sb-item" data-page="cronograma-custos" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-custos">Custos</span></div>
         <div class="sb-item" data-page="cronograma-conciliacoes" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-conciliacoes">Conciliações</span></div>
       </div>
@@ -632,6 +663,38 @@
           <div class="cal-scroll">
             <table class="cal-table" id="crono-cal-table"></table>
           </div>
+        </div>
+      </div>
+    </div>
+    <!-- CRONOGRAMA > ACCOUNTS – CIERRE -->
+    <div class="page" id="page-cronograma-cierre">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title-text">Accounts – Cierre</div>
+          <div class="page-title-count" id="cierre-count-header"></div>
+        </div>
+      </div>
+      <div class="crono-filters">
+        <select id="cierre-f-mes" onchange="renderCierreTable()"></select>
+        <select id="cierre-f-pais" onchange="renderCierreTable()"></select>
+        <select id="cierre-f-agente" onchange="renderCierreTable()"></select>
+        <select id="cierre-f-banco" onchange="renderCierreTable()"></select>
+        <select id="cierre-f-status" onchange="renderCierreTable()">
+          <option value="">Todos os status</option>
+          <option value="pendente">Pendente</option>
+          <option value="verificando">Verificando</option>
+          <option value="concluido">Concluído</option>
+        </select>
+      </div>
+      <div class="cierre-stats-row" id="cierre-stats"></div>
+      <div class="cierre-wrap">
+        <div id="cierre-empty" class="empty-state" style="display:none">
+          <div class="empty-icon">📋</div>
+          <div class="empty-title">Nenhuma conta encontrada</div>
+          <div class="empty-sub">Tente ajustar os filtros.</div>
+        </div>
+        <div class="cierre-table-wrap" id="cierre-table-wrap" style="display:none">
+          <table class="cierre-table" id="cierre-table"></table>
         </div>
       </div>
     </div>
@@ -1183,7 +1246,7 @@ const i18n = {
     'login-desc':'Faça login com sua conta corporativa Eron para continuar.',
     'login-btn':'Continuar com Google','login-note':'Somente contas @eroninternational.com',
     'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Cadastro',
-    'nav-accounts':'Accounts','nav-custos':'Custos','nav-conciliacoes':'Conciliações',
+    'nav-accounts':'Accounts','nav-custos':'Custos','nav-conciliacoes':'Conciliações','nav-cierre':'Accounts – Cierre',
     'nav-pais':'País','nav-agente':'Agente','nav-banco':'Banco',
     'nav-soon':'Em breve','nav-hegi':'HEGI','nav-processadores':'Processadores','nav-relatorios':'Relatórios',
     'soon-badge':'Em breve','dev-badge':'Em desenvolvimento',
@@ -1370,6 +1433,7 @@ const store = {
   ],
   contas:[],
   cronogramaData:{},
+  cierreData:{},
   auditLog:[],
   permissions:{},
   credentials:{},
@@ -1384,6 +1448,7 @@ const pagesMeta = {
   'cronograma-accounts':{parentKey:'nav-cronograma',labelKey:'nav-accounts'},
   'cronograma-custos':{parentKey:'nav-cronograma',labelKey:'nav-custos'},
   'cronograma-conciliacoes':{parentKey:'nav-cronograma',labelKey:'nav-conciliacoes'},
+  'cronograma-cierre':{parentKey:'nav-cronograma',labelKey:'nav-cierre'},
   'cadastro-pais':{parentKey:'nav-cadastro',labelKey:'nav-pais'},
   'cadastro-agente':{parentKey:'nav-cadastro',labelKey:'nav-agente'},
   'cadastro-banco':{parentKey:'nav-cadastro',labelKey:'nav-banco'},
@@ -1399,6 +1464,7 @@ function navigate(pageId){
   currentPageId=pageId;
   updateBreadcrumb();
   if(pageId==='cronograma-accounts'){ initCronoDates(); initCronoFilters(); renderCronogramaAccounts(); }
+  if(pageId==='cronograma-cierre'){ initCierreFilters(); renderCierreTable(); }
 }
 function updateBreadcrumb(){
   const m=pagesMeta[currentPageId];
@@ -2486,12 +2552,115 @@ function setCronoDayStatus(contaKey, dateStr, status, event){
   renderCronogramaAccounts();
 }
 
+// ─── CRONOGRAMA > ACCOUNTS – CIERRE ─────────────────────────────
+function _isCierreExcluded(c){
+  const t=(c.tipo||'').toUpperCase();
+  return t==='MON'||t==='STP';
+}
+function _cierreKey(c,mes){
+  return `${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'')+`_${mes}`;
+}
+function _cierreStatus(entry){
+  if(!entry)return 'pendente';
+  if(entry.concluido)return 'concluido';
+  if(entry.comentario&&entry.comentario.trim())return 'verificando';
+  return 'pendente';
+}
+function _cierreChip(status){
+  const m={pendente:'<span class="chip chip-cierre-pendente">Pendente</span>',verificando:'<span class="chip chip-cierre-verificando">Verificando</span>',concluido:'<span class="chip chip-cierre-concluido">Concluído</span>'};
+  return m[status]||m.pendente;
+}
+function _cierreStatsHtml(mes){
+  const all=store.contas.filter(c=>c.status!=='encerrada'&&!_isCierreExcluded(c));
+  const cts={pendente:0,verificando:0,concluido:0};
+  all.forEach(c=>{cts[_cierreStatus(store.cierreData[_cierreKey(c,mes)])]++;});
+  return `<div class="cierre-stat cierre-stat-pendente"><div class="cierre-stat-num">${cts.pendente}</div><div class="cierre-stat-lbl">Pendente</div></div><div class="cierre-stat cierre-stat-verificando"><div class="cierre-stat-num">${cts.verificando}</div><div class="cierre-stat-lbl">Verificando</div></div><div class="cierre-stat cierre-stat-concluido"><div class="cierre-stat-num">${cts.concluido}</div><div class="cierre-stat-lbl">Concluído</div></div>`;
+}
+function initCierreFilters(){
+  const mesEl=document.getElementById('cierre-f-mes');
+  if(!mesEl)return;
+  const now=new Date();
+  let opts='';
+  for(let i=-5;i<=2;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()+i,1);
+    const val=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const lbl=d.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+    opts+=`<option value="${val}"${i===0?' selected':''}>${lbl.charAt(0).toUpperCase()+lbl.slice(1)}</option>`;
+  }
+  mesEl.innerHTML=opts;
+  const contas=store.contas.filter(c=>!_isCierreExcluded(c));
+  const paises=[...new Set(contas.map(c=>c.pais))].sort();
+  document.getElementById('cierre-f-pais').innerHTML=`<option value="">Todos os países</option>`+paises.map(p=>`<option>${p}</option>`).join('');
+  const agentes=[...new Set(contas.map(c=>c.agente))].sort();
+  document.getElementById('cierre-f-agente').innerHTML=`<option value="">Todos os agentes</option>`+agentes.map(a=>`<option>${a}</option>`).join('');
+  const bancos=[...new Set(contas.map(c=>c.banco))].sort();
+  document.getElementById('cierre-f-banco').innerHTML=`<option value="">Todos os bancos</option>`+bancos.map(b=>`<option>${b}</option>`).join('');
+}
+function renderCierreTable(){
+  const mes=document.getElementById('cierre-f-mes')?.value||'';
+  const fPais=document.getElementById('cierre-f-pais')?.value||'';
+  const fAgente=document.getElementById('cierre-f-agente')?.value||'';
+  const fBanco=document.getElementById('cierre-f-banco')?.value||'';
+  const fStatus=document.getElementById('cierre-f-status')?.value||'';
+  let contas=store.contas.filter(c=>c.status!=='encerrada'&&!_isCierreExcluded(c));
+  if(fPais) contas=contas.filter(c=>c.pais===fPais);
+  if(fAgente) contas=contas.filter(c=>c.agente===fAgente);
+  if(fBanco) contas=contas.filter(c=>c.banco===fBanco);
+  if(fStatus) contas=contas.filter(c=>_cierreStatus(store.cierreData[_cierreKey(c,mes)])===fStatus);
+  document.getElementById('cierre-stats').innerHTML=_cierreStatsHtml(mes);
+  document.getElementById('cierre-count-header').textContent=`${contas.length} conta(s)`;
+  const empty=document.getElementById('cierre-empty');
+  const wrap=document.getElementById('cierre-table-wrap');
+  const tbl=document.getElementById('cierre-table');
+  if(!contas.length){empty.style.display='';wrap.style.display='none';return;}
+  empty.style.display='none';wrap.style.display='';
+  const edit=canEdit();
+  const dis=edit?'':'disabled';
+  tbl.innerHTML=`<thead><tr>
+    <th>Sigla</th><th>País</th><th>Agente</th><th>Banco</th><th>Nº Conta</th>
+    <th>Apontamento</th><th>Status</th><th>Comentário</th><th style="text-align:center">Concluído</th>
+  </tr></thead><tbody>${contas.map(c=>{
+    const ck=_cierreKey(c,mes);
+    const entry=store.cierreData[ck]||{};
+    const status=_cierreStatus(entry);
+    const flag=FLAG_MAP[c.pais]||'🏳';
+    const hasAp=entry.apontamento?' has-val':'';
+    const hasCom=entry.comentario?.trim()?' has-val':'';
+    const aOpts=['','Falta PDF','Verificar Saldo'].map(v=>`<option value="${v}"${entry.apontamento===v?' selected':''}>${v||'— selecione —'}</option>`).join('');
+    const com=(entry.comentario||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    return `<tr>
+      <td><div class="cierre-sigla-cell">${flag}<strong>${c.sigla||''}</strong></div></td>
+      <td class="sub">${c.pais||''}</td><td class="sub">${c.agente||''}</td>
+      <td class="sub">${c.banco||''}</td><td class="mono">${c.numeroConta||''}</td>
+      <td><select class="cierre-ap-select${hasAp}" ${dis} onchange="updateCierreField('${ck}','apontamento',this.value,this)">${aOpts}</select></td>
+      <td id="cs-${ck.replace(/[^a-z0-9]/gi,'_')}">${_cierreChip(status)}</td>
+      <td><input type="text" class="cierre-comment-input${hasCom}" ${dis} value="${com}" placeholder="Adicionar comentário..." onchange="updateCierreField('${ck}','comentario',this.value,this)"></td>
+      <td class="cierre-check-cell"><input type="checkbox" class="cierre-cb" ${dis} ${entry.concluido?' checked':''} onchange="updateCierreField('${ck}','concluido',this.checked,this)"></td>
+    </tr>`;
+  }).join('')}</tbody>`;
+}
+function updateCierreField(ck,field,value,el){
+  if(!store.cierreData[ck])store.cierreData[ck]={apontamento:'',comentario:'',concluido:false};
+  store.cierreData[ck][field]=value;
+  saveStore();
+  const entry=store.cierreData[ck];
+  const status=_cierreStatus(entry);
+  const safeId=ck.replace(/[^a-z0-9]/gi,'_');
+  const statusEl=document.getElementById('cs-'+safeId);
+  if(statusEl)statusEl.innerHTML=_cierreChip(status);
+  if(field==='apontamento')el.className='cierre-ap-select'+(value?' has-val':'');
+  if(field==='comentario')el.className='cierre-comment-input'+(value?.trim()?' has-val':'');
+  const mes=document.getElementById('cierre-f-mes')?.value||'';
+  document.getElementById('cierre-stats').innerHTML=_cierreStatsHtml(mes);
+}
+
 // ─── PERSISTÊNCIA localStorage ────────────────────────────────────
 const STORE_KEY='eron-foc-v1';
 function saveStore(){
   const _ls={paises:store.paises,agentes:store.agentes,bancos:store.bancos,
     responsaveis:store.responsaveis,contas:store.contas,
-    cronogramaData:store.cronogramaData,auditLog:store.auditLog,
+    cronogramaData:store.cronogramaData,cierreData:store.cierreData,
+    auditLog:store.auditLog,
     permissions:store.permissions,credentials:store.credentials};
   try{localStorage.setItem(STORE_KEY,JSON.stringify(_ls));}catch(e){}
   if(typeof _fbRef!=='undefined'){
@@ -2533,6 +2702,7 @@ function loadStore(){
     }
     if(saved.contas) store.contas=saved.contas;
     if(saved.cronogramaData) store.cronogramaData=saved.cronogramaData;
+    if(saved.cierreData) store.cierreData=saved.cierreData;
     if(saved.auditLog) store.auditLog=saved.auditLog;
     if(saved.permissions) store.permissions=saved.permissions;
     if(saved.credentials) store.credentials=saved.credentials;
@@ -2565,10 +2735,12 @@ function _storeToFb(){
   Object.entries(store.credentials).forEach(([e,v])=>creds[_encK(e)]=v);
   const crono={};
   Object.entries(store.cronogramaData||{}).forEach(([k,v])=>crono[_encFbKey(k)]=v);
+  const cierre={};
+  Object.entries(store.cierreData||{}).forEach(([k,v])=>cierre[_encFbKey(k)]=v);
   return {
     paises:store.paises,agentes:store.agentes,bancos:store.bancos,
     responsaveis:store.responsaveis,contas:store.contas,
-    cronogramaData:crono,
+    cronogramaData:crono,cierreData:cierre,
     auditLog:store.auditLog.slice(-500),
     permissions:store.permissions,credentials:creds
   };
@@ -2596,6 +2768,11 @@ function _applyFbData(saved){
     const crono={};
     Object.entries(saved.cronogramaData).forEach(([k,v])=>crono[_decFbKey(k)]=v);
     store.cronogramaData=crono;
+  }
+  if(saved.cierreData){
+    const cierre={};
+    Object.entries(saved.cierreData).forEach(([k,v])=>cierre[_decFbKey(k)]=v);
+    store.cierreData=cierre;
   }
   if(saved.auditLog)store.auditLog=_fbArr(saved.auditLog);
   if(saved.permissions)store.permissions=saved.permissions;
