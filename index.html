@@ -679,6 +679,7 @@
         <select id="cierre-f-pais" onchange="renderCierreTable()"></select>
         <select id="cierre-f-agente" onchange="renderCierreTable()"></select>
         <select id="cierre-f-banco" onchange="renderCierreTable()"></select>
+        <select id="cierre-f-resp" onchange="renderCierreTable()"></select>
         <select id="cierre-f-status" onchange="renderCierreTable()">
           <option value="">Todos os status</option>
           <option value="pendente">Pendente</option>
@@ -2563,6 +2564,11 @@ function setCronoDayStatus(contaKey, dateStr, status, event){
 }
 
 // ─── CRONOGRAMA > ACCOUNTS – CIERRE ─────────────────────────────
+function _cierreResp(c){
+  const ag=store.agentes.find(a=>a.nome===c.agente);
+  if(!ag||!ag.responsavel)return null;
+  return store.responsaveis.find(r=>r.email===ag.responsavel)||null;
+}
 function _isCierreExcluded(c){
   const s=(c.sigla||'').toUpperCase();
   return s.startsWith('MON')||s.startsWith('STP');
@@ -2605,18 +2611,23 @@ function initCierreFilters(){
   document.getElementById('cierre-f-agente').innerHTML=`<option value="">Todos os agentes</option>`+agentes.map(a=>`<option>${a}</option>`).join('');
   const bancos=[...new Set(contas.map(c=>c.banco))].sort();
   document.getElementById('cierre-f-banco').innerHTML=`<option value="">Todos os bancos</option>`+bancos.map(b=>`<option>${b}</option>`).join('');
+  const respEmails=[...new Set(contas.map(c=>{const ag=store.agentes.find(a=>a.nome===c.agente);return ag?.responsavel||'';}).filter(Boolean))];
+  const resps=respEmails.map(e=>store.responsaveis.find(r=>r.email===e)).filter(Boolean).sort((a,b)=>a.nome.localeCompare(b.nome));
+  document.getElementById('cierre-f-resp').innerHTML=`<option value="">Todos os responsáveis</option>`+resps.map(r=>`<option value="${r.email}">${r.nome}</option>`).join('');
 }
 function renderCierreTable(){
   const mes=document.getElementById('cierre-f-mes')?.value||'';
   const fPais=document.getElementById('cierre-f-pais')?.value||'';
   const fAgente=document.getElementById('cierre-f-agente')?.value||'';
   const fBanco=document.getElementById('cierre-f-banco')?.value||'';
+  const fResp=document.getElementById('cierre-f-resp')?.value||'';
   const fStatus=document.getElementById('cierre-f-status')?.value||'';
   const q=(document.getElementById('cierre-search')?.value||'').toLowerCase().trim();
   let contas=store.contas.filter(c=>c.status!=='encerrada'&&!_isCierreExcluded(c));
   if(fPais) contas=contas.filter(c=>c.pais===fPais);
   if(fAgente) contas=contas.filter(c=>c.agente===fAgente);
   if(fBanco) contas=contas.filter(c=>c.banco===fBanco);
+  if(fResp) contas=contas.filter(c=>{const ag=store.agentes.find(a=>a.nome===c.agente);return ag?.responsavel===fResp;});
   if(fStatus) contas=contas.filter(c=>_cierreStatus(store.cierreData[_cierreKey(c,mes)])===fStatus);
   if(q) contas=contas.filter(c=>[c.sigla,c.pais,c.agente,c.banco,c.numeroConta].some(v=>(v||'').toLowerCase().includes(q)));
   document.getElementById('cierre-stats').innerHTML=_cierreStatsHtml(mes);
@@ -2629,7 +2640,7 @@ function renderCierreTable(){
   const edit=canEdit();
   const dis=edit?'':'disabled';
   tbl.innerHTML=`<thead><tr>
-    <th>Sigla</th><th>País</th><th>Agente</th><th>Banco</th><th>Nº Conta</th>
+    <th>Sigla</th><th>País</th><th>Agente</th><th>Responsável</th><th>Banco</th><th>Nº Conta</th>
     <th>Apontamento</th><th>Status</th><th>Comentário</th><th style="text-align:center">Concluído</th>
   </tr></thead><tbody>${contas.map(c=>{
     const ck=_cierreKey(c,mes);
@@ -2640,9 +2651,12 @@ function renderCierreTable(){
     const hasCom=entry.comentario?.trim()?' has-val':'';
     const aOpts=['','Falta PDF','Verificar Saldo'].map(v=>`<option value="${v}"${entry.apontamento===v?' selected':''}>${v||'— selecione —'}</option>`).join('');
     const com=(entry.comentario||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    const resp=_cierreResp(c);
+    const respCell=resp?`<span class="chip chip-purple" title="${resp.nome}">${resp.sigla}</span>`:`<span style="color:var(--e-muted);font-size:11px">—</span>`;
     return `<tr>
       <td><div class="cierre-sigla-cell">${flag}<strong>${c.sigla||''}</strong></div></td>
       <td class="sub">${c.pais||''}</td><td class="sub">${c.agente||''}</td>
+      <td>${respCell}</td>
       <td class="sub">${c.banco||''}</td><td class="mono">${c.numeroConta||''}</td>
       <td><select class="cierre-ap-select${hasAp}" ${dis} onchange="updateCierreField('${ck}','apontamento',this.value,this)">${aOpts}</select></td>
       <td id="cs-${ck.replace(/[^a-z0-9]/gi,'_')}">${_cierreChip(status)}</td>
