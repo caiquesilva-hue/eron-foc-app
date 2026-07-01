@@ -2014,6 +2014,7 @@ function renderCronogramaAccounts(){
     return null;
   };
   const listBase=store.contas.filter(c=>{
+    if(c.status==='encerrada') return false;
     if(fp&&c.pais!==fp) return false;
     if(fa&&c.agente!==fa) return false;
     if(fb&&c.banco!==fb) return false;
@@ -3014,7 +3015,7 @@ function loadStore(){
         if(!store.responsaveis.find(r=>r.email===u.email)) store.responsaveis.push(u);
       });
     }
-    if(saved.contas) store.contas=(Array.isArray(saved.contas)?saved.contas:Object.values(saved.contas)).filter(Boolean);
+    if(saved.contas) store.contas=(Array.isArray(saved.contas)?saved.contas:Object.values(saved.contas)).filter(Boolean).map(c=>({...c,status:c.status==='aberta'?'ativa':c.status}));
     if(saved.cronogramaData) store.cronogramaData=saved.cronogramaData;
     if(saved.cierreData) store.cierreData=saved.cierreData;
     if(saved.auditLog) store.auditLog=(Array.isArray(saved.auditLog)?saved.auditLog:Object.values(saved.auditLog)).filter(Boolean);
@@ -3077,7 +3078,7 @@ function _applyFbData(saved){
     ];
     can.forEach(u=>{if(!store.responsaveis.find(r=>r.email===u.email))store.responsaveis.push(u);});
   }
-  if(saved.contas)store.contas=_fbArr(saved.contas);
+  if(saved.contas)store.contas=_fbArr(saved.contas).map(c=>({...c,status:c.status==='aberta'?'ativa':c.status}));
   if(saved.cronogramaData){
     const crono={};
     Object.entries(saved.cronogramaData).forEach(([k,v])=>crono[_decFbKey(k)]=v);
