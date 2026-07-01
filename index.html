@@ -2712,23 +2712,14 @@ function updateCierreField(ck,field,value,el){
   const entry=store.cierreData[ck];
   const status=_cierreStatus(entry);
   const safeId=ck.replace(/[^a-z0-9]/gi,'_');
+  if(field==='concluido'){
+    renderCierreTable();
+    return;
+  }
   const statusEl=document.getElementById('cs-'+safeId);
   if(statusEl)statusEl.innerHTML=_cierreChip(status);
   const agingEl=document.getElementById('ag-'+safeId);
   if(agingEl)agingEl.innerHTML=_cierreAging(entry);
-  const row=el.closest('tr');
-  if(row){
-    row.className=status==='concluido'?'row-concluido':'';
-    const tbody=row.closest('tbody');
-    if(tbody){
-      if(status==='concluido'){
-        tbody.appendChild(row);
-      } else {
-        const firstConcluido=tbody.querySelector('tr.row-concluido');
-        tbody.insertBefore(row,firstConcluido||null);
-      }
-    }
-  }
   if(field==='apontamento'){
     const apCls=value===''?'':value==='Falta PDF'?' has-val ap-faltapdf':' has-val ap-verificarsaldo';
     el.className='cierre-ap-select'+apCls;
