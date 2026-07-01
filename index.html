@@ -355,10 +355,14 @@
   .cierre-table tbody tr{border-bottom:1px solid var(--e-pale);transition:background .1s;}
   .cierre-table tbody tr:last-child{border-bottom:none;}
   .cierre-table tbody tr:hover{background:rgba(241,241,254,.5);}
+  .cierre-table tbody tr.row-concluido{opacity:.45;filter:grayscale(.4);}
+  .cierre-table tbody tr.row-concluido:hover{opacity:.6;}
   .cierre-table td{padding:7px 12px;font-size:12px;color:var(--e-text);vertical-align:middle;white-space:nowrap;}
   .cierre-ap-select{border:1px solid var(--e-pale);border-radius:7px;padding:4px 26px 4px 9px;font-size:12px;font-family:inherit;color:var(--e-text);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239898c3' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 7px center;appearance:none;outline:none;transition:border-color .15s;min-width:130px;cursor:pointer;}
   .cierre-ap-select:focus{border-color:var(--e-purple);}
-  .cierre-ap-select.has-val{border-color:var(--e-violet);color:var(--e-violet);font-weight:500;}
+  .cierre-ap-select.has-val{font-weight:500;}
+  .cierre-ap-select.ap-faltapdf{border-color:#fca5a5;color:#dc2626;background-color:#fef2f2;}
+  .cierre-ap-select.ap-verificarsaldo{border-color:#fdba74;color:#c2410c;background-color:#fff7ed;}
   .cierre-comment-input{border:1px solid var(--e-pale);border-radius:7px;padding:4px 9px;font-size:12px;font-family:inherit;color:var(--e-text);background:#fff;outline:none;transition:border-color .15s;width:170px;}
   .cierre-comment-input:focus{border-color:var(--e-purple);box-shadow:0 0 0 2px rgba(151,111,244,.08);}
   .cierre-comment-input.has-val{border-color:var(--e-lilac);}
@@ -2572,6 +2576,14 @@ function setCronoDayStatus(contaKey, dateStr, status, event){
 }
 
 // ─── CRONOGRAMA > ACCOUNTS – CIERRE ─────────────────────────────
+function _cierreAging(entry){
+  if(!entry||!entry.tsApontamento)return `<span style="color:var(--e-muted)">—</span>`;
+  const start=new Date(entry.tsApontamento);
+  const end=entry.tsConcluido?new Date(entry.tsConcluido):new Date();
+  const days=Math.max(0,Math.round((end-start)/(1000*60*60*24)));
+  const color=entry.concluido?'#6b7280':days>=7?'#dc2626':days>=3?'#d97706':'#15803d';
+  return `<span style="color:${color};font-weight:600">${days}d</span>`;
+}
 function _cierreResp(c){
   const ag=store.agentes.find(a=>a.nome===c.agente);
   if(!ag||!ag.responsavel)return null;
@@ -2638,6 +2650,11 @@ function renderCierreTable(){
   if(fResp) contas=contas.filter(c=>{const ag=store.agentes.find(a=>a.nome===c.agente);return ag?.responsavel===fResp;});
   if(fStatus) contas=contas.filter(c=>_cierreStatus(store.cierreData[_cierreKey(c,mes)])===fStatus);
   if(q) contas=contas.filter(c=>[c.sigla,c.pais,c.agente,c.banco,c.numeroConta].some(v=>(v||'').toLowerCase().includes(q)));
+  contas.sort((a,b)=>{
+    const sa=_cierreStatus(store.cierreData[_cierreKey(a,mes)])==='concluido'?1:0;
+    const sb=_cierreStatus(store.cierreData[_cierreKey(b,mes)])==='concluido'?1:0;
+    return sa-sb;
+  });
   document.getElementById('cierre-stats').innerHTML=_cierreStatsHtml(mes);
   document.getElementById('cierre-count-header').textContent=`${contas.length} conta(s)`;
   const empty=document.getElementById('cierre-empty');
@@ -2649,19 +2666,20 @@ function renderCierreTable(){
   const dis=edit?'':'disabled';
   tbl.innerHTML=`<thead><tr>
     <th>Sigla</th><th>País</th><th>Responsável</th><th>Banco</th><th>Nº Conta</th>
-    <th>Apontamento</th><th>Status</th><th>Comentário</th><th style="text-align:center">✓</th>
+    <th>Apontamento</th><th>Status</th><th>Comentário</th><th style="text-align:right">Aging</th><th style="text-align:center">✓</th>
   </tr></thead><tbody>${contas.map(c=>{
     const ck=_cierreKey(c,mes);
     const entry=store.cierreData[ck]||{};
     const status=_cierreStatus(entry);
     const flag=FLAG_MAP[c.pais]||'🏳';
-    const hasAp=entry.apontamento?' has-val':'';
+    const hasAp=entry.apontamento?` has-val ap-${entry.apontamento==='Falta PDF'?'faltapdf':'verificarsaldo'}`:'';
     const hasCom=entry.comentario?.trim()?' has-val':'';
     const aOpts=['','Falta PDF','Verificar Saldo'].map(v=>`<option value="${v}"${entry.apontamento===v?' selected':''}>${v||'— selecione —'}</option>`).join('');
     const com=(entry.comentario||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     const resp=_cierreResp(c);
     const respCell=resp?`<span class="chip chip-purple" title="${resp.nome}">${resp.sigla}</span>`:`<span style="color:var(--e-muted);font-size:11px">—</span>`;
-    return `<tr>
+    const rowCls=status==='concluido'?' class="row-concluido"':'';
+    return `<tr${rowCls}>
       <td><div class="cierre-sigla-cell">${flag}<strong>${c.sigla||''}</strong></div></td>
       <td class="sub">${c.pais||''}</td>
       <td>${respCell}</td>
@@ -2669,6 +2687,7 @@ function renderCierreTable(){
       <td><select class="cierre-ap-select${hasAp}" ${dis} onchange="updateCierreField('${ck}','apontamento',this.value,this)">${aOpts}</select></td>
       <td id="cs-${ck.replace(/[^a-z0-9]/gi,'_')}">${_cierreChip(status)}</td>
       <td><input type="text" class="cierre-comment-input${hasCom}" ${dis} value="${com}" placeholder="Adicionar comentário..." onchange="updateCierreField('${ck}','comentario',this.value,this)"></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums;font-size:12px" id="ag-${ck.replace(/[^a-z0-9]/gi,'_')}">${_cierreAging(entry)}</td>
       <td class="cierre-check-cell"><input type="checkbox" class="cierre-cb" ${dis} ${entry.concluido?' checked':''} onchange="updateCierreField('${ck}','concluido',this.checked,this)"></td>
     </tr>`;
   }).join('')}</tbody>`;
@@ -2683,6 +2702,11 @@ function clearCierreSearch(){
 }
 function updateCierreField(ck,field,value,el){
   if(!store.cierreData[ck])store.cierreData[ck]={apontamento:'',comentario:'',concluido:false};
+  const now=new Date().toISOString();
+  if(field==='apontamento'&&value&&!store.cierreData[ck].tsApontamento) store.cierreData[ck].tsApontamento=now;
+  if(field==='apontamento'&&!value) store.cierreData[ck].tsApontamento=null;
+  if(field==='concluido'&&value&&!store.cierreData[ck].tsConcluido) store.cierreData[ck].tsConcluido=now;
+  if(field==='concluido'&&!value) store.cierreData[ck].tsConcluido=null;
   store.cierreData[ck][field]=value;
   saveStore();
   const entry=store.cierreData[ck];
@@ -2690,7 +2714,14 @@ function updateCierreField(ck,field,value,el){
   const safeId=ck.replace(/[^a-z0-9]/gi,'_');
   const statusEl=document.getElementById('cs-'+safeId);
   if(statusEl)statusEl.innerHTML=_cierreChip(status);
-  if(field==='apontamento')el.className='cierre-ap-select'+(value?' has-val':'');
+  const agingEl=document.getElementById('ag-'+safeId);
+  if(agingEl)agingEl.innerHTML=_cierreAging(entry);
+  const row=el.closest('tr');
+  if(row){row.className=status==='concluido'?'row-concluido':'';}
+  if(field==='apontamento'){
+    const apCls=value===''?'':value==='Falta PDF'?' has-val ap-faltapdf':' has-val ap-verificarsaldo';
+    el.className='cierre-ap-select'+apCls;
+  }
   if(field==='comentario')el.className='cierre-comment-input'+(value?.trim()?' has-val':'');
   const mes=document.getElementById('cierre-f-mes')?.value||'';
   document.getElementById('cierre-stats').innerHTML=_cierreStatsHtml(mes);
