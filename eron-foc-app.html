@@ -2956,7 +2956,7 @@ let _fbListening=false,_ownWrite=false;
 // Email → chave Firebase-safe (Firebase proíbe '.' em chaves)
 const _encK=e=>btoa(unescape(encodeURIComponent(e))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
 const _decK=k=>{try{return decodeURIComponent(escape(atob(k.replace(/-/g,'+').replace(/_/g,'/'))));}catch(e){return k;}};
-const _fbArr=v=>{if(!v)return[];if(Array.isArray(v))return v;return Object.values(v);};
+const _fbArr=v=>{if(!v)return[];if(Array.isArray(v))return v.filter(Boolean);return Object.values(v).filter(Boolean);};
 // Firebase proíbe . # $ / [ ] em chaves — codifica com vírgula (permitida)
 const _encFbKey=k=>k.replace(/\./g,',');
 const _decFbKey=k=>k.replace(/,/g,'.');
