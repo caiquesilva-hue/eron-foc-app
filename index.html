@@ -2874,9 +2874,15 @@ function onDayCellClick(event, contaKey, dateStr, active, tdEl){
   }
   if(existing) opts.push({status:'clear',label:'Limpar',sub:'',bg:'transparent',color:'#6b7280'});
   if(!opts.length){ dd.remove(); return; }
-  dd.innerHTML=opts.map(o=>`<div class="cal-dd-item" onclick="setCronoDayStatus('${contaKey}','${dateStr}','${o.status}',event)" style="color:${o.color};background:${o.bg}">
+  dd.innerHTML=opts.map(o=>`<div class="cal-dd-item" data-status="${o.status}" style="color:${o.color};background:${o.bg}">
     <div style="font-weight:600">${o.label}</div>${o.sub?`<div style="font-size:10px;opacity:.8;font-family:monospace">${o.sub}</div>`:''}
   </div>`).join('');
+  dd.addEventListener('click',function(ev){
+    const item=ev.target.closest('.cal-dd-item');
+    if(!item)return;
+    ev.stopPropagation();
+    setCronoDayStatus(contaKey,dateStr,item.dataset.status,ev);
+  });
   document.body.appendChild(dd);
   event.stopPropagation();
 }
