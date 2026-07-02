@@ -1828,7 +1828,7 @@ function cancelEncerrar(){ closeModal('modal-confirm-encerrar'); }
 function renderAccountsTable(){
   const q=(document.getElementById('acc-search')||{}).value?.toLowerCase()||'';
   const sf=(document.getElementById('acc-filter-status')||{}).value||'';
-  const list=store.contas.filter(c=>{
+  let list=store.contas.filter(c=>{
     const mq=!q||[c.pais,c.agente,c.banco,c.sigla].join(' ').toLowerCase().includes(q);
     const ms=!sf||c.status===sf;
     return mq&&ms;
@@ -2167,7 +2167,6 @@ function renderCronogramaAccounts(){
     tbl._dayClickAttached=true;
     tbl.addEventListener('click',function(e){
       const td=e.target.closest('td.day-cell');
-      console.log('[DBG] tbl click, target=',e.target.tagName,e.target.className,'td=',td,'canEdit=',canEdit(),'email=',window._loggedEmail);
       if(!td)return;
       e.stopPropagation();
       onDayCellClick(e,td.dataset.ck,td.dataset.dt,td.dataset.act==='true',td);
@@ -2841,7 +2840,6 @@ function scheduleHideNoteTooltip(){
 }
 document.addEventListener('click', function(e){ if(!e.target.closest('.cal-dropdown')) closeCalDropdown(); });
 function onDayCellClick(event, contaKey, dateStr, active, tdEl){
-  console.log('[DBG] onDayCellClick conta=',contaKey,'date=',dateStr,'active=',active,'canEdit=',canEdit());
   closeCalDropdown();
   if(!canEdit()){ event.stopPropagation(); return; }
   const user=store.responsaveis.find(r=>r.email===window._loggedEmail);
