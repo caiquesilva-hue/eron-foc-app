@@ -2061,7 +2061,8 @@ function renderCronogramaAccounts(){
       const yr=prev.getFullYear(), mo=String(prev.getMonth()+1).padStart(2,'0');
       const dim=new Date(yr,prev.getMonth()+1,0).getDate();
       for(let d=1;d<=dim;d++){
-        if(store.cronogramaData[`${ck}_${yr}-${mo}-${String(d).padStart(2,'0')}`]) return null;
+        const e=store.cronogramaData[`${ck}_${yr}-${mo}-${String(d).padStart(2,'0')}`];
+        if(e) return e.status;
       }
       return 'pendente';
     }
