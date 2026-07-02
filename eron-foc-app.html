@@ -136,6 +136,7 @@
   .chip-violet{background:rgba(111,115,244,.12);color:var(--e-violet);}
   .chip-teal{background:#e0fdf4;color:#0f766e;}
   .chip-amber{background:#fef9c3;color:#92400e;}
+  .chip-rose{background:#fce7f3;color:#9d174d;}
   .chip-red{background:#fef2f2;color:#dc2626;}
 
   /* EMPTY STATE */
@@ -220,6 +221,7 @@
   .freq-toggle.active.ft-t2{border-color:var(--e-purple);background:rgba(151,111,244,.12);color:var(--e-mid);}
   .freq-toggle.active.ft-diario{border-color:#0f766e;background:#e0fdf4;color:#0f766e;}
   .freq-toggle.active.ft-mensal{border-color:#92400e;background:#fef9c3;color:#92400e;}
+  .freq-toggle.active.ft-semanal{border-color:#9d174d;background:#fce7f3;color:#9d174d;}
   .d1-status-filter{display:flex;gap:6px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
   .d1-status-filter-label{font-size:12px;color:var(--e-muted);font-weight:600;margin-right:2px;}
   .d1-toggle{border:1px solid var(--e-pale);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:500;background:#fff;color:var(--e-muted);cursor:pointer;transition:all .15s;font-family:inherit;}
@@ -263,6 +265,7 @@
   .day-dot.active-t2{background:rgba(151,111,244,.2);color:var(--e-mid);}
   .day-dot.active-diario{background:#e0fdf4;color:#0f766e;}
   .day-dot.active-once{background:#fef9c3;color:#92400e;}
+  .day-dot.active-semanal{background:#fce7f3;color:#9d174d;}
   .day-dot.inactive{width:6px;height:6px;background:var(--e-pale);border-radius:50%;margin:9px auto;}
   .cal-sticky{position:sticky;left:0;background:#fff;z-index:2;border-right:1px solid var(--e-pale);}
   .cal-table thead th.cal-sticky{background:var(--e-ghost);}
@@ -610,6 +613,7 @@
             <button class="freq-toggle ft-t2" data-freq="T2" onclick="toggleFreqFilter(this)">T2</button>
             <button class="freq-toggle ft-diario" data-freq="Diário" onclick="toggleFreqFilter(this)">Diário</button>
             <button class="freq-toggle ft-mensal" data-freq="1 vez ao mês" onclick="toggleFreqFilter(this)">1×/mês</button>
+            <button class="freq-toggle ft-semanal" data-freq="1 vez na semana" onclick="toggleFreqFilter(this)">1×/sem</button>
           </div>
         </div>
         <div class="freq-dd" id="crono-d1-dd">
@@ -822,6 +826,7 @@
             <option value="T2">T2</option>
             <option value="Diário">Diário</option>
             <option value="1 vez ao mês">1 vez ao mês</option>
+            <option value="1 vez na semana">1 vez na semana</option>
           </select>
         </div>
         <div class="form-field">
@@ -1092,6 +1097,7 @@
         <option value="T2">T2</option>
         <option value="Diário">Diário</option>
         <option value="1 vez ao mês">1 vez ao mês</option>
+        <option value="1 vez na semana">1 vez na semana</option>
       </select>
     </div>
     <div class="modal-footer">
@@ -1392,7 +1398,7 @@ const i18n = {
     'd1-concluida':'Concluida','d1-sem-mov':'Sin movimiento','d1-sem-acesso':'Sin acceso',
     'd1-pendente':'Pendiente','d1-ag-extrato':'Ag. extracto',
     'tipo-op':'Operacional','tipo-adm':'Administrativa','tipo-bbpix':'BB Pix',
-    'freq-diario':'Diario','freq-mensal':'1× al mes',
+    'freq-diario':'Diario','freq-mensal':'1× al mes','freq-semanal':'1× por sem.',
     'status-pendente':'Pendiente','status-concluido':'Concluida','status-sem-mov':'Sin mov.','status-sem-acesso':'Sin acceso','status-ag-extrato':'Ag. extracto',
     'preset-prev-month':'Mês anterior','preset-curr-month':'Mês atual','preset-last-7':'Últimos 7 dias','preset-custom':'Personalizado',
     'crono-resp':'Responsável','crono-d1-lbl':'Acompanhamento','crono-bulk-apply':'Aplicar em massa',
@@ -1401,7 +1407,7 @@ const i18n = {
     'd1-concluida':'Concluída','d1-sem-mov':'Sem Movimento','d1-sem-acesso':'Sem Acesso',
     'd1-pendente':'Pendente','d1-ag-extrato':'Ag. Extrato',
     'tipo-op':'Operacional','tipo-adm':'Administrativa','tipo-bbpix':'BB Pix',
-    'freq-diario':'Diário','freq-mensal':'1 vez ao mês',
+    'freq-diario':'Diário','freq-mensal':'1 vez ao mês','freq-semanal':'1 vez na semana',
     'status-pendente':'Pendente','status-concluido':'Concluída','status-sem-mov':'Sem Mov.','status-sem-acesso':'Sem Acesso','status-ag-extrato':'Ag. Extrato',
   },
   'en': {
@@ -1460,7 +1466,7 @@ const i18n = {
     'd1-concluida':'Completed','d1-sem-mov':'No movement','d1-sem-acesso':'No access',
     'd1-pendente':'Pending','d1-ag-extrato':'Aw. statement',
     'tipo-op':'Operational','tipo-adm':'Administrative','tipo-bbpix':'BB Pix',
-    'freq-diario':'Daily','freq-mensal':'1× / month',
+    'freq-diario':'Daily','freq-mensal':'1× / month','freq-semanal':'1× / week',
     'status-pendente':'Pending','status-concluido':'Completed','status-sem-mov':'No mov.','status-sem-acesso':'No access','status-ag-extrato':'Aw. stmt',
   },
   'es': {
@@ -1519,7 +1525,7 @@ const i18n = {
     'd1-concluida':'Concluida','d1-sem-mov':'Sin movimiento','d1-sem-acesso':'Sin acceso',
     'd1-pendente':'Pendiente','d1-ag-extrato':'Ag. extracto',
     'tipo-op':'Operacional','tipo-adm':'Administrativa','tipo-bbpix':'BB Pix',
-    'freq-diario':'Diario','freq-mensal':'1× al mes',
+    'freq-diario':'Diario','freq-mensal':'1× al mes','freq-semanal':'1× por sem.',
     'status-pendente':'Pendiente','status-concluido':'Concluida','status-sem-mov':'Sin mov.','status-sem-acesso':'Sin acceso','status-ag-extrato':'Ag. extracto',
   }
 };
@@ -1886,8 +1892,8 @@ function submitBulkFreq(){
   renderCronogramaAccounts();
 }
 function tipoChip(tipo){
-  const map={'T1':'chip-violet','T2':'chip-purple','Diário':'chip-teal','1 vez ao mês':'chip-amber'};
-  const lbl={'Diário':t('freq-diario'),'1 vez ao mês':t('freq-mensal')};
+  const map={'T1':'chip-violet','T2':'chip-purple','Diário':'chip-teal','1 vez ao mês':'chip-amber','1 vez na semana':'chip-rose'};
+  const lbl={'Diário':t('freq-diario'),'1 vez ao mês':t('freq-mensal'),'1 vez na semana':t('freq-semanal')};
   return `<span class="chip ${map[tipo]||'chip-grey'}">${lbl[tipo]||tipo}</span>`;
 }
 function tipoContaChip(tc){
@@ -1985,7 +1991,7 @@ function isActiveDay(date, freq){
   if(freq==='1 vez ao mês') return true;
   return true; // Diário, T1, T2 e qualquer outro = todos os dias ativos
 }
-function dayDotClass(freq){ return {T1:'active-t1',T2:'active-t2','Diário':'active-diario','1 vez ao mês':'active-once'}[freq]||''; }
+function dayDotClass(freq){ return {T1:'active-t1',T2:'active-t2','Diário':'active-diario','1 vez ao mês':'active-once','1 vez na semana':'active-semanal'}[freq]||''; }
 function buildCronoDates(){
   const s=document.getElementById('crono-date-start');
   const e=document.getElementById('crono-date-end');
