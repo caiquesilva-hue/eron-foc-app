@@ -252,7 +252,7 @@
   .cal-table{width:max-content;min-width:100%;border-collapse:collapse;}
   .cal-table thead th{padding:8px 10px;text-align:center;font-size:11px;font-weight:600;color:var(--e-muted);text-transform:uppercase;letter-spacing:.06em;background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap;}
   .cal-table thead th.col-info{text-align:left;padding:8px 14px;}
-  .cal-table thead th.col-day{min-width:36px;width:auto;padding:5px 3px;}
+  .cal-table thead th.col-day{min-width:44px;width:auto;padding:5px 3px;}
   .cal-table thead th.weekend{background:#faf5ff;}
   .cal-table tbody tr{border-bottom:1px solid var(--e-pale);border-left:3px solid transparent;}
   .cal-table tbody tr:last-child{border-bottom:none;}
@@ -2093,7 +2093,7 @@ function renderCronogramaAccounts(){
   const INFO_COLS=10;
   const dayHeaders=days.map(d=>{
     const isWk=d.getDay()===0||d.getDay()===6;
-    return `<th class="col-day${isWk?' weekend':''}">${String(d.getDate()).padStart(2,'0')}</th>`;
+    return `<th class="col-day${isWk?' weekend':''}">${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}</th>`;
   }).join('');
   const wdHeaders=days.map(d=>{
     const isWk=d.getDay()===0||d.getDay()===6;
@@ -2669,7 +2669,13 @@ function togglePerm(itemId,type){
 // ─── AUDITORIA ───────────────────────────────────────────────────
 function logAudit(modulo,acao,detalhes){
   const user=store.responsaveis.find(r=>r.email===window._loggedEmail);
-  store.auditLog.push({ts:new Date().toLocaleString('pt-BR'),userName:user?.nome||window._loggedEmail||'Sistema',userSigla:user?.sigla||'?',modulo,acao,detalhes:JSON.stringify(detalhes)});
+  const entry={ts:new Date().toLocaleString('pt-BR'),userName:user?.nome||window._loggedEmail||'Sistema',userSigla:user?.sigla||'?',modulo,acao,detalhes:JSON.stringify(detalhes)};
+  store.auditLog.push(entry);
+  if(typeof _fbAuditRef!=='undefined'){
+    const newRef=_fbAuditRef.push();
+    _fbAuditSeen.add(newRef.key);
+    newRef.set(entry).catch(e=>console.warn('[audit push]',e));
+  }
 }
 function _downloadCSV(rows,filename){
   const esc=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
@@ -3057,7 +3063,7 @@ function saveStore(){
     _ownWrite=true;setTimeout(()=>_ownWrite=false,3000);
     _syncBadge('syncing');
     try{
-      _fbRef.set(_storeToFb())
+      _fbRef.update(_storeToFb())
         .then(()=>_syncBadge('synced'))
         .catch(e=>{console.warn('[FB write]',e);_syncBadge('offline');});
     }catch(e){console.warn('[FB set sync]',e);_syncBadge('offline');}
@@ -3110,7 +3116,9 @@ const _FB_CFG={
 };
 const _fbApp=firebase.initializeApp(_FB_CFG);
 const _fbRef=firebase.database(_fbApp).ref('store');
-let _fbListening=false,_ownWrite=false;
+const _fbAuditRef=firebase.database(_fbApp).ref('store/auditLog');
+const _fbAuditSeen=new Set();
+let _fbListening=false,_fbAuditListening=false,_ownWrite=false;
 
 // Email → chave Firebase-safe (Firebase proíbe '.' em chaves)
 const _encK=e=>btoa(unescape(encodeURIComponent(e))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
@@ -3131,7 +3139,6 @@ function _storeToFb(){
     paises:store.paises,agentes:store.agentes,bancos:store.bancos,
     responsaveis:store.responsaveis,contas:store.contas,
     cronogramaData:crono,cierreData:cierre,
-    auditLog:store.auditLog.slice(-500),
     permissions:store.permissions,credentials:creds
   };
 }
@@ -3164,7 +3171,7 @@ function _applyFbData(saved){
     Object.entries(saved.cierreData).forEach(([k,v])=>cierre[_decFbKey(k)]=v);
     store.cierreData=cierre;
   }
-  if(saved.auditLog)store.auditLog=_fbArr(saved.auditLog);
+  // auditLog carregado separadamente via _fbAuditRef.child_added
   if(saved.permissions)store.permissions=saved.permissions;
   if(saved.credentials){
     const creds={};
@@ -3216,6 +3223,16 @@ async function startFirebaseSync(){
         const noModal=!document.querySelector('.modal-overlay.open');
         _applyFbData(d);
         if(noModal){renderAll();updateCounts();}
+      });
+    }
+    if(!_fbAuditListening){
+      _fbAuditListening=true;
+      store.auditLog=[];
+      _fbAuditRef.limitToLast(1000).on('child_added',snap=>{
+        if(_fbAuditSeen.has(snap.key))return;
+        _fbAuditSeen.add(snap.key);
+        const e=snap.val();
+        if(e) store.auditLog.push(e);
       });
     }
     return true;
