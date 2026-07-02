@@ -1885,9 +1885,11 @@ function openBulkFreq(){
   openModal('modal-bulk-freq');
 }
 function submitBulkFreq(){
+  const desc=document.getElementById('bulk-freq-desc');
+  const _st=msg=>{if(desc)desc.textContent=msg;};
   const novaFreq=document.getElementById('bulk-freq-select')?.value;
-  console.log('[BF] click | novaFreq=',novaFreq,'| contas=',store.contas.length);
-  if(!novaFreq){console.warn('[BF] sem frequência');return;}
+  _st('freq='+novaFreq+' | contas='+store.contas.length);
+  if(!novaFreq){_st('ERRO: sem frequência selecionada');return;}
   const q=(document.getElementById('acc-search')||{}).value?.toLowerCase()||'';
   const sf=(document.getElementById('acc-filter-status')||{}).value||'';
   const _matches=c=>{
@@ -1896,18 +1898,17 @@ function submitBulkFreq(){
     return mq&&ms;
   };
   const matched=store.contas.filter(_matches).length;
-  console.log('[BF] matched=',matched,'q=',q,'sf=',sf);
-  if(!matched){console.warn('[BF] 0 contas matched');return;}
+  _st('contas matched='+matched+' (q="'+q+'" sf="'+sf+'")');
+  if(!matched){_st('ERRO: 0 contas correspondem ao filtro');return;}
   let changed=0;
   store.contas.forEach((c,i)=>{ if(_matches(c)){ store.contas[i].tipo=novaFreq; changed++; } });
-  console.log('[BF] changed=',changed);
-  if(!changed){console.warn('[BF] changed=0');return;}
+  _st('alteradas='+changed);
+  if(!changed){_st('ERRO: nenhuma conta foi alterada');return;}
   logAudit('gerencial','bulk-freq',{novaFreq,count:changed});
   saveStore(); _fbSync('contas');
   closeModal('modal-bulk-freq');
   renderAccountsTable();
   renderCronogramaAccounts();
-  console.log('[BF] done ✓');
 }
 function tipoChip(tipo){
   const map={'T1':'chip-violet','T2':'chip-purple','Diário':'chip-teal','1 vez ao mês':'chip-amber','1 vez na semana':'chip-rose'};
