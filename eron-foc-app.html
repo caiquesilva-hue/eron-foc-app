@@ -1788,7 +1788,7 @@ function submitAccountForm(){
   if(editingIdx>=0){ logAudit('gerencial','edit-conta',{sigla:data.sigla}); store.contas[editingIdx]=data; }
   else{ logAudit('gerencial','add-conta',{sigla:data.sigla,pais:data.pais}); store.contas.push(data); }
   closeModal('modal-account');
-  saveStore();
+  saveStore(); _fbSync('contas');
   renderAccountsTable();
   renderCronogramaAccounts();
   updateCounts();
@@ -1807,7 +1807,7 @@ function deleteAccount(idx){
   const c=store.contas[idx];
   if(!c) return;
   showDeleteConfirm(`Excluir conta "${c.sigla}"`,`${c.banco} · ${c.numeroConta}`,()=>{
-    logAudit('gerencial','delete-conta',{sigla:c.sigla}); store.contas.splice(idx,1); saveStore(); renderAccountsTable(); renderCronogramaAccounts(); updateCounts();
+    logAudit('gerencial','delete-conta',{sigla:c.sigla}); store.contas.splice(idx,1); saveStore(); _fbSync('contas'); renderAccountsTable(); renderCronogramaAccounts(); updateCounts();
   });
 }
 
@@ -1898,7 +1898,7 @@ function submitBulkFreq(){
   if(!confirm(`Alterar frequência de ${list.length} conta${list.length!==1?'s':''} para "${novaFreq}"?`)) return;
   list.forEach(c=>{ const idx=store.contas.indexOf(c); if(idx>=0) store.contas[idx].tipo=novaFreq; });
   logAudit('gerencial','bulk-freq',{novaFreq,count:list.length});
-  saveStore();
+  saveStore(); _fbSync('contas');
   closeModal('modal-bulk-freq');
   renderAccountsTable();
   renderCronogramaAccounts();
@@ -1960,7 +1960,7 @@ function submitCadastro(){
     else{ store.agentes.push({nome,pais,responsavel}); logAudit('cadastro','add-agente',{nome,pais,responsavel}); }
   }
   closeModal('modal-cadastro');
-  saveStore();
+  saveStore(); _fbSync(cadastroType==='pais'?'paises':cadastroType==='banco'?'bancos':'agentes');
   renderCadastro(cadastroType);
   updateCounts();
 }
@@ -1973,7 +1973,7 @@ function deleteCadastro(type,idx){
     else if(type==='agente') store.agentes.splice(idx,1);
     else store.bancos.splice(idx,1);
     logAudit('cadastro','delete-'+type,{idx});
-    saveStore();
+    saveStore(); _fbSync(type==='pais'?'paises':type==='banco'?'bancos':'agentes');
     renderCadastro(type); updateCounts();
   });
 }
@@ -2419,7 +2419,8 @@ function importContasFromSheet(){
     const conta={...c,sigla:fmtSigla(c.sigla,c.agente)};
     if(!seen.has(ck(conta))){store.contas.push(conta);seen.set(ck(conta),conta);addedC++;}
   });
-  saveStore();renderAll();updateCounts();
+  saveStore(); _fbSync('paises'); _fbSync('agentes'); _fbSync('bancos'); _fbSync('contas');
+  renderAll();updateCounts();
   const fixMsg=fixedSiglas?`\n• ${fixedSiglas} sigla(s) normalizadas (agente adicionado)`:'';
   const dupMsg=removedDups?`\n• ${removedDups} duplicata(s) removida(s)`:'';
   alert(`Importação concluída!\n\nAdicionados:\n• ${addedP} país(es)\n• ${addedA} agente(s)\n• ${addedB} banco(s)\n• ${addedC} conta(s)${dupMsg}${fixMsg}\n\nJá existentes foram ignorados.`);
@@ -2515,7 +2516,7 @@ function submitBulkApply(){
         }
       });
     });
-    saveStore();
+    saveStore(); if(changed) _fbSync('cronogramaData');
     const _bfp=document.getElementById('crono-f-pais')?.value||'';
     const _bfa=document.getElementById('crono-f-agente')?.value||'';
     const _bfb=document.getElementById('crono-f-banco')?.value||'';
@@ -2629,7 +2630,7 @@ async function submitAcesso(){
     logAudit('acessos','add-user',{nome,email,sigla,role});
   }
   closeModal('modal-acesso');
-  saveStore();
+  saveStore(); _fbSync('responsaveis'); _fbSync('credentials');
   renderAcessos();
   updateCounts();
 }
@@ -2640,7 +2641,7 @@ function deleteAcesso(idx){
   showDeleteConfirm(`Excluir acesso de "${r.nome}"`,r.email,()=>{
     logAudit('acessos','delete-user',{nome:r?.nome,email:r?.email});
     store.responsaveis.splice(idx,1);
-    saveStore();
+    saveStore(); _fbSync('responsaveis');
     renderAcessos(); updateCounts();
   });
 }
@@ -2731,7 +2732,7 @@ function togglePerm(itemId,type){
     else{btn.classList.toggle('on-edit',cur.edit);}
   }
   logAudit('acessos','toggle-perm',{user:_permEditEmail,page:itemId,type,value:cur[type]});
-  saveStore();
+  saveStore(); _fbSync('permissions');
 }
 
 // ─── AUDITORIA ───────────────────────────────────────────────────
@@ -3118,7 +3119,7 @@ function updateCierreField(ck,field,value,el){
   if(field==='concluido'&&value&&!store.cierreData[ck].tsConcluido) store.cierreData[ck].tsConcluido=now;
   if(field==='concluido'&&!value) store.cierreData[ck].tsConcluido=null;
   store.cierreData[ck][field]=value;
-  saveStore();
+  saveStore(); _fbSync('cierreData');
   const entry=store.cierreData[ck];
   const status=_cierreStatus(entry);
   const safeId=ck.replace(/[^a-z0-9]/gi,'_');
@@ -3148,19 +3149,6 @@ function saveStore(){
     auditLog:store.auditLog,
     permissions:store.permissions,credentials:store.credentials};
   try{localStorage.setItem(STORE_KEY,JSON.stringify(_ls));}catch(e){}
-  if(typeof _fbRef!=='undefined'){
-    _pendingWrites++;
-    _ownWrite=true;
-    clearTimeout(_ownWriteTimer);
-    _ownWriteTimer=setTimeout(()=>{_pendingWrites=0;_ownWrite=false;},30000);
-    _syncBadge('syncing');
-    const _done=()=>{if(--_pendingWrites<=0){_pendingWrites=0;_ownWrite=false;clearTimeout(_ownWriteTimer);}};
-    try{
-      _fbRef.update(_storeToFb())
-        .then(()=>{_syncBadge('synced');_done();})
-        .catch(e=>{console.warn('[FB write]',e);_syncBadge('offline');_done();});
-    }catch(e){console.warn('[FB set sync]',e);_syncBadge('offline');_done();}
-  }
 }
 function loadStore(){
   try{
@@ -3211,7 +3199,7 @@ const _fbApp=firebase.initializeApp(_FB_CFG);
 const _fbRef=firebase.database(_fbApp).ref('store');
 const _fbAuditRef=firebase.database(_fbApp).ref('store/auditLog');
 const _fbAuditSeen=new Set();
-let _fbListening=false,_fbAuditListening=false,_ownWrite=false,_ownWriteTimer=null,_pendingWrites=0;
+let _fbListening=false,_fbAuditListening=false,_pendingWrites=0,_ownWriteTimer=null;
 
 // Email → chave Firebase-safe (Firebase proíbe '.' em chaves)
 const _encK=e=>btoa(unescape(encodeURIComponent(e))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
@@ -3224,22 +3212,40 @@ const _decFbKey=k=>k.replace(/,/g,'.');
 // Escrita granular de uma entrada de cronograma — evita race condition com update do store todo
 function _fbSetCronoEntry(storeKey,entry){
   if(typeof _fbRef==='undefined')return;
+  _pendingWrites++;
+  clearTimeout(_ownWriteTimer);
+  _ownWriteTimer=setTimeout(()=>{_pendingWrites=0;},30000);
+  _syncBadge('syncing');
+  const _done=(ok)=>{
+    _syncBadge(ok?'synced':'offline');
+    setTimeout(()=>{if(--_pendingWrites<=0){_pendingWrites=0;clearTimeout(_ownWriteTimer);}},300);
+  };
   const node=_fbRef.child('cronogramaData/'+_encFbKey(storeKey));
-  if(entry===null) node.remove().catch(e=>console.warn('[FB crono rm]',e));
-  else node.set(entry).catch(e=>console.warn('[FB crono set]',e));
+  if(entry===null) node.remove().then(()=>_done(true)).catch(e=>{console.warn('[FB crono rm]',e);_done(false);});
+  else node.set(entry).then(()=>_done(true)).catch(e=>{console.warn('[FB crono set]',e);_done(false);});
 }
 
-function _storeToFb(){
-  const creds={};
-  Object.entries(store.credentials).forEach(([e,v])=>creds[_encK(e)]=v);
-  const cierre={};
-  Object.entries(store.cierreData||{}).forEach(([k,v])=>cierre[_encFbKey(k)]=v);
-  return {
-    paises:store.paises,agentes:store.agentes,bancos:store.bancos,
-    responsaveis:store.responsaveis,contas:store.contas,
-    cierreData:cierre,
-    permissions:store.permissions,credentials:creds
+function _fbSync(field){
+  if(typeof _fbRef==='undefined') return;
+  let val;
+  if(field==='cierreData'||field==='cronogramaData'){
+    val={};Object.entries(store[field]||{}).forEach(([k,v])=>val[_encFbKey(k)]=v);
+  } else if(field==='credentials'){
+    val={};Object.entries(store.credentials).forEach(([k,v])=>val[_encK(k)]=v);
+  } else {
+    val=store[field];
+  }
+  _pendingWrites++;
+  clearTimeout(_ownWriteTimer);
+  _ownWriteTimer=setTimeout(()=>{_pendingWrites=0;},30000);
+  _syncBadge('syncing');
+  const _done=(ok)=>{
+    _syncBadge(ok?'synced':'offline');
+    setTimeout(()=>{if(--_pendingWrites<=0){_pendingWrites=0;clearTimeout(_ownWriteTimer);}},300);
   };
+  _fbRef.child(field).set(val)
+    .then(()=>_done(true))
+    .catch(e=>{console.warn('[FB sync]',field,e);_done(false);});
 }
 
 function _applyFbData(saved){
@@ -3313,7 +3319,7 @@ async function startFirebaseSync(){
     if(!_fbListening){
       _fbListening=true;
       _fbRef.on('value',snap=>{
-        if(_ownWrite)return;
+        if(_pendingWrites>0)return;
         const d=snap.val();if(!d)return;
         const noModal=!document.querySelector('.modal-overlay.open');
         _applyFbData(d);
@@ -3425,7 +3431,7 @@ async function initAdminCredentials(){
       changed=true;
     }
   }
-  if(changed) saveStore();
+  if(changed){ saveStore(); _fbSync('credentials'); }
 }
 
 // ─── LEMBRAR SESSÃO ──────────────────────────────────────────────
@@ -3567,7 +3573,7 @@ async function submitResetFromLink(){
     const hash=await hashPwd(p1);
     store.credentials[email]={hash,mustChange:false};
     if(!Array.isArray(store.auditLog)) store.auditLog=[];
-    saveStore();
+    saveStore(); _fbSync('credentials');
     if(!Array.isArray(store.auditLog)) store.auditLog=[];
     logAudit('auth','password-reset-via-link',{email});
     // Fecha modal DEPOIS de tudo — erros ainda serão visíveis
@@ -3622,7 +3628,7 @@ async function submitForcePwd(){
   if(p1!==p2){errEl.style.display='block';errEl.textContent='As senhas não coincidem.';return;}
   const email=window._pendingLoginEmail;
   store.credentials[email]={hash:await hashPwd(p1),mustChange:false};
-  saveStore();
+  saveStore(); _fbSync('credentials');
   closeModal('modal-force-pwd');
   logAudit('auth','password-changed-first',{email});
   selectAccount(email);
@@ -3641,7 +3647,7 @@ async function submitChangePwd(){
   if(p1.length<6){errEl.style.display='block';errEl.textContent='A nova senha deve ter pelo menos 6 caracteres.';return;}
   if(p1!==p2){errEl.style.display='block';errEl.textContent='As novas senhas não coincidem.';return;}
   store.credentials[email]={hash:await hashPwd(p1),mustChange:false};
-  saveStore();
+  saveStore(); _fbSync('credentials');
   closeModal('modal-change-pwd');
   logAudit('auth','password-changed',{email});
   alert('Senha alterada com sucesso!');
@@ -3670,7 +3676,7 @@ async function submitResetPwd(){
   const user=store.responsaveis[_resetPwdIdx];
   if(!user) return;
   store.credentials[user.email]={hash:await hashPwd(pwd),mustChange:true};
-  saveStore();
+  saveStore(); _fbSync('credentials');
   closeModal('modal-reset-pwd');
   logAudit('acessos','password-reset',{email:user.email,by:window._loggedEmail});
   renderAcessos();
