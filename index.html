@@ -3133,13 +3133,17 @@ function saveStore(){
     permissions:store.permissions,credentials:store.credentials};
   try{localStorage.setItem(STORE_KEY,JSON.stringify(_ls));}catch(e){}
   if(typeof _fbRef!=='undefined'){
-    _ownWrite=true;setTimeout(()=>_ownWrite=false,8000);
+    _pendingWrites++;
+    _ownWrite=true;
+    clearTimeout(_ownWriteTimer);
+    _ownWriteTimer=setTimeout(()=>{_pendingWrites=0;_ownWrite=false;},30000);
     _syncBadge('syncing');
+    const _done=()=>{if(--_pendingWrites<=0){_pendingWrites=0;_ownWrite=false;clearTimeout(_ownWriteTimer);}};
     try{
       _fbRef.update(_storeToFb())
-        .then(()=>_syncBadge('synced'))
-        .catch(e=>{console.warn('[FB write]',e);_syncBadge('offline');});
-    }catch(e){console.warn('[FB set sync]',e);_syncBadge('offline');}
+        .then(()=>{_syncBadge('synced');_done();})
+        .catch(e=>{console.warn('[FB write]',e);_syncBadge('offline');_done();});
+    }catch(e){console.warn('[FB set sync]',e);_syncBadge('offline');_done();}
   }
 }
 function loadStore(){
@@ -3191,7 +3195,7 @@ const _fbApp=firebase.initializeApp(_FB_CFG);
 const _fbRef=firebase.database(_fbApp).ref('store');
 const _fbAuditRef=firebase.database(_fbApp).ref('store/auditLog');
 const _fbAuditSeen=new Set();
-let _fbListening=false,_fbAuditListening=false,_ownWrite=false;
+let _fbListening=false,_fbAuditListening=false,_ownWrite=false,_ownWriteTimer=null,_pendingWrites=0;
 
 // Email → chave Firebase-safe (Firebase proíbe '.' em chaves)
 const _encK=e=>btoa(unescape(encodeURIComponent(e))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
