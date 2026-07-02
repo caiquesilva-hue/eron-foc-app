@@ -243,7 +243,7 @@
   /* CRONOGRAMA NOTE (hover link) */
   .day-filled.has-note{position:relative;overflow:visible;}
   .day-filled.has-note::after{content:'';position:absolute;top:0;right:0;width:0;height:0;border-style:solid;border-width:0 6px 6px 0;border-color:transparent #f59e0b transparent transparent;pointer-events:none;}
-  #crono-note-tip{position:fixed;z-index:9999;background:#fefce8;border:1px solid #f59e0b;border-radius:8px;padding:8px 12px;font-size:11px;max-width:300px;box-shadow:0 4px 16px rgba(0,0,0,.15);display:none;pointer-events:none;}
+  #crono-note-tip{position:fixed;z-index:9999;background:#fefce8;border:1px solid #f59e0b;border-radius:8px;padding:8px 12px;font-size:11px;max-width:300px;box-shadow:0 4px 16px rgba(0,0,0,.15);display:none;}
   #crono-note-tip a{color:#1d4ed8;word-break:break-all;display:block;margin-top:3px;}
   .crono-filters select:focus,.crono-filters input[type=date]:focus{border-color:var(--e-purple);}
   .crono-sep{color:var(--e-muted);font-size:13px;flex-shrink:0;padding:0 2px;}
@@ -2918,11 +2918,13 @@ function setCronoDayStatus(contaKey, dateStr, status, event){
     if(status==='clear'){
       delete store.cronogramaData[storeKey];
       logAudit('cronograma','limpar',{conta:contaKey,data:dateStr});
+      _fbSetCronoEntry(storeKey,null);
     } else {
       const entry={status,sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')};
       if(reportLink) entry.reportLink=reportLink;
       store.cronogramaData[storeKey]=entry;
       logAudit('cronograma',status,{conta:contaKey,data:dateStr,sigla});
+      _fbSetCronoEntry(storeKey,entry);
     }
     saveStore();
     renderCronogramaAccounts();
@@ -3205,17 +3207,23 @@ const _fbArr=v=>{if(!v)return[];if(Array.isArray(v))return v.filter(Boolean);ret
 const _encFbKey=k=>k.replace(/\./g,',');
 const _decFbKey=k=>k.replace(/,/g,'.');
 
+// Escrita granular de uma entrada de cronograma — evita race condition com update do store todo
+function _fbSetCronoEntry(storeKey,entry){
+  if(typeof _fbRef==='undefined')return;
+  const node=_fbRef.child('cronogramaData/'+_encFbKey(storeKey));
+  if(entry===null) node.remove().catch(e=>console.warn('[FB crono rm]',e));
+  else node.set(entry).catch(e=>console.warn('[FB crono set]',e));
+}
+
 function _storeToFb(){
   const creds={};
   Object.entries(store.credentials).forEach(([e,v])=>creds[_encK(e)]=v);
-  const crono={};
-  Object.entries(store.cronogramaData||{}).forEach(([k,v])=>crono[_encFbKey(k)]=v);
   const cierre={};
   Object.entries(store.cierreData||{}).forEach(([k,v])=>cierre[_encFbKey(k)]=v);
   return {
     paises:store.paises,agentes:store.agentes,bancos:store.bancos,
     responsaveis:store.responsaveis,contas:store.contas,
-    cronogramaData:crono,cierreData:cierre,
+    cierreData:cierre,
     permissions:store.permissions,credentials:creds
   };
 }
@@ -3238,11 +3246,7 @@ function _applyFbData(saved){
     can.forEach(u=>{if(!store.responsaveis.find(r=>r.email===u.email))store.responsaveis.push(u);});
   }
   if(saved.contas)store.contas=_fbArr(saved.contas).map(c=>({...c,status:c.status==='aberta'?'ativa':c.status}));
-  if(saved.cronogramaData){
-    const crono={};
-    Object.entries(saved.cronogramaData).forEach(([k,v])=>crono[_decFbKey(k)]=v);
-    store.cronogramaData=crono;
-  }
+  // cronogramaData gerenciado pelo listener específico em _fbRef.child('cronogramaData')
   if(saved.cierreData){
     const cierre={};
     Object.entries(saved.cierreData).forEach(([k,v])=>cierre[_decFbKey(k)]=v);
@@ -3312,6 +3316,16 @@ async function startFirebaseSync(){
         if(e) store.auditLog.push(e);
       });
     }
+    // Listener granular de cronogramaData: substitui store inteiro evitando race condition
+    _fbRef.child('cronogramaData').on('value',snap=>{
+      const d=snap.val()||{};
+      const crono={};
+      Object.entries(d).forEach(([k,v])=>crono[_decFbKey(k)]=v);
+      store.cronogramaData=crono;
+      localStorage.setItem(STORE_KEY,JSON.stringify({paises:store.paises,agentes:store.agentes,bancos:store.bancos,responsaveis:store.responsaveis,contas:store.contas,cronogramaData:store.cronogramaData,cierreData:store.cierreData,auditLog:store.auditLog,permissions:store.permissions,credentials:store.credentials}));
+      renderCronogramaAccounts();
+      updateCounts();
+    });
     return true;
   }catch(e){
     console.warn('[Firebase]',e);
