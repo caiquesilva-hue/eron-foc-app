@@ -3205,6 +3205,7 @@ const _fbRef=firebase.database(_fbApp).ref('store');
 const _fbAuditRef=firebase.database(_fbApp).ref('store/auditLog');
 const _fbAuditSeen=new Set();
 let _fbListening=false,_fbAuditListening=false,_pendingWrites=0,_ownWriteTimer=null;
+const _ownWrites={}; // field→true while a granular write is in-flight; _applyFbData skips these fields
 
 // Email → chave Firebase-safe (Firebase proíbe '.' em chaves)
 const _encK=e=>btoa(unescape(encodeURIComponent(e))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
@@ -3240,6 +3241,11 @@ function _fbSync(field){
   } else {
     val=store[field];
   }
+  // Guard this specific field in _applyFbData for 5s so Firebase confirmation events
+  // can't overwrite our local change before the server returns the updated snapshot.
+  _ownWrites[field]=true;
+  clearTimeout(_ownWrites['_t_'+field]);
+  _ownWrites['_t_'+field]=setTimeout(()=>{ delete _ownWrites[field]; delete _ownWrites['_t_'+field]; },5000);
   _pendingWrites++;
   clearTimeout(_ownWriteTimer);
   _ownWriteTimer=setTimeout(()=>{_pendingWrites=0;},30000);
@@ -3255,10 +3261,10 @@ function _fbSync(field){
 
 function _applyFbData(saved){
   if(!saved)return;
-  if(saved.paises)store.paises=_fbArr(saved.paises);
-  if(saved.agentes)store.agentes=_fbArr(saved.agentes);
-  if(saved.bancos)store.bancos=_fbArr(saved.bancos);
-  if(saved.responsaveis){
+  if(saved.paises&&!_ownWrites.paises)store.paises=_fbArr(saved.paises);
+  if(saved.agentes&&!_ownWrites.agentes)store.agentes=_fbArr(saved.agentes);
+  if(saved.bancos&&!_ownWrites.bancos)store.bancos=_fbArr(saved.bancos);
+  if(saved.responsaveis&&!_ownWrites.responsaveis){
     store.responsaveis=_fbArr(saved.responsaveis);
     store.responsaveis.forEach(r=>{if(!r.role)r.role=r.email===ADMIN_EMAIL?'super_admin':'visualizacao';});
     const can=[
@@ -3270,16 +3276,16 @@ function _applyFbData(saved){
     ];
     can.forEach(u=>{if(!store.responsaveis.find(r=>r.email===u.email))store.responsaveis.push(u);});
   }
-  if(saved.contas)store.contas=_fbArr(saved.contas).map(c=>({...c,status:c.status==='aberta'?'ativa':c.status}));
+  if(saved.contas&&!_ownWrites.contas)store.contas=_fbArr(saved.contas).map(c=>({...c,status:c.status==='aberta'?'ativa':c.status}));
   // cronogramaData gerenciado pelo listener específico em _fbRef.child('cronogramaData')
-  if(saved.cierreData){
+  if(saved.cierreData&&!_ownWrites.cierreData){
     const cierre={};
     Object.entries(saved.cierreData).forEach(([k,v])=>cierre[_decFbKey(k)]=v);
     store.cierreData=cierre;
   }
   // auditLog carregado separadamente via _fbAuditRef.child_added
-  if(saved.permissions)store.permissions=saved.permissions;
-  if(saved.credentials){
+  if(saved.permissions&&!_ownWrites.permissions)store.permissions=saved.permissions;
+  if(saved.credentials&&!_ownWrites.credentials){
     const creds={};
     Object.entries(saved.credentials).forEach(([k,v])=>creds[_decK(k)]=v);
     store.credentials=creds;
