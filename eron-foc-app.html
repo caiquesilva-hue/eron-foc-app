@@ -622,10 +622,18 @@
             <button class="d1-toggle dt-ag-extrato" data-d1="aguardando_extrato" onclick="toggleD1Filter(this)" data-i18n="d1-ag-extrato">Ag. Extrato</button>
           </div>
         </div>
-        <span class="crono-sep">De</span>
-        <input type="date" id="crono-date-start" onchange="renderCronogramaAccounts()">
-        <span class="crono-sep">→</span>
-        <input type="date" id="crono-date-end" onchange="renderCronogramaAccounts()">
+        <select id="crono-date-preset" onchange="onCronoDatePreset()">
+          <option value="prev-month" data-i18n="preset-prev-month">Mês anterior</option>
+          <option value="curr-month" data-i18n="preset-curr-month">Mês atual</option>
+          <option value="last-7" data-i18n="preset-last-7">Últimos 7 dias</option>
+          <option value="custom" data-i18n="preset-custom">Personalizado</option>
+        </select>
+        <div id="crono-date-custom-wrap" style="display:none;align-items:center;gap:8px">
+          <span class="crono-sep">De</span>
+          <input type="date" id="crono-date-start" onchange="renderCronogramaAccounts()">
+          <span class="crono-sep">→</span>
+          <input type="date" id="crono-date-end" onchange="renderCronogramaAccounts()">
+        </div>
         <button id="btn-bulk-apply" class="btn-bulk-apply" onclick="openBulkApply()" data-requires-edit="1">
           <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 16l2 2 4-4"/></svg>
           <span data-i18n="crono-bulk-apply">Aplicar em massa</span>
@@ -1386,6 +1394,7 @@ const i18n = {
     'tipo-op':'Operacional','tipo-adm':'Administrativa','tipo-bbpix':'BB Pix',
     'freq-diario':'Diario','freq-mensal':'1× al mes',
     'status-pendente':'Pendiente','status-concluido':'Concluida','status-sem-mov':'Sin mov.','status-sem-acesso':'Sin acceso','status-ag-extrato':'Ag. extracto',
+    'preset-prev-month':'Mês anterior','preset-curr-month':'Mês atual','preset-last-7':'Últimos 7 dias','preset-custom':'Personalizado',
     'crono-resp':'Responsável','crono-d1-lbl':'Acompanhamento','crono-bulk-apply':'Aplicar em massa',
     'crono-clear-filters':'Limpar filtros','crono-download-csv':'Baixar CSV',
     'crono-search-ph':'Buscar contas... ex: pais:Peru | banco:BCP | agente:PE.Onlinepro | status:ativa | tipo:Diário',
@@ -1444,6 +1453,7 @@ const i18n = {
     'login-forgot':'Forgot password',
     'login-enter':'Sign in',
     'count-banco':'bank','count-bancos':'banks',
+    'preset-prev-month':'Previous month','preset-curr-month':'Current month','preset-last-7':'Last 7 days','preset-custom':'Custom',
     'crono-resp':'Responsible','crono-d1-lbl':'Follow-up','crono-bulk-apply':'Bulk apply',
     'crono-clear-filters':'Clear filters','crono-download-csv':'Download CSV',
     'crono-search-ph':'Search accounts... ex: country:Peru | bank:BCP | agent:PE.Onlinepro | status:active | type:Daily',
@@ -1502,6 +1512,7 @@ const i18n = {
     'login-forgot':'Olvidé la contraseña',
     'login-enter':'Entrar',
     'count-banco':'banco','count-bancos':'bancos',
+    'preset-prev-month':'Mes anterior','preset-curr-month':'Mes actual','preset-last-7':'Últimos 7 días','preset-custom':'Personalizado',
     'crono-resp':'Responsable','crono-d1-lbl':'Seguimiento','crono-bulk-apply':'Aplicar en masa',
     'crono-clear-filters':'Limpiar filtros','crono-download-csv':'Descargar CSV',
     'crono-search-ph':'Buscar cuentas... ej: país:Perú | banco:BCP | agente:PE.Onlinepro | estado:activa | tipo:Diario',
@@ -2204,14 +2215,44 @@ function _updateRespLabel(){
 }
 function toggleRespFilter(btn){btn.classList.toggle('active');_updateRespLabel();renderCronogramaAccounts();}
 function initCronoDates(){
-  const now=new Date();
-  let y=now.getFullYear(), m=now.getMonth();
-  if(now.getDate()===1){const prev=new Date(y,m-1,1);y=prev.getFullYear();m=prev.getMonth();}
+  const preset=document.getElementById('crono-date-preset');
+  if(!preset) return;
+  if(!preset.dataset.initialized){
+    preset.value=new Date().getDate()===1?'prev-month':'curr-month';
+    preset.dataset.initialized='1';
+  }
+  onCronoDatePreset();
+}
+function onCronoDatePreset(){
+  const preset=document.getElementById('crono-date-preset')?.value||'curr-month';
+  const wrap=document.getElementById('crono-date-custom-wrap');
   const pad=n=>String(n).padStart(2,'0');
-  const s=document.getElementById('crono-date-start');
-  const e=document.getElementById('crono-date-end');
-  if(s&&!s.value) s.value=`${y}-${pad(m+1)}-01`;
-  if(e&&!e.value){const last=new Date(y,m+1,0);e.value=`${y}-${pad(m+1)}-${pad(last.getDate())}`;}
+  const now=new Date();
+  const y=now.getFullYear(),mo=now.getMonth(),d=now.getDate();
+  let start,end;
+  if(preset==='prev-month'){
+    const pmo=new Date(y,mo-1,1);
+    const py=pmo.getFullYear(),pm=pmo.getMonth();
+    start=`${py}-${pad(pm+1)}-01`;
+    end=`${py}-${pad(pm+1)}-${pad(new Date(py,pm+1,0).getDate())}`;
+  } else if(preset==='curr-month'){
+    start=`${y}-${pad(mo+1)}-01`;
+    end=`${y}-${pad(mo+1)}-${pad(new Date(y,mo+1,0).getDate())}`;
+  } else if(preset==='last-7'){
+    const sd=new Date(now); sd.setDate(d-6);
+    start=`${sd.getFullYear()}-${pad(sd.getMonth()+1)}-${pad(sd.getDate())}`;
+    end=`${y}-${pad(mo+1)}-${pad(d)}`;
+  }
+  if(preset==='custom'){
+    if(wrap) wrap.style.display='flex';
+  } else {
+    if(wrap) wrap.style.display='none';
+    const s=document.getElementById('crono-date-start');
+    const e=document.getElementById('crono-date-end');
+    if(s) s.value=start;
+    if(e) e.value=end;
+    renderCronogramaAccounts();
+  }
 }
 // ─── BUSCA AVANÇADA CRONOGRAMA ───────────────────────────────────
 function parseCronoSearch(q){
