@@ -2146,13 +2146,16 @@ function renderCronogramaAccounts(){
           const noteClass=hasLink?' has-note':'';
           const noteEvts=hasLink?` onmouseenter="showNoteTooltip(event,this)" onmouseleave="scheduleHideNoteTooltip()"`:'';
           const noteData=hasLink?` data-link="${entry.reportLink.replace(/"/g,'&quot;')}"`:'' ;
-          return `<td class="day-cell" onclick="onDayCellClick(event,'${contaKey}','${dateStr}',${active})" style="cursor:pointer;padding:2px 1px">
+          const _ck=contaKey.replace(/&/g,'&amp;');
+          return `<td class="day-cell" data-ck="${_ck}" data-dt="${dateStr}" data-act="true" style="cursor:pointer;padding:2px 1px">
             <div class="day-filled${noteClass}"${noteData}${noteEvts} style="background:${cfg.bg};color:${cfg.color}">${cfg.lbl}</div></td>`;
         } else if(active){
-          return `<td class="day-cell" onclick="onDayCellClick(event,'${contaKey}','${dateStr}',${active})" style="cursor:pointer">
+          const _ck=contaKey.replace(/&/g,'&amp;');
+          return `<td class="day-cell" data-ck="${_ck}" data-dt="${dateStr}" data-act="true" style="cursor:pointer">
             <div class="day-dot ${dotCls}" style="opacity:.55;font-size:8px">·</div></td>`;
         } else {
-          return `<td class="day-cell" onclick="onDayCellClick(event,'${contaKey}','${dateStr}',false)" style="cursor:pointer">
+          const _ck=contaKey.replace(/&/g,'&amp;');
+          return `<td class="day-cell" data-ck="${_ck}" data-dt="${dateStr}" data-act="false" style="cursor:pointer">
             <div class="day-dot inactive"></div></td>`;
         }
       }).join('');
@@ -2160,6 +2163,15 @@ function renderCronogramaAccounts(){
     }).join('')
   }</tbody>`;
   if(calScrollEl){calScrollEl.scrollLeft=_savedSL;calScrollEl.scrollTop=_savedST;}
+  if(!tbl._dayClickAttached){
+    tbl._dayClickAttached=true;
+    tbl.addEventListener('click',function(e){
+      const td=e.target.closest('td.day-cell');
+      if(!td)return;
+      e.stopPropagation();
+      onDayCellClick(e,td.dataset.ck,td.dataset.dt,td.dataset.act==='true',td);
+    });
+  }
 }
 const _sortState={accounts:{col:null,dir:1},crono:{col:null,dir:1},cierre:{col:null,dir:1}};
 function _applySortBy(list,col,dir){
@@ -2827,7 +2839,7 @@ function scheduleHideNoteTooltip(){
   _noteHideTimer=setTimeout(()=>{const tip=document.getElementById('crono-note-tip');if(tip)tip.style.display='none';},150);
 }
 document.addEventListener('click', function(e){ if(!e.target.closest('.cal-dropdown')) closeCalDropdown(); });
-function onDayCellClick(event, contaKey, dateStr, active){
+function onDayCellClick(event, contaKey, dateStr, active, tdEl){
   closeCalDropdown();
   if(!canEdit()){ event.stopPropagation(); return; }
   const user=store.responsaveis.find(r=>r.email===window._loggedEmail);
@@ -2835,7 +2847,7 @@ function onDayCellClick(event, contaKey, dateStr, active){
   const storeKey=`${contaKey}_${dateStr}`;
   const existing=store.cronogramaData[storeKey];
   const isLocked=existing&&LOCKED_STATUSES.includes(existing.status)&&!isAdmin();
-  const cell=event.currentTarget;
+  const cell=tdEl||event.currentTarget;
   const rect=cell.getBoundingClientRect();
   const dd=document.createElement('div');
   dd.className='cal-dropdown';
