@@ -269,6 +269,14 @@
   .day-dot.active-once{background:#fef9c3;color:#92400e;}
   .day-dot.active-semanal{background:#fce7f3;color:#9d174d;}
   .day-dot.inactive{width:6px;height:6px;background:var(--e-pale);border-radius:50%;margin:9px auto;}
+  .sortable-th{cursor:pointer;user-select:none;}
+  .sortable-th:hover{color:var(--e-purple);}
+  .sort-arrow{font-size:9px;margin-left:3px;opacity:.35;display:inline-block;}
+  .sort-arrow.asc::after{content:'↑';opacity:1;}
+  .sort-arrow.desc::after{content:'↓';opacity:1;}
+  .sort-arrow.none::after{content:'⇅';}
+  .sort-active .sort-arrow{opacity:1;color:var(--e-purple);}
+  th.sort-active{color:var(--e-purple);}
   .cal-sticky{position:sticky;left:0;background:#fff;z-index:2;border-right:1px solid var(--e-pale);}
   .cal-table thead th.cal-sticky{background:var(--e-ghost);z-index:5;}
   .chip-operacional{background:#ede9fe;color:#5b21b6;}
@@ -568,16 +576,16 @@
         </div>
         <div class="table-scroll" id="accounts-table-inner" style="display:none">
           <table>
-            <thead><tr>
-              <th data-i18n="col-pais">País</th>
-              <th data-i18n="col-agente">Agente</th>
-              <th data-i18n="col-banco">Banco</th>
-              <th data-i18n="col-sigla">Sigla</th>
-              <th data-i18n="col-num-conta">N° Conta</th>
-              <th data-i18n="col-agencia">Agência</th>
-              <th data-i18n="col-tipo">Frequência</th>
-              <th data-i18n="col-tipo-conta">Tipo</th>
-              <th data-i18n="col-status">Status</th>
+            <thead id="accounts-thead"><tr>
+              <th class="sortable-th" data-sort-col="pais" onclick="toggleSort('accounts','pais')" data-i18n="col-pais">País <span class="sort-arrow none"></span></th>
+              <th class="sortable-th" data-sort-col="agente" onclick="toggleSort('accounts','agente')" data-i18n="col-agente">Agente <span class="sort-arrow none"></span></th>
+              <th class="sortable-th" data-sort-col="banco" onclick="toggleSort('accounts','banco')" data-i18n="col-banco">Banco <span class="sort-arrow none"></span></th>
+              <th class="sortable-th" data-sort-col="sigla" onclick="toggleSort('accounts','sigla')" data-i18n="col-sigla">Sigla <span class="sort-arrow none"></span></th>
+              <th class="sortable-th" data-sort-col="numeroConta" onclick="toggleSort('accounts','numeroConta')" data-i18n="col-num-conta">N° Conta <span class="sort-arrow none"></span></th>
+              <th class="sortable-th" data-sort-col="agencia" onclick="toggleSort('accounts','agencia')" data-i18n="col-agencia">Agência <span class="sort-arrow none"></span></th>
+              <th class="sortable-th" data-sort-col="tipo" onclick="toggleSort('accounts','tipo')" data-i18n="col-tipo">Frequência <span class="sort-arrow none"></span></th>
+              <th class="sortable-th" data-sort-col="tipoConta" onclick="toggleSort('accounts','tipoConta')" data-i18n="col-tipo-conta">Tipo <span class="sort-arrow none"></span></th>
+              <th class="sortable-th" data-sort-col="status" onclick="toggleSort('accounts','status')" data-i18n="col-status">Status <span class="sort-arrow none"></span></th>
               <th data-i18n="col-actions">Ações</th>
             </tr></thead>
             <tbody id="accounts-tbody"></tbody>
@@ -1833,6 +1841,8 @@ function renderAccountsTable(){
   filters.style.display=hasData?'':'none';
   const bfBtn=document.getElementById('btn-bulk-freq');
   if(bfBtn) bfBtn.style.display=(canEdit()&&list.length>0)?'flex':'none';
+  list=_applySortBy(list,_sortState.accounts.col,_sortState.accounts.dir);
+  _refreshStaticSortHeader('accounts-thead','accounts');
   if(!list.length){ empty.style.display=''; inner.style.display='none'; return; }
   empty.style.display='none'; inner.style.display='';
   tbody.innerHTML=list.map((c,i)=>{
@@ -2086,8 +2096,9 @@ function renderCronogramaAccounts(){
     const ck=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
     return activeD1.includes(d1Map[ck]);
   }):listBase;
-  if(countEl) countEl.textContent=list.length+' '+(list.length===1?t('count-conta'):t('count-contas'));
-  if(!list.length||!days){
+  const listSorted=_applySortBy(list,_sortState.crono.col,_sortState.crono.dir);
+  if(countEl) countEl.textContent=listSorted.length+' '+(listSorted.length===1?t('count-conta'):t('count-contas'));
+  if(!listSorted.length||!days){
     emptyEl.style.display=''; calWrap.style.display='none'; return;
   }
   emptyEl.style.display='none'; calWrap.style.display='';
@@ -2101,11 +2112,12 @@ function renderCronogramaAccounts(){
     const isWk=d.getDay()===0||d.getDay()===6;
     return `<th class="col-day${isWk?' weekend':''}" style="font-size:9px;color:var(--e-muted);background:${isWk?'#faf5ff':'var(--e-ghost)'}">${wd[d.getDay()]}</th>`;
   }).join('');
-  const colInfos=`<th class="col-info cal-sticky">${t('col-sigla')}</th><th class="col-info">${t('col-pais')}</th><th class="col-info">${t('col-agente')}</th><th class="col-info">Resp.</th><th class="col-info">${t('col-banco')}</th><th class="col-info">${t('col-num-conta')}</th><th class="col-info">${t('col-tipo')}</th><th class="col-info">${t('col-tipo-conta')}</th><th class="col-info">${t('col-status')}</th><th class="col-info" style="white-space:nowrap">Acompanhamento</th>`;
+  const _sth=(col,lbl,extra='')=>`<th class="${_sortThCls('crono',col)} col-info${extra?' cal-sticky':''}" ${extra} onclick="toggleSort('crono','${col}')" style="cursor:pointer">${lbl}${_sortArrow('crono',col)}</th>`;
+  const colInfos=`${_sth('sigla',t('col-sigla'),'cal-sticky')}${_sth('pais',t('col-pais'))}${_sth('agente',t('col-agente'))}<th class="col-info">Resp.</th>${_sth('banco',t('col-banco'))}${_sth('numeroConta',t('col-num-conta'))}${_sth('tipo',t('col-tipo'))}${_sth('tipoConta',t('col-tipo-conta'))}${_sth('status',t('col-status'))}<th class="col-info" style="white-space:nowrap">Acompanhamento</th>`;
   const emptyInfoCols='<th class="col-info cal-sticky" style="background:var(--e-ghost)"></th>'+'<th class="col-info" style="background:var(--e-ghost)"></th>'.repeat(INFO_COLS-1);
   const fmtDate=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   tbl.innerHTML=`<thead><tr>${colInfos}${dayHeaders}</tr><tr>${emptyInfoCols}${wdHeaders}</tr></thead><tbody>${
-    list.map(c=>{
+    listSorted.map(c=>{
       const contaKey=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
       const agente=store.agentes.find(a=>a.nome===c.agente);
       const resp=agente?.responsavel?store.responsaveis.find(r=>r.email===agente.responsavel):null;
@@ -2145,6 +2157,41 @@ function renderCronogramaAccounts(){
     }).join('')
   }</tbody>`;
 }
+const _sortState={accounts:{col:null,dir:1},crono:{col:null,dir:1},cierre:{col:null,dir:1}};
+function _applySortBy(list,col,dir){
+  if(!col) return list;
+  return [...list].sort((a,b)=>{
+    const va=String(a[col]||'').toLowerCase();
+    const vb=String(b[col]||'').toLowerCase();
+    return va<vb?-dir:va>vb?dir:0;
+  });
+}
+function _sortArrow(tbl,col){
+  const st=_sortState[tbl];
+  const cls=st.col===col?(st.dir===1?'asc':'desc'):'none';
+  return `<span class="sort-arrow ${cls}"></span>`;
+}
+function _sortThCls(tbl,col){ return _sortState[tbl].col===col?'sortable-th sort-active':'sortable-th'; }
+function _refreshStaticSortHeader(theadId,tblKey){
+  const thead=document.getElementById(theadId);
+  if(!thead) return;
+  const st=_sortState[tblKey];
+  thead.querySelectorAll('[data-sort-col]').forEach(th=>{
+    const col=th.dataset.sortCol;
+    const isActive=st.col===col;
+    const arrow=th.querySelector('.sort-arrow');
+    if(arrow) arrow.className='sort-arrow '+(isActive?(st.dir===1?'asc':'desc'):'none');
+    th.classList.toggle('sort-active',isActive);
+  });
+}
+function toggleSort(tbl,col){
+  const st=_sortState[tbl];
+  if(st.col===col) st.dir*=-1;
+  else{st.col=col;st.dir=1;}
+  if(tbl==='accounts') renderAccountsTable();
+  else if(tbl==='crono') renderCronogramaAccounts();
+  else if(tbl==='cierre') renderCierreTable();
+}
 function _hasCronoFilters(){
   const fp=document.getElementById('crono-f-pais')?.value||'';
   const fa=document.getElementById('crono-f-agente')?.value||'';
@@ -2171,6 +2218,7 @@ function clearCronoFilters(){
   document.querySelectorAll('#crono-resp-toggles .freq-toggle.active').forEach(b=>b.classList.remove('active'));
   _updateRespLabel();
   if(sel('crono-search')){sel('crono-search').value='';updateCronoSearchClear();}
+  _sortState.crono={col:null,dir:1};
   renderCronogramaAccounts();
 }
 function toggleFreqDropdown(e){
@@ -2973,11 +3021,10 @@ function renderCierreTable(){
   if(fResp) contas=contas.filter(c=>{const ag=store.agentes.find(a=>a.nome===c.agente);return ag?.responsavel===fResp;});
   if(fStatus) contas=contas.filter(c=>_cierreStatus(store.cierreData[_cierreKey(c,mes)])===fStatus);
   if(q) contas=contas.filter(c=>[c.sigla,c.pais,c.agente,c.banco,c.numeroConta].some(v=>(v||'').toLowerCase().includes(q)));
-  contas.sort((a,b)=>{
-    const sa=_cierreStatus(store.cierreData[_cierreKey(a,mes)])==='concluido'?1:0;
-    const sb=_cierreStatus(store.cierreData[_cierreKey(b,mes)])==='concluido'?1:0;
-    return sa-sb;
-  });
+  const _isConcluido=c=>_cierreStatus(store.cierreData[_cierreKey(c,mes)])==='concluido';
+  const pending=_applySortBy(contas.filter(c=>!_isConcluido(c)),_sortState.cierre.col,_sortState.cierre.dir);
+  const concluded=_applySortBy(contas.filter(c=>_isConcluido(c)),_sortState.cierre.col,_sortState.cierre.dir);
+  contas=[...pending,...concluded];
   document.getElementById('cierre-stats').innerHTML=_cierreStatsHtml(mes);
   document.getElementById('cierre-count-header').textContent=`${contas.length} conta(s)`;
   const empty=document.getElementById('cierre-empty');
@@ -2987,8 +3034,9 @@ function renderCierreTable(){
   empty.style.display='none';wrap.style.display='';
   const edit=canEdit();
   const dis=edit?'':'disabled';
+  const _cth=(col,lbl,extra='')=>`<th class="${_sortThCls('cierre',col)}" style="cursor:pointer${extra?';'+extra:''}" onclick="toggleSort('cierre','${col}')">${lbl}${_sortArrow('cierre',col)}</th>`;
   tbl.innerHTML=`<thead><tr>
-    <th>Sigla</th><th>País</th><th>Responsável</th><th>Banco</th><th>Nº Conta</th>
+    ${_cth('sigla','Sigla')}${_cth('pais','País')}${_cth('agente','Responsável')}${_cth('banco','Banco')}${_cth('numeroConta','Nº Conta')}
     <th>Apontamento</th><th>Status</th><th>Comentário</th><th style="text-align:right">Aging</th><th style="text-align:center">✓</th>
   </tr></thead><tbody>${contas.map(c=>{
     const ck=_cierreKey(c,mes);
