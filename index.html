@@ -2977,6 +2977,13 @@ function _cierreAging(entry){
   const color=entry.concluido?'#6b7280':days>=7?'#dc2626':days>=3?'#d97706':'#15803d';
   return `<span style="color:${color};font-weight:600">${days}d</span>`;
 }
+function _agingDays(c,mes){
+  const e=store.cierreData[_cierreKey(c,mes)]||{};
+  if(!e.tsApontamento) return -1;
+  const start=new Date(e.tsApontamento);
+  const end=e.tsConcluido?new Date(e.tsConcluido):new Date();
+  return Math.max(0,Math.round((end-start)/(1000*60*60*24)));
+}
 function _cierreResp(c){
   const ag=store.agentes.find(a=>a.nome===c.agente);
   if(!ag||!ag.responsavel)return null;
@@ -3048,8 +3055,14 @@ function renderCierreTable(){
   if(fStatus) contas=contas.filter(c=>_cierreStatus(store.cierreData[_cierreKey(c,mes)])===fStatus);
   if(q) contas=contas.filter(c=>[c.sigla,c.pais,c.agente,c.banco,c.numeroConta].some(v=>(v||'').toLowerCase().includes(q)));
   const _isConcluido=c=>_cierreStatus(store.cierreData[_cierreKey(c,mes)])==='concluido';
-  const pending=_applySortBy(contas.filter(c=>!_isConcluido(c)),_sortState.cierre.col,_sortState.cierre.dir);
-  const concluded=_applySortBy(contas.filter(c=>_isConcluido(c)),_sortState.cierre.col,_sortState.cierre.dir);
+  const _ciSort=(list)=>{
+    const col=_sortState.cierre.col,dir=_sortState.cierre.dir;
+    if(!col) return list;
+    if(col==='_aging') return [...list].sort((a,b)=>(_agingDays(a,mes)-_agingDays(b,mes))*dir);
+    return _applySortBy(list,col,dir);
+  };
+  const pending=_ciSort(contas.filter(c=>!_isConcluido(c)));
+  const concluded=_ciSort(contas.filter(c=>_isConcluido(c)));
   contas=[...pending,...concluded];
   document.getElementById('cierre-stats').innerHTML=_cierreStatsHtml(mes);
   document.getElementById('cierre-count-header').textContent=`${contas.length} conta(s)`;
@@ -3063,7 +3076,7 @@ function renderCierreTable(){
   const _cth=(col,lbl,extra='')=>`<th class="${_sortThCls('cierre',col)}" style="cursor:pointer${extra?';'+extra:''}" onclick="toggleSort('cierre','${col}')">${lbl}${_sortArrow('cierre',col)}</th>`;
   tbl.innerHTML=`<thead><tr>
     ${_cth('sigla','Sigla')}${_cth('pais','País')}${_cth('agente','Responsável')}${_cth('banco','Banco')}${_cth('numeroConta','Nº Conta')}
-    <th>Apontamento</th><th>Status</th><th>Comentário</th><th style="text-align:right">Aging</th><th style="text-align:center">✓</th>
+    <th>Apontamento</th><th>Status</th><th>Comentário</th>${_cth('_aging','Aging','text-align:right')}<th style="text-align:center">✓</th>
   </tr></thead><tbody>${contas.map(c=>{
     const ck=_cierreKey(c,mes);
     const entry=store.cierreData[ck]||{};
