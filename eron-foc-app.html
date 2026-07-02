@@ -1894,11 +1894,7 @@ function submitBulkFreq(){
     const ms=!sf||c.status===sf;
     return mq&&ms;
   };
-  const previewCount=store.contas.filter(_matches).length;
-  if(!previewCount) return;
-  if(!confirm(`Alterar frequência de ${previewCount} conta${previewCount!==1?'s':''} para "${novaFreq}"?`)) return;
-  // Re-iterate store.contas by index after confirm() — stale object refs break indexOf if
-  // the Firebase listener replaced store.contas during the blocking confirm dialog.
+  if(!store.contas.filter(_matches).length) return;
   let changed=0;
   store.contas.forEach((c,i)=>{ if(_matches(c)){ store.contas[i].tipo=novaFreq; changed++; } });
   if(!changed) return;
