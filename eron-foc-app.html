@@ -1889,15 +1889,20 @@ function submitBulkFreq(){
   if(!novaFreq) return;
   const q=(document.getElementById('acc-search')||{}).value?.toLowerCase()||'';
   const sf=(document.getElementById('acc-filter-status')||{}).value||'';
-  const list=store.contas.filter(c=>{
+  const _matches=c=>{
     const mq=!q||[c.pais,c.agente,c.banco,c.sigla].join(' ').toLowerCase().includes(q);
     const ms=!sf||c.status===sf;
     return mq&&ms;
-  });
-  if(!list.length) return;
-  if(!confirm(`Alterar frequência de ${list.length} conta${list.length!==1?'s':''} para "${novaFreq}"?`)) return;
-  list.forEach(c=>{ const idx=store.contas.indexOf(c); if(idx>=0) store.contas[idx].tipo=novaFreq; });
-  logAudit('gerencial','bulk-freq',{novaFreq,count:list.length});
+  };
+  const previewCount=store.contas.filter(_matches).length;
+  if(!previewCount) return;
+  if(!confirm(`Alterar frequência de ${previewCount} conta${previewCount!==1?'s':''} para "${novaFreq}"?`)) return;
+  // Re-iterate store.contas by index after confirm() — stale object refs break indexOf if
+  // the Firebase listener replaced store.contas during the blocking confirm dialog.
+  let changed=0;
+  store.contas.forEach((c,i)=>{ if(_matches(c)){ store.contas[i].tipo=novaFreq; changed++; } });
+  if(!changed) return;
+  logAudit('gerencial','bulk-freq',{novaFreq,count:changed});
   saveStore(); _fbSync('contas');
   closeModal('modal-bulk-freq');
   renderAccountsTable();
