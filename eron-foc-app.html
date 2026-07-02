@@ -111,9 +111,9 @@
 
   /* TABLE */
   .table-wrap{background:#fff;border:1px solid var(--e-pale);border-radius:12px;overflow:hidden;}
-  .table-scroll{overflow-x:auto;}
+  .table-scroll{overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 220px);}
   table{width:100%;border-collapse:collapse;}
-  thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--e-muted);text-transform:uppercase;letter-spacing:.07em;background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap;}
+  thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--e-muted);text-transform:uppercase;letter-spacing:.07em;background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap;position:sticky;top:0;z-index:2;}
   tbody tr{border-bottom:1px solid var(--e-pale);transition:background .1s;border-left:3px solid transparent;}
   tbody tr:last-child{border-bottom:none;}
   tbody tr:hover{background:var(--e-ghost);}
@@ -250,7 +250,9 @@
   .cal-wrap{background:#fff;border:1px solid var(--e-pale);border-radius:12px;}
   .cal-scroll{overflow-x:scroll;}
   .cal-table{width:max-content;min-width:100%;border-collapse:collapse;}
-  .cal-table thead th{padding:8px 10px;text-align:center;font-size:11px;font-weight:600;color:var(--e-muted);text-transform:uppercase;letter-spacing:.06em;background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap;}
+  .cal-table thead th{padding:8px 10px;text-align:center;font-size:11px;font-weight:600;color:var(--e-muted);text-transform:uppercase;letter-spacing:.06em;background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap;position:sticky;z-index:3;}
+  .cal-table thead tr:first-child th{top:0;}
+  .cal-table thead tr:last-child th{top:31px;border-top:none;}
   .cal-table thead th.col-info{text-align:left;padding:8px 14px;}
   .cal-table thead th.col-day{min-width:44px;width:auto;padding:5px 3px;}
   .cal-table thead th.weekend{background:#faf5ff;}
@@ -268,7 +270,7 @@
   .day-dot.active-semanal{background:#fce7f3;color:#9d174d;}
   .day-dot.inactive{width:6px;height:6px;background:var(--e-pale);border-radius:50%;margin:9px auto;}
   .cal-sticky{position:sticky;left:0;background:#fff;z-index:2;border-right:1px solid var(--e-pale);}
-  .cal-table thead th.cal-sticky{background:var(--e-ghost);}
+  .cal-table thead th.cal-sticky{background:var(--e-ghost);z-index:5;}
   .chip-operacional{background:#ede9fe;color:#5b21b6;}
   .chip-administrativa{background:#fce7f3;color:#9d174d;}
   .chip-bbpix{background:#e0f2fe;color:#0369a1;}
