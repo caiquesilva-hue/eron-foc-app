@@ -603,13 +603,13 @@
         <select id="crono-f-agente" onchange="renderCronogramaAccounts()"></select>
         <select id="crono-f-banco" onchange="renderCronogramaAccounts()"></select>
         <div class="freq-dd" id="crono-resp-dd">
-          <button class="freq-dd-btn" id="crono-resp-btn" onclick="toggleRespDropdown(event)">Responsável</button>
+          <button class="freq-dd-btn" id="crono-resp-btn" onclick="toggleRespDropdown(event)" data-i18n-default="crono-resp">Responsável</button>
           <div class="freq-dd-panel" id="crono-resp-panel">
             <div id="crono-resp-toggles"></div>
           </div>
         </div>
         <div class="freq-dd" id="crono-f-freq-dd">
-          <button class="freq-dd-btn" id="crono-freq-btn" onclick="toggleFreqDropdown(event)">Todas as freq.</button>
+          <button class="freq-dd-btn" id="crono-freq-btn" onclick="toggleFreqDropdown(event)" data-i18n-default="crono-all-freq">Todas as freq.</button>
           <div class="freq-dd-panel" id="crono-f-freq-wrap">
             <button class="freq-toggle ft-t1" data-freq="T1" onclick="toggleFreqFilter(this)">T1</button>
             <button class="freq-toggle ft-t2" data-freq="T2" onclick="toggleFreqFilter(this)">T2</button>
@@ -618,13 +618,13 @@
           </div>
         </div>
         <div class="freq-dd" id="crono-d1-dd">
-          <button class="freq-dd-btn" id="crono-d1-btn" onclick="toggleD1Dropdown(event)">Acompanhamento</button>
+          <button class="freq-dd-btn" id="crono-d1-btn" onclick="toggleD1Dropdown(event)" data-i18n-default="crono-d1-lbl">Acompanhamento</button>
           <div class="freq-dd-panel" id="crono-d1-filter">
-            <button class="d1-toggle dt-concluida" data-d1="concluido" onclick="toggleD1Filter(this)">Concluída</button>
-            <button class="d1-toggle dt-sem-mov" data-d1="sem_movimento" onclick="toggleD1Filter(this)">Sem Movimento</button>
-            <button class="d1-toggle dt-sem-acesso" data-d1="sem_acesso" onclick="toggleD1Filter(this)">Sem Acesso</button>
-            <button class="d1-toggle dt-pendente" data-d1="pendente" onclick="toggleD1Filter(this)">Pendente</button>
-            <button class="d1-toggle dt-ag-extrato" data-d1="aguardando_extrato" onclick="toggleD1Filter(this)">Ag. Extrato</button>
+            <button class="d1-toggle dt-concluida" data-d1="concluido" onclick="toggleD1Filter(this)" data-i18n="d1-concluida">Concluída</button>
+            <button class="d1-toggle dt-sem-mov" data-d1="sem_movimento" onclick="toggleD1Filter(this)" data-i18n="d1-sem-mov">Sem Movimento</button>
+            <button class="d1-toggle dt-sem-acesso" data-d1="sem_acesso" onclick="toggleD1Filter(this)" data-i18n="d1-sem-acesso">Sem Acesso</button>
+            <button class="d1-toggle dt-pendente" data-d1="pendente" onclick="toggleD1Filter(this)" data-i18n="d1-pendente">Pendente</button>
+            <button class="d1-toggle dt-ag-extrato" data-d1="aguardando_extrato" onclick="toggleD1Filter(this)" data-i18n="d1-ag-extrato">Ag. Extrato</button>
           </div>
         </div>
         <span class="crono-sep">De</span>
@@ -633,7 +633,7 @@
         <input type="date" id="crono-date-end" onchange="renderCronogramaAccounts()">
         <button id="btn-bulk-apply" class="btn-bulk-apply" onclick="openBulkApply()" data-requires-edit="1">
           <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 16l2 2 4-4"/></svg>
-          Aplicar em massa
+          <span data-i18n="crono-bulk-apply">Aplicar em massa</span>
         </button>
         <button class="btn-bulk-apply" id="btn-clear-filters" onclick="clearCronoFilters()" style="background:var(--e-ghost);color:var(--e-muted);border-color:var(--e-pale);display:none" title="Limpar todos os filtros">
           <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -641,18 +641,18 @@
         </button>
       </div>
       <div class="crono-d1-panel" id="crono-d1-panel">
-        <div class="d1-stat-card d1-stat-concluida"><div class="d1-stat-num" id="d1-count-concluida">—</div><div class="d1-stat-lbl">Concluída</div></div>
-        <div class="d1-stat-card d1-stat-sem-mov"><div class="d1-stat-num" id="d1-count-sem-mov">—</div><div class="d1-stat-lbl">Sem Movimento</div></div>
-        <div class="d1-stat-card d1-stat-sem-acesso"><div class="d1-stat-num" id="d1-count-sem-acesso">—</div><div class="d1-stat-lbl">Sem Acesso</div></div>
-        <div class="d1-stat-card d1-stat-pendente"><div class="d1-stat-num" id="d1-count-pendente">—</div><div class="d1-stat-lbl">Pendente</div></div>
-        <div class="d1-stat-card d1-stat-ag-extrato"><div class="d1-stat-num" id="d1-count-ag-extrato">—</div><div class="d1-stat-lbl">Ag. Extrato</div></div>
+        <div class="d1-stat-card d1-stat-concluida"><div class="d1-stat-num" id="d1-count-concluida">—</div><div class="d1-stat-lbl" data-i18n="d1-concluida">Concluída</div></div>
+        <div class="d1-stat-card d1-stat-sem-mov"><div class="d1-stat-num" id="d1-count-sem-mov">—</div><div class="d1-stat-lbl" data-i18n="d1-sem-mov">Sem Movimento</div></div>
+        <div class="d1-stat-card d1-stat-sem-acesso"><div class="d1-stat-num" id="d1-count-sem-acesso">—</div><div class="d1-stat-lbl" data-i18n="d1-sem-acesso">Sem Acesso</div></div>
+        <div class="d1-stat-card d1-stat-pendente"><div class="d1-stat-num" id="d1-count-pendente">—</div><div class="d1-stat-lbl" data-i18n="d1-pendente">Pendente</div></div>
+        <div class="d1-stat-card d1-stat-ag-extrato"><div class="d1-stat-num" id="d1-count-ag-extrato">—</div><div class="d1-stat-lbl" data-i18n="d1-ag-extrato">Ag. Extrato</div></div>
       </div>
       <div class="crono-search-wrap">
         <div class="crono-search-col">
           <div class="crono-search-inner">
             <svg class="crono-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
             <input type="text" id="crono-search" class="crono-search-input"
-              placeholder="Buscar contas... ex: in:BCP_3 PE.Onlinepro;BCP_1 PE.Onlinepro  |  pais:Peru  |  banco:BCP  |  agente:PE.Onlinepro  |  status:ativa  |  tipo:Diário"
+              data-i18n-placeholder="crono-search-ph" placeholder="Buscar contas... ex: pais:Peru | banco:BCP | agente:PE.Onlinepro | status:ativa | tipo:Diário"
               oninput="renderCronogramaAccounts();updateCronoSearchClear()">
             <button class="crono-search-clear" id="crono-search-clear" onclick="clearCronoSearch()" style="display:none" title="Limpar busca">×</button>
             <button class="crono-search-help-btn" onclick="toggleSearchHelp(event)" title="Sintaxe de busca">?</button>
@@ -673,7 +673,7 @@
         </div>
         <button class="btn-csv" onclick="downloadCronoCSV()" title="Baixar CSV com os filtros aplicados">
           <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
-          Baixar CSV
+          <span data-i18n="crono-download-csv">Baixar CSV</span>
         </button>
       </div>
       <div id="crono-accounts-wrap">
@@ -1384,6 +1384,22 @@ const i18n = {
     'login-forgot':'Esqueci a senha',
     'login-enter':'Entrar',
     'count-banco':'banco','count-bancos':'bancos',
+    'crono-resp':'Responsable','crono-d1-lbl':'Seguimiento','crono-bulk-apply':'Aplicar en masa',
+    'crono-clear-filters':'Limpiar filtros','crono-download-csv':'Descargar CSV',
+    'crono-search-ph':'Buscar cuentas... ej: país:Perú | banco:BCP | agente:PE.Onlinepro | estado:activa | tipo:Diario',
+    'd1-concluida':'Concluida','d1-sem-mov':'Sin movimiento','d1-sem-acesso':'Sin acceso',
+    'd1-pendente':'Pendiente','d1-ag-extrato':'Ag. extracto',
+    'tipo-op':'Operacional','tipo-adm':'Administrativa','tipo-bbpix':'BB Pix',
+    'freq-diario':'Diario','freq-mensal':'1× al mes',
+    'status-pendente':'Pendiente','status-concluido':'Concluida','status-sem-mov':'Sin mov.','status-sem-acesso':'Sin acceso','status-ag-extrato':'Ag. extracto',
+    'crono-resp':'Responsável','crono-d1-lbl':'Acompanhamento','crono-bulk-apply':'Aplicar em massa',
+    'crono-clear-filters':'Limpar filtros','crono-download-csv':'Baixar CSV',
+    'crono-search-ph':'Buscar contas... ex: pais:Peru | banco:BCP | agente:PE.Onlinepro | status:ativa | tipo:Diário',
+    'd1-concluida':'Concluída','d1-sem-mov':'Sem Movimento','d1-sem-acesso':'Sem Acesso',
+    'd1-pendente':'Pendente','d1-ag-extrato':'Ag. Extrato',
+    'tipo-op':'Operacional','tipo-adm':'Administrativa','tipo-bbpix':'BB Pix',
+    'freq-diario':'Diário','freq-mensal':'1 vez ao mês',
+    'status-pendente':'Pendente','status-concluido':'Concluída','status-sem-mov':'Sem Mov.','status-sem-acesso':'Sem Acesso','status-ag-extrato':'Ag. Extrato',
   },
   'en': {
     'ops-platform':'FOC App','login-welcome':'Welcome back',
@@ -1435,6 +1451,14 @@ const i18n = {
     'login-forgot':'Forgot password',
     'login-enter':'Sign in',
     'count-banco':'bank','count-bancos':'banks',
+    'crono-resp':'Responsible','crono-d1-lbl':'Follow-up','crono-bulk-apply':'Bulk apply',
+    'crono-clear-filters':'Clear filters','crono-download-csv':'Download CSV',
+    'crono-search-ph':'Search accounts... ex: country:Peru | bank:BCP | agent:PE.Onlinepro | status:active | type:Daily',
+    'd1-concluida':'Completed','d1-sem-mov':'No movement','d1-sem-acesso':'No access',
+    'd1-pendente':'Pending','d1-ag-extrato':'Aw. statement',
+    'tipo-op':'Operational','tipo-adm':'Administrative','tipo-bbpix':'BB Pix',
+    'freq-diario':'Daily','freq-mensal':'1× / month',
+    'status-pendente':'Pending','status-concluido':'Completed','status-sem-mov':'No mov.','status-sem-acesso':'No access','status-ag-extrato':'Aw. stmt',
   },
   'es': {
     'ops-platform':'FOC App','login-welcome':'Bienvenido de nuevo',
@@ -1486,6 +1510,14 @@ const i18n = {
     'login-forgot':'Olvidé la contraseña',
     'login-enter':'Entrar',
     'count-banco':'banco','count-bancos':'bancos',
+    'crono-resp':'Responsable','crono-d1-lbl':'Seguimiento','crono-bulk-apply':'Aplicar en masa',
+    'crono-clear-filters':'Limpiar filtros','crono-download-csv':'Descargar CSV',
+    'crono-search-ph':'Buscar cuentas... ej: país:Perú | banco:BCP | agente:PE.Onlinepro | estado:activa | tipo:Diario',
+    'd1-concluida':'Concluida','d1-sem-mov':'Sin movimiento','d1-sem-acesso':'Sin acceso',
+    'd1-pendente':'Pendiente','d1-ag-extrato':'Ag. extracto',
+    'tipo-op':'Operacional','tipo-adm':'Administrativa','tipo-bbpix':'BB Pix',
+    'freq-diario':'Diario','freq-mensal':'1× al mes',
+    'status-pendente':'Pendiente','status-concluido':'Concluida','status-sem-mov':'Sin mov.','status-sem-acesso':'Sin acceso','status-ag-extrato':'Ag. extracto',
   }
 };
 
@@ -1513,6 +1545,8 @@ function setLang(lang){
 }
 function applyTranslations(){
   document.querySelectorAll('[data-i18n]').forEach(el=>{ const v=t(el.dataset.i18n); if(v) el.textContent=v; });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{ const v=t(el.dataset.i18nPlaceholder); if(v) el.placeholder=v; });
+  document.querySelectorAll('[data-i18n-default]').forEach(el=>{ if(!el.classList.contains('has-active')) el.textContent=t(el.dataset.i18nDefault); });
   updateBreadcrumb();
   updateCounts();
 }
@@ -1850,11 +1884,13 @@ function submitBulkFreq(){
 }
 function tipoChip(tipo){
   const map={'T1':'chip-violet','T2':'chip-purple','Diário':'chip-teal','1 vez ao mês':'chip-amber'};
-  return `<span class="chip ${map[tipo]||'chip-grey'}">${tipo}</span>`;
+  const lbl={'Diário':t('freq-diario'),'1 vez ao mês':t('freq-mensal')};
+  return `<span class="chip ${map[tipo]||'chip-grey'}">${lbl[tipo]||tipo}</span>`;
 }
 function tipoContaChip(tc){
   const map={'Operacional':'chip-operacional','Administrativa':'chip-administrativa','BB Pix':'chip-bbpix'};
-  return tc?`<span class="chip ${map[tc]||'chip-grey'}">${tc}</span>`:'—';
+  const lbl={'Operacional':t('tipo-op'),'Administrativa':t('tipo-adm'),'BB Pix':t('tipo-bbpix')};
+  return tc?`<span class="chip ${map[tc]||'chip-grey'}">${lbl[tc]||tc}</span>`:'—';
 }
 
 // ─── CADASTRO ─────────────────────────────────────────────────────
@@ -2066,7 +2102,7 @@ function renderCronogramaAccounts(){
       const statusChip=c.status==='encerrada'?`<span class="chip chip-red">${t('status-encerrada')}</span>`:`<span class="chip chip-green">${t('status-ativa')}</span>`;
       const dotCls=dayDotClass(c.tipo);
       const _d1s=d1Map[contaKey];
-      const _d1chipHtml={concluido:'<span class="chip chip-green" style="font-size:10px">Concluída</span>',sem_movimento:'<span class="chip chip-purple" style="font-size:10px">Sem Mov.</span>',sem_acesso:'<span class="chip chip-red" style="font-size:10px">Sem Acesso</span>',pendente:'<span class="chip chip-amber" style="font-size:10px">Pendente</span>',aguardando_extrato:'<span class="chip chip-bbpix" style="font-size:10px">Ag. Extrato</span>'}[_d1s]||'<span style="color:var(--e-muted);font-size:11px">—</span>';
+      const _d1chipHtml={concluido:`<span class="chip chip-green" style="font-size:10px">${t('status-concluido')}</span>`,sem_movimento:`<span class="chip chip-purple" style="font-size:10px">${t('status-sem-mov')}</span>`,sem_acesso:`<span class="chip chip-red" style="font-size:10px">${t('status-sem-acesso')}</span>`,pendente:`<span class="chip chip-amber" style="font-size:10px">${t('status-pendente')}</span>`,aguardando_extrato:`<span class="chip chip-bbpix" style="font-size:10px">${t('status-ag-extrato')}</span>`}[_d1s]||'<span style="color:var(--e-muted);font-size:11px">—</span>';
       const d1Cell=`<td style="white-space:nowrap;padding:4px 8px">${_d1chipHtml}</td>`;
       const cells=days.map(d=>{
         const dateStr=fmtDate(d);
@@ -2144,7 +2180,7 @@ function _updateFreqLabel(){
   const active=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')];
   const btn=document.getElementById('crono-freq-btn');
   if(!btn) return;
-  if(!active.length){btn.textContent='Todas as freq.';btn.classList.remove('has-active');}
+  if(!active.length){btn.textContent=t('crono-all-freq');btn.classList.remove('has-active');}
   else{btn.textContent=active.map(b=>b.dataset.freq).join(', ');btn.classList.add('has-active');}
 }
 function toggleFreqFilter(btn){btn.classList.toggle('active');_updateFreqLabel();renderCronogramaAccounts();}
@@ -2161,7 +2197,7 @@ function _updateD1Label(){
   const active=[...document.querySelectorAll('#crono-d1-filter .d1-toggle.active')];
   const btn=document.getElementById('crono-d1-btn');
   if(!btn) return;
-  if(!active.length){btn.textContent='Acompanhamento';btn.classList.remove('has-active');}
+  if(!active.length){btn.textContent=t('crono-d1-lbl');btn.classList.remove('has-active');}
   else{btn.textContent=active.map(b=>b.textContent).join(', ');btn.classList.add('has-active');}
 }
 function toggleD1Filter(btn){btn.classList.toggle('active');_updateD1Label();renderCronogramaAccounts();}
@@ -2171,7 +2207,7 @@ function _updateRespLabel(){
   const active=[...document.querySelectorAll('#crono-resp-toggles .freq-toggle.active')];
   const btn=document.getElementById('crono-resp-btn');
   if(!btn) return;
-  if(!active.length){btn.textContent='Responsável';btn.classList.remove('has-active');}
+  if(!active.length){btn.textContent=t('crono-resp');btn.classList.remove('has-active');}
   else{btn.textContent=active.map(b=>b.dataset.resp).join(', ');btn.classList.add('has-active');}
 }
 function toggleRespFilter(btn){btn.classList.toggle('active');_updateRespLabel();renderCronogramaAccounts();}
@@ -2621,18 +2657,18 @@ function downloadCronoCSV(){
   const _now=new Date();
   const _d1=new Date(_now.getFullYear(),_now.getMonth(),_now.getDate()-1);
   const d1Str=fmtDate(_d1);
-  const STATUS_LBL={concluido:'Concluída',sem_movimento:'Sem Movimento',sem_acesso:'Sem Acesso',aguardando_extrato:'Ag. Extrato'};
+  const STATUS_LBL=()=>({concluido:t('d1-concluida'),sem_movimento:t('d1-sem-mov'),sem_acesso:t('d1-sem-acesso'),aguardando_extrato:t('d1-ag-extrato')});
   const dateHeaders=days?days.map(d=>fmtDate(d)):[];
   const headers=['Sigla','País','Agente','Banco','Nº Conta','Frequência','Tipo','Status','Acompanhamento',...dateHeaders];
   const rows=[headers];
   list.forEach(c=>{
     const ck=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
     const d1Entry=store.cronogramaData[`${ck}_${d1Str}`];
-    const d1Status=d1Entry?STATUS_LBL[d1Entry.status]||d1Entry.status:isActiveDay(_d1,c.tipo)?'Pendente':'—';
+    const d1Status=d1Entry?STATUS_LBL()[d1Entry.status]||d1Entry.status:isActiveDay(_d1,c.tipo)?t('status-pendente'):'—';
     const dayCells=days?days.map(d=>{
       const ds=fmtDate(d);
       const e=store.cronogramaData[`${ck}_${ds}`];
-      return e?(STATUS_LBL[e.status]||e.status):isActiveDay(d,c.tipo)?'Pendente':'';
+      return e?(STATUS_LBL()[e.status]||e.status):isActiveDay(d,c.tipo)?t('status-pendente'):'';
     }):[];
     rows.push([c.sigla,c.pais,c.agente,c.banco,c.numeroConta||'',c.tipo,c.tipoConta||'',c.status,d1Status,...dayCells]);
   });
