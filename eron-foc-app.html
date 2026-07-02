@@ -243,7 +243,7 @@
   /* CRONOGRAMA NOTE (hover link) */
   .day-filled.has-note{position:relative;overflow:visible;}
   .day-filled.has-note::after{content:'';position:absolute;top:0;right:0;width:0;height:0;border-style:solid;border-width:0 6px 6px 0;border-color:transparent #f59e0b transparent transparent;pointer-events:none;}
-  #crono-note-tip{position:fixed;z-index:9999;background:#fefce8;border:1px solid #f59e0b;border-radius:8px;padding:8px 12px;font-size:11px;max-width:300px;box-shadow:0 4px 16px rgba(0,0,0,.15);display:none;}
+  #crono-note-tip{position:fixed;z-index:9999;background:#fefce8;border:1px solid #f59e0b;border-radius:8px;padding:8px 12px;font-size:11px;max-width:300px;box-shadow:0 4px 16px rgba(0,0,0,.15);display:none;pointer-events:none;}
   #crono-note-tip a{color:#1d4ed8;word-break:break-all;display:block;margin-top:3px;}
   .crono-filters select:focus,.crono-filters input[type=date]:focus{border-color:var(--e-purple);}
   .crono-sep{color:var(--e-muted);font-size:13px;flex-shrink:0;padding:0 2px;}
@@ -445,7 +445,7 @@
     <div class="login-err" id="login-err" style="text-align:left;margin-bottom:8px;display:none"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin:6px 0 14px">
       <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;color:rgba(185,185,230,.7);user-select:none">
-        <input type="checkbox" id="login-remember" style="accent-color:var(--e-purple);width:14px;height:14px;cursor:pointer"><span data-i18n="login-remember"> Lembrar por 24h</span>
+        <input type="checkbox" id="login-remember" checked style="accent-color:var(--e-purple);width:14px;height:14px;cursor:pointer"><span data-i18n="login-remember"> Lembrar por 24h</span>
       </label>
       <button type="button" onclick="openForgotPassword()" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--e-lilac);padding:0;font-family:inherit"><span data-i18n="login-forgot">Esqueci a senha</span></button>
     </div>
@@ -2102,6 +2102,9 @@ function renderCronogramaAccounts(){
     emptyEl.style.display=''; calWrap.style.display='none'; return;
   }
   emptyEl.style.display='none'; calWrap.style.display='';
+  const calScrollEl=calWrap.querySelector('.cal-scroll');
+  const _savedSL=calScrollEl?calScrollEl.scrollLeft:0;
+  const _savedST=calScrollEl?calScrollEl.scrollTop:0;
   const wd=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   const INFO_COLS=10;
   const dayHeaders=days.map(d=>{
@@ -2156,6 +2159,7 @@ function renderCronogramaAccounts(){
       return `<tr class="row-${c.status}"><td class="cal-sticky" style="font-family:ui-monospace,monospace;font-size:12px">${c.sigla}</td><td>${countryFlag(c.pais)} ${c.pais}</td><td class="sub">${c.agente}</td><td>${respCell}</td><td>${c.banco}</td><td class="mono">${c.numeroConta||'—'}</td><td>${tipoChip(c.tipo)}</td><td>${tipoContaChip(c.tipoConta)}</td><td>${statusChip}</td>${d1Cell}${cells}</tr>`;
     }).join('')
   }</tbody>`;
+  if(calScrollEl){calScrollEl.scrollLeft=_savedSL;calScrollEl.scrollTop=_savedST;}
 }
 const _sortState={accounts:{col:null,dir:1},crono:{col:null,dir:1},cierre:{col:null,dir:1}};
 function _applySortBy(list,col,dir){
@@ -3111,7 +3115,7 @@ function saveStore(){
     permissions:store.permissions,credentials:store.credentials};
   try{localStorage.setItem(STORE_KEY,JSON.stringify(_ls));}catch(e){}
   if(typeof _fbRef!=='undefined'){
-    _ownWrite=true;setTimeout(()=>_ownWrite=false,3000);
+    _ownWrite=true;setTimeout(()=>_ownWrite=false,8000);
     _syncBadge('syncing');
     try{
       _fbRef.update(_storeToFb())
