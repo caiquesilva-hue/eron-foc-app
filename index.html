@@ -1881,12 +1881,15 @@ function openBulkFreq(){
     return mq&&ms;
   });
   const desc=document.getElementById('bulk-freq-desc');
-  if(desc) desc.textContent=`Aplicar nova frequência a ${list.length} conta${list.length!==1?'s':''} filtrada${list.length!==1?'s':''}.`;
+  if(desc) desc.textContent=`[v6] Aplicar nova frequência a ${list.length} conta${list.length!==1?'s':''} filtrada${list.length!==1?'s':''}.`;
   openModal('modal-bulk-freq');
 }
 function submitBulkFreq(){
+  const desc=document.getElementById('bulk-freq-desc');
+  const _st=msg=>{if(desc)desc.textContent=msg;};
   const novaFreq=document.getElementById('bulk-freq-select')?.value;
-  if(!novaFreq) return;
+  _st('freq='+novaFreq+' | contas='+store.contas.length);
+  if(!novaFreq){_st('ERRO: sem frequência selecionada');return;}
   const q=(document.getElementById('acc-search')||{}).value?.toLowerCase()||'';
   const sf=(document.getElementById('acc-filter-status')||{}).value||'';
   const _matches=c=>{
@@ -1894,14 +1897,13 @@ function submitBulkFreq(){
     const ms=!sf||c.status===sf;
     return mq&&ms;
   };
-  const previewCount=store.contas.filter(_matches).length;
-  if(!previewCount) return;
-  if(!confirm(`Alterar frequência de ${previewCount} conta${previewCount!==1?'s':''} para "${novaFreq}"?`)) return;
-  // Re-iterate store.contas by index after confirm() — stale object refs break indexOf if
-  // the Firebase listener replaced store.contas during the blocking confirm dialog.
+  const matched=store.contas.filter(_matches).length;
+  _st('contas matched='+matched+' (q="'+q+'" sf="'+sf+'")');
+  if(!matched){_st('ERRO: 0 contas correspondem ao filtro');return;}
   let changed=0;
   store.contas.forEach((c,i)=>{ if(_matches(c)){ store.contas[i].tipo=novaFreq; changed++; } });
-  if(!changed) return;
+  _st('alteradas='+changed);
+  if(!changed){_st('ERRO: nenhuma conta foi alterada');return;}
   logAudit('gerencial','bulk-freq',{novaFreq,count:changed});
   saveStore(); _fbSync('contas');
   closeModal('modal-bulk-freq');
