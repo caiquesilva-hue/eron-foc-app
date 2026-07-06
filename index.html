@@ -1905,6 +1905,7 @@ function submitBulkFreq(){
   closeModal('modal-bulk-freq');
   renderAccountsTable();
   renderCronogramaAccounts();
+  _toast(`✓ ${changed} conta${changed!==1?'s':''} → ${novaFreq}`);
 }
 function tipoChip(tipo){
   const map={'T1':'chip-violet','T2':'chip-purple','Diário':'chip-teal','1 vez ao mês':'chip-amber','1 vez na semana':'chip-rose'};
@@ -3307,6 +3308,12 @@ function _syncBadge(state){
   if(state==='synced')setTimeout(()=>b.style.opacity='0',3000);
 }
 
+function _toast(msg,ms=4000){
+  let t=document.getElementById('_toast-msg');
+  if(!t){t=document.createElement('div');t.id='_toast-msg';t.style.cssText='position:fixed;bottom:36px;right:14px;font-size:12px;font-weight:600;padding:6px 12px;border-radius:10px;z-index:9999;pointer-events:none;transition:opacity .4s;background:rgba(5,150,105,.9);color:#fff;';document.body.appendChild(t);}
+  t.textContent=msg;t.style.opacity='1';
+  clearTimeout(t._hide);t._hide=setTimeout(()=>t.style.opacity='0',ms);
+}
 async function startFirebaseSync(){
   _syncBadge('syncing');
   try{
