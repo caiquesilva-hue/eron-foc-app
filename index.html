@@ -254,6 +254,13 @@
   .d1-stat-sem-acesso .d1-stat-num{color:#dc2626;}
   .d1-stat-pendente .d1-stat-num{color:#d97706;}
   .d1-stat-ag-extrato .d1-stat-num{color:#0369a1;}
+  .d1-stat-pronto-conc .d1-stat-num{color:#0f766e;}
+  #page-cronograma-conciliacoes.active{display:flex;flex-direction:column;overflow-y:hidden;}
+  .prior-chip{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:.02em;}
+  .prior-alta{background:#fef2f2;color:#dc2626;}
+  .prior-media{background:#fef9c3;color:#92400e;}
+  .prior-baixa{background:#dcfce7;color:#15803d;}
+  .prior-none{color:var(--e-muted);font-size:11px;}
   /* CRONOGRAMA NOTE (hover link) */
   .day-filled.has-note{position:relative;overflow:visible;}
   .day-filled.has-note::after{content:'';position:absolute;top:0;right:0;width:0;height:0;border-style:solid;border-width:0 6px 6px 0;border-color:transparent #f59e0b transparent transparent;pointer-events:none;}
@@ -780,25 +787,72 @@
     <div class="page" id="page-cronograma-custos"><div class="placeholder-page"><div class="ph-section" data-i18n="nav-cronograma">Cronograma</div><div class="ph-icon">🗓️</div><div class="ph-title" data-i18n="nav-custos">Custos</div><div class="ph-sub" data-i18n="ph-crono-cus-desc">Agendamento e revisão de lançamentos de custos por período.</div><div class="ph-badge" data-i18n="dev-badge">Em desenvolvimento</div></div></div>
     <!-- CRONOGRAMA > CONCILIAÇÕES -->
     <div class="page" id="page-cronograma-conciliacoes">
-  <div class="page-header"><div class="page-header-left"><div class="page-title-text">Cronograma · Conciliações</div><div class="page-title-count" id="crono-conc-count"></div></div></div>
-  <div class="crono-conc-filters">
-    <select class="form-select" id="crono-conc-f-pais" style="min-width:130px" onchange="renderCronogramaConciliacoes()"><option value="">Todos os países</option></select>
-    <select class="form-select" id="crono-conc-f-agente" style="min-width:140px" onchange="renderCronogramaConciliacoes()"><option value="">Todos os agentes</option></select>
-    <select class="form-select" id="crono-conc-date-preset" style="min-width:150px" onchange="onCronconcDatePreset()">
-      <option value="curr-month">Mês atual</option>
+  <div class="page-header">
+    <div class="page-title-group">
+      <div class="page-title-text">Conciliações</div>
+      <div class="page-title-count" id="crono-conc-count"></div>
+    </div>
+  </div>
+  <div class="crono-filters">
+    <select id="crono-conc-f-pais" onchange="renderCronogramaConciliacoes()"></select>
+    <select id="crono-conc-f-agente" onchange="renderCronogramaConciliacoes()"></select>
+    <div class="freq-dd" id="crono-conc-resp-dd">
+      <button class="freq-dd-btn" id="crono-conc-resp-btn" onclick="toggleConcRespDropdown(event)">Responsável</button>
+      <div class="freq-dd-panel" id="crono-conc-resp-panel">
+        <div id="crono-conc-resp-toggles"></div>
+      </div>
+    </div>
+    <div class="freq-dd" id="crono-conc-d1-dd">
+      <button class="freq-dd-btn" id="crono-conc-d1-btn" onclick="toggleConcD1Dropdown(event)">Acompanhamento</button>
+      <div class="freq-dd-panel" id="crono-conc-d1-filter">
+        <button class="d1-toggle dt-concluida" data-d1="concluido" onclick="toggleConcD1Filter(this)">Concluída</button>
+        <button class="d1-toggle" data-d1="pronto_conciliacao" onclick="toggleConcD1Filter(this)" style="background:#e0fdf4;color:#0f766e;border:1px solid #99f6e4">Pronto p/ Conc.</button>
+        <button class="d1-toggle dt-sem-mov" data-d1="sem_movimento" onclick="toggleConcD1Filter(this)">Sem Movimento</button>
+        <button class="d1-toggle dt-sem-acesso" data-d1="sem_acesso" onclick="toggleConcD1Filter(this)">Sem Acesso</button>
+        <button class="d1-toggle dt-pendente" data-d1="pendente" onclick="toggleConcD1Filter(this)">Pendente</button>
+      </div>
+    </div>
+    <select id="crono-conc-date-preset" onchange="onCronconcDatePreset()">
       <option value="prev-month">Mês anterior</option>
+      <option value="curr-month">Mês atual</option>
       <option value="last-7">Últimos 7 dias</option>
       <option value="custom">Personalizado</option>
     </select>
     <div id="crono-conc-date-custom-wrap" style="display:none;align-items:center;gap:8px">
+      <span class="crono-sep">De</span>
       <input type="date" id="crono-conc-date-start" onchange="renderCronogramaConciliacoes()">
-      <span style="color:var(--e-muted)">→</span>
+      <span class="crono-sep">→</span>
       <input type="date" id="crono-conc-date-end" onchange="renderCronogramaConciliacoes()">
     </div>
-    <button class="btn-secondary" onclick="clearCronconcFilters()" style="margin-left:auto">Limpar filtros</button>
+    <button class="btn-bulk-apply" id="crono-conc-clear-btn" onclick="clearCronconcFilters()" style="background:var(--e-ghost);color:var(--e-muted);border-color:var(--e-pale);display:none" title="Limpar filtros">
+      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      Limpar filtros
+    </button>
   </div>
-  <div id="crono-conc-empty" class="empty-state" style="display:none"><div class="empty-icon">🔗</div><div class="empty-title">Nenhuma conciliação encontrada</div></div>
-  <div id="crono-conc-cal-wrap" style="display:none"><div class="cal-scroll"><table class="cal-table" id="crono-conc-cal-table"></table></div></div>
+  <div class="crono-d1-panel" id="crono-conc-d1-panel">
+    <div class="d1-stat-card d1-stat-concluida"><div class="d1-stat-num" id="conc-d1-concluida">—</div><div class="d1-stat-lbl">Concluída</div></div>
+    <div class="d1-stat-card d1-stat-pronto-conc"><div class="d1-stat-num" id="conc-d1-pronto">—</div><div class="d1-stat-lbl">Pronto p/ Conc.</div></div>
+    <div class="d1-stat-card d1-stat-sem-mov"><div class="d1-stat-num" id="conc-d1-sem-mov">—</div><div class="d1-stat-lbl">Sem Movimento</div></div>
+    <div class="d1-stat-card d1-stat-sem-acesso"><div class="d1-stat-num" id="conc-d1-sem-acesso">—</div><div class="d1-stat-lbl">Sem Acesso</div></div>
+    <div class="d1-stat-card d1-stat-pendente"><div class="d1-stat-num" id="conc-d1-pendente">—</div><div class="d1-stat-lbl">Pendente</div></div>
+  </div>
+  <div class="crono-search-wrap">
+    <div class="crono-search-col">
+      <div class="crono-search-inner">
+        <svg class="crono-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="crono-conc-search" class="crono-search-input" placeholder="Buscar por nome, país ou agente..."
+          oninput="renderCronogramaConciliacoes();_updConcSearchClear()">
+        <button class="crono-search-clear" id="crono-conc-search-clear" onclick="clearConcSearch()" style="display:none" title="Limpar">×</button>
+      </div>
+    </div>
+  </div>
+  <div id="crono-conc-empty" class="empty-state" style="display:none">
+    <div class="empty-icon">🔗</div>
+    <div class="empty-title">Nenhuma conciliação encontrada</div>
+  </div>
+  <div id="crono-conc-cal-wrap" style="display:none">
+    <div class="cal-scroll"><table class="cal-table" id="crono-conc-cal-table"></table></div>
+  </div>
 </div>
 
     <!-- CADASTRO > PAÍS -->
@@ -1643,6 +1697,7 @@ const store = {
   conciliacoes:[],
   cronogramaConciliacoes:{},
   paisesResp:{},
+  conciliacoesPrioridade:{},
   auditLog:[],
   permissions:{},
   credentials:{},
@@ -1674,7 +1729,17 @@ function navigate(pageId){
   updateBreadcrumb();
   if(pageId==='cronograma-accounts'){ initCronoDates(); initCronoFilters(); renderCronogramaAccounts(); }
   if(pageId==='cronograma-cierre'){ initCierreFilters(); renderCierreTable(); }
-  if(pageId==='cronograma-conciliacoes'){ initCronconcDates(); renderCronogramaConciliacoes(); }
+  if(pageId==='cronograma-conciliacoes'){
+    // reset filter selects so _initConcFilters repopulates them fresh
+    const fpEl=document.getElementById('crono-conc-f-pais');
+    const faEl=document.getElementById('crono-conc-f-agente');
+    if(fpEl) fpEl.innerHTML='<option value="">Todos os países</option>';
+    if(faEl) faEl.innerHTML='<option value="">Todos os agentes</option>';
+    const rt=document.getElementById('crono-conc-resp-toggles');
+    if(rt){rt.innerHTML='';delete rt.dataset.init;}
+    initCronconcDates();
+    renderCronogramaConciliacoes();
+  }
   if(pageId==='gerencial-conciliacoes'){ renderGerencialConciliacoes(); }
 }
 function updateBreadcrumb(){
@@ -2274,7 +2339,7 @@ function renderCronogramaAccounts(){
     });
   }
 }
-const _sortState={accounts:{col:null,dir:1},crono:{col:null,dir:1},cierre:{col:null,dir:1}};
+const _sortState={accounts:{col:null,dir:1},crono:{col:null,dir:1},cierre:{col:null,dir:1},'crono-conc':{col:null,dir:1}};
 function _applySortBy(list,col,dir){
   if(!col) return list;
   return [...list].sort((a,b)=>{
@@ -2309,6 +2374,7 @@ function toggleSort(tbl,col){
   if(tbl==='accounts') renderAccountsTable();
   else if(tbl==='crono') renderCronogramaAccounts();
   else if(tbl==='cierre') renderCierreTable();
+  else if(tbl==='crono-conc') renderCronogramaConciliacoes();
 }
 function _hasCronoFilters(){
   const fp=document.getElementById('crono-f-pais')?.value||'';
@@ -2352,6 +2418,8 @@ document.addEventListener('click',function(e){
   if(!e.target.closest('#crono-f-freq-dd'))_closeFreqDropdown();
   if(!e.target.closest('#crono-d1-dd'))_closeD1Dropdown();
   if(!e.target.closest('#crono-resp-dd'))_closeRespDropdown();
+  if(!e.target.closest('#crono-conc-resp-dd')){const p=document.getElementById('crono-conc-resp-panel');if(p)p.classList.remove('open');}
+  if(!e.target.closest('#crono-conc-d1-dd')){const p=document.getElementById('crono-conc-d1-filter');if(p)p.classList.remove('open');}
 });
 function _updateFreqLabel(){
   const active=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')];
@@ -3247,7 +3315,7 @@ function saveStore(){
     responsaveis:store.responsaveis,contas:store.contas,
     cronogramaData:store.cronogramaData,cierreData:store.cierreData,
     conciliacoes:store.conciliacoes,cronogramaConciliacoes:store.cronogramaConciliacoes,
-    paisesResp:store.paisesResp,
+    paisesResp:store.paisesResp,conciliacoesPrioridade:store.conciliacoesPrioridade,
     auditLog:store.auditLog,
     permissions:store.permissions,credentials:store.credentials};
   try{localStorage.setItem(STORE_KEY,JSON.stringify(_ls));}catch(e){}
@@ -3285,6 +3353,7 @@ function loadStore(){
     if(saved.conciliacoes) store.conciliacoes=(Array.isArray(saved.conciliacoes)?saved.conciliacoes:Object.values(saved.conciliacoes)).filter(Boolean);
     if(saved.cronogramaConciliacoes) store.cronogramaConciliacoes=saved.cronogramaConciliacoes;
     if(saved.paisesResp) store.paisesResp=saved.paisesResp;
+    if(saved.conciliacoesPrioridade) store.conciliacoesPrioridade=saved.conciliacoesPrioridade;
     if(saved.auditLog) store.auditLog=(Array.isArray(saved.auditLog)?saved.auditLog:Object.values(saved.auditLog)).filter(Boolean);
     if(saved.permissions) store.permissions=saved.permissions;
     if(saved.credentials) store.credentials=saved.credentials;
@@ -3380,6 +3449,7 @@ function _applyFbData(saved){
   if(saved.conciliacoes&&!_ownWrites.conciliacoes)store.conciliacoes=_fbArr(saved.conciliacoes);
   if(saved.cronogramaConciliacoes&&!_ownWrites.cronogramaConciliacoes)store.cronogramaConciliacoes=saved.cronogramaConciliacoes;
   if(saved.paisesResp&&!_ownWrites.paisesResp)store.paisesResp=saved.paisesResp;
+  if(saved.conciliacoesPrioridade&&!_ownWrites.conciliacoesPrioridade)store.conciliacoesPrioridade=saved.conciliacoesPrioridade;
   // cronogramaData gerenciado pelo listener específico em _fbRef.child('cronogramaData')
   if(saved.cierreData&&!_ownWrites.cierreData){
     const cierre={};
@@ -3948,8 +4018,75 @@ function initCronconcDates(){
   if(wrap) wrap.style.display=v==='custom'?'flex':'none';
 }
 
-function onCronconcDatePreset(){
-  initCronconcDates();
+function onCronconcDatePreset(){initCronconcDates();renderCronogramaConciliacoes();}
+
+function _initConcRespToggles(){
+  const wrap=document.getElementById('crono-conc-resp-toggles');
+  if(!wrap||wrap.dataset.init) return;
+  wrap.dataset.init='1';
+  const emails=[...new Set(store.conciliacoes.map(c=>store.paisesResp[c.pais]).filter(Boolean))];
+  emails.forEach(email=>{
+    const u=store.responsaveis.find(r=>r.email===email);
+    if(!u) return;
+    const b=document.createElement('button');
+    b.className='freq-toggle';
+    b.dataset.resp=u.sigla;
+    b.textContent=u.sigla;
+    b.onclick=()=>{b.classList.toggle('active');_updateConcRespLabel();renderCronogramaConciliacoes();};
+    wrap.appendChild(b);
+  });
+}
+
+function _updateConcRespLabel(){
+  const active=[...document.querySelectorAll('#crono-conc-resp-toggles .freq-toggle.active')];
+  const btn=document.getElementById('crono-conc-resp-btn');
+  if(!btn) return;
+  if(!active.length){btn.textContent='Responsável';btn.classList.remove('has-active');}
+  else{btn.textContent=active.map(b=>b.dataset.resp).join(', ');btn.classList.add('has-active');}
+}
+
+function toggleConcRespDropdown(e){
+  e.stopPropagation();
+  _initConcRespToggles();
+  const p=document.getElementById('crono-conc-resp-panel');
+  if(p) p.classList.toggle('open');
+}
+
+function _updateConcD1Label(){
+  const active=[...document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active')];
+  const btn=document.getElementById('crono-conc-d1-btn');
+  if(!btn) return;
+  if(!active.length){btn.textContent='Acompanhamento';btn.classList.remove('has-active');}
+  else{btn.textContent=active.map(b=>b.textContent.trim()).join(', ');btn.classList.add('has-active');}
+}
+
+function toggleConcD1Filter(btn){btn.classList.toggle('active');_updateConcD1Label();renderCronogramaConciliacoes();}
+
+function toggleConcD1Dropdown(e){
+  e.stopPropagation();
+  const p=document.getElementById('crono-conc-d1-filter');
+  if(p) p.classList.toggle('open');
+}
+
+function _hasConcFilters(){
+  const fp=document.getElementById('crono-conc-f-pais')?.value||'';
+  const fa=document.getElementById('crono-conc-f-agente')?.value||'';
+  const hasResp=document.querySelectorAll('#crono-conc-resp-toggles .freq-toggle.active').length>0;
+  const hasD1=document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active').length>0;
+  const hasSearch=(document.getElementById('crono-conc-search')?.value||'').trim()!=='';
+  return !!(fp||fa||hasResp||hasD1||hasSearch||_sortState['crono-conc'].col);
+}
+
+function _updConcSearchClear(){
+  const btn=document.getElementById('crono-conc-search-clear');
+  const val=(document.getElementById('crono-conc-search')?.value||'').trim();
+  if(btn) btn.style.display=val?'flex':'none';
+}
+
+function clearConcSearch(){
+  const inp=document.getElementById('crono-conc-search');
+  if(inp) inp.value='';
+  _updConcSearchClear();
   renderCronogramaConciliacoes();
 }
 
@@ -3958,9 +4095,41 @@ function clearCronconcFilters(){
   const ag=document.getElementById('crono-conc-f-agente');
   if(ps) ps.value='';
   if(ag) ag.value='';
+  document.querySelectorAll('#crono-conc-resp-toggles .freq-toggle.active').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active').forEach(b=>b.classList.remove('active'));
+  _updateConcRespLabel(); _updateConcD1Label();
+  const inp=document.getElementById('crono-conc-search');
+  if(inp) inp.value='';
+  _updConcSearchClear();
+  _sortState['crono-conc']={col:null,dir:1};
   const dp=document.getElementById('crono-conc-date-preset');
   if(dp){dp.value='curr-month';initCronconcDates();}
   renderCronogramaConciliacoes();
+}
+
+function _initConcFilters(){
+  const fpEl=document.getElementById('crono-conc-f-pais');
+  const faEl=document.getElementById('crono-conc-f-agente');
+  if(fpEl&&fpEl.options.length<=1){
+    fpEl.innerHTML=`<option value="">Todos os países</option>`;
+    [...new Set(store.conciliacoes.map(c=>c.pais).filter(Boolean))].sort().forEach(p=>{
+      const o=document.createElement('option');o.value=p;o.textContent=p;fpEl.appendChild(o);
+    });
+  }
+  if(faEl&&faEl.options.length<=1){
+    faEl.innerHTML=`<option value="">Todos os agentes</option>`;
+    [...new Set(store.conciliacoes.map(c=>c.agente).filter(Boolean))].sort().forEach(a=>{
+      const o=document.createElement('option');o.value=a;o.textContent=a;faEl.appendChild(o);
+    });
+  }
+}
+
+function _priorChip(concId){
+  const raw=(store.conciliacoesPrioridade[concId]||'').trim();
+  if(!raw) return '<span class="prior-none">—</span>';
+  const low=raw.toLowerCase();
+  const cls=low.includes('alt')||low.includes('crít')||low.includes('crit')?'prior-alta':low.includes('méd')||low.includes('med')?'prior-media':'prior-baixa';
+  return `<span class="prior-chip ${cls}">${raw}</span>`;
 }
 
 function renderCronogramaConciliacoes(){
@@ -3970,47 +4139,101 @@ function renderCronogramaConciliacoes(){
   const countEl=document.getElementById('crono-conc-count');
   if(!tbl||!emptyEl||!calWrap) return;
 
-  // populate filters
-  const fpEl=document.getElementById('crono-conc-f-pais');
-  const faEl=document.getElementById('crono-conc-f-agente');
-  if(fpEl&&fpEl.options.length<=1){
-    const ps=[...new Set(store.conciliacoes.map(c=>c.pais).filter(Boolean))].sort();
-    ps.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;fpEl.appendChild(o);});
-  }
-  if(faEl&&faEl.options.length<=1){
-    const ags=[...new Set(store.conciliacoes.map(c=>c.agente).filter(Boolean))].sort();
-    ags.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;faEl.appendChild(o);});
-  }
+  _initConcFilters();
 
-  const fp=fpEl?.value||'';
-  const fa=faEl?.value||'';
+  const fp=document.getElementById('crono-conc-f-pais')?.value||'';
+  const fa=document.getElementById('crono-conc-f-agente')?.value||'';
+  const activeResps=[...document.querySelectorAll('#crono-conc-resp-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
+  const activeD1=[...document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active')].map(b=>b.dataset.d1);
+  const searchQ=(document.getElementById('crono-conc-search')?.value||'').toLowerCase().trim();
+
   const dsEl=document.getElementById('crono-conc-date-start');
   const deEl=document.getElementById('crono-conc-date-end');
-  if(!dsEl?.value||!deEl?.value){initCronconcDates();}
+  if(!dsEl?.value||!deEl?.value) initCronconcDates();
   const dsStr=dsEl?.value||'';
   const deStr=deEl?.value||'';
-  if(!dsStr||!deStr){emptyEl.style.display='';calWrap.style.display='none';return;}
-
-  const days=[];
-  let cur=new Date(dsStr+'T12:00:00');
-  const end=new Date(deStr+'T12:00:00');
-  while(cur<=end){days.push(new Date(cur));cur.setDate(cur.getDate()+1);}
-  if(!days.length){emptyEl.style.display='';calWrap.style.display='none';return;}
 
   const fmtD=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  const list=store.conciliacoes.filter(c=>{
+  const now=new Date();
+  const d1Str=fmtD(new Date(now.getFullYear(),now.getMonth(),now.getDate()-1));
+
+  const clearBtn=document.getElementById('crono-conc-clear-btn');
+  if(clearBtn) clearBtn.style.display=_hasConcFilters()?'flex':'none';
+
+  const days=[];
+  if(dsStr&&deStr){
+    let cur=new Date(dsStr+'T12:00:00');
+    const end=new Date(deStr+'T12:00:00');
+    while(cur<=end){days.push(new Date(cur));cur.setDate(cur.getDate()+1);}
+  }
+
+  // build full list with D1 status pre-computed
+  const listWithD1=store.conciliacoes.map(c=>{
+    const d1r=_getConcilStatus(c,d1Str);
+    return {c,d1Status:d1r.status};
+  });
+
+  // stat counters over unfiltered-by-d1 list (matching país/agente/resp/search)
+  const d1C={concluido:0,pronto_conciliacao:0,sem_movimento:0,sem_acesso:0,pendente:0};
+  listWithD1.forEach(({c,d1Status})=>{
+    if(fp&&c.pais!==fp) return;
+    if(fa&&c.agente!==fa) return;
+    if(activeResps.length){
+      const rEmail=store.paisesResp[c.pais]||'';
+      const ru=store.responsaveis.find(r=>r.email===rEmail);
+      if(!ru||!activeResps.includes(ru.sigla)) return;
+    }
+    if(searchQ&&!`${c.nome} ${c.pais} ${c.agente}`.toLowerCase().includes(searchQ)) return;
+    if(Object.prototype.hasOwnProperty.call(d1C,d1Status)) d1C[d1Status]++;
+    else d1C.pendente++;
+  });
+  const _upd=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  _upd('conc-d1-concluida',d1C.concluido);
+  _upd('conc-d1-pronto',d1C.pronto_conciliacao);
+  _upd('conc-d1-sem-mov',d1C.sem_movimento);
+  _upd('conc-d1-sem-acesso',d1C.sem_acesso);
+  _upd('conc-d1-pendente',d1C.pendente);
+
+  // full filter including d1 status filter
+  let list=listWithD1.filter(({c,d1Status})=>{
     if(fp&&c.pais!==fp) return false;
     if(fa&&c.agente!==fa) return false;
+    if(activeResps.length){
+      const rEmail=store.paisesResp[c.pais]||'';
+      const ru=store.responsaveis.find(r=>r.email===rEmail);
+      if(!ru||!activeResps.includes(ru.sigla)) return false;
+    }
+    if(activeD1.length&&!activeD1.includes(d1Status)) return false;
+    if(searchQ&&!`${c.nome} ${c.pais} ${c.agente}`.toLowerCase().includes(searchQ)) return false;
     return true;
+  }).map(({c})=>c);
+
+  // sort
+  const st=_sortState['crono-conc'];
+  if(st.col) list=[...list].sort((a,b)=>{
+    const va=String(a[st.col]||'').toLowerCase();
+    const vb=String(b[st.col]||'').toLowerCase();
+    return va<vb?-st.dir:va>vb?st.dir:0;
   });
 
   if(countEl) countEl.textContent=list.length+' conciliação'+(list.length!==1?'s':'');
-  if(!list.length){emptyEl.style.display='';calWrap.style.display='none';return;}
+
+  if(!list.length||!days.length){emptyEl.style.display='';calWrap.style.display='none';return;}
   emptyEl.style.display='none';calWrap.style.display='';
+
+  const calScrollEl=calWrap.querySelector('.cal-scroll');
+  const _savedSL=calScrollEl?calScrollEl.scrollLeft:0;
+  const _savedST=calScrollEl?calScrollEl.scrollTop:0;
 
   const wd=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   const dayHdrs=days.map(d=>{const wk=d.getDay()===0||d.getDay()===6;return `<th class="col-day${wk?' weekend':''}">${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}</th>`;}).join('');
   const wdHdrs=days.map(d=>{const wk=d.getDay()===0||d.getDay()===6;return `<th class="col-day${wk?' weekend':''}" style="font-size:9px;color:var(--e-muted);background:${wk?'#faf5ff':'var(--e-ghost)'}">${wd[d.getDay()]}</th>`;}).join('');
+
+  const INFO_COLS=6;
+  const _sth=(col,lbl,extra='')=>`<th class="${_sortThCls('crono-conc',col)} col-info${extra?' cal-sticky':''}" ${extra} onclick="toggleSort('crono-conc','${col}')" style="cursor:pointer">${lbl}${_sortArrow('crono-conc',col)}</th>`;
+  const colInfos=`${_sth('nome','Nome','cal-sticky')}${_sth('pais','País')}${_sth('agente','Agente')}<th class="col-info">Resp.</th><th class="col-info">Prioridade</th><th class="col-info" style="white-space:nowrap">Acompanhamento</th>`;
+  const emptyInfoCols='<th class="col-info cal-sticky" style="background:var(--e-ghost)"></th>'+'<th class="col-info" style="background:var(--e-ghost)"></th>'.repeat(INFO_COLS-1);
+
   const statusCfg={
     concluido:{bg:'#dcfce7',color:'#15803d'},
     pronto_conciliacao:{bg:'#ccfbf1',color:'#0f766e'},
@@ -4027,29 +4250,31 @@ function renderCronogramaConciliacoes(){
   };
 
   tbl.innerHTML=`<thead>
-    <tr><th class="col-info cal-sticky">Nome</th><th class="col-info">País</th><th class="col-info">Agente</th><th class="col-info">Resp.</th><th class="col-info">Acompanhamento</th>${dayHdrs}</tr>
-    <tr><th class="col-info cal-sticky" style="background:var(--e-ghost)"></th><th class="col-info" style="background:var(--e-ghost)"></th><th class="col-info" style="background:var(--e-ghost)"></th><th class="col-info" style="background:var(--e-ghost)"></th><th class="col-info" style="background:var(--e-ghost)"></th>${wdHdrs}</tr>
+    <tr>${colInfos}${dayHdrs}</tr>
+    <tr>${emptyInfoCols}${wdHdrs}</tr>
   </thead><tbody>${list.map(conc=>{
     const rEmail=store.paisesResp[conc.pais]||'';
     const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;
     const respCell=rUser?`<span style="font-family:monospace;font-size:10px;font-weight:700;background:rgba(151,111,244,.1);color:var(--e-mid);padding:1px 5px;border-radius:3px">${rUser.sigla}</span>`:'<span style="color:var(--e-muted);font-size:11px">—</span>';
-    const d1Str=fmtD(new Date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate()-1));
+    const concId=(conc.id||conc.nome).replace(/['"]/g,'');
     const d1Result=_getConcilStatus(conc,d1Str);
     const d1Chip=chipHtml[d1Result.status]||'<span style="color:var(--e-muted);font-size:11px">—</span>';
-    const concKey=(conc.id||conc.nome).replace(/['"]/g,'');
+    const priorCell=_priorChip(concId);
     const cells=days.map(d=>{
       const dateStr=fmtD(d);
       const r=_getConcilStatus(conc,dateStr);
       const cfg=statusCfg[r.status];
-      const _ck=concKey.replace(/&/g,'&amp;');
+      const _ck=concId.replace(/&/g,'&amp;');
       if(r.status==='pendente'){
         return `<td class="day-cell conc-cell" data-ck="${_ck}" data-dt="${dateStr}" style="cursor:pointer"><div class="day-dot" style="opacity:.4">·</div></td>`;
       }
       const lbl=r.entry?r.entry.sigla:(r.status==='pronto_conciliacao'?'✓':r.status==='sem_movimento'?'s/m':'s/a');
       return `<td class="day-cell conc-cell" data-ck="${_ck}" data-dt="${dateStr}" style="cursor:pointer;padding:2px 1px"><div class="day-filled" style="background:${cfg.bg};color:${cfg.color}">${lbl}</div></td>`;
     }).join('');
-    return `<tr><td class="cal-sticky" style="font-size:12px;font-weight:600;white-space:nowrap">${conc.nome}</td><td style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td><td class="sub" style="font-size:11px">${conc.agente||'—'}</td><td>${respCell}</td><td style="white-space:nowrap;padding:4px 8px">${d1Chip}</td>${cells}</tr>`;
+    return `<tr><td class="cal-sticky" style="font-size:12px;font-weight:600;white-space:nowrap">${conc.nome}</td><td style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td><td class="sub" style="font-size:11px">${conc.agente||'—'}</td><td>${respCell}</td><td style="padding:4px 8px">${priorCell}</td><td style="white-space:nowrap;padding:4px 8px">${d1Chip}</td>${cells}</tr>`;
   }).join('')}</tbody>`;
+
+  if(calScrollEl){calScrollEl.scrollLeft=_savedSL;calScrollEl.scrollTop=_savedST;}
 
   if(!tbl._concClickAttached){
     tbl._concClickAttached=true;
