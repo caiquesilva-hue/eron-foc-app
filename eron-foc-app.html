@@ -138,6 +138,20 @@
   .chip-amber{background:#fef9c3;color:#92400e;}
   .chip-rose{background:#fce7f3;color:#9d174d;}
   .chip-red{background:#fef2f2;color:#dc2626;}
+  .chip-pronto{background:#ccfbf1;color:#0f766e;}
+  .contas-ms-wrap{border:1px solid var(--e-border);border-radius:8px;overflow:hidden;background:var(--e-surface);}
+  .contas-ms-search{padding:6px 10px;border-bottom:1px solid var(--e-border);}
+  .contas-ms-search input{width:100%;border:none;background:transparent;font-size:12px;outline:none;color:var(--e-text);}
+  .contas-ms-list{max-height:150px;overflow-y:auto;}
+  .contas-ms-item{display:flex;align-items:center;gap:8px;padding:5px 10px;cursor:pointer;font-size:12px;user-select:none;}
+  .contas-ms-item:hover{background:var(--e-ghost);}
+  .contas-ms-item input{cursor:pointer;}
+  .contas-ms-sigla{font-family:monospace;font-weight:700;font-size:11px;color:var(--e-mid);}
+  .contas-ms-sub{color:var(--e-muted);font-size:11px;}
+  .contas-ms-tags{display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;min-height:30px;border-top:1px solid var(--e-border);background:var(--e-ghost);}
+  .contas-tag{display:inline-flex;align-items:center;gap:3px;background:var(--e-surface);border:1px solid var(--e-border);border-radius:4px;padding:1px 6px;font-size:11px;font-family:monospace;}
+  .contas-tag button{background:none;border:none;cursor:pointer;color:var(--e-muted);font-size:14px;line-height:1;padding:0 0 0 2px;}
+  .crono-conc-filters{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;border-bottom:1px solid var(--e-border);align-items:center;}
 
   /* EMPTY STATE */
   .empty-state{padding:60px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;}
@@ -599,7 +613,16 @@
     <!-- GERENCIAL > CUSTOS -->
     <div class="page" id="page-gerencial-custos"><div class="placeholder-page"><div class="ph-section" data-i18n="nav-gerencial">Gerencial</div><div class="ph-icon">💸</div><div class="ph-title" data-i18n="nav-custos">Custos</div><div class="ph-sub" data-i18n="ph-ger-cus-desc">Gestão de custos operacionais por agente, banco e período.</div><div class="ph-badge" data-i18n="dev-badge">Em desenvolvimento</div></div></div>
     <!-- GERENCIAL > CONCILIAÇÕES -->
-    <div class="page" id="page-gerencial-conciliacoes"><div class="placeholder-page"><div class="ph-section" data-i18n="nav-gerencial">Gerencial</div><div class="ph-icon">🔗</div><div class="ph-title" data-i18n="nav-conciliacoes">Conciliações</div><div class="ph-sub" data-i18n="ph-ger-con-desc">Painel de conciliação entre extratos bancários e transações do sistema.</div><div class="ph-badge" data-i18n="dev-badge">Em desenvolvimento</div></div></div>
+    <div class="page" id="page-gerencial-conciliacoes">
+  <div class="page-header">
+    <div class="page-header-left"><div class="page-title-text">Conciliações</div><div class="page-title-count" id="conciliacoes-count"></div></div>
+    <button class="btn-primary" onclick="openConciliacaoModal()" data-requires-edit><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg> Adicionar conciliação</button>
+  </div>
+  <div class="table-wrap">
+    <div id="conciliacoes-empty" class="empty-state"><div class="empty-icon">🔗</div><div class="empty-title">Nenhuma conciliação cadastrada</div><div class="empty-sub">Adicione conciliações vinculando contas de Gerencial > Accounts.</div></div>
+    <div class="table-scroll" id="conciliacoes-table-inner" style="display:none"><table><thead><tr><th>Nome</th><th>País</th><th>Agente</th><th>Contas vinculadas</th><th style="width:80px">Ações</th></tr></thead><tbody id="conciliacoes-tbody"></tbody></table></div>
+  </div>
+</div>
     <!-- CRONOGRAMA > ACCOUNTS -->
     <div class="page" id="page-cronograma-accounts">
       <div class="page-header">
@@ -756,7 +779,27 @@
     <!-- CRONOGRAMA > CUSTOS -->
     <div class="page" id="page-cronograma-custos"><div class="placeholder-page"><div class="ph-section" data-i18n="nav-cronograma">Cronograma</div><div class="ph-icon">🗓️</div><div class="ph-title" data-i18n="nav-custos">Custos</div><div class="ph-sub" data-i18n="ph-crono-cus-desc">Agendamento e revisão de lançamentos de custos por período.</div><div class="ph-badge" data-i18n="dev-badge">Em desenvolvimento</div></div></div>
     <!-- CRONOGRAMA > CONCILIAÇÕES -->
-    <div class="page" id="page-cronograma-conciliacoes"><div class="placeholder-page"><div class="ph-section" data-i18n="nav-cronograma">Cronograma</div><div class="ph-icon">⏰</div><div class="ph-title" data-i18n="nav-conciliacoes">Conciliações</div><div class="ph-sub" data-i18n="ph-crono-con-desc">Calendário de conciliações e prazos por processador.</div><div class="ph-badge" data-i18n="dev-badge">Em desenvolvimento</div></div></div>
+    <div class="page" id="page-cronograma-conciliacoes">
+  <div class="page-header"><div class="page-header-left"><div class="page-title-text">Cronograma · Conciliações</div><div class="page-title-count" id="crono-conc-count"></div></div></div>
+  <div class="crono-conc-filters">
+    <select class="form-select" id="crono-conc-f-pais" style="min-width:130px" onchange="renderCronogramaConciliacoes()"><option value="">Todos os países</option></select>
+    <select class="form-select" id="crono-conc-f-agente" style="min-width:140px" onchange="renderCronogramaConciliacoes()"><option value="">Todos os agentes</option></select>
+    <select class="form-select" id="crono-conc-date-preset" style="min-width:150px" onchange="onCronconcDatePreset()">
+      <option value="curr-month">Mês atual</option>
+      <option value="prev-month">Mês anterior</option>
+      <option value="last-7">Últimos 7 dias</option>
+      <option value="custom">Personalizado</option>
+    </select>
+    <div id="crono-conc-date-custom-wrap" style="display:none;align-items:center;gap:8px">
+      <input type="date" id="crono-conc-date-start" onchange="renderCronogramaConciliacoes()">
+      <span style="color:var(--e-muted)">→</span>
+      <input type="date" id="crono-conc-date-end" onchange="renderCronogramaConciliacoes()">
+    </div>
+    <button class="btn-secondary" onclick="clearCronconcFilters()" style="margin-left:auto">Limpar filtros</button>
+  </div>
+  <div id="crono-conc-empty" class="empty-state" style="display:none"><div class="empty-icon">🔗</div><div class="empty-title">Nenhuma conciliação encontrada</div></div>
+  <div id="crono-conc-cal-wrap" style="display:none"><div class="cal-scroll"><table class="cal-table" id="crono-conc-cal-table"></table></div></div>
+</div>
 
     <!-- CADASTRO > PAÍS -->
     <div class="page" id="page-cadastro-pais">
@@ -764,7 +807,7 @@
         <div class="page-header-left"><div class="page-title-text" data-i18n="cad-pais-title">Países</div><div class="page-title-count" id="pais-count"></div></div>
         <button class="btn-primary" onclick="openCadastroModal('pais')" data-requires-edit><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn-add-pais">Adicionar país</span></button>
       </div>
-      <div class="table-wrap"><div id="pais-empty" class="empty-state"><div class="empty-icon">🌎</div><div class="empty-title" data-i18n="pais-empty-title">Nenhum país cadastrado</div><div class="empty-sub" data-i18n="pais-empty-sub">Adicione países para alimentar os dropdowns do sistema.</div></div><div class="table-scroll" id="pais-table-inner" style="display:none"><table><thead><tr><th data-i18n="col-pais">País</th><th style="width:70px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="pais-tbody"></tbody></table></div></div>
+      <div class="table-wrap"><div id="pais-empty" class="empty-state"><div class="empty-icon">🌎</div><div class="empty-title" data-i18n="pais-empty-title">Nenhum país cadastrado</div><div class="empty-sub" data-i18n="pais-empty-sub">Adicione países para alimentar os dropdowns do sistema.</div></div><div class="table-scroll" id="pais-table-inner" style="display:none"><table><thead><tr><th data-i18n="col-pais">País</th><th>Responsável Conciliações</th><th style="width:70px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="pais-tbody"></tbody></table></div></div>
     </div>
     <!-- CADASTRO > AGENTE -->
     <div class="page" id="page-cadastro-agente">
@@ -772,7 +815,7 @@
         <div class="page-header-left"><div class="page-title-text" data-i18n="cad-agente-title">Agentes</div><div class="page-title-count" id="agente-count"></div></div>
         <button class="btn-primary" onclick="openCadastroModal('agente')" data-requires-edit><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn-add-agente">Adicionar agente</span></button>
       </div>
-      <div class="table-wrap"><div id="agente-empty" class="empty-state"><div class="empty-icon">👤</div><div class="empty-title" data-i18n="agente-empty-title">Nenhum agente cadastrado</div><div class="empty-sub" data-i18n="agente-empty-sub">Adicione agentes vinculados a um país.</div></div><div class="table-scroll" id="agente-table-inner" style="display:none"><table><thead><tr><th data-i18n="nav-agente">Agente</th><th data-i18n="col-pais">País</th><th>Responsável</th><th style="width:70px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="agente-tbody"></tbody></table></div></div>
+      <div class="table-wrap"><div id="agente-empty" class="empty-state"><div class="empty-icon">👤</div><div class="empty-title" data-i18n="agente-empty-title">Nenhum agente cadastrado</div><div class="empty-sub" data-i18n="agente-empty-sub">Adicione agentes vinculados a um país.</div></div><div class="table-scroll" id="agente-table-inner" style="display:none"><table><thead><tr><th data-i18n="nav-agente">Agente</th><th data-i18n="col-pais">País</th><th>Responsável Accounts</th><th style="width:70px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="agente-tbody"></tbody></table></div></div>
     </div>
     <!-- CADASTRO > BANCO -->
     <div class="page" id="page-cadastro-banco">
@@ -1597,6 +1640,9 @@ const store = {
   contas:[],
   cronogramaData:{},
   cierreData:{},
+  conciliacoes:[],
+  cronogramaConciliacoes:{},
+  paisesResp:{},
   auditLog:[],
   permissions:{},
   credentials:{},
@@ -1628,6 +1674,8 @@ function navigate(pageId){
   updateBreadcrumb();
   if(pageId==='cronograma-accounts'){ initCronoDates(); initCronoFilters(); renderCronogramaAccounts(); }
   if(pageId==='cronograma-cierre'){ initCierreFilters(); renderCierreTable(); }
+  if(pageId==='cronograma-conciliacoes'){ initCronconcDates(); renderCronogramaConciliacoes(); }
+  if(pageId==='gerencial-conciliacoes'){ renderGerencialConciliacoes(); }
 }
 function updateBreadcrumb(){
   const m=pagesMeta[currentPageId];
@@ -1945,7 +1993,15 @@ function openCadastroModal(type, editIdx=-1){
   const respOpts=store.responsaveis.map(r=>`<option value="${r.email}">${r.nome} [${r.sigla||'?'}]</option>`).join('');
   if(type==='pais'||type==='banco'){
     const currentVal=isEdit?(type==='pais'?store.paises[editIdx]:store.bancos[editIdx]):'';
-    body.innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="cad-nome" placeholder="${phs[type]}" value="${currentVal}"></div>`;
+    if(type==='banco'){
+      body.innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="cad-nome" placeholder="${phs[type]}" value="${currentVal}"></div>`;
+    } else {
+      const respOpts=store.responsaveis.map(r=>`<option value="${r.email}">${r.nome} [${r.sigla||'?'}]</option>`).join('');
+      const currentResp=isEdit?(store.paisesResp[currentVal]||''):'';
+      body.innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="cad-nome" placeholder="${phs[type]}" value="${currentVal}"></div>
+        <div class="form-field"><label class="form-label">Responsável Conciliações</label><select class="form-select" id="cad-resp-conc"><option value="">Nenhum</option>${respOpts}</select></div>`;
+      if(currentResp) setTimeout(()=>{const s=document.getElementById('cad-resp-conc');if(s)s.value=currentResp;},0);
+    }
   } else {
     const ag=isEdit?store.agentes[editIdx]:{};
     body.innerHTML=`
@@ -1965,8 +2021,12 @@ function submitCadastro(){
   const isEdit=_editCadIdx>=0;
   let _logArgs=null;
   if(cadastroType==='pais'){
+    const prevNome=isEdit?store.paises[_editCadIdx]:'';
     if(isEdit) store.paises[_editCadIdx]=nome;
     else if(!store.paises.includes(nome)) store.paises.push(nome);
+    const respConc=document.getElementById('cad-resp-conc')?.value||'';
+    if(isEdit&&prevNome&&prevNome!==nome) delete store.paisesResp[prevNome];
+    store.paisesResp[nome]=respConc;
   } else if(cadastroType==='banco'){
     if(isEdit) store.bancos[_editCadIdx]=nome;
     else if(!store.bancos.includes(nome)) store.bancos.push(nome);
@@ -1978,7 +2038,9 @@ function submitCadastro(){
   }
   // _fbSync antes de logAudit: logAudit escreve em store/auditLog e dispara o listener raiz
   // sincronamente; sem _pendingWrites=1 ativo, _applyFbData sobrescrevia store.agentes com dados antigos.
-  saveStore(); _fbSync(cadastroType==='pais'?'paises':cadastroType==='banco'?'bancos':'agentes');
+  saveStore();
+  _fbSync(cadastroType==='pais'?'paises':cadastroType==='banco'?'bancos':'agentes');
+  if(cadastroType==='pais') _fbSync('paisesResp');
   if(_logArgs) logAudit(..._logArgs);
   closeModal('modal-cadastro');
   renderCadastro(cadastroType);
@@ -2016,7 +2078,12 @@ function renderCadastro(type){
   if(type==='pais'){
     const e=document.getElementById('pais-empty'),i=document.getElementById('pais-table-inner'),b=document.getElementById('pais-tbody');
     if(!store.paises.length){e.style.display='';i.style.display='none';return;} e.style.display='none';i.style.display='';
-    b.innerHTML=store.paises.map((p,i)=>`<tr><td>${countryFlag(p)} ${p}</td><td>${edit?`<button class="action-btn del" onclick="deleteCadastro('pais',${i})">${trashIcon}</button>`:''}</td></tr>`).join('');
+    b.innerHTML=store.paises.map((p,pi)=>{
+      const rEmail=store.paisesResp[p]||'';
+      const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;
+      const rCell=rUser?`<span style="font-size:12px;color:var(--e-text)">${rUser.nome} <span style="font-family:monospace;background:var(--e-ghost);padding:1px 5px;border-radius:3px;font-weight:700;color:var(--e-mid)">${rUser.sigla||''}</span></span>`:`<span style="color:var(--e-muted);font-size:12px">—</span>`;
+      return `<tr><td>${countryFlag(p)} ${p}</td><td>${rCell}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openCadastroModal('pais',${pi})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteCadastro('pais',${pi})">${trashIcon}</button></div>`:''}</td></tr>`;
+    }).join('');
   } else if(type==='agente'){
     const e=document.getElementById('agente-empty'),i=document.getElementById('agente-table-inner'),b=document.getElementById('agente-tbody');
     if(!store.agentes.length){e.style.display='';i.style.display='none';return;} e.style.display='none';i.style.display='';
@@ -3179,6 +3246,8 @@ function saveStore(){
   const _ls={paises:store.paises,agentes:store.agentes,bancos:store.bancos,
     responsaveis:store.responsaveis,contas:store.contas,
     cronogramaData:store.cronogramaData,cierreData:store.cierreData,
+    conciliacoes:store.conciliacoes,cronogramaConciliacoes:store.cronogramaConciliacoes,
+    paisesResp:store.paisesResp,
     auditLog:store.auditLog,
     permissions:store.permissions,credentials:store.credentials};
   try{localStorage.setItem(STORE_KEY,JSON.stringify(_ls));}catch(e){}
@@ -3213,6 +3282,9 @@ function loadStore(){
     if(saved.contas) store.contas=(Array.isArray(saved.contas)?saved.contas:Object.values(saved.contas)).filter(Boolean).map(c=>({...c,status:c.status==='aberta'?'ativa':c.status}));
     if(saved.cronogramaData) store.cronogramaData=saved.cronogramaData;
     if(saved.cierreData) store.cierreData=saved.cierreData;
+    if(saved.conciliacoes) store.conciliacoes=(Array.isArray(saved.conciliacoes)?saved.conciliacoes:Object.values(saved.conciliacoes)).filter(Boolean);
+    if(saved.cronogramaConciliacoes) store.cronogramaConciliacoes=saved.cronogramaConciliacoes;
+    if(saved.paisesResp) store.paisesResp=saved.paisesResp;
     if(saved.auditLog) store.auditLog=(Array.isArray(saved.auditLog)?saved.auditLog:Object.values(saved.auditLog)).filter(Boolean);
     if(saved.permissions) store.permissions=saved.permissions;
     if(saved.credentials) store.credentials=saved.credentials;
@@ -3305,6 +3377,9 @@ function _applyFbData(saved){
     can.forEach(u=>{if(!store.responsaveis.find(r=>r.email===u.email))store.responsaveis.push(u);});
   }
   if(saved.contas&&!_ownWrites.contas)store.contas=_fbArr(saved.contas).map(c=>({...c,status:c.status==='aberta'?'ativa':c.status}));
+  if(saved.conciliacoes&&!_ownWrites.conciliacoes)store.conciliacoes=_fbArr(saved.conciliacoes);
+  if(saved.cronogramaConciliacoes&&!_ownWrites.cronogramaConciliacoes)store.cronogramaConciliacoes=saved.cronogramaConciliacoes;
+  if(saved.paisesResp&&!_ownWrites.paisesResp)store.paisesResp=saved.paisesResp;
   // cronogramaData gerenciado pelo listener específico em _fbRef.child('cronogramaData')
   if(saved.cierreData&&!_ownWrites.cierreData){
     const cierre={};
@@ -3732,7 +3807,283 @@ async function submitResetPwd(){
   renderAcessos();
 }
 
-function renderAll(){ renderAccountsTable(); initCronoDates(); renderCronogramaAccounts(); renderCadastro('pais'); renderCadastro('agente'); renderCadastro('banco'); renderAcessos(); }
+// ─── GERENCIAL CONCILIAÇÕES ──────────────────────────────────────
+let _editConcIdx=-1;
+let _selectedContas=[];
+
+function renderGerencialConciliacoes(){
+  const e=document.getElementById('conciliacoes-empty');
+  const ti=document.getElementById('conciliacoes-table-inner');
+  const tb=document.getElementById('conciliacoes-tbody');
+  const cnt=document.getElementById('conciliacoes-count');
+  if(!e||!ti||!tb) return;
+  const edit=canEdit();
+  if(!store.conciliacoes.length){e.style.display='';ti.style.display='none';if(cnt)cnt.textContent='';return;}
+  e.style.display='none';ti.style.display='';
+  if(cnt) cnt.textContent=store.conciliacoes.length+' conciliação'+(store.conciliacoes.length!==1?'s':'');
+  tb.innerHTML=store.conciliacoes.map((c,ci)=>{
+    const tags=c.contas&&c.contas.length?c.contas.map(s=>`<span style="font-family:monospace;font-size:10px;background:var(--e-ghost);padding:1px 5px;border-radius:3px;margin-right:3px">${s}</span>`).join(''):`<span style="color:var(--e-muted);font-size:11px">—</span>`;
+    return `<tr><td style="font-weight:600">${c.nome}</td><td>${c.pais?`${countryFlag(c.pais)} ${c.pais}`:'—'}</td><td style="font-size:12px;color:var(--e-muted)">${c.agente||'—'}</td><td style="white-space:normal">${tags}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openConciliacaoModal(${ci})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteConciliacao(${ci})">${trashIcon}</button></div>`:''}</td></tr>`;
+  }).join('');
+}
+
+function openConciliacaoModal(editIdx=-1){
+  _editConcIdx=editIdx;
+  const isEdit=editIdx>=0;
+  const conc=isEdit?store.conciliacoes[editIdx]:{};
+  _selectedContas=isEdit&&conc.contas?[...conc.contas]:[];
+  const paisOpts=store.paises.map(p=>`<option value="${p}">${countryFlag(p)} ${p}</option>`).join('');
+  const agenteOpts=[...new Set(store.contas.map(c=>c.agente))].sort().map(a=>`<option value="${a}">${a}</option>`).join('');
+  const m=document.getElementById('modal-cadastro');
+  document.getElementById('cad-modal-title').textContent=(isEdit?'Editar: ':'')+conc.nome||'Nova Conciliação';
+  const body=document.getElementById('cad-modal-body');
+  body.innerHTML=`
+    <div class="form-field"><label class="form-label">Nome<span class="req">*</span></label><input class="form-input" id="conc-nome" placeholder="Ex: Payout Mono Colprocesa" value="${conc.nome||''}"></div>
+    <div class="form-field"><label class="form-label">País</label><select class="form-select" id="conc-pais"><option value="">Selecione</option>${paisOpts}</select></div>
+    <div class="form-field"><label class="form-label">Agente</label><select class="form-select" id="conc-agente"><option value="">Selecione</option>${agenteOpts}</select></div>
+    <div class="form-field"><label class="form-label">Contas vinculadas</label>
+      <div class="contas-ms-wrap">
+        <div class="contas-ms-search"><input type="text" placeholder="Buscar por sigla, banco ou agente..." id="contas-ms-input" oninput="renderContasMSList()"></div>
+        <div class="contas-ms-list" id="contas-ms-list"></div>
+        <div class="contas-ms-tags" id="contas-ms-tags"></div>
+      </div>
+    </div>`;
+  if(conc.pais) setTimeout(()=>{const s=document.getElementById('conc-pais');if(s)s.value=conc.pais;},0);
+  if(conc.agente) setTimeout(()=>{const s=document.getElementById('conc-agente');if(s)s.value=conc.agente;},0);
+  setTimeout(()=>{renderContasMSList();renderContasMSTags();},0);
+  document.getElementById('cad-submit').onclick=submitConciliacao;
+  openModal('modal-cadastro');
+}
+
+function renderContasMSList(){
+  const q=(document.getElementById('contas-ms-input')?.value||'').toLowerCase();
+  const list=document.getElementById('contas-ms-list');
+  if(!list) return;
+  const filtered=store.contas.filter(c=>c.status!=='encerrada'&&(!q||`${c.sigla} ${c.banco} ${c.agente}`.toLowerCase().includes(q)));
+  list.innerHTML=filtered.map(c=>{
+    const checked=_selectedContas.includes(c.sigla);
+    return `<label class="contas-ms-item">
+      <input type="checkbox" value="${c.sigla}" ${checked?'checked':''} onchange="toggleContaMS('${c.sigla.replace(/'/g,"\\'")}',this.checked)">
+      <span class="contas-ms-sigla">${c.sigla}</span>
+      <span class="contas-ms-sub">${c.banco} · ${c.agente}</span>
+    </label>`;
+  }).join('');
+}
+
+function toggleContaMS(sigla,checked){
+  if(checked&&!_selectedContas.includes(sigla)) _selectedContas.push(sigla);
+  else if(!checked) _selectedContas=_selectedContas.filter(s=>s!==sigla);
+  renderContasMSTags();
+}
+
+function renderContasMSTags(){
+  const tags=document.getElementById('contas-ms-tags');
+  if(!tags) return;
+  tags.innerHTML=_selectedContas.map(s=>`<span class="contas-tag">${s}<button type="button" onclick="toggleContaMS('${s.replace(/'/g,"\\'")}',false);renderContasMSList();renderContasMSTags()">×</button></span>`).join('');
+}
+
+function submitConciliacao(){
+  const nome=(document.getElementById('conc-nome')?.value||'').trim();
+  if(!nome){document.getElementById('conc-nome')?.classList.add('err');return;}
+  const pais=document.getElementById('conc-pais')?.value||'';
+  const agente=document.getElementById('conc-agente')?.value||'';
+  const contas=[..._selectedContas];
+  const isEdit=_editConcIdx>=0;
+  if(isEdit){
+    store.conciliacoes[_editConcIdx]={...store.conciliacoes[_editConcIdx],nome,pais,agente,contas};
+  } else {
+    const id=nome.toLowerCase().replace(/[^a-z0-9]/g,'_')+'_'+Date.now();
+    store.conciliacoes.push({id,nome,pais,agente,contas});
+  }
+  saveStore(); _fbSync('conciliacoes');
+  logAudit('gerencial-conciliacoes',isEdit?'edit':'add',{nome});
+  closeModal('modal-cadastro');
+  renderGerencialConciliacoes();
+  updateCounts();
+}
+
+function deleteConciliacao(idx){
+  const c=store.conciliacoes[idx];
+  if(!c) return;
+  showDeleteConfirm(`Excluir conciliação "${c.nome}"`,`Esta ação não pode ser desfeita.`,()=>{
+    logAudit('gerencial-conciliacoes','delete',{nome:c.nome});
+    store.conciliacoes.splice(idx,1);
+    saveStore(); _fbSync('conciliacoes');
+    renderGerencialConciliacoes(); updateCounts();
+  });
+}
+
+// ─── CRONOGRAMA CONCILIAÇÕES ─────────────────────────────────────
+function _getConcilStatus(conc,dateStr){
+  const manualKey=`${conc.id||conc.nome}_${dateStr}`;
+  const manual=store.cronogramaConciliacoes[manualKey];
+  if(manual&&manual.status==='concluido') return {status:'concluido',entry:manual};
+  const sigs=conc.contas||[];
+  if(!sigs.length) return {status:'pendente'};
+  const stArr=sigs.map(sig=>{
+    const c=store.contas.find(ct=>ct.sigla===sig);
+    if(!c) return 'pendente';
+    const ck=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
+    const e=store.cronogramaData[`${ck}_${dateStr}`];
+    return e?e.status:'pendente';
+  });
+  if(stArr.includes('concluido')) return {status:'pronto_conciliacao'};
+  if(stArr.includes('sem_movimento')) return {status:'sem_movimento'};
+  if(stArr.includes('sem_acesso')) return {status:'sem_acesso'};
+  return {status:'pendente'};
+}
+
+function initCronconcDates(){
+  const preset=document.getElementById('crono-conc-date-preset');
+  if(!preset) return;
+  const s=document.getElementById('crono-conc-date-start');
+  const e=document.getElementById('crono-conc-date-end');
+  const now=new Date();
+  const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const v=preset.value||'curr-month';
+  if(v==='curr-month'){const f=new Date(now.getFullYear(),now.getMonth(),1),l=new Date(now.getFullYear(),now.getMonth()+1,0);if(s)s.value=fmt(f);if(e)e.value=fmt(l);}
+  else if(v==='prev-month'){const f=new Date(now.getFullYear(),now.getMonth()-1,1),l=new Date(now.getFullYear(),now.getMonth(),0);if(s)s.value=fmt(f);if(e)e.value=fmt(l);}
+  else if(v==='last-7'){const f=new Date(now);f.setDate(f.getDate()-6);if(s)s.value=fmt(f);if(e)e.value=fmt(now);}
+  const wrap=document.getElementById('crono-conc-date-custom-wrap');
+  if(wrap) wrap.style.display=v==='custom'?'flex':'none';
+}
+
+function onCronconcDatePreset(){
+  initCronconcDates();
+  renderCronogramaConciliacoes();
+}
+
+function clearCronconcFilters(){
+  const ps=document.getElementById('crono-conc-f-pais');
+  const ag=document.getElementById('crono-conc-f-agente');
+  if(ps) ps.value='';
+  if(ag) ag.value='';
+  const dp=document.getElementById('crono-conc-date-preset');
+  if(dp){dp.value='curr-month';initCronconcDates();}
+  renderCronogramaConciliacoes();
+}
+
+function renderCronogramaConciliacoes(){
+  const emptyEl=document.getElementById('crono-conc-empty');
+  const calWrap=document.getElementById('crono-conc-cal-wrap');
+  const tbl=document.getElementById('crono-conc-cal-table');
+  const countEl=document.getElementById('crono-conc-count');
+  if(!tbl||!emptyEl||!calWrap) return;
+
+  // populate filters
+  const fpEl=document.getElementById('crono-conc-f-pais');
+  const faEl=document.getElementById('crono-conc-f-agente');
+  if(fpEl&&fpEl.options.length<=1){
+    const ps=[...new Set(store.conciliacoes.map(c=>c.pais).filter(Boolean))].sort();
+    ps.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;fpEl.appendChild(o);});
+  }
+  if(faEl&&faEl.options.length<=1){
+    const ags=[...new Set(store.conciliacoes.map(c=>c.agente).filter(Boolean))].sort();
+    ags.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;faEl.appendChild(o);});
+  }
+
+  const fp=fpEl?.value||'';
+  const fa=faEl?.value||'';
+  const dsEl=document.getElementById('crono-conc-date-start');
+  const deEl=document.getElementById('crono-conc-date-end');
+  if(!dsEl?.value||!deEl?.value){initCronconcDates();}
+  const dsStr=dsEl?.value||'';
+  const deStr=deEl?.value||'';
+  if(!dsStr||!deStr){emptyEl.style.display='';calWrap.style.display='none';return;}
+
+  const days=[];
+  let cur=new Date(dsStr+'T12:00:00');
+  const end=new Date(deStr+'T12:00:00');
+  while(cur<=end){days.push(new Date(cur));cur.setDate(cur.getDate()+1);}
+  if(!days.length){emptyEl.style.display='';calWrap.style.display='none';return;}
+
+  const fmtD=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const list=store.conciliacoes.filter(c=>{
+    if(fp&&c.pais!==fp) return false;
+    if(fa&&c.agente!==fa) return false;
+    return true;
+  });
+
+  if(countEl) countEl.textContent=list.length+' conciliação'+(list.length!==1?'s':'');
+  if(!list.length){emptyEl.style.display='';calWrap.style.display='none';return;}
+  emptyEl.style.display='none';calWrap.style.display='';
+
+  const wd=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const dayHdrs=days.map(d=>{const wk=d.getDay()===0||d.getDay()===6;return `<th class="col-day${wk?' weekend':''}">${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}</th>`;}).join('');
+  const wdHdrs=days.map(d=>{const wk=d.getDay()===0||d.getDay()===6;return `<th class="col-day${wk?' weekend':''}" style="font-size:9px;color:var(--e-muted);background:${wk?'#faf5ff':'var(--e-ghost)'}">${wd[d.getDay()]}</th>`;}).join('');
+  const statusCfg={
+    concluido:{bg:'#dcfce7',color:'#15803d'},
+    pronto_conciliacao:{bg:'#ccfbf1',color:'#0f766e'},
+    sem_movimento:{bg:'#ede9fe',color:'#5b21b6'},
+    sem_acesso:{bg:'#fef2f2',color:'#dc2626'},
+    pendente:{bg:'',color:''}
+  };
+  const chipHtml={
+    concluido:`<span class="chip chip-green" style="font-size:10px">Concluída</span>`,
+    pronto_conciliacao:`<span class="chip chip-teal" style="font-size:10px">Pronto p/ Conc.</span>`,
+    sem_movimento:`<span class="chip chip-purple" style="font-size:10px">Sem Movimento</span>`,
+    sem_acesso:`<span class="chip chip-red" style="font-size:10px">Sem Acesso</span>`,
+    pendente:`<span class="chip chip-amber" style="font-size:10px">Pendente</span>`
+  };
+
+  tbl.innerHTML=`<thead>
+    <tr><th class="col-info cal-sticky">Nome</th><th class="col-info">País</th><th class="col-info">Agente</th><th class="col-info">Resp.</th><th class="col-info">Acompanhamento</th>${dayHdrs}</tr>
+    <tr><th class="col-info cal-sticky" style="background:var(--e-ghost)"></th><th class="col-info" style="background:var(--e-ghost)"></th><th class="col-info" style="background:var(--e-ghost)"></th><th class="col-info" style="background:var(--e-ghost)"></th><th class="col-info" style="background:var(--e-ghost)"></th>${wdHdrs}</tr>
+  </thead><tbody>${list.map(conc=>{
+    const rEmail=store.paisesResp[conc.pais]||'';
+    const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;
+    const respCell=rUser?`<span style="font-family:monospace;font-size:10px;font-weight:700;background:rgba(151,111,244,.1);color:var(--e-mid);padding:1px 5px;border-radius:3px">${rUser.sigla}</span>`:'<span style="color:var(--e-muted);font-size:11px">—</span>';
+    const d1Str=fmtD(new Date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate()-1));
+    const d1Result=_getConcilStatus(conc,d1Str);
+    const d1Chip=chipHtml[d1Result.status]||'<span style="color:var(--e-muted);font-size:11px">—</span>';
+    const concKey=(conc.id||conc.nome).replace(/['"]/g,'');
+    const cells=days.map(d=>{
+      const dateStr=fmtD(d);
+      const r=_getConcilStatus(conc,dateStr);
+      const cfg=statusCfg[r.status];
+      const _ck=concKey.replace(/&/g,'&amp;');
+      if(r.status==='pendente'){
+        return `<td class="day-cell conc-cell" data-ck="${_ck}" data-dt="${dateStr}" style="cursor:pointer"><div class="day-dot" style="opacity:.4">·</div></td>`;
+      }
+      const lbl=r.entry?r.entry.sigla:(r.status==='pronto_conciliacao'?'✓':r.status==='sem_movimento'?'s/m':'s/a');
+      return `<td class="day-cell conc-cell" data-ck="${_ck}" data-dt="${dateStr}" style="cursor:pointer;padding:2px 1px"><div class="day-filled" style="background:${cfg.bg};color:${cfg.color}">${lbl}</div></td>`;
+    }).join('');
+    return `<tr><td class="cal-sticky" style="font-size:12px;font-weight:600;white-space:nowrap">${conc.nome}</td><td style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td><td class="sub" style="font-size:11px">${conc.agente||'—'}</td><td>${respCell}</td><td style="white-space:nowrap;padding:4px 8px">${d1Chip}</td>${cells}</tr>`;
+  }).join('')}</tbody>`;
+
+  if(!tbl._concClickAttached){
+    tbl._concClickAttached=true;
+    tbl.addEventListener('click',function(ev){
+      const td=ev.target.closest('td.conc-cell');
+      if(!td) return;
+      ev.stopPropagation();
+      onConcCellClick(td.dataset.ck,td.dataset.dt);
+    });
+  }
+}
+
+function onConcCellClick(ck,dateStr){
+  const conc=store.conciliacoes.find(c=>(c.id||c.nome).replace(/['"]/g,'')===ck);
+  if(!conc) return;
+  const user=store.responsaveis.find(r=>r.email===window._loggedEmail);
+  const sigla=user?.sigla||'?';
+  const manualKey=`${conc.id||conc.nome}_${dateStr}`;
+  const existing=store.cronogramaConciliacoes[manualKey];
+  if(existing&&existing.status==='concluido'){
+    showDeleteConfirm(`Limpar marcação em ${dateStr}`,`Remover "Concluída" da conciliação "${conc.nome}"?`,()=>{
+      delete store.cronogramaConciliacoes[manualKey];
+      saveStore(); _fbSync('cronogramaConciliacoes');
+      renderCronogramaConciliacoes();
+    });
+  } else {
+    store.cronogramaConciliacoes[manualKey]={status:'concluido',sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')};
+    saveStore(); _fbSync('cronogramaConciliacoes');
+    renderCronogramaConciliacoes();
+    _toast(`✓ ${conc.nome} concluída em ${dateStr}`);
+  }
+}
+
+function renderAll(){ renderAccountsTable(); initCronoDates(); renderCronogramaAccounts(); renderCadastro('pais'); renderCadastro('agente'); renderCadastro('banco'); renderAcessos(); renderGerencialConciliacoes(); renderCronogramaConciliacoes(); }
 
 // ─── COUNTS ───────────────────────────────────────────────────────
 function updateCounts(){
@@ -3742,6 +4093,7 @@ function updateCounts(){
   el('pais-count',n(store.paises.length,t('count-pais'),t('count-paises')));
   el('agente-count',n(store.agentes.length,t('count-agente'),t('count-agentes')));
   el('banco-count',n(store.bancos.length,t('count-banco'),t('count-bancos')));
+  el('conciliacoes-count',n(store.conciliacoes.length,'conciliação','conciliações'));
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────
