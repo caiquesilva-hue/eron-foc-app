@@ -1984,15 +1984,20 @@ function submitCadastro(){
   if(cadastroType==='agente'){
     const _eIdx=isEdit?_editCadIdx:store.agentes.length-1;
     const _savedAg={...store.agentes[_eIdx]};
-    const _reapplyAg=(label)=>{
+    const _reapplyAg=()=>{
       const ag=store.agentes.find(a=>a.nome===_savedAg.nome);
       if(ag&&(ag.responsavel!==_savedAg.responsavel||ag.pais!==_savedAg.pais)){
         ag.responsavel=_savedAg.responsavel; ag.pais=_savedAg.pais;
         saveStore();_fbSync('agentes');renderCadastro('agente');
       }
     };
-    setTimeout(()=>_reapplyAg('1.5s'),1500);
-    setTimeout(()=>_reapplyAg('4s'),4000);
+    setTimeout(()=>{
+      const _ag=store.agentes.find(a=>a.nome===_savedAg.nome);
+      const _rOk=_ag&&store.responsaveis.find(r=>r.email===_ag.responsavel);
+      _toast(`1.5s ag:${_ag?.responsavel?.split('@')[0]||'?'} rsp:${_rOk?'ok':'X'} sv:${_savedAg.responsavel?.split('@')[0]||'?'}`,6000);
+      _reapplyAg();
+    },1500);
+    setTimeout(_reapplyAg,4000);
   }
 }
 function deleteCadastro(type,idx){
