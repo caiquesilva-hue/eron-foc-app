@@ -1991,10 +1991,11 @@ function submitCadastro(){
         saveStore();_fbSync('agentes');renderCadastro('agente');
       }
     };
+    const _drp=_dbgResp;
     setTimeout(()=>{
       const _ag=store.agentes.find(a=>a.nome===_savedAg.nome);
       const _rOk=_ag&&store.responsaveis.find(r=>r.email===_ag.responsavel);
-      _toast(`1.5s ag:${_ag?.responsavel?.split('@')[0]||'?'} rsp:${_rOk?'ok':'X'} sv:${_savedAg.responsavel?.split('@')[0]||'?'}`,6000);
+      _toast(`drp:[${_drp.split('@')[0]||'X'}] ag:${_ag?.responsavel?.split('@')[0]||'?'} sv:${_savedAg.responsavel?.split('@')[0]||'?'}`,7000);
       _reapplyAg();
     },1500);
     setTimeout(_reapplyAg,4000);
