@@ -1963,6 +1963,7 @@ function submitCadastro(){
   if(!validate(req)) return;
   const nome=document.getElementById('cad-nome').value.trim();
   const isEdit=_editCadIdx>=0;
+  let _dbgResp='';
   if(cadastroType==='pais'){
     if(isEdit) store.paises[_editCadIdx]=nome;
     else if(!store.paises.includes(nome)) store.paises.push(nome);
@@ -1972,7 +1973,7 @@ function submitCadastro(){
   } else {
     const pais=document.getElementById('cad-pais-vinculo').value;
     const responsavel=document.getElementById('cad-responsavel')?.value||'';
-    _toast(`edit:${isEdit} idx:${_editCadIdx} resp:[${responsavel.split('@')[0]||'vazio'}]`);
+    _dbgResp=responsavel;
     if(isEdit){ store.agentes[_editCadIdx]={nome,pais,responsavel}; logAudit('cadastro','edit-agente',{nome,pais}); }
     else{ store.agentes.push({nome,pais,responsavel}); logAudit('cadastro','add-agente',{nome,pais,responsavel}); }
   }
@@ -1986,7 +1987,7 @@ function submitCadastro(){
     // Diagnóstico: mostra o que está no store e o que o lookup encontra
     const _diagAg=store.agentes[_eIdx];
     const _diagResp=_diagAg?store.responsaveis.find(r=>r.email===_diagAg.responsavel):null;
-    _toast(`store:${_diagAg?.responsavel?.split('@')[0]||'vazio'} | lookup:${_diagResp?.nome||'—'}`);
+    _toast(`e:${isEdit} i:${_editCadIdx} drp:[${_dbgResp.split('@')[0]||'X'}] st:${_diagAg?.responsavel?.split('@')[0]||'?'} lk:${_diagResp?.nome||'—'}`,8000);
     const _reapplyAg=(label)=>{
       const ag=store.agentes.find(a=>a.nome===_savedAg.nome);
       if(ag&&(ag.responsavel!==_savedAg.responsavel||ag.pais!==_savedAg.pais)){
