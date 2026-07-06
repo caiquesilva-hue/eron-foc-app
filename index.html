@@ -1906,6 +1906,11 @@ function submitBulkFreq(){
   renderAccountsTable();
   renderCronogramaAccounts();
   _toast(`✓ ${changed} conta${changed!==1?'s':''} → ${novaFreq}`);
+  const _snap=store.contas.map(c=>c.tipo);
+  setTimeout(()=>{
+    const changed2=_snap.filter((t,i)=>store.contas[i]&&store.contas[i].tipo!==t).length;
+    _toast(changed2>0?`Firebase reverteu ${changed2} conta(s)!`:`OK — store mantido`);
+  },2500);
 }
 function tipoChip(tipo){
   const map={'T1':'chip-violet','T2':'chip-purple','Diário':'chip-teal','1 vez ao mês':'chip-amber','1 vez na semana':'chip-rose'};
