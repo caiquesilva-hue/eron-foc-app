@@ -1906,11 +1906,18 @@ function submitBulkFreq(){
   renderAccountsTable();
   renderCronogramaAccounts();
   _toast(`✓ ${changed} conta${changed!==1?'s':''} → ${novaFreq}`);
-  const _snap=store.contas.map(c=>c.tipo);
-  setTimeout(()=>{
-    const changed2=_snap.filter((t,i)=>store.contas[i]&&store.contas[i].tipo!==t).length;
-    _toast(changed2>0?`Firebase reverteu ${changed2} conta(s)!`:`OK — store mantido`);
-  },2500);
+  // Guarda siglas alteradas e re-aplica após 1.5s caso Firebase tenha revertido
+  const _siglasTipo=store.contas.filter(_matches).map(c=>({sigla:c.sigla,tipo:novaFreq}));
+  const _reapply=()=>{
+    let fixed=0;
+    _siglasTipo.forEach(({sigla,tipo})=>{
+      const acc=store.contas.find(c=>c.sigla===sigla);
+      if(acc&&acc.tipo!==tipo){acc.tipo=tipo;fixed++;}
+    });
+    if(fixed>0){saveStore();_fbSync('contas');renderAccountsTable();renderCronogramaAccounts();}
+  };
+  setTimeout(_reapply,1500);
+  setTimeout(_reapply,4000);
 }
 function tipoChip(tipo){
   const map={'T1':'chip-violet','T2':'chip-purple','Diário':'chip-teal','1 vez ao mês':'chip-amber','1 vez na semana':'chip-rose'};
@@ -1972,6 +1979,19 @@ function submitCadastro(){
   saveStore(); _fbSync(cadastroType==='pais'?'paises':cadastroType==='banco'?'bancos':'agentes');
   renderCadastro(cadastroType);
   updateCounts();
+  if(cadastroType==='agente'){
+    const _eIdx=isEdit?_editCadIdx:store.agentes.length-1;
+    const _savedAg={...store.agentes[_eIdx]};
+    const _reapplyAg=()=>{
+      const ag=store.agentes.find(a=>a.nome===_savedAg.nome);
+      if(ag&&(ag.responsavel!==_savedAg.responsavel||ag.pais!==_savedAg.pais)){
+        ag.responsavel=_savedAg.responsavel; ag.pais=_savedAg.pais;
+        saveStore();_fbSync('agentes');renderCadastro('agente');
+      }
+    };
+    setTimeout(_reapplyAg,1500);
+    setTimeout(_reapplyAg,4000);
+  }
 }
 function deleteCadastro(type,idx){
   const labels={'pais':'país','agente':'agente','banco':'banco'};
@@ -3249,7 +3269,7 @@ function _fbSync(field){
   // can't overwrite our local change before the server returns the updated snapshot.
   _ownWrites[field]=true;
   clearTimeout(_ownWrites['_t_'+field]);
-  _ownWrites['_t_'+field]=setTimeout(()=>{ delete _ownWrites[field]; delete _ownWrites['_t_'+field]; },5000);
+  _ownWrites['_t_'+field]=setTimeout(()=>{ delete _ownWrites[field]; delete _ownWrites['_t_'+field]; },10000);
   _pendingWrites++;
   clearTimeout(_ownWriteTimer);
   _ownWriteTimer=setTimeout(()=>{_pendingWrites=0;},30000);
@@ -3343,7 +3363,12 @@ async function startFirebaseSync(){
         if(_pendingWrites>0)return;
         const d=snap.val();if(!d)return;
         const noModal=!document.querySelector('.modal-overlay.open');
+        // Salva referências dos campos protegidos localmente antes de _applyFbData
+        const _pre={};
+        ['contas','agentes','paises','bancos','responsaveis'].forEach(f=>{if(_ownWrites[f])_pre[f]=store[f];});
         _applyFbData(d);
+        // Restaura campos protegidos caso _applyFbData os tenha sobrescrito
+        Object.keys(_pre).forEach(f=>{store[f]=_pre[f];});
         if(noModal){renderAll();updateCounts();}
       });
     }
