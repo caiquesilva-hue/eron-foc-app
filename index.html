@@ -431,14 +431,14 @@
     <div class="form-field" style="text-align:left;margin-bottom:12px">
       <label class="form-label" data-i18n="login-email-lbl" style="color:rgba(185,185,230,.7);margin-bottom:5px">Email corporativo</label>
       <input class="form-input login-form-input" type="email" id="login-email-input"
-        placeholder="nome@eroninternational.com"
+        name="username" placeholder="nome@eroninternational.com"
         onkeydown="if(event.key==='Enter')document.getElementById('login-pwd-input').focus()" autocomplete="username">
     </div>
     <div class="form-field" style="text-align:left;margin-bottom:8px">
       <label class="form-label" data-i18n="login-pwd-lbl" style="color:rgba(185,185,230,.7);margin-bottom:5px">Senha</label>
       <div class="pwd-field-wrap">
         <input class="form-input login-form-input" type="password" id="login-pwd-input"
-          placeholder="••••••••"
+          name="password" placeholder="••••••••"
           onkeydown="if(event.key==='Enter')tryLogin()" style="padding-right:36px" autocomplete="current-password">
         <button type="button" class="pwd-toggle" onclick="togglePwdVisibility('login-pwd-input',this)" tabindex="-1" style="color:rgba(185,185,230,.5)">👁</button>
       </div>
