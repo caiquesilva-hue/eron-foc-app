@@ -1357,13 +1357,13 @@
 <div class="modal-overlay" id="modal-historico" onclick="if(event.target===this)closeModal('modal-historico')">
   <div class="modal-card" style="width:760px;max-width:98vw">
     <div class="modal-header">
-      <div class="modal-title">Histórico de Alterações</div>
+      <div class="modal-title" data-i18n="hist-title">Histórico de Alterações</div>
       <button class="modal-close" onclick="closeModal('modal-historico')">×</button>
     </div>
     <div style="padding:12px 16px 0;border-bottom:1px solid var(--e-pale)">
       <div style="position:relative;max-width:320px">
         <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="var(--e-muted)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
-        <input id="historico-search" type="text" placeholder="Buscar usuário, módulo, ação..." autocomplete="off"
+        <input id="historico-search" type="text" data-i18n-placeholder="hist-search-ph" placeholder="Buscar usuário, módulo, ação..." autocomplete="off"
           style="width:100%;padding:7px 9px 7px 30px;border:1.5px solid var(--e-pale);border-radius:8px;font-size:12px;font-family:inherit;color:var(--e-text);background:#fff;outline:none;box-sizing:border-box;transition:border-color .15s"
           onfocus="this.style.borderColor='var(--e-purple)'" onblur="this.style.borderColor='var(--e-pale)'"
           oninput="filterHistorico()">
@@ -1374,10 +1374,10 @@
       <div style="overflow-x:auto">
         <table style="width:100%;border-collapse:collapse">
           <thead><tr>
-            <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap">Data/Hora</th>
-            <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale)">Usuário</th>
-            <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale)">Módulo</th>
-            <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale)">Ação</th>
+            <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap" data-i18n="hist-col-datetime">Data/Hora</th>
+            <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale)" data-i18n="hist-col-user">Usuário</th>
+            <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale)" data-i18n="hist-col-module">Módulo</th>
+            <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale)" data-i18n="hist-col-action">Ação</th>
           </tr></thead>
           <tbody id="historico-tbody"></tbody>
         </table>
@@ -1386,9 +1386,9 @@
     <div class="modal-footer" style="justify-content:space-between">
       <button class="btn-csv" onclick="downloadHistoricoCSV()">
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
-        Baixar CSV
+        <span data-i18n="hist-download-csv">Baixar CSV</span>
       </button>
-      <button class="btn-secondary" onclick="closeModal('modal-historico')">Fechar</button>
+      <button class="btn-secondary" onclick="closeModal('modal-historico')" data-i18n="hist-close">Fechar</button>
     </div>
   </div>
 </div>
@@ -1554,6 +1554,10 @@ const i18n = {
     'tipo-op':'Operacional','tipo-adm':'Administrativa','tipo-bbpix':'BB Pix',
     'freq-diario':'Diário','freq-mensal':'1 vez ao mês','freq-semanal':'1 vez na semana',
     'status-pendente':'Pendente','status-concluido':'Concluída','status-sem-mov':'Sem Mov.','status-sem-acesso':'Sem Acesso','status-ag-extrato':'Ag. Extrato',
+    'hist-title':'Histórico de Alterações','hist-search-ph':'Buscar usuário, módulo, ação...','hist-empty':'Nenhuma ação registrada ainda.',
+    'hist-close':'Fechar','hist-download-csv':'Baixar CSV',
+    'hist-col-datetime':'Data/Hora','hist-col-user':'Usuário','hist-col-module':'Módulo','hist-col-action':'Ação',
+    'hist-records-one':'registro','hist-records-many':'registros',
   },
   'en': {
     'ops-platform':'FOC App','login-welcome':'Welcome back',
@@ -1613,6 +1617,11 @@ const i18n = {
     'tipo-op':'Operational','tipo-adm':'Administrative','tipo-bbpix':'BB Pix',
     'freq-diario':'Daily','freq-mensal':'1× / month','freq-semanal':'1× / week',
     'status-pendente':'Pending','status-concluido':'Completed','status-sem-mov':'No mov.','status-sem-acesso':'No access','status-ag-extrato':'Aw. stmt',
+    'hist-title':'Change History','hist-search-ph':'Search user, module, action...','hist-empty':'No actions recorded yet.',
+    'hist-close':'Close','hist-download-csv':'Download CSV',
+    'hist-col-datetime':'Date/Time','hist-col-user':'User','hist-col-module':'Module','hist-col-action':'Action',
+    'hist-records-one':'record','hist-records-many':'records',
+    'nav-cierre':'Accounts – Cierre',
   },
   'es': {
     'ops-platform':'FOC App','login-welcome':'Bienvenido de nuevo',
@@ -1672,6 +1681,11 @@ const i18n = {
     'tipo-op':'Operacional','tipo-adm':'Administrativa','tipo-bbpix':'BB Pix',
     'freq-diario':'Diario','freq-mensal':'1× al mes','freq-semanal':'1× por sem.',
     'status-pendente':'Pendiente','status-concluido':'Concluida','status-sem-mov':'Sin mov.','status-sem-acesso':'Sin acceso','status-ag-extrato':'Ag. extracto',
+    'hist-title':'Historial de cambios','hist-search-ph':'Buscar usuario, módulo, acción...','hist-empty':'Aún no hay acciones registradas.',
+    'hist-close':'Cerrar','hist-download-csv':'Descargar CSV',
+    'hist-col-datetime':'Fecha/Hora','hist-col-user':'Usuario','hist-col-module':'Módulo','hist-col-action':'Acción',
+    'hist-records-one':'registro','hist-records-many':'registros',
+    'nav-cierre':'Accounts – Cierre',
   }
 };
 
@@ -2767,10 +2781,10 @@ function getUserRole(){
   return store.responsaveis.find(r=>r.email===window._loggedEmail)?.role||'visualizacao';
 }
 function isSuperAdmin(){ return SUPERADMIN_EMAILS.includes(window._loggedEmail); }
-function isAdmin(){ return ['super_admin','admin'].includes(getUserRole()); }
-function canEdit(){ return ['super_admin','admin','analista'].includes(getUserRole()); }
-function canViewAcessos(){ return ['super_admin','admin'].includes(getUserRole()); }
-function canManagePasswords(){ return getUserRole()==='super_admin'; }
+function isAdmin(){ return isSuperAdmin()||['super_admin','admin'].includes(getUserRole()); }
+function canEdit(){ return isSuperAdmin()||['super_admin','admin','analista'].includes(getUserRole()); }
+function canViewAcessos(){ return isSuperAdmin()||['super_admin','admin'].includes(getUserRole()); }
+function canManagePasswords(){ return isSuperAdmin(); }
 function getRoleLabel(role){ return ROLES[role]?.label||'Visualização'; }
 function getRoleBadge(role){ return ROLES[role]?.badge||'👁'; }
 function getRoleClass(role){ return ROLES[role]?.cssClass||'role-visualizacao'; }
@@ -3002,20 +3016,22 @@ function downloadCronoCSV(){
   const end=document.getElementById('crono-date-end')?.value||'';
   _downloadCSV(rows,`cronograma${start?'-'+start:''}${end?'_'+end:''}.csv`);
 }
+function _esc(s){ const d=document.createElement('div');d.appendChild(document.createTextNode(String(s??'')));return d.innerHTML; }
 function _renderHistoricoRows(entries){
   const tbody=document.getElementById('historico-tbody');
   const count=document.getElementById('historico-count');
   if(!entries.length){
-    tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--e-muted);padding:32px">Nenhuma ação registrada ainda.</td></tr>';
+    tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;color:var(--e-muted);padding:32px">${_esc(t('hist-empty'))}</td></tr>`;
     if(count) count.textContent='';
   } else {
     tbody.innerHTML=entries.map(e=>`<tr style="border-bottom:1px solid var(--e-pale)">
-      <td style="padding:9px 14px;font-size:11px;color:var(--e-muted);white-space:nowrap">${e.ts}</td>
-      <td style="padding:9px 14px"><span style="font-weight:600;color:var(--e-text);font-size:13px">${e.userName}</span> <span style="font-size:11px;color:var(--e-muted);background:var(--e-ghost);padding:1px 5px;border-radius:3px;font-family:monospace">${e.userSigla}</span></td>
-      <td style="padding:9px 14px"><span class="pais-tag">${e.modulo}</span></td>
-      <td style="padding:9px 14px;font-size:12px;color:var(--e-sub)">${e.acao}: <span style="color:var(--e-text)">${e.detalhes}</span></td>
+      <td style="padding:9px 14px;font-size:11px;color:var(--e-muted);white-space:nowrap">${_esc(e.ts)}</td>
+      <td style="padding:9px 14px"><span style="font-weight:600;color:var(--e-text);font-size:13px">${_esc(e.userName)}</span> <span style="font-size:11px;color:var(--e-muted);background:var(--e-ghost);padding:1px 5px;border-radius:3px;font-family:monospace">${_esc(e.userSigla)}</span></td>
+      <td style="padding:9px 14px"><span class="pais-tag">${_esc(e.modulo)}</span></td>
+      <td style="padding:9px 14px;font-size:12px;color:var(--e-sub)">${_esc(e.acao)}: <span style="color:var(--e-text)">${_esc(e.detalhes)}</span></td>
     </tr>`).join('');
-    if(count) count.textContent=`${entries.length} registro${entries.length!==1?'s':''}`;
+    const n=entries.length;
+    if(count) count.textContent=`${n} ${n===1?t('hist-records-one'):t('hist-records-many')}`;
   }
 }
 function filterHistorico(){
@@ -3041,7 +3057,8 @@ function showNoteTooltip(event,el){
     tip.addEventListener('mouseenter',()=>clearTimeout(_noteHideTimer));
     tip.addEventListener('mouseleave',()=>scheduleHideNoteTooltip());
   }
-  tip.innerHTML=`<div style="font-weight:700;color:#92400e;font-size:10px;margin-bottom:2px">🔗 Link</div><a href="${link.replace(/"/g,'&quot;')}" target="_blank" rel="noopener noreferrer">${link}</a>`;
+  const safeLink=/^https?:\/\//i.test(link)?link:'';
+  tip.innerHTML=safeLink?`<div style="font-weight:700;color:#92400e;font-size:10px;margin-bottom:2px">🔗 Link</div><a href="${safeLink.replace(/"/g,'&quot;')}" target="_blank" rel="noopener noreferrer">${_esc(safeLink)}</a>`:`<div style="color:#dc2626;font-size:11px">Link inválido</div>`;
   tip.style.display='block';
   const rect=el.getBoundingClientRect();
   const tipW=300;
@@ -3423,7 +3440,7 @@ function loadStore(){
 // ─── FIREBASE REALTIME DATABASE ──────────────────────────────────
 const ENVIRONMENTS={
   eron:{
-    label:'Eron FOC',
+    label:'Eron',
     storeKey:'eron-foc-v1',
     cfg:{
       apiKey:"AIzaSyB-Fhj-aoMq-BK4p3wRZSFnTHc-VLaUBUQ",
