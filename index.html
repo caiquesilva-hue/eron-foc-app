@@ -261,6 +261,11 @@
   .prior-media{background:#fef9c3;color:#92400e;}
   .prior-baixa{background:#dcfce7;color:#15803d;}
   .prior-none{color:var(--e-muted);font-size:11px;}
+  .conc-warn{font-size:13px;cursor:default;vertical-align:middle;margin-left:4px;line-height:1;}
+  .conc-warn-tip{position:fixed;background:#1e1b4b;color:#e9e7ff;border-radius:8px;padding:10px 13px;font-size:11px;line-height:1.7;z-index:9999;max-width:280px;box-shadow:0 4px 20px rgba(0,0,0,.28);pointer-events:none;white-space:pre-wrap;}
+  .chip-tipo-bancos{background:#e0f2fe;color:#0369a1;}
+  .chip-tipo-proc{background:#f3e8ff;color:#7c3aed;}
+  .chip-tipo-mista{background:#fef3c7;color:#92400e;}
   /* CRONOGRAMA NOTE (hover link) */
   .day-filled.has-note{position:relative;overflow:visible;}
   .day-filled.has-note::after{content:'';position:absolute;top:0;right:0;width:0;height:0;border-style:solid;border-width:0 6px 6px 0;border-color:transparent #f59e0b transparent transparent;pointer-events:none;}
@@ -627,7 +632,7 @@
   </div>
   <div class="table-wrap">
     <div id="conciliacoes-empty" class="empty-state"><div class="empty-icon">🔗</div><div class="empty-title">Nenhuma conciliação cadastrada</div><div class="empty-sub">Adicione conciliações vinculando contas de Gerencial > Accounts.</div></div>
-    <div class="table-scroll" id="conciliacoes-table-inner" style="display:none"><table><thead><tr><th>Nome</th><th>País</th><th>Agente</th><th>Contas vinculadas</th><th style="width:80px">Ações</th></tr></thead><tbody id="conciliacoes-tbody"></tbody></table></div>
+    <div class="table-scroll" id="conciliacoes-table-inner" style="display:none"><table><thead><tr><th>Nome</th><th>País</th><th>Agente</th><th>Tipo</th><th>Contas vinculadas</th><th style="width:80px">Ações</th></tr></thead><tbody id="conciliacoes-tbody"></tbody></table></div>
   </div>
 </div>
     <!-- CRONOGRAMA > ACCOUNTS -->
@@ -3020,6 +3025,23 @@ function showNoteTooltip(event,el){
 function scheduleHideNoteTooltip(){
   _noteHideTimer=setTimeout(()=>{const tip=document.getElementById('crono-note-tip');if(tip)tip.style.display='none';},150);
 }
+let _concWarnTimer=null;
+function showConcWarnTooltip(ev,el){
+  clearTimeout(_concWarnTimer);
+  let tip=document.getElementById('conc-warn-tip');
+  if(!tip){tip=document.createElement('div');tip.id='conc-warn-tip';tip.className='conc-warn-tip';document.body.appendChild(tip);}
+  tip.innerHTML=decodeURIComponent(el.dataset.warn||'');
+  tip.style.display='block';
+  const rect=el.getBoundingClientRect();
+  const tipW=280;
+  let left=rect.right+8;
+  if(left+tipW>window.innerWidth-8) left=rect.left-tipW-8;
+  tip.style.left=Math.max(4,left)+'px';
+  tip.style.top=Math.max(4,rect.top-4)+'px';
+}
+function scheduleHideConcWarn(){
+  _concWarnTimer=setTimeout(()=>{const tip=document.getElementById('conc-warn-tip');if(tip)tip.style.display='none';},150);
+}
 document.addEventListener('click', function(e){ if(!e.target.closest('.cal-dropdown')) closeCalDropdown(); });
 function onDayCellClick(event, contaKey, dateStr, active, tdEl){
   closeCalDropdown();
@@ -3905,7 +3927,10 @@ function renderGerencialConciliacoes(){
   if(cnt) cnt.textContent=store.conciliacoes.length+' conciliação'+(store.conciliacoes.length!==1?'s':'');
   tb.innerHTML=store.conciliacoes.map((c,ci)=>{
     const tags=c.contas&&c.contas.length?c.contas.map(s=>`<span style="font-family:monospace;font-size:10px;background:var(--e-ghost);padding:1px 5px;border-radius:3px;margin-right:3px">${s}</span>`).join(''):`<span style="color:var(--e-muted);font-size:11px">—</span>`;
-    return `<tr><td style="font-weight:600">${c.nome}</td><td>${c.pais?`${countryFlag(c.pais)} ${c.pais}`:'—'}</td><td style="font-size:12px;color:var(--e-muted)">${c.agente||'—'}</td><td style="white-space:normal">${tags}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openConciliacaoModal(${ci})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteConciliacao(${ci})">${trashIcon}</button></div>`:''}</td></tr>`;
+    const tipoMap={bancos:['chip-tipo-bancos','Bancos'],mista:['chip-tipo-mista','Mista'],processadores:['chip-tipo-proc','Processadores']};
+    const [tipoCls,tipoLbl]=tipoMap[c.tipo||'bancos']||tipoMap.bancos;
+    const tipoChipHtml=`<span class="chip ${tipoCls}" style="font-size:10px">${tipoLbl}</span>`;
+    return `<tr><td style="font-weight:600">${c.nome}</td><td>${c.pais?`${countryFlag(c.pais)} ${c.pais}`:'—'}</td><td style="font-size:12px;color:var(--e-muted)">${c.agente||'—'}</td><td>${tipoChipHtml}</td><td style="white-space:normal">${tags}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openConciliacaoModal(${ci})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteConciliacao(${ci})">${trashIcon}</button></div>`:''}</td></tr>`;
   }).join('');
 }
 
@@ -3919,11 +3944,19 @@ function openConciliacaoModal(editIdx=-1){
   const m=document.getElementById('modal-cadastro');
   document.getElementById('cad-modal-title').textContent=(isEdit?'Editar: ':'')+conc.nome||'Nova Conciliação';
   const body=document.getElementById('cad-modal-body');
+  const tipoAtual=conc.tipo||'bancos';
   body.innerHTML=`
     <div class="form-field"><label class="form-label">Nome<span class="req">*</span></label><input class="form-input" id="conc-nome" placeholder="Ex: Payout Mono Colprocesa" value="${conc.nome||''}"></div>
     <div class="form-field"><label class="form-label">País</label><select class="form-select" id="conc-pais"><option value="">Selecione</option>${paisOpts}</select></div>
     <div class="form-field"><label class="form-label">Agente</label><select class="form-select" id="conc-agente"><option value="">Selecione</option>${agenteOpts}</select></div>
-    <div class="form-field"><label class="form-label">Contas vinculadas</label>
+    <div class="form-field"><label class="form-label">Tipo<span class="req">*</span></label>
+      <select class="form-select" id="conc-tipo" onchange="onConcTipoChange()">
+        <option value="bancos">Bancos</option>
+        <option value="mista">Mista (bancos + processadores)</option>
+        <option value="processadores">Processadores</option>
+      </select>
+    </div>
+    <div id="conc-contas-wrap" class="form-field"><label class="form-label">Contas vinculadas</label>
       <div class="contas-ms-wrap">
         <div class="contas-ms-search"><input type="text" placeholder="Buscar por sigla, banco ou agente..." id="contas-ms-input" oninput="renderContasMSList()"></div>
         <div class="contas-ms-list" id="contas-ms-list"></div>
@@ -3932,7 +3965,13 @@ function openConciliacaoModal(editIdx=-1){
     </div>`;
   if(conc.pais) setTimeout(()=>{const s=document.getElementById('conc-pais');if(s)s.value=conc.pais;},0);
   if(conc.agente) setTimeout(()=>{const s=document.getElementById('conc-agente');if(s)s.value=conc.agente;},0);
-  setTimeout(()=>{renderContasMSList();renderContasMSTags();},0);
+  setTimeout(()=>{
+    const t=document.getElementById('conc-tipo');
+    if(t) t.value=tipoAtual;
+    onConcTipoChange();
+    renderContasMSList();
+    renderContasMSTags();
+  },0);
   document.getElementById('cad-submit').onclick=submitConciliacao;
   openModal('modal-cadastro');
 }
@@ -3964,18 +4003,25 @@ function renderContasMSTags(){
   tags.innerHTML=_selectedContas.map(s=>`<span class="contas-tag">${s}<button type="button" onclick="toggleContaMS('${s.replace(/'/g,"\\'")}',false);renderContasMSList();renderContasMSTags()">×</button></span>`).join('');
 }
 
+function onConcTipoChange(){
+  const tipo=document.getElementById('conc-tipo')?.value||'bancos';
+  const wrap=document.getElementById('conc-contas-wrap');
+  if(wrap) wrap.style.display=tipo==='processadores'?'none':'';
+}
+
 function submitConciliacao(){
   const nome=(document.getElementById('conc-nome')?.value||'').trim();
   if(!nome){document.getElementById('conc-nome')?.classList.add('err');return;}
   const pais=document.getElementById('conc-pais')?.value||'';
   const agente=document.getElementById('conc-agente')?.value||'';
-  const contas=[..._selectedContas];
+  const tipo=document.getElementById('conc-tipo')?.value||'bancos';
+  const contas=tipo==='processadores'?[]:[..._selectedContas];
   const isEdit=_editConcIdx>=0;
   if(isEdit){
-    store.conciliacoes[_editConcIdx]={...store.conciliacoes[_editConcIdx],nome,pais,agente,contas};
+    store.conciliacoes[_editConcIdx]={...store.conciliacoes[_editConcIdx],nome,pais,agente,tipo,contas};
   } else {
     const id=nome.toLowerCase().replace(/[^a-z0-9]/g,'_')+'_'+Date.now();
-    store.conciliacoes.push({id,nome,pais,agente,contas});
+    store.conciliacoes.push({id,nome,pais,agente,tipo,contas});
   }
   saveStore(); _fbSync('conciliacoes');
   logAudit('gerencial-conciliacoes',isEdit?'edit':'add',{nome});
@@ -4144,6 +4190,21 @@ function _priorChip(concId){
   return `<span class="prior-chip ${cls}">${raw}</span>`;
 }
 
+function _getConcilProblems(conc,dateStr){
+  const semAcesso=[];
+  const aguardandoExtrato=[];
+  (conc.contas||[]).forEach(sig=>{
+    const c=store.contas.find(ct=>ct.sigla===sig);
+    if(!c) return;
+    const ck=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
+    const e=store.cronogramaData[`${ck}_${dateStr}`];
+    if(!e) return;
+    if(e.status==='sem_acesso') semAcesso.push(`${c.sigla} ${c.agente}`);
+    else if(e.status==='aguardando_extrato') aguardandoExtrato.push(`${c.sigla} ${c.agente}`);
+  });
+  return {semAcesso,aguardandoExtrato};
+}
+
 function renderCronogramaConciliacoes(){
   const emptyEl=document.getElementById('crono-conc-empty');
   const calWrap=document.getElementById('crono-conc-cal-wrap');
@@ -4270,7 +4331,17 @@ function renderCronogramaConciliacoes(){
     const respCell=rUser?`<span style="font-family:monospace;font-size:10px;font-weight:700;background:rgba(151,111,244,.1);color:var(--e-mid);padding:1px 5px;border-radius:3px">${rUser.sigla}</span>`:'<span style="color:var(--e-muted);font-size:11px">—</span>';
     const concId=(conc.id||conc.nome).replace(/['"]/g,'');
     const d1Result=_getConcilStatus(conc,d1Str);
-    const d1Chip=chipHtml[d1Result.status]||'<span style="color:var(--e-muted);font-size:11px">—</span>';
+    let d1ChipHtml=chipHtml[d1Result.status]||'<span style="color:var(--e-muted);font-size:11px">—</span>';
+    if(d1Result.status==='pronto_conciliacao'){
+      const probs=_getConcilProblems(conc,d1Str);
+      if(probs.semAcesso.length||probs.aguardandoExtrato.length){
+        const lines=[];
+        if(probs.semAcesso.length) lines.push(`Sem acesso:\n${probs.semAcesso.map(s=>`  · ${s}`).join('\n')}`);
+        if(probs.aguardandoExtrato.length) lines.push(`Ag. extrato:\n${probs.aguardandoExtrato.map(s=>`  · ${s}`).join('\n')}`);
+        const tipEnc=encodeURIComponent(lines.join('\n\n'));
+        d1ChipHtml+=` <span class="conc-warn" data-warn="${tipEnc}" onmouseenter="showConcWarnTooltip(event,this)" onmouseleave="scheduleHideConcWarn()" title="">⚠️</span>`;
+      }
+    }
     const priorCell=_priorChip(concId);
     const cells=days.map(d=>{
       const dateStr=fmtD(d);
@@ -4283,7 +4354,7 @@ function renderCronogramaConciliacoes(){
       const lbl=r.entry?r.entry.sigla:(r.status==='pronto_conciliacao'?'✓':r.status==='sem_movimento'?'s/m':'s/a');
       return `<td class="day-cell conc-cell" data-ck="${_ck}" data-dt="${dateStr}" style="cursor:pointer;padding:2px 1px"><div class="day-filled" style="background:${cfg.bg};color:${cfg.color}">${lbl}</div></td>`;
     }).join('');
-    return `<tr><td class="cal-sticky" style="font-size:12px;font-weight:600;white-space:nowrap">${conc.nome}</td><td style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td><td class="sub" style="font-size:11px">${conc.agente||'—'}</td><td>${respCell}</td><td style="padding:4px 8px">${priorCell}</td><td style="white-space:nowrap;padding:4px 8px">${d1Chip}</td>${cells}</tr>`;
+    return `<tr class="row-ativa"><td class="cal-sticky" style="font-size:12px;font-weight:600;white-space:nowrap">${conc.nome}</td><td style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td><td class="sub" style="font-size:11px">${conc.agente||'—'}</td><td>${respCell}</td><td style="padding:4px 8px">${priorCell}</td><td style="white-space:nowrap;padding:4px 8px">${d1ChipHtml}</td>${cells}</tr>`;
   }).join('')}</tbody>`;
 
   if(calScrollEl){calScrollEl.scrollLeft=_savedSL;calScrollEl.scrollTop=_savedST;}
