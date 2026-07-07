@@ -2867,6 +2867,8 @@ async function _submitAcessoInner(){
   closeModal('modal-acesso');
   saveStore(); _fbSync('responsaveis'); _fbSync('credentials');
   renderAcessos(); updateCounts();
+  _toast('✓ Acesso salvo. Total: '+store.responsaveis.length+' usuário(s)', 6000);
+  console.log('[acessos] store.responsaveis após submit:', JSON.stringify(store.responsaveis));
 }
 function deleteAcesso(idx){
   if(!isAdmin()) return;
