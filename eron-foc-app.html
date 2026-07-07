@@ -1376,6 +1376,7 @@
           <thead><tr>
             <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap" data-i18n="hist-col-datetime">Data/Hora</th>
             <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale)" data-i18n="hist-col-user">Usuário</th>
+            <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale)">Ambiente</th>
             <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale)" data-i18n="hist-col-module">Módulo</th>
             <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale)" data-i18n="hist-col-action">Ação</th>
           </tr></thead>
@@ -2847,7 +2848,8 @@ async function submitAcesso(){
     const sigla=document.getElementById('acesso-sigla').value.trim().toUpperCase();
     const pwd=document.getElementById('acesso-pwd').value;
     const role=isSuperAdmin()?(document.getElementById('acesso-role')?.value||'visualizacao'):'visualizacao';
-    if(!email.endsWith('@eroninternational.com')){alert('O email deve ser @eroninternational.com');return;}
+    if(_currentEnv==='eron'&&!email.endsWith('@eroninternational.com')){alert('O email deve ser @eroninternational.com');return;}
+    if(!email.includes('@')||!email.includes('.')){alert('Email inválido.');return;}
     if(pwd.length<6){alert('A senha deve ter pelo menos 6 caracteres.');return;}
     const existing=store.responsaveis.find(r=>r.email===email);
     if(existing){existing.nome=nome;existing.sigla=sigla;existing.role=role;}
@@ -2856,7 +2858,11 @@ async function submitAcesso(){
     logAudit('acessos','add-user',{nome,email,sigla,role});
   }
   closeModal('modal-acesso');
-  saveStore(); _fbSync('responsaveis'); _fbSync('credentials');
+  saveStore();
+  _fbRef.child('responsaveis').set(store.responsaveis)
+    .then(()=>{ _syncBadge('synced'); renderAcessos(); updateCounts(); })
+    .catch(e=>{ console.warn('[FB responsaveis]',e); _syncBadge('offline'); });
+  _fbSync('credentials');
   renderAcessos();
   updateCounts();
 }
@@ -2964,7 +2970,8 @@ function togglePerm(itemId,type){
 // ─── AUDITORIA ───────────────────────────────────────────────────
 function logAudit(modulo,acao,detalhes){
   const user=store.responsaveis.find(r=>r.email===window._loggedEmail);
-  const entry={ts:new Date().toLocaleString('pt-BR'),userName:user?.nome||window._loggedEmail||'Sistema',userSigla:user?.sigla||'?',modulo,acao,detalhes:JSON.stringify(detalhes)};
+  const envLabel=ENVIRONMENTS[_currentEnv]?.label||_currentEnv;
+  const entry={ts:new Date().toLocaleString('pt-BR'),userName:user?.nome||window._loggedEmail||'Sistema',userSigla:user?.sigla||'?',env:envLabel,modulo,acao,detalhes:JSON.stringify(detalhes)};
   store.auditLog.push(entry);
   if(typeof _fbAuditRef!=='undefined'){
     const newRef=_fbAuditRef.push();
@@ -3024,12 +3031,16 @@ function _renderHistoricoRows(entries){
     tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;color:var(--e-muted);padding:32px">${_esc(t('hist-empty'))}</td></tr>`;
     if(count) count.textContent='';
   } else {
-    tbody.innerHTML=entries.map(e=>`<tr style="border-bottom:1px solid var(--e-pale)">
+    tbody.innerHTML=entries.map(e=>{
+      const envColor=e.env==='AstroPay'?'#0369a1':e.env==='Eron'?'#7c3aed':'#6b7280';
+      const envBg=e.env==='AstroPay'?'#e0f2fe':e.env==='Eron'?'#ede9fe':'#f3f4f6';
+      return `<tr style="border-bottom:1px solid var(--e-pale)">
       <td style="padding:9px 14px;font-size:11px;color:var(--e-muted);white-space:nowrap">${_esc(e.ts)}</td>
       <td style="padding:9px 14px"><span style="font-weight:600;color:var(--e-text);font-size:13px">${_esc(e.userName)}</span> <span style="font-size:11px;color:var(--e-muted);background:var(--e-ghost);padding:1px 5px;border-radius:3px;font-family:monospace">${_esc(e.userSigla)}</span></td>
+      <td style="padding:9px 14px">${e.env?`<span style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;background:${envBg};color:${envColor}">${_esc(e.env)}</span>`:'<span style="font-size:11px;color:var(--e-muted)">—</span>'}</td>
       <td style="padding:9px 14px"><span class="pais-tag">${_esc(e.modulo)}</span></td>
       <td style="padding:9px 14px;font-size:12px;color:var(--e-sub)">${_esc(e.acao)}: <span style="color:var(--e-text)">${_esc(e.detalhes)}</span></td>
-    </tr>`).join('');
+    </tr>`;}).join('');
     const n=entries.length;
     if(count) count.textContent=`${n} ${n===1?t('hist-records-one'):t('hist-records-many')}`;
   }
@@ -3037,7 +3048,7 @@ function _renderHistoricoRows(entries){
 function filterHistorico(){
   const q=(document.getElementById('historico-search')?.value||'').toLowerCase().trim();
   const all=[...store.auditLog].reverse();
-  const filtered=q?all.filter(e=>[e.ts,e.userName,e.userSigla,e.modulo,e.acao,e.detalhes].some(v=>(v||'').toLowerCase().includes(q))):all;
+  const filtered=q?all.filter(e=>[e.ts,e.userName,e.userSigla,e.env,e.modulo,e.acao,e.detalhes].some(v=>(v||'').toLowerCase().includes(q))):all;
   _renderHistoricoRows(filtered);
 }
 function openHistorico(){
