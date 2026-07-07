@@ -64,6 +64,16 @@
   /* MAIN */
   #main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--e-ghost);}
   .topbar{background:#fff;border-bottom:1px solid var(--e-pale);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+  .env-switcher{position:relative;}
+  .env-btn{display:flex;align-items:center;gap:6px;padding:5px 10px;border:1.5px solid var(--e-purple);border-radius:7px;background:rgba(151,111,244,.06);color:var(--e-purple);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s;}
+  .env-btn:hover{background:rgba(151,111,244,.12);}
+  .env-btn .env-arrow{font-size:9px;margin-left:2px;transition:transform .15s;}
+  .env-btn.open .env-arrow{transform:rotate(180deg);}
+  .env-dd{position:absolute;top:calc(100% + 6px);left:0;min-width:160px;background:#fff;border:1px solid var(--e-pale);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:500;overflow:hidden;}
+  .env-dd-item{display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;cursor:pointer;transition:background .1s;color:var(--e-text);}
+  .env-dd-item:hover{background:var(--e-ghost);}
+  .env-dd-item.active{font-weight:700;color:var(--e-purple);}
+  .env-dd-item .env-check{font-size:11px;color:var(--e-purple);width:14px;}
   .breadcrumb{font-size:13px;color:var(--e-sub);display:flex;align-items:center;gap:6px;}
   .crumb-parent{color:var(--e-muted);}
   .sep{color:var(--e-pale);}
@@ -547,6 +557,20 @@
     <div class="topbar">
       <div class="breadcrumb" id="breadcrumb-wrap"><span class="crumb-parent" id="bc-parent" style="display:none"></span><span class="sep" id="bc-sep" style="display:none">›</span><span class="crumb-current" id="bc-current">ERON Ops Platform</span></div>
       <div style="display:flex;gap:10px;align-items:center">
+        <div class="env-switcher" id="env-switcher-wrap" style="display:none">
+          <button class="env-btn" id="env-btn" onclick="toggleEnvDropdown()">
+            <span id="env-btn-label">Eron</span>
+            <span class="env-arrow" id="env-arrow">▾</span>
+          </button>
+          <div class="env-dd" id="env-dd" style="display:none">
+            <div class="env-dd-item" id="env-item-eron" onclick="switchEnvironment('eron')">
+              <span class="env-check" id="env-check-eron">✓</span>Eron FOC
+            </div>
+            <div class="env-dd-item" id="env-item-astropay" onclick="switchEnvironment('astropay')">
+              <span class="env-check" id="env-check-astropay" style="visibility:hidden">✓</span>AstroPay
+            </div>
+          </div>
+        </div>
         <button class="btn-hist" onclick="openHistorico()" title="Ver log de alterações">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
           Histórico
@@ -1795,6 +1819,7 @@ function selectAccount(email){
   document.getElementById('app').classList.add('visible');
   logAudit('auth','login',{email});
   updateSidebarForRole();
+  _updateEnvSwitcher();
   renderAll();
 }
 function updateSidebarForRole(){
@@ -2729,6 +2754,7 @@ function submitBulkApply(){
 
 // ─── ACESSOS ─────────────────────────────────────────────────────
 const ADMIN_EMAIL='caique.silva@eroninternational.com';
+const SUPERADMIN_EMAILS=[ADMIN_EMAIL];
 
 const ROLES={
   super_admin:{label:'Super Admin',badge:'👑',cssClass:'role-super-admin'},
@@ -2740,7 +2766,7 @@ function getUserRole(){
   if(!window._loggedEmail) return 'visualizacao';
   return store.responsaveis.find(r=>r.email===window._loggedEmail)?.role||'visualizacao';
 }
-function isSuperAdmin(){ return getUserRole()==='super_admin'; }
+function isSuperAdmin(){ return SUPERADMIN_EMAILS.includes(window._loggedEmail); }
 function isAdmin(){ return ['super_admin','admin'].includes(getUserRole()); }
 function canEdit(){ return ['super_admin','admin','analista'].includes(getUserRole()); }
 function canViewAcessos(){ return ['super_admin','admin'].includes(getUserRole()); }
@@ -3344,7 +3370,7 @@ function updateCierreField(ck,field,value,el){
 }
 
 // ─── PERSISTÊNCIA localStorage ────────────────────────────────────
-const STORE_KEY='eron-foc-v1';
+let STORE_KEY='eron-foc-v1';
 function saveStore(){
   const _ls={paises:store.paises,agentes:store.agentes,bancos:store.bancos,
     responsaveis:store.responsaveis,contas:store.contas,
@@ -3395,18 +3421,30 @@ function loadStore(){
   } catch(e){}
 }
 // ─── FIREBASE REALTIME DATABASE ──────────────────────────────────
-const _FB_CFG={
-  apiKey:"AIzaSyB-Fhj-aoMq-BK4p3wRZSFnTHc-VLaUBUQ",
-  authDomain:"eron-foc-app-da755.firebaseapp.com",
-  databaseURL:"https://eron-foc-app-da755-default-rtdb.firebaseio.com",
-  projectId:"eron-foc-app-da755",
-  storageBucket:"eron-foc-app-da755.firebasestorage.app",
-  messagingSenderId:"786560486412",
-  appId:"1:786560486412:web:f2dd8d4d9977bac495f229"
+const ENVIRONMENTS={
+  eron:{
+    label:'Eron FOC',
+    storeKey:'eron-foc-v1',
+    cfg:{
+      apiKey:"AIzaSyB-Fhj-aoMq-BK4p3wRZSFnTHc-VLaUBUQ",
+      authDomain:"eron-foc-app-da755.firebaseapp.com",
+      databaseURL:"https://eron-foc-app-da755-default-rtdb.firebaseio.com",
+      projectId:"eron-foc-app-da755",
+      storageBucket:"eron-foc-app-da755.firebasestorage.app",
+      messagingSenderId:"786560486412",
+      appId:"1:786560486412:web:f2dd8d4d9977bac495f229"
+    }
+  },
+  astropay:{
+    label:'AstroPay',
+    storeKey:'astropay-foc-v1',
+    cfg:null  // Firebase não configurado ainda — placeholder
+  }
 };
-const _fbApp=firebase.initializeApp(_FB_CFG);
-const _fbRef=firebase.database(_fbApp).ref('store');
-const _fbAuditRef=firebase.database(_fbApp).ref('store/auditLog');
+let _currentEnv='eron';
+let _fbApp=firebase.initializeApp(ENVIRONMENTS.eron.cfg,'eron');
+let _fbRef=firebase.database(_fbApp).ref('store');
+let _fbAuditRef=firebase.database(_fbApp).ref('store/auditLog');
 const _fbAuditSeen=new Set();
 let _fbListening=false,_fbAuditListening=false,_pendingWrites=0,_ownWriteTimer=null;
 const _ownWrites={}; // field→true while a granular write is in-flight; _applyFbData skips these fields
@@ -3584,7 +3622,61 @@ async function startFirebaseSync(){
   }
 }
 
-
+// ─── ENVIRONMENT SWITCHER ─────────────────────────────────────────
+function toggleEnvDropdown(){
+  const dd=document.getElementById('env-dd');
+  const btn=document.getElementById('env-btn');
+  if(!dd) return;
+  const open=dd.style.display==='block';
+  dd.style.display=open?'none':'block';
+  btn.classList.toggle('open',!open);
+  if(!open){
+    const close=e=>{if(!document.getElementById('env-switcher-wrap')?.contains(e.target)){dd.style.display='none';btn.classList.remove('open');document.removeEventListener('click',close);}};
+    setTimeout(()=>document.addEventListener('click',close),0);
+  }
+}
+async function switchEnvironment(envKey){
+  if(envKey===_currentEnv){document.getElementById('env-dd').style.display='none';document.getElementById('env-btn').classList.remove('open');return;}
+  const env=ENVIRONMENTS[envKey];
+  if(!env){alert('Ambiente não reconhecido.');return;}
+  if(!env.cfg){alert('O Firebase do ambiente "'+env.label+'" ainda não está configurado.\nEntre em contato com o administrador para configurar.');return;}
+  // Detach Firebase listeners
+  try{_fbRef.off();}catch(e){}
+  try{_fbAuditRef.off();}catch(e){}
+  try{_fbRef.child('cronogramaData').off();}catch(e){}
+  _fbListening=false;_fbAuditListening=false;_pendingWrites=0;
+  // Delete old Firebase app and create new one
+  try{await _fbApp.delete();}catch(e){}
+  _currentEnv=envKey;
+  STORE_KEY=env.storeKey;
+  _fbApp=firebase.initializeApp(env.cfg,envKey+'_'+Date.now());
+  _fbRef=firebase.database(_fbApp).ref('store');
+  _fbAuditRef=firebase.database(_fbApp).ref('store/auditLog');
+  _fbAuditSeen.clear();
+  // Reset store to defaults for the new environment
+  Object.assign(store,{paises:[],agentes:[],bancos:[],responsaveis:[],contas:[],cronogramaData:{},cierreData:{},conciliacoes:[],cronogramaConciliacoes:{},paisesResp:{},conciliacoesPrioridade:{},auditLog:[],permissions:{},credentials:{}});
+  loadStore();
+  _updateEnvSwitcher();
+  document.getElementById('env-dd').style.display='none';
+  document.getElementById('env-btn').classList.remove('open');
+  _toast('Ambiente: '+env.label,3000);
+  await startFirebaseSync();
+  try{renderAll();updateCounts();}catch(e){}
+}
+function _updateEnvSwitcher(){
+  const wrap=document.getElementById('env-switcher-wrap');
+  if(!wrap) return;
+  wrap.style.display=isSuperAdmin()?'':'none';
+  if(!isSuperAdmin()) return;
+  const env=ENVIRONMENTS[_currentEnv];
+  document.getElementById('env-btn-label').textContent=env?.label||_currentEnv;
+  Object.keys(ENVIRONMENTS).forEach(k=>{
+    const chk=document.getElementById('env-check-'+k);
+    if(chk) chk.style.visibility=k===_currentEnv?'visible':'hidden';
+    const item=document.getElementById('env-item-'+k);
+    if(item) item.classList.toggle('active',k===_currentEnv);
+  });
+}
 
 // ─── SENHAS ──────────────────────────────────────────────────────
 async function hashPwd(pwd){
