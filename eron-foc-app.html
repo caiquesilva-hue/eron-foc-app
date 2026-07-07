@@ -2858,13 +2858,8 @@ async function submitAcesso(){
     logAudit('acessos','add-user',{nome,email,sigla,role});
   }
   closeModal('modal-acesso');
-  saveStore();
-  _fbRef.child('responsaveis').set(store.responsaveis)
-    .then(()=>{ _syncBadge('synced'); renderAcessos(); updateCounts(); })
-    .catch(e=>{ console.warn('[FB responsaveis]',e); _syncBadge('offline'); });
-  _fbSync('credentials');
-  renderAcessos();
-  updateCounts();
+  saveStore(); _fbSync('responsaveis'); _fbSync('credentials');
+  renderAcessos(); updateCounts();
 }
 function deleteAcesso(idx){
   if(!isAdmin()) return;
@@ -3398,7 +3393,7 @@ function updateCierreField(ck,field,value,el){
 }
 
 // ─── PERSISTÊNCIA localStorage ────────────────────────────────────
-let STORE_KEY='eron-foc-v1';
+let STORE_KEY='eron-foc-v1'; // atualizado após bloco Firebase para refletir o ambiente persistido
 function saveStore(){
   const _ls={paises:store.paises,agentes:store.agentes,bancos:store.bancos,
     responsaveis:store.responsaveis,contas:store.contas,
@@ -3464,10 +3459,13 @@ const ENVIRONMENTS={
     }
   }
 };
-let _currentEnv='eron';
-let _fbApp=firebase.initializeApp(ENVIRONMENTS.eron.cfg,'eron');
+const ENV_PERSIST_KEY='eron-foc-active-env';
+const _initEnvKey=(()=>{try{const k=localStorage.getItem(ENV_PERSIST_KEY);return(k&&ENVIRONMENTS[k]?.cfg)?k:'eron';}catch(e){return'eron';}})();
+let _currentEnv=_initEnvKey;
+let _fbApp=firebase.initializeApp(ENVIRONMENTS[_initEnvKey].cfg,_initEnvKey+'_init');
 let _fbRef=firebase.database(_fbApp).ref('store');
 let _fbAuditRef=firebase.database(_fbApp).ref('store/auditLog');
+STORE_KEY=ENVIRONMENTS[_initEnvKey].storeKey; // sincroniza STORE_KEY com ambiente restaurado
 const _fbAuditSeen=new Set();
 let _fbListening=false,_fbAuditListening=false,_pendingWrites=0,_ownWriteTimer=null;
 const _ownWrites={}; // field→true while a granular write is in-flight; _applyFbData skips these fields
@@ -3664,6 +3662,7 @@ async function switchEnvironment(envKey){
   try{await _fbApp.delete();}catch(e){}
   _currentEnv=envKey;
   STORE_KEY=env.storeKey;
+  try{localStorage.setItem(ENV_PERSIST_KEY,envKey);}catch(e){}
   _fbApp=firebase.initializeApp(env.cfg,envKey+'_'+Date.now());
   _fbRef=firebase.database(_fbApp).ref('store');
   _fbAuditRef=firebase.database(_fbApp).ref('store/auditLog');
@@ -4529,6 +4528,7 @@ async function _initApp(){
   } else {
     checkRememberedSession();
   }
+  _updateEnvSwitcher();
 }
 _initApp();
 </script>
