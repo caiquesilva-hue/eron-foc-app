@@ -4199,8 +4199,8 @@ function _getConcilProblems(conc,dateStr){
     const ck=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
     const e=store.cronogramaData[`${ck}_${dateStr}`];
     if(!e) return;
-    if(e.status==='sem_acesso') semAcesso.push(`${c.sigla} ${c.agente}`);
-    else if(e.status==='aguardando_extrato') aguardandoExtrato.push(`${c.sigla} ${c.agente}`);
+    if(e.status==='sem_acesso') semAcesso.push(c.sigla);
+    else if(e.status==='aguardando_extrato') aguardandoExtrato.push(c.sigla);
   });
   return {semAcesso,aguardandoExtrato};
 }
