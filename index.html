@@ -3408,21 +3408,8 @@ function loadStore(){
     if(saved.bancos) store.bancos=(Array.isArray(saved.bancos)?saved.bancos:Object.values(saved.bancos)).filter(Boolean);
     if(saved.responsaveis){
       store.responsaveis=saved.responsaveis;
-      // Migração: garante que todos têm role definido
       store.responsaveis.forEach(r=>{
-        if(!r.role) r.role=r.email==='caique.silva@eroninternational.com'?'super_admin':'visualizacao';
-      });
-      // Migração: usuários do código que não estão no localStorage são adicionados
-      // (evita "Usuário não cadastrado" quando o localStorage é de versão antiga)
-      const canonical=[
-        {nome:'Caique Bruno',email:'caique.silva@eroninternational.com',sigla:'CA',role:'super_admin'},
-        {nome:'Jana Czaia',email:'janaine.czaia@eroninternational.com',sigla:'JC',role:'admin'},
-        {nome:'Leticia Sanglard',email:'leticia.gomes@eroninternational.com',sigla:'LS',role:'analista'},
-        {nome:'Luciane Goes',email:'luciane.goes@eroninternational.com',sigla:'LG',role:'admin'},
-        {nome:'Larissa Chequim',email:'larissa.chequim@eroninternational.com',sigla:'LQ',role:'admin'},
-      ];
-      canonical.forEach(u=>{
-        if(!store.responsaveis.find(r=>r.email===u.email)) store.responsaveis.push(u);
+        if(!r.role) r.role=r.email===ADMIN_EMAIL?'super_admin':'visualizacao';
       });
     }
     if(saved.contas) store.contas=(Array.isArray(saved.contas)?saved.contas:Object.values(saved.contas)).filter(Boolean).map(c=>({...c,status:c.status==='aberta'?'ativa':c.status}));
@@ -3534,14 +3521,6 @@ function _applyFbData(saved){
   if(saved.responsaveis&&!_ownWrites.responsaveis){
     store.responsaveis=_fbArr(saved.responsaveis);
     store.responsaveis.forEach(r=>{if(!r.role)r.role=r.email===ADMIN_EMAIL?'super_admin':'visualizacao';});
-    const can=[
-      {nome:'Caique Bruno',email:'caique.silva@eroninternational.com',sigla:'CA',role:'super_admin'},
-      {nome:'Jana Czaia',email:'janaine.czaia@eroninternational.com',sigla:'JC',role:'admin'},
-      {nome:'Leticia Sanglard',email:'leticia.gomes@eroninternational.com',sigla:'LS',role:'analista'},
-      {nome:'Luciane Goes',email:'luciane.goes@eroninternational.com',sigla:'LG',role:'admin'},
-      {nome:'Larissa Chequim',email:'larissa.chequim@eroninternational.com',sigla:'LQ',role:'admin'},
-    ];
-    can.forEach(u=>{if(!store.responsaveis.find(r=>r.email===u.email))store.responsaveis.push(u);});
   }
   if(saved.contas&&!_ownWrites.contas)store.contas=_fbArr(saved.contas).map(c=>({...c,status:c.status==='aberta'?'ativa':c.status}));
   if(saved.conciliacoes&&!_ownWrites.conciliacoes)store.conciliacoes=_fbArr(saved.conciliacoes);
@@ -3764,13 +3743,13 @@ function checkPwdStrength(){
 // Garante que qualquer dispositivo, mesmo sem localStorage prévio, já tem senha inicial
 async function initAdminCredentials(){
   const DEFAULT_PWD='Eron@2026';
-  const canonical=[
+  const canonical=_currentEnv==='eron'?[
     ADMIN_EMAIL,
     'janaine.czaia@eroninternational.com',
     'leticia.gomes@eroninternational.com',
     'luciane.goes@eroninternational.com',
     'larissa.chequim@eroninternational.com',
-  ];
+  ]:[ADMIN_EMAIL];
   let changed=false;
   for(const email of canonical){
     if(!store.credentials[email]){
