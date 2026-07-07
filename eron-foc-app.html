@@ -2842,6 +2842,10 @@ async function _submitAcessoInner(){
       if(r.email===ADMIN_EMAIL&&novoRole!=='super_admin'){alert('Não é possível remover o Super Admin de si mesmo.');return;}
       r.role=novoRole;
     }
+    // _fbSync ANTES de logAudit: o SDK Firebase v8 dispara o listener raiz
+    // de forma SÍNCRONA ao escrever em auditLog. Se _pendingWrites=0 nesse
+    // momento, _applyFbData sobrescreveria o store com dados antigos do Firebase.
+    saveStore(); _fbSync('responsaveis');
     logAudit('acessos','edit-user',{email:r.email,nome,sigla,role:r.role});
   } else {
     // Modo adição
@@ -2854,21 +2858,19 @@ async function _submitAcessoInner(){
     if(_currentEnv==='eron'&&!email.endsWith('@eroninternational.com')){alert('O email deve ser @eroninternational.com');return;}
     if(!email.includes('@')||!email.includes('.')){alert('Email inválido.');return;}
     if(pwd.length<6){alert('A senha deve ter pelo menos 6 caracteres.');return;}
-    // Computa hash antes de modificar o store: evita race condition onde o
-    // listener Firebase dispara durante o await e sobrescreve store.responsaveis
-    // com dados antigos (sem o novo usuário), fazendo-o sumir silenciosamente.
+    // Computa hash antes de modificar o store (evita yield do await no meio das mutações).
     const pwdHash=await hashPwd(pwd);
     const existing=store.responsaveis.find(r=>r.email===email);
     if(existing){existing.nome=nome;existing.sigla=sigla;existing.role=role;}
     else store.responsaveis.push({nome,email,sigla,role});
     store.credentials[email]={hash:pwdHash,mustChange:true};
+    // _fbSync ANTES de logAudit: garante _pendingWrites>0 quando logAudit
+    // dispara o listener raiz sincronamente via push em auditLog.
+    saveStore(); _fbSync('responsaveis'); _fbSync('credentials');
     logAudit('acessos','add-user',{nome,email,sigla,role});
   }
   closeModal('modal-acesso');
-  saveStore(); _fbSync('responsaveis'); _fbSync('credentials');
   renderAcessos(); updateCounts();
-  _toast('✓ Acesso salvo. Total: '+store.responsaveis.length+' usuário(s)', 6000);
-  console.log('[acessos] store.responsaveis após submit:', JSON.stringify(store.responsaveis));
 }
 function deleteAcesso(idx){
   if(!isAdmin()) return;
