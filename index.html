@@ -2851,10 +2851,14 @@ async function submitAcesso(){
     if(_currentEnv==='eron'&&!email.endsWith('@eroninternational.com')){alert('O email deve ser @eroninternational.com');return;}
     if(!email.includes('@')||!email.includes('.')){alert('Email inválido.');return;}
     if(pwd.length<6){alert('A senha deve ter pelo menos 6 caracteres.');return;}
+    // Computa hash antes de modificar o store: evita race condition onde o
+    // listener Firebase dispara durante o await e sobrescreve store.responsaveis
+    // com dados antigos (sem o novo usuário), fazendo-o sumir silenciosamente.
+    const pwdHash=await hashPwd(pwd);
     const existing=store.responsaveis.find(r=>r.email===email);
     if(existing){existing.nome=nome;existing.sigla=sigla;existing.role=role;}
     else store.responsaveis.push({nome,email,sigla,role});
-    store.credentials[email]={hash:await hashPwd(pwd),mustChange:true};
+    store.credentials[email]={hash:pwdHash,mustChange:true};
     logAudit('acessos','add-user',{nome,email,sigla,role});
   }
   closeModal('modal-acesso');
