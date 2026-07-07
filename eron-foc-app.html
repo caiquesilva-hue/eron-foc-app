@@ -2827,6 +2827,9 @@ function editAcesso(idx){
   openModal('modal-acesso');
 }
 async function submitAcesso(){
+  try{await _submitAcessoInner();}catch(e){console.error('[submitAcesso]',e);alert('Erro ao salvar acesso: '+(e.message||e));}
+}
+async function _submitAcessoInner(){
   if(_editAcessoIdx>=0){
     // Modo edição — nome, sigla, e role (se super_admin)
     if(!validate(['acesso-nome','acesso-sigla'])) return;
@@ -3523,7 +3526,13 @@ function _fbSync(field){
   };
   _fbRef.child(field).set(val)
     .then(()=>_done(true))
-    .catch(e=>{console.warn('[FB sync]',field,e);_done(false);});
+    .catch(e=>{
+      console.warn('[FB sync]',field,e);
+      if(['responsaveis','credentials'].includes(field)){
+        _toast('⚠️ Erro ao salvar no Firebase ('+field+'): '+(e.code||e.message||e)+'. Verifique as regras do banco de dados.', 10000);
+      }
+      _done(false);
+    });
 }
 
 function _applyFbData(saved){
