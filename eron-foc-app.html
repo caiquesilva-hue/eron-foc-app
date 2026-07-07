@@ -642,6 +642,12 @@
         <select id="crono-f-pais" onchange="renderCronogramaAccounts()"></select>
         <select id="crono-f-agente" onchange="renderCronogramaAccounts()"></select>
         <select id="crono-f-banco" onchange="renderCronogramaAccounts()"></select>
+        <select id="crono-f-tipo-conta" onchange="renderCronogramaAccounts()">
+          <option value="">Todos os tipos</option>
+          <option value="Operacional">Operacional</option>
+          <option value="Administrativa">Administrativa</option>
+          <option value="BB Pix">BB Pix</option>
+        </select>
         <div class="freq-dd" id="crono-resp-dd">
           <button class="freq-dd-btn" id="crono-resp-btn" onclick="toggleRespDropdown(event)" data-i18n-default="crono-resp">Responsável</button>
           <div class="freq-dd-panel" id="crono-resp-panel">
@@ -2210,6 +2216,7 @@ function renderCronogramaAccounts(){
   const fp=document.getElementById('crono-f-pais')?.value||'';
   const fa=document.getElementById('crono-f-agente')?.value||'';
   const fb=document.getElementById('crono-f-banco')?.value||'';
+  const ftc=document.getElementById('crono-f-tipo-conta')?.value||'';
   const activeFreqs=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')].map(b=>b.dataset.freq);
   const activeD1=[...document.querySelectorAll('#crono-d1-filter .d1-toggle.active')].map(b=>b.dataset.d1);
   const activeResps=[...document.querySelectorAll('#crono-resp-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
@@ -2241,6 +2248,7 @@ function renderCronogramaAccounts(){
     if(fp&&c.pais!==fp) return false;
     if(fa&&c.agente!==fa) return false;
     if(fb&&c.banco!==fb) return false;
+    if(ftc&&c.tipoConta!==ftc) return false;
     if(activeFreqs.length&&!activeFreqs.includes(c.tipo)) return false;
     if(searchFilters&&!matchesCronoSearch(c,searchFilters)) return false;
     if(activeResps.length){
@@ -2380,11 +2388,12 @@ function _hasCronoFilters(){
   const fp=document.getElementById('crono-f-pais')?.value||'';
   const fa=document.getElementById('crono-f-agente')?.value||'';
   const fb=document.getElementById('crono-f-banco')?.value||'';
+  const ftc=document.getElementById('crono-f-tipo-conta')?.value||'';
   const hasFreq=document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active').length>0;
   const hasD1=document.querySelectorAll('#crono-d1-filter .d1-toggle.active').length>0;
   const hasResp=document.querySelectorAll('#crono-resp-toggles .freq-toggle.active').length>0;
   const hasSearch=(document.getElementById('crono-search')?.value||'').trim()!=='';
-  return !!(fp||fa||fb||hasFreq||hasD1||hasResp||hasSearch||_sortState.crono.col);
+  return !!(fp||fa||fb||ftc||hasFreq||hasD1||hasResp||hasSearch||_sortState.crono.col);
 }
 function _updateClearBtn(){
   const btn=document.getElementById('btn-clear-filters');
@@ -2395,6 +2404,7 @@ function clearCronoFilters(){
   if(sel('crono-f-pais')) sel('crono-f-pais').value='';
   if(sel('crono-f-agente')) sel('crono-f-agente').value='';
   if(sel('crono-f-banco')) sel('crono-f-banco').value='';
+  if(sel('crono-f-tipo-conta')) sel('crono-f-tipo-conta').value='';
   document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active').forEach(b=>b.classList.remove('active'));
   _updateFreqLabel();
   document.querySelectorAll('#crono-d1-filter .d1-toggle.active').forEach(b=>b.classList.remove('active'));
@@ -2600,6 +2610,7 @@ function _getFilteredCronoContext(){
   const fp=document.getElementById('crono-f-pais')?.value||'';
   const fa=document.getElementById('crono-f-agente')?.value||'';
   const fb=document.getElementById('crono-f-banco')?.value||'';
+  const ftc=document.getElementById('crono-f-tipo-conta')?.value||'';
   const activeFreqs=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')].map(b=>b.dataset.freq);
   const activeResps=[...document.querySelectorAll('#crono-resp-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
   const searchQ=(document.getElementById('crono-search')?.value||'').trim();
@@ -2610,6 +2621,7 @@ function _getFilteredCronoContext(){
     if(fp&&c.pais!==fp) return false;
     if(fa&&c.agente!==fa) return false;
     if(fb&&c.banco!==fb) return false;
+    if(ftc&&c.tipoConta!==ftc) return false;
     if(activeFreqs.length&&!activeFreqs.includes(c.tipo)) return false;
     if(searchFilters&&!matchesCronoSearch(c,searchFilters)) return false;
     if(activeResps.length){
