@@ -281,6 +281,22 @@
   .vol-import-modal label{display:block;font-size:12px;font-weight:600;color:var(--e-mid);margin-bottom:4px;}
   .vol-import-modal input[type=file]{width:100%;font-size:12px;padding:6px;}
   #vol-import-result{font-size:12px;color:var(--e-mid);margin-top:8px;min-height:18px;}
+  .vol-sel-wrap{position:relative;width:100%;}
+  .vol-sel-input{width:100%;box-sizing:border-box;padding:6px 28px 6px 10px;border:1px solid var(--e-pale);border-radius:6px;font-size:12px;background:var(--e-bg);color:var(--e-text);cursor:text;}
+  .vol-sel-input:focus{outline:none;border-color:var(--e-mid);}
+  .vol-sel-clear{position:absolute;right:7px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:14px;color:var(--e-muted);line-height:1;background:none;border:none;padding:0;}
+  .vol-sel-clear:hover{color:var(--e-text);}
+  .vol-sel-list{position:absolute;top:calc(100% + 3px);left:0;right:0;background:var(--e-bg);border:1px solid var(--e-pale);border-radius:6px;max-height:210px;overflow-y:auto;z-index:600;box-shadow:0 4px 14px rgba(0,0,0,.12);}
+  .vol-sel-opt{display:flex;align-items:center;gap:7px;padding:6px 10px;font-size:12px;cursor:pointer;border-bottom:1px solid var(--e-ghost);}
+  .vol-sel-opt:last-child{border-bottom:none;}
+  .vol-sel-opt:hover,.vol-sel-opt.active{background:var(--e-ghost);}
+  .vol-sel-opt.selected{background:rgba(151,111,244,.07);}
+  .vol-sel-rank{font-family:monospace;font-size:10px;color:var(--e-muted);min-width:28px;}
+  .vol-sel-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .vol-sel-country{font-size:10px;color:var(--e-muted);}
+  .vol-sel-none{padding:9px 12px;font-size:12px;color:var(--e-muted);font-style:italic;}
+  .vol-sel-opt-clear{padding:5px 10px;font-size:11px;color:var(--e-muted);cursor:pointer;border-bottom:1px solid var(--e-pale);}
+  .vol-sel-opt-clear:hover{background:var(--e-ghost);}
   .conc-warn{font-size:13px;cursor:default;vertical-align:middle;margin-left:4px;line-height:1;}
   .conc-warn-tip{position:fixed;background:#1e1b4b;color:#e9e7ff;border-radius:8px;padding:10px 13px;font-size:11px;line-height:1.7;z-index:9999;max-width:280px;box-shadow:0 4px 20px rgba(0,0,0,.28);pointer-events:none;white-space:pre-wrap;}
   .chip-tipo-bancos{background:#e0f2fe;color:#0369a1;}
@@ -4304,8 +4320,8 @@ function openConciliacaoModal(editIdx=-1){
     </div>
     <div class="form-field" style="border-top:1px solid var(--e-pale);padding-top:12px;margin-top:4px">
       <label class="form-label" style="color:var(--e-muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em">Prioridade por Volume</label>
-      <div class="form-field" style="margin-bottom:8px"><label class="form-label" style="font-size:11px">Cashin (Gateway)</label><select class="form-select" id="conc-cashin-id" style="font-size:12px">${_volCashinOpts(concMap?.cashinId||'')}</select></div>
-      <div class="form-field" style="margin-bottom:0"><label class="form-label" style="font-size:11px">Cashout (Processador)</label><select class="form-select" id="conc-cashout-id" style="font-size:12px">${_volCashoutOpts(concMap?.cashoutId||'')}</select></div>
+      <div class="form-field" style="margin-bottom:8px"><label class="form-label" style="font-size:11px">Cashin (Gateway)</label>${_volSearchSelectHtml('conc-cashin-id','cashin',concMap?.cashinId||'')}</div>
+      <div class="form-field" style="margin-bottom:0"><label class="form-label" style="font-size:11px">Cashout (Processador)</label>${_volSearchSelectHtml('conc-cashout-id','cashout',concMap?.cashoutId||'')}</div>
     </div>`;
   if(conc.pais) setTimeout(()=>{const s=document.getElementById('conc-pais');if(s)s.value=conc.pais;},0);
   if(conc.agente) setTimeout(()=>{const s=document.getElementById('conc-agente');if(s)s.value=conc.agente;},0);
@@ -4656,16 +4672,72 @@ async function processVolumeImport(){
   resultEl.textContent=msgs.join(' ')+' Dados salvos no Firebase.';
   renderCronogramaConciliacoes();
 }
-function _volCashinOpts(selectedId){
-  const entries=Object.entries(store.volumeRankings?.cashin||{}).sort((a,b)=>a[1].rank-b[1].rank);
-  if(!entries.length) return '<option value="">— nenhum dado importado —</option>';
-  return '<option value="">Nenhum</option>'+entries.map(([id,e])=>`<option value="${id}"${id===selectedId?' selected':''}>#${e.rank} · ${e.name} (${e.country||'?'})</option>`).join('');
+function _volSelEntries(type){
+  const src=type==='cashin'?store.volumeRankings?.cashin:store.volumeRankings?.cashout;
+  return Object.entries(src||{}).sort((a,b)=>a[1].rank-b[1].rank);
 }
-function _volCashoutOpts(selectedId){
-  const entries=Object.entries(store.volumeRankings?.cashout||{}).sort((a,b)=>a[1].rank-b[1].rank);
-  if(!entries.length) return '<option value="">— nenhum dado importado —</option>';
-  return '<option value="">Nenhum</option>'+entries.map(([id,e])=>`<option value="${id}"${id===selectedId?' selected':''}>#${e.rank} · ${e.name} (${e.country||'?'})</option>`).join('');
+function _volSelLabel(e,id){
+  return e?`#${e.rank} · ${e.name} (${e.country||'?'})`:'';
 }
+function _volSearchSelectHtml(fieldId,type,selectedId){
+  const entries=_volSelEntries(type);
+  const selEntry=selectedId?( (type==='cashin'?store.volumeRankings?.cashin:store.volumeRankings?.cashout)||{})[selectedId]:null;
+  const inputVal=selEntry?_volSelLabel(selEntry,selectedId):'';
+  const ph=entries.length?'Buscar…':'— importe os dados primeiro —';
+  return `<div class="vol-sel-wrap" id="wrap-${fieldId}">
+    <input type="text" class="vol-sel-input" id="input-${fieldId}" placeholder="${ph}" value="${inputVal.replace(/"/g,'&quot;')}" autocomplete="off"
+      oninput="_volSelFilter('${fieldId}','${type}',this.value)"
+      onfocus="_volSelOpen('${fieldId}','${type}',this.value)"
+      onkeydown="_volSelKey(event,'${fieldId}','${type}')">
+    <button type="button" class="vol-sel-clear" title="Limpar" onclick="_volSelClear('${fieldId}')">×</button>
+    <div class="vol-sel-list" id="list-${fieldId}" style="display:none"></div>
+    <input type="hidden" id="${fieldId}" value="${selectedId||''}">
+  </div>`;
+}
+function _volSelRenderList(fieldId,type,query){
+  const list=document.getElementById('list-'+fieldId);
+  if(!list) return;
+  const entries=_volSelEntries(type);
+  const q=(query||'').toLowerCase().trim();
+  const src=type==='cashin'?store.volumeRankings?.cashin:store.volumeRankings?.cashout;
+  const currentVal=document.getElementById(fieldId)?.value||'';
+  const filtered=q?entries.filter(([id,e])=>
+    e.name.toLowerCase().includes(q)||
+    (e.country||'').toLowerCase().includes(q)||
+    id.toString().includes(q)||
+    String(e.rank).startsWith(q)
+  ):entries;
+  const rows=filtered.slice(0,60).map(([id,e],i)=>`<div class="vol-sel-opt${id===currentVal?' selected':''}" data-val="${id}" data-lbl="${_volSelLabel(e,id).replace(/"/g,'&quot;')}" data-idx="${i}"
+    onmousedown="_volSelPick('${fieldId}','${id}','${_volSelLabel(e,id).replace(/'/g,"&#39;")}')">
+    <span class="vol-sel-rank">#${e.rank}</span><span class="vol-sel-name">${e.name}</span><span class="vol-sel-country">${e.country||''}</span>
+  </div>`).join('');
+  const more=filtered.length>60?`<div class="vol-sel-none">${filtered.length} resultados — refine a busca</div>`:'';
+  const clearOpt=`<div class="vol-sel-opt-clear" onmousedown="_volSelClear('${fieldId}')">Nenhum (limpar)</div>`;
+  list.innerHTML=(entries.length?clearOpt:'')+(rows||'<div class="vol-sel-none">Nenhum resultado</div>')+more;
+  list.style.display='';
+}
+function _volSelOpen(fieldId,type,query){_volSelRenderList(fieldId,type,query);}
+function _volSelFilter(fieldId,type,query){_volSelRenderList(fieldId,type,query);}
+function _volSelPick(fieldId,value,label){
+  const h=document.getElementById(fieldId);if(h)h.value=value;
+  const inp=document.getElementById('input-'+fieldId);if(inp)inp.value=label;
+  const list=document.getElementById('list-'+fieldId);if(list)list.style.display='none';
+}
+function _volSelClear(fieldId){
+  const h=document.getElementById(fieldId);if(h)h.value='';
+  const inp=document.getElementById('input-'+fieldId);if(inp){inp.value='';inp.focus();}
+  const list=document.getElementById('list-'+fieldId);if(list)list.style.display='none';
+  setTimeout(()=>{ const l=document.getElementById('list-'+fieldId);if(l)l.style.display='none'; },50);
+}
+function _volSelKey(ev,fieldId,type){
+  if(ev.key==='Escape'){const l=document.getElementById('list-'+fieldId);if(l)l.style.display='none';}
+}
+document.addEventListener('click',function(ev){
+  document.querySelectorAll('.vol-sel-list').forEach(l=>{
+    const wrap=l.closest('.vol-sel-wrap');
+    if(wrap&&!wrap.contains(ev.target)) l.style.display='none';
+  });
+});
 // ─────────────────────────────────────────────────────────────────
 
 function _priorChip(concId){
