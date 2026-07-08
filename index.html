@@ -160,6 +160,9 @@
   .contas-ms-sigla{font-family:monospace;font-weight:700;font-size:11px;color:var(--e-mid);}
   .contas-ms-sub{color:var(--e-muted);font-size:11px;}
   .vol-ms-rank{font-family:monospace;font-size:10px;color:var(--e-muted);min-width:32px;flex-shrink:0;}
+  .op-type-toggle{padding:4px 12px;border-radius:20px;border:1px solid var(--e-pale);background:var(--e-ghost);color:var(--e-mid);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;}
+  .op-type-toggle.active{background:#ede9fe;color:#5b21b6;border-color:#c4b5fd;}
+  .op-type-toggle:hover:not(.active){background:var(--e-pale);}
   .contas-ms-tags{display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;min-height:30px;border-top:1px solid var(--e-border);background:var(--e-ghost);}
   .contas-tag{display:inline-flex;align-items:center;gap:3px;background:var(--e-surface);border:1px solid var(--e-border);border-radius:4px;padding:1px 6px;font-size:11px;font-family:monospace;}
   .contas-tag button{background:none;border:none;cursor:pointer;color:var(--e-muted);font-size:14px;line-height:1;padding:0 0 0 2px;}
@@ -1535,16 +1538,26 @@
       <div class="form-field">
         <label>Volume Cashin Cronograma (CSV)</label>
         <input type="file" id="vol-cashin-file" accept=".csv">
-        <div style="font-size:11px;color:var(--e-muted);margin-top:3px">Gateways são rankeados por soma de USD Amount</div>
+        <div style="font-size:11px;color:var(--e-muted);margin-top:3px">Gateways rankeados por soma de USD Amount (col 4=ID, col 7=USD)</div>
       </div>
       <div class="form-field">
         <label>Cashout Volume By Payout Processor (CSV)</label>
         <input type="file" id="vol-cashout-file" accept=".csv">
-        <div style="font-size:11px;color:var(--e-muted);margin-top:3px">Rank já vem da ordem das linhas no arquivo</div>
+        <div style="font-size:11px;color:var(--e-muted);margin-top:3px">Rank pela ordem das linhas (col 1=rank, col 2=ID, col 3=país, col 4=nome)</div>
+      </div>
+      <div class="form-field">
+        <label>Refunds (CSV)</label>
+        <input type="file" id="vol-refunds-file" accept=".csv">
+        <div style="font-size:11px;color:var(--e-muted);margin-top:3px">Mesmo formato do Cashout (rank pela ordem das linhas)</div>
+      </div>
+      <div class="form-field">
+        <label>Chargebacks (CSV)</label>
+        <input type="file" id="vol-chargebacks-file" accept=".csv">
+        <div style="font-size:11px;color:var(--e-muted);margin-top:3px">Mesmo formato do Cashout (rank pela ordem das linhas)</div>
       </div>
       <div style="background:var(--e-ghost);border-radius:6px;padding:10px;font-size:11px;color:var(--e-mid);line-height:1.5">
-        <strong>Fórmula:</strong> SE(OU(rank_cashin ≤ N; rank_cashout ≤ N) → TOP N)<br>
-        Após importar, edite cada conciliação e selecione o gateway e processador correspondentes.
+        <strong>Fórmula:</strong> melhor rank entre todos os tipos vinculados → TOP N<br>
+        Após importar, edite cada conciliação, selecione os tipos de operação e os gateways correspondentes.
       </div>
       <div id="vol-import-result"></div>
     </div>
@@ -1834,7 +1847,7 @@ const store = {
   cronogramaConciliacoes:{},
   paisesResp:{},
   conciliacoesPrioridade:{},
-  volumeRankings:{cashin:{},cashout:{}},
+  volumeRankings:{cashin:{},cashout:{},refunds:{},chargebacks:{}},
   concilVolumeMap:{},
   auditLog:[],
   permissions:{},
@@ -3899,7 +3912,7 @@ async function switchEnvironment(envKey){
   _acessosTabEnv=null; _acessosOtherStore=null;
   if(_acessosOtherApp){try{_acessosOtherApp.delete();}catch(e){} _acessosOtherApp=null;}
   // Reset store to defaults for the new environment
-  Object.assign(store,{paises:[],agentes:[],bancos:[],responsaveis:[],contas:[],cronogramaData:{},cierreData:{},conciliacoes:[],cronogramaConciliacoes:{},paisesResp:{},conciliacoesPrioridade:{},volumeRankings:{cashin:{},cashout:{}},concilVolumeMap:{},auditLog:[],permissions:{},credentials:{}});
+  Object.assign(store,{paises:[],agentes:[],bancos:[],responsaveis:[],contas:[],cronogramaData:{},cierreData:{},conciliacoes:[],cronogramaConciliacoes:{},paisesResp:{},conciliacoesPrioridade:{},volumeRankings:{cashin:{},cashout:{},refunds:{},chargebacks:{}},concilVolumeMap:{},auditLog:[],permissions:{},credentials:{}});
   loadStore();
   _updateEnvSwitcher();
   document.getElementById('env-dd').style.display='none';
@@ -4280,6 +4293,9 @@ let _editConcIdx=-1;
 let _selectedContas=[];
 let _selectedCashinIds=[];
 let _selectedCashoutIds=[];
+let _selectedRefundIds=[];
+let _selectedChargebackIds=[];
+let _selectedOpTypes=[];
 
 function renderGerencialConciliacoes(){
   const e=document.getElementById('conciliacoes-empty');
@@ -4309,6 +4325,15 @@ function openConciliacaoModal(editIdx=-1){
   const concMap=(store.concilVolumeMap||{})[concId]||{};
   _selectedCashinIds=concMap.cashinIds?[...concMap.cashinIds]:(concMap.cashinId?[concMap.cashinId]:[]);
   _selectedCashoutIds=concMap.cashoutIds?[...concMap.cashoutIds]:(concMap.cashoutId?[concMap.cashoutId]:[]);
+  _selectedRefundIds=concMap.refundIds?[...concMap.refundIds]:[];
+  _selectedChargebackIds=concMap.chargebackIds?[...concMap.chargebackIds]:[];
+  // backward compat: infer tiposOperacao from existing linked IDs
+  _selectedOpTypes=concMap.tiposOperacao?[...concMap.tiposOperacao]:[
+    ...(_selectedCashinIds.length?['cashin']:[]),
+    ...(_selectedCashoutIds.length?['cashout']:[]),
+    ...(_selectedRefundIds.length?['refunds']:[]),
+    ...(_selectedChargebackIds.length?['chargebacks']:[]),
+  ];
   const paisOpts=store.paises.map(p=>`<option value="${p}">${countryFlag(p)} ${p}</option>`).join('');
   const agenteOpts=[...new Set([...store.agentes.map(a=>a.nome),...store.contas.map(c=>c.agente)].filter(Boolean))].sort().map(a=>`<option value="${a}">${a}</option>`).join('');
   const m=document.getElementById('modal-cadastro');
@@ -4335,20 +4360,43 @@ function openConciliacaoModal(editIdx=-1){
     </div>
     <div class="form-field" style="border-top:1px solid var(--e-pale);padding-top:12px;margin-top:4px">
       <label class="form-label" style="color:var(--e-muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em">Prioridade por Volume</label>
-      <div class="form-field" style="margin-bottom:8px">
-        <label class="form-label" style="font-size:11px">Cashin (Gateway)</label>
+      <div style="font-size:11px;font-weight:600;color:var(--e-mid);margin-bottom:6px">Tipos de operação</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+        <button type="button" class="op-type-toggle" data-type="cashin" onclick="toggleOpType('cashin')">Cashin</button>
+        <button type="button" class="op-type-toggle" data-type="cashout" onclick="toggleOpType('cashout')">Cashout</button>
+        <button type="button" class="op-type-toggle" data-type="refunds" onclick="toggleOpType('refunds')">Refunds</button>
+        <button type="button" class="op-type-toggle" data-type="chargebacks" onclick="toggleOpType('chargebacks')">Chargebacks</button>
+      </div>
+      <div id="vol-cashin-wrap" style="display:none" class="form-field">
+        <label class="form-label" style="font-size:11px">Cashin — Gateways</label>
         <div class="contas-ms-wrap">
           <div class="contas-ms-search"><input type="text" placeholder="Buscar por ID, nome ou país..." id="vol-cashin-ms-input" oninput="renderVolMSList('cashin')"></div>
           <div class="contas-ms-list" id="vol-cashin-ms-list"></div>
           <div class="contas-ms-tags" id="vol-cashin-ms-tags"></div>
         </div>
       </div>
-      <div class="form-field" style="margin-bottom:0">
-        <label class="form-label" style="font-size:11px">Cashout (Processador)</label>
+      <div id="vol-cashout-wrap" style="display:none" class="form-field">
+        <label class="form-label" style="font-size:11px">Cashout — Processadores</label>
         <div class="contas-ms-wrap">
           <div class="contas-ms-search"><input type="text" placeholder="Buscar por ID, nome ou país..." id="vol-cashout-ms-input" oninput="renderVolMSList('cashout')"></div>
           <div class="contas-ms-list" id="vol-cashout-ms-list"></div>
           <div class="contas-ms-tags" id="vol-cashout-ms-tags"></div>
+        </div>
+      </div>
+      <div id="vol-refunds-wrap" style="display:none" class="form-field">
+        <label class="form-label" style="font-size:11px">Refunds — Gateways</label>
+        <div class="contas-ms-wrap">
+          <div class="contas-ms-search"><input type="text" placeholder="Buscar por ID, nome ou país..." id="vol-refunds-ms-input" oninput="renderVolMSList('refunds')"></div>
+          <div class="contas-ms-list" id="vol-refunds-ms-list"></div>
+          <div class="contas-ms-tags" id="vol-refunds-ms-tags"></div>
+        </div>
+      </div>
+      <div id="vol-chargebacks-wrap" style="display:none" class="form-field" style="margin-bottom:0">
+        <label class="form-label" style="font-size:11px">Chargebacks — Gateways</label>
+        <div class="contas-ms-wrap">
+          <div class="contas-ms-search"><input type="text" placeholder="Buscar por ID, nome ou país..." id="vol-chargebacks-ms-input" oninput="renderVolMSList('chargebacks')"></div>
+          <div class="contas-ms-list" id="vol-chargebacks-ms-list"></div>
+          <div class="contas-ms-tags" id="vol-chargebacks-ms-tags"></div>
         </div>
       </div>
     </div>`;
@@ -4360,10 +4408,14 @@ function openConciliacaoModal(editIdx=-1){
     onConcTipoChange();
     renderContasMSList();
     renderContasMSTags();
-    renderVolMSList('cashin');
-    renderVolMSTags('cashin');
-    renderVolMSList('cashout');
-    renderVolMSTags('cashout');
+    _selectedOpTypes.forEach(t=>{
+      const btn=document.querySelector(`.op-type-toggle[data-type="${t}"]`);
+      if(btn) btn.classList.add('active');
+      const wrap=document.getElementById(`vol-${t}-wrap`);
+      if(wrap) wrap.style.display='';
+      renderVolMSList(t);
+      renderVolMSTags(t);
+    });
   },0);
   document.getElementById('cad-submit').onclick=submitConciliacao;
   openModal('modal-cadastro');
@@ -4411,6 +4463,9 @@ function submitConciliacao(){
   const contas=tipo==='processadores'?[]:[..._selectedContas];
   const cashinIds=[..._selectedCashinIds];
   const cashoutIds=[..._selectedCashoutIds];
+  const refundIds=[..._selectedRefundIds];
+  const chargebackIds=[..._selectedChargebackIds];
+  const tiposOperacao=[..._selectedOpTypes];
   const isEdit=_editConcIdx>=0;
   let concId;
   if(isEdit){
@@ -4420,9 +4475,9 @@ function submitConciliacao(){
     concId=nome.toLowerCase().replace(/[^a-z0-9]/g,'_')+'_'+Date.now();
     store.conciliacoes.push({id:concId,nome,pais,agente,tipo,contas});
   }
-  if(cashinIds.length||cashoutIds.length){
+  if(tiposOperacao.length){
     if(!store.concilVolumeMap) store.concilVolumeMap={};
-    store.concilVolumeMap[concId]={cashinIds,cashoutIds};
+    store.concilVolumeMap[concId]={tiposOperacao,cashinIds,cashoutIds,refundIds,chargebackIds};
     _fbSync('concilVolumeMap');
   } else if(store.concilVolumeMap?.[concId]){
     delete store.concilVolumeMap[concId];
@@ -4613,14 +4668,20 @@ function _applyPriorFormula(r1,r2){
 function _computeVolumePrioridade(concId){
   const map=(store.concilVolumeMap||{})[concId];
   if(!map) return null;
-  const cashinSrc=store.volumeRankings?.cashin||{};
-  const cashoutSrc=store.volumeRankings?.cashout||{};
+  const vr=store.volumeRankings||{};
   const cashinIds=map.cashinIds||(map.cashinId?[map.cashinId]:[]);
   const cashoutIds=map.cashoutIds||(map.cashoutId?[map.cashoutId]:[]);
-  const cr=cashinIds.length?Math.min(...cashinIds.map(id=>cashinSrc[id]?.rank||999)):999;
-  const xr=cashoutIds.length?Math.min(...cashoutIds.map(id=>cashoutSrc[id]?.rank||999)):999;
-  if(cr===999&&xr===999) return null;
-  return _applyPriorFormula(cr,xr);
+  const refundIds=map.refundIds||[];
+  const chargebackIds=map.chargebackIds||[];
+  const _minRank=(ids,src)=>ids.length?Math.min(...ids.map(id=>(src[id]?.rank)||999)):999;
+  const best=Math.min(
+    _minRank(cashinIds,vr.cashin||{}),
+    _minRank(cashoutIds,vr.cashout||{}),
+    _minRank(refundIds,vr.refunds||{}),
+    _minRank(chargebackIds,vr.chargebacks||{})
+  );
+  if(best===999) return null;
+  return _applyPriorFormula(best,best);
 }
 function _priorTierClass(tier){
   if(tier==='TOP 10') return 'prior-top10';
@@ -4660,65 +4721,72 @@ function _parseCashinCSV(text){
   sorted.forEach((e,i)=>{cashin[e.id]={rank:i+1,name:e.name,country:e.country};});
   return {cashin,count:sorted.length};
 }
-function _parseCashoutCSV(text){
+function _parseRankedCSV(text){
   const lines=text.trim().split('\n');
-  const cashout={};
+  const data={};
   for(let i=1;i<lines.length;i++){
     const cols=_parseCSVLine(lines[i]);
-    if(cols.length<5) continue;
+    if(cols.length<4) continue;
     const rank=parseInt(cols[0])||0;
     const id=cols[1]?.trim();
     const country=cols[2]?.trim();
     const name=cols[3]?.trim();
     if(!rank||!id||!name) continue;
-    cashout[id]={rank,name,country};
+    data[id]={rank,name,country};
   }
-  return {cashout,count:Object.keys(cashout).length};
+  return {data,count:Object.keys(data).length};
 }
 function openVolumeImportModal(){
-  const cs=Object.keys(store.volumeRankings?.cashin||{}).length;
-  const xs=Object.keys(store.volumeRankings?.cashout||{}).length;
+  const vr=store.volumeRankings||{};
+  const cs=Object.keys(vr.cashin||{}).length;
+  const xs=Object.keys(vr.cashout||{}).length;
+  const rs=Object.keys(vr.refunds||{}).length;
+  const cbs=Object.keys(vr.chargebacks||{}).length;
   const info=document.getElementById('vol-import-info');
-  if(info) info.textContent=cs||xs?`Dados atuais: ${cs} gateways cashin, ${xs} processadores cashout.`:'Nenhum dado importado ainda.';
-  const fi=document.getElementById('vol-cashin-file');if(fi)fi.value='';
-  const fo=document.getElementById('vol-cashout-file');if(fo)fo.value='';
+  const parts=[];
+  if(cs) parts.push(`${cs} cashin`);
+  if(xs) parts.push(`${xs} cashout`);
+  if(rs) parts.push(`${rs} refunds`);
+  if(cbs) parts.push(`${cbs} chargebacks`);
+  if(info) info.textContent=parts.length?`Dados atuais: ${parts.join(', ')}.`:'Nenhum dado importado ainda.';
+  ['vol-cashin-file','vol-cashout-file','vol-refunds-file','vol-chargebacks-file'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const re=document.getElementById('vol-import-result');if(re)re.textContent='';
   openModal('modal-volume-import');
 }
 async function processVolumeImport(){
   const cashinFile=document.getElementById('vol-cashin-file').files[0];
   const cashoutFile=document.getElementById('vol-cashout-file').files[0];
+  const refundsFile=document.getElementById('vol-refunds-file').files[0];
+  const chargebacksFile=document.getElementById('vol-chargebacks-file').files[0];
   const resultEl=document.getElementById('vol-import-result');
-  if(!cashinFile&&!cashoutFile){resultEl.textContent='Selecione ao menos um arquivo CSV.';return;}
+  if(!cashinFile&&!cashoutFile&&!refundsFile&&!chargebacksFile){resultEl.textContent='Selecione ao menos um arquivo CSV.';return;}
   resultEl.textContent='Processando...';
-  const newR={cashin:{...store.volumeRankings?.cashin||{}},cashout:{...store.volumeRankings?.cashout||{}}};
+  const vr=store.volumeRankings||{};
+  const newR={cashin:{...vr.cashin||{}},cashout:{...vr.cashout||{}},refunds:{...vr.refunds||{}},chargebacks:{...vr.chargebacks||{}}};
   const msgs=[];
-  if(cashinFile){
-    const text=await cashinFile.text();
-    const {cashin,count}=_parseCashinCSV(text);
-    newR.cashin=cashin;
-    msgs.push(`Cashin: ${count} gateways rankiados.`);
-  }
-  if(cashoutFile){
-    const text=await cashoutFile.text();
-    const {cashout,count}=_parseCashoutCSV(text);
-    newR.cashout=cashout;
-    msgs.push(`Cashout: ${count} processadores rankiados.`);
-  }
+  if(cashinFile){const text=await cashinFile.text();const {cashin,count}=_parseCashinCSV(text);newR.cashin=cashin;msgs.push(`Cashin: ${count} gateways.`);}
+  if(cashoutFile){const text=await cashoutFile.text();const {data,count}=_parseRankedCSV(text);newR.cashout=data;msgs.push(`Cashout: ${count} processadores.`);}
+  if(refundsFile){const text=await refundsFile.text();const {data,count}=_parseRankedCSV(text);newR.refunds=data;msgs.push(`Refunds: ${count} entradas.`);}
+  if(chargebacksFile){const text=await chargebacksFile.text();const {data,count}=_parseRankedCSV(text);newR.chargebacks=data;msgs.push(`Chargebacks: ${count} entradas.`);}
   store.volumeRankings=newR;
   saveStore(); _fbSync('volumeRankings');
   resultEl.textContent=msgs.join(' ')+' Dados salvos no Firebase.';
   renderCronogramaConciliacoes();
 }
+function _volSelectedArr(type){
+  if(type==='cashin') return _selectedCashinIds;
+  if(type==='cashout') return _selectedCashoutIds;
+  if(type==='refunds') return _selectedRefundIds;
+  return _selectedChargebackIds;
+}
 function _volMSEntries(type){
-  const src=type==='cashin'?store.volumeRankings?.cashin:store.volumeRankings?.cashout;
-  return Object.entries(src||{}).sort((a,b)=>a[1].rank-b[1].rank);
+  return Object.entries(store.volumeRankings?.[type]||{}).sort((a,b)=>a[1].rank-b[1].rank);
 }
 function renderVolMSList(type){
   const q=(document.getElementById(`vol-${type}-ms-input`)?.value||'').toLowerCase().trim();
   const list=document.getElementById(`vol-${type}-ms-list`);
   if(!list) return;
-  const selected=type==='cashin'?_selectedCashinIds:_selectedCashoutIds;
+  const selected=_volSelectedArr(type);
   const entries=_volMSEntries(type);
   if(!entries.length){list.innerHTML='<div style="padding:8px 12px;font-size:12px;color:var(--e-muted)">Importe os dados primeiro em Gerencial › Conciliações → Importar Volume</div>';return;}
   const filtered=q?entries.filter(([id,e])=>
@@ -4740,16 +4808,30 @@ function renderVolMSList(type){
   ||(filtered.length===0?'<div style="padding:8px 12px;font-size:12px;color:var(--e-muted)">Nenhum resultado</div>':'');
 }
 function toggleVolMS(type,id,checked){
-  const arr=type==='cashin'?_selectedCashinIds:_selectedCashoutIds;
+  const arr=_volSelectedArr(type);
   if(checked&&!arr.includes(id)) arr.push(id);
   else if(!checked){const i=arr.indexOf(id);if(i>=0)arr.splice(i,1);}
   renderVolMSTags(type);
 }
+function toggleOpType(type){
+  const idx=_selectedOpTypes.indexOf(type);
+  if(idx>=0) _selectedOpTypes.splice(idx,1);
+  else _selectedOpTypes.push(type);
+  document.querySelectorAll('.op-type-toggle').forEach(b=>b.classList.toggle('active',_selectedOpTypes.includes(b.dataset.type)));
+  ['cashin','cashout','refunds','chargebacks'].forEach(t=>{
+    const wrap=document.getElementById(`vol-${t}-wrap`);
+    if(wrap){
+      const show=_selectedOpTypes.includes(t);
+      wrap.style.display=show?'':'none';
+      if(show){renderVolMSList(t);renderVolMSTags(t);}
+    }
+  });
+}
 function renderVolMSTags(type){
   const tags=document.getElementById(`vol-${type}-ms-tags`);
   if(!tags) return;
-  const selected=type==='cashin'?_selectedCashinIds:_selectedCashoutIds;
-  const src=type==='cashin'?store.volumeRankings?.cashin:store.volumeRankings?.cashout;
+  const selected=_volSelectedArr(type);
+  const src=store.volumeRankings?.[type]||{};
   tags.innerHTML=selected.map(id=>{
     const e=(src||{})[id];
     const lbl=e?`#${e.rank} ${e.name} (${e.country||'?'})`:id;
