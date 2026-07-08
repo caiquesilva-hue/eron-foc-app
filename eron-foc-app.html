@@ -869,7 +869,6 @@
       <option value="TOP 10">TOP 10</option>
       <option value="TOP 20">TOP 20</option>
       <option value="TOP 30">TOP 30</option>
-      <option value="TOP 40">TOP 40</option>
       <option value="TOP 50">TOP 50</option>
       <option value="Acima TOP 50">Acima TOP 50</option>
       <option value="__none__">Sem prioridade</option>
@@ -4661,7 +4660,6 @@ function _applyPriorFormula(r1,r2){
   if(r<=10) return 'TOP 10';
   if(r<=20) return 'TOP 20';
   if(r<=30) return 'TOP 30';
-  if(r<=40) return 'TOP 40';
   if(r<=50) return 'TOP 50';
   return 'Acima TOP 50';
 }
@@ -4686,7 +4684,7 @@ function _computeVolumePrioridade(concId){
 function _priorTierClass(tier){
   if(tier==='TOP 10') return 'prior-top10';
   if(tier==='TOP 20') return 'prior-top20';
-  if(tier==='TOP 30'||tier==='TOP 40') return 'prior-top30';
+  if(tier==='TOP 30') return 'prior-top30';
   if(tier==='TOP 50') return 'prior-top50';
   if(tier==='Acima TOP 50') return 'prior-outros';
   return 'prior-outros';
