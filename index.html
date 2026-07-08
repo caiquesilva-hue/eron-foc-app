@@ -2927,7 +2927,11 @@ function renderAcessosTabs(){
   tabsEl.innerHTML=adminEnvs.map(k=>{
     const env=ENVIRONMENTS[k];
     const isActive=k===_acessosTabEnv;
-    return '<button onclick="switchAcessosTab(''+k+'')" style="padding:5px 16px;border-radius:7px;border:1.5px solid '+(isActive?'var(--e-purple)':'rgba(255,255,255,.12)')+';background:'+(isActive?'rgba(151,111,244,.12)':'transparent')+';color:'+(isActive?'var(--e-purple)':'var(--e-sub)')+';font-size:12px;font-weight:'+(isActive?'700':'500')+';cursor:pointer;font-family:inherit;transition:.15s">'+env.label+'</button>';
+    const borderC=isActive?'var(--e-purple)':'rgba(255,255,255,.12)';
+    const bgC=isActive?'rgba(151,111,244,.12)':'transparent';
+    const colorC=isActive?'var(--e-purple)':'var(--e-sub)';
+    const fwC=isActive?'700':'500';
+    return `<button onclick="switchAcessosTab('${k}')" style="padding:5px 16px;border-radius:7px;border:1.5px solid ${borderC};background:${bgC};color:${colorC};font-size:12px;font-weight:${fwC};cursor:pointer;font-family:inherit;transition:.15s">${env.label}</button>`;
   }).join('');
 }
 async function _submitAcessoInner(){
