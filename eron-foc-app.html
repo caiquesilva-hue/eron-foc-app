@@ -573,7 +573,7 @@
         </div>
         <button class="btn-hist" onclick="openHistorico()" title="Ver log de alterações">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          Histórico
+          <span data-i18n="hist-btn">Histórico</span>
         </button>
         <div class="lang-switcher">
           <button class="lang-btn active" onclick="setLang('pt-BR')" data-lang="pt-BR">🇧🇷 PT</button>
@@ -1381,7 +1381,7 @@
           <thead><tr>
             <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap" data-i18n="hist-col-datetime">Data/Hora</th>
             <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale)" data-i18n="hist-col-user">Usuário</th>
-            <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale)">Ambiente</th>
+            <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale)" data-i18n="hist-col-env">Ambiente</th>
             <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale)" data-i18n="hist-col-module">Módulo</th>
             <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--e-muted);background:var(--e-ghost);border-bottom:1px solid var(--e-pale)" data-i18n="hist-col-action">Ação</th>
           </tr></thead>
@@ -1550,7 +1550,7 @@ const i18n = {
     'd1-pendente':'Pendiente','d1-ag-extrato':'Ag. extracto',
     'tipo-op':'Operacional','tipo-adm':'Administrativa','tipo-bbpix':'BB Pix',
     'freq-diario':'Diario','freq-mensal':'1× al mes','freq-semanal':'1× por sem.',
-    'status-pendente':'Pendiente','status-concluido':'Concluida','status-sem-mov':'Sin mov.','status-sem-acesso':'Sin acceso','status-ag-extrato':'Ag. extracto',
+    'cierre-verificando':'Verificando','status-pendente':'Pendiente','status-concluido':'Concluida','status-sem-mov':'Sin mov.','status-sem-acesso':'Sin acceso','status-ag-extrato':'Ag. extracto',
     'preset-prev-month':'Mês anterior','preset-curr-month':'Mês atual','preset-last-7':'Últimos 7 dias','preset-custom':'Personalizado',
     'crono-resp':'Responsável','crono-d1-lbl':'Acompanhamento','crono-bulk-apply':'Aplicar em massa',
     'crono-clear-filters':'Limpar filtros','crono-download-csv':'Baixar CSV',
@@ -1559,8 +1559,8 @@ const i18n = {
     'd1-pendente':'Pendente','d1-ag-extrato':'Ag. Extrato',
     'tipo-op':'Operacional','tipo-adm':'Administrativa','tipo-bbpix':'BB Pix',
     'freq-diario':'Diário','freq-mensal':'1 vez ao mês','freq-semanal':'1 vez na semana',
-    'status-pendente':'Pendente','status-concluido':'Concluída','status-sem-mov':'Sem Mov.','status-sem-acesso':'Sem Acesso','status-ag-extrato':'Ag. Extrato',
-    'hist-title':'Histórico de Alterações','hist-search-ph':'Buscar usuário, módulo, ação...','hist-empty':'Nenhuma ação registrada ainda.',
+    'cierre-verificando':'Verificando','status-pendente':'Pendente','status-concluido':'Concluída','status-sem-mov':'Sem Mov.','status-sem-acesso':'Sem Acesso','status-ag-extrato':'Ag. Extrato',
+    'hist-btn':'Histórico','hist-title':'Histórico de Alterações','hist-col-env':'Ambiente','hist-search-ph':'Buscar usuário, módulo, ação...','hist-empty':'Nenhuma ação registrada ainda.',
     'hist-close':'Fechar','hist-download-csv':'Baixar CSV',
     'hist-col-datetime':'Data/Hora','hist-col-user':'Usuário','hist-col-module':'Módulo','hist-col-action':'Ação',
     'hist-records-one':'registro','hist-records-many':'registros',
@@ -1622,8 +1622,8 @@ const i18n = {
     'd1-pendente':'Pending','d1-ag-extrato':'Aw. statement',
     'tipo-op':'Operational','tipo-adm':'Administrative','tipo-bbpix':'BB Pix',
     'freq-diario':'Daily','freq-mensal':'1× / month','freq-semanal':'1× / week',
-    'status-pendente':'Pending','status-concluido':'Completed','status-sem-mov':'No mov.','status-sem-acesso':'No access','status-ag-extrato':'Aw. stmt',
-    'hist-title':'Change History','hist-search-ph':'Search user, module, action...','hist-empty':'No actions recorded yet.',
+    'cierre-verificando':'Verifying','status-pendente':'Pending','status-concluido':'Completed','status-sem-mov':'No mov.','status-sem-acesso':'No access','status-ag-extrato':'Aw. stmt',
+    'hist-btn':'History','hist-title':'Change History','hist-col-env':'Environment','hist-search-ph':'Search user, module, action...','hist-empty':'No actions recorded yet.',
     'hist-close':'Close','hist-download-csv':'Download CSV',
     'hist-col-datetime':'Date/Time','hist-col-user':'User','hist-col-module':'Module','hist-col-action':'Action',
     'hist-records-one':'record','hist-records-many':'records',
@@ -1687,7 +1687,7 @@ const i18n = {
     'tipo-op':'Operacional','tipo-adm':'Administrativa','tipo-bbpix':'BB Pix',
     'freq-diario':'Diario','freq-mensal':'1× al mes','freq-semanal':'1× por sem.',
     'status-pendente':'Pendiente','status-concluido':'Concluida','status-sem-mov':'Sin mov.','status-sem-acesso':'Sin acceso','status-ag-extrato':'Ag. extracto',
-    'hist-title':'Historial de cambios','hist-search-ph':'Buscar usuario, módulo, acción...','hist-empty':'Aún no hay acciones registradas.',
+    'hist-btn':'Historial','hist-title':'Historial de cambios','hist-col-env':'Entorno','hist-search-ph':'Buscar usuario, módulo, acción...','hist-empty':'Aún no hay acciones registradas.',
     'hist-close':'Cerrar','hist-download-csv':'Descargar CSV',
     'hist-col-datetime':'Fecha/Hora','hist-col-user':'Usuario','hist-col-module':'Módulo','hist-col-action':'Acción',
     'hist-records-one':'registro','hist-records-many':'registros',
@@ -1716,6 +1716,12 @@ function setLang(lang){
   document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));
   applyTranslations();
   renderAll();
+  // Re-render dynamic historico content if modal is open
+  const hModal=document.getElementById('modal-historico');
+  if(hModal&&hModal.style.display!=='none') filterHistorico();
+  // Re-render cierre stats if on cierre page
+  const cStats=document.getElementById('cierre-stats');
+  if(cStats) { const mes=document.getElementById('cierre-f-mes')?.value||''; cStats.innerHTML=_cierreStatsHtml(mes); }
 }
 function applyTranslations(){
   document.querySelectorAll('[data-i18n]').forEach(el=>{ const v=t(el.dataset.i18n); if(v) el.textContent=v; });
@@ -3395,11 +3401,11 @@ function _cierreChip(status){
   const m={pendente:'<span class="chip chip-cierre-pendente">Pendente</span>',verificando:'<span class="chip chip-cierre-verificando">Verificando</span>',concluido:'<span class="chip chip-cierre-concluido">Concluído</span>'};
   return m[status]||m.pendente;
 }
-function _cierreStatsHtml(mes){
-  const all=store.contas.filter(c=>c.status!=='encerrada'&&!_isCierreExcluded(c));
+function _cierreStatsHtml(mes,filteredContas){
+  const list=filteredContas||store.contas.filter(c=>c.status!=='encerrada'&&!_isCierreExcluded(c));
   const cts={pendente:0,verificando:0,concluido:0};
-  all.forEach(c=>{cts[_cierreStatus(store.cierreData[_cierreKey(c,mes)])]++;});
-  return `<div class="cierre-stat cierre-stat-pendente"><div class="cierre-stat-num">${cts.pendente}</div><div class="cierre-stat-lbl">Pendente</div></div><div class="cierre-stat cierre-stat-verificando"><div class="cierre-stat-num">${cts.verificando}</div><div class="cierre-stat-lbl">Verificando</div></div><div class="cierre-stat cierre-stat-concluido"><div class="cierre-stat-num">${cts.concluido}</div><div class="cierre-stat-lbl">Concluído</div></div>`;
+  list.forEach(c=>{cts[_cierreStatus(store.cierreData[_cierreKey(c,mes)])]++;});
+  return `<div class="cierre-stat cierre-stat-pendente"><div class="cierre-stat-num">${cts.pendente}</div><div class="cierre-stat-lbl">${t('status-pendente')||'Pendente'}</div></div><div class="cierre-stat cierre-stat-verificando"><div class="cierre-stat-num">${cts.verificando}</div><div class="cierre-stat-lbl">${t('cierre-verificando')||'Verificando'}</div></div><div class="cierre-stat cierre-stat-concluido"><div class="cierre-stat-num">${cts.concluido}</div><div class="cierre-stat-lbl">${t('status-concluido')||'Concluído'}</div></div>`;
 }
 function initCierreFilters(){
   const mesEl=document.getElementById('cierre-f-mes');
@@ -3453,7 +3459,7 @@ function renderCierreTable(){
   const pending=_ciSort(contas.filter(c=>!_isConcluido(c)));
   const concluded=_ciSort(contas.filter(c=>_isConcluido(c)));
   contas=[...pending,...concluded];
-  document.getElementById('cierre-stats').innerHTML=_cierreStatsHtml(mes);
+  document.getElementById('cierre-stats').innerHTML=_cierreStatsHtml(mes,contas);
   document.getElementById('cierre-count-header').textContent=`${contas.length} conta(s)`;
   const empty=document.getElementById('cierre-empty');
   const wrap=document.getElementById('cierre-table-wrap');
