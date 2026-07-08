@@ -861,6 +861,18 @@
   <div class="crono-filters">
     <select id="crono-conc-f-pais" onchange="renderCronogramaConciliacoes()"></select>
     <select id="crono-conc-f-agente" onchange="renderCronogramaConciliacoes()"></select>
+    <select id="crono-conc-f-prior" onchange="renderCronogramaConciliacoes()">
+      <option value="">Todas as prioridades</option>
+      <option value="TOP 10">TOP 10</option>
+      <option value="TOP 15">TOP 15</option>
+      <option value="TOP 20">TOP 20</option>
+      <option value="TOP 25">TOP 25</option>
+      <option value="TOP 30">TOP 30</option>
+      <option value="TOP 40">TOP 40</option>
+      <option value="TOP 50">TOP 50</option>
+      <option value="Acima TOP 50">Acima TOP 50</option>
+      <option value="__none__">Sem prioridade</option>
+    </select>
     <div class="freq-dd" id="crono-conc-resp-dd">
       <button class="freq-dd-btn" id="crono-conc-resp-btn" onclick="toggleConcRespDropdown(event)">Responsável</button>
       <div class="freq-dd-panel" id="crono-conc-resp-panel">
@@ -4535,10 +4547,11 @@ function toggleConcD1Dropdown(e){
 function _hasConcFilters(){
   const fp=document.getElementById('crono-conc-f-pais')?.value||'';
   const fa=document.getElementById('crono-conc-f-agente')?.value||'';
+  const fpr=document.getElementById('crono-conc-f-prior')?.value||'';
   const hasResp=document.querySelectorAll('#crono-conc-resp-toggles .freq-toggle.active').length>0;
   const hasD1=document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active').length>0;
   const hasSearch=(document.getElementById('crono-conc-search')?.value||'').trim()!=='';
-  return !!(fp||fa||hasResp||hasD1||hasSearch||_sortState['crono-conc'].col);
+  return !!(fp||fa||fpr||hasResp||hasD1||hasSearch||_sortState['crono-conc'].col);
 }
 
 function _updConcSearchClear(){
@@ -4559,6 +4572,7 @@ function clearCronconcFilters(){
   const ag=document.getElementById('crono-conc-f-agente');
   if(ps) ps.value='';
   if(ag) ag.value='';
+  const pr=document.getElementById('crono-conc-f-prior');if(pr) pr.value='';
   document.querySelectorAll('#crono-conc-resp-toggles .freq-toggle.active').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active').forEach(b=>b.classList.remove('active'));
   _updateConcRespLabel(); _updateConcD1Label();
@@ -4785,6 +4799,7 @@ function renderCronogramaConciliacoes(){
 
   const fp=document.getElementById('crono-conc-f-pais')?.value||'';
   const fa=document.getElementById('crono-conc-f-agente')?.value||'';
+  const fpr=document.getElementById('crono-conc-f-prior')?.value||'';
   const activeResps=[...document.querySelectorAll('#crono-conc-resp-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
   const activeD1=[...document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active')].map(b=>b.dataset.d1);
   const searchQ=(document.getElementById('crono-conc-search')?.value||'').toLowerCase().trim();
@@ -4815,7 +4830,7 @@ function renderCronogramaConciliacoes(){
     return {c,d1Status:d1r.status};
   });
 
-  // stat counters over unfiltered-by-d1 list (matching país/agente/resp/search)
+  // stat counters over unfiltered-by-d1 list (matching país/agente/resp/search/prior)
   const d1C={concluido:0,pronto_conciliacao:0,sem_movimento:0,sem_acesso:0,pendente:0};
   listWithD1.forEach(({c,d1Status})=>{
     if(fp&&c.pais!==fp) return;
@@ -4824,6 +4839,14 @@ function renderCronogramaConciliacoes(){
       const rEmail=store.paisesResp[c.pais]||'';
       const ru=store.responsaveis.find(r=>r.email===rEmail);
       if(!ru||!activeResps.includes(ru.sigla)) return;
+    }
+    if(fpr){
+      const concId=(c.id||c.nome).replace(/['"]/g,'');
+      const vol=_computeVolumePrioridade(concId);
+      const raw=(store.conciliacoesPrioridade[concId]||'').trim();
+      const efectiva=vol||raw||null;
+      if(fpr==='__none__'){if(efectiva) return;}
+      else{if(efectiva!==fpr) return;}
     }
     if(searchQ&&!`${c.nome} ${c.pais} ${c.agente}`.toLowerCase().includes(searchQ)) return;
     if(Object.prototype.hasOwnProperty.call(d1C,d1Status)) d1C[d1Status]++;
@@ -4844,6 +4867,14 @@ function renderCronogramaConciliacoes(){
       const rEmail=store.paisesResp[c.pais]||'';
       const ru=store.responsaveis.find(r=>r.email===rEmail);
       if(!ru||!activeResps.includes(ru.sigla)) return false;
+    }
+    if(fpr){
+      const concId=(c.id||c.nome).replace(/['"]/g,'');
+      const vol=_computeVolumePrioridade(concId);
+      const raw=(store.conciliacoesPrioridade[concId]||'').trim();
+      const efectiva=vol||raw||null;
+      if(fpr==='__none__'){if(efectiva) return false;}
+      else{if(efectiva!==fpr) return false;}
     }
     if(activeD1.length&&!activeD1.includes(d1Status)) return false;
     if(searchQ&&!`${c.nome} ${c.pais} ${c.agente}`.toLowerCase().includes(searchQ)) return false;
