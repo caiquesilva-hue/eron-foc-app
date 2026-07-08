@@ -864,9 +864,7 @@
     <select id="crono-conc-f-prior" onchange="renderCronogramaConciliacoes()">
       <option value="">Todas as prioridades</option>
       <option value="TOP 10">TOP 10</option>
-      <option value="TOP 15">TOP 15</option>
       <option value="TOP 20">TOP 20</option>
-      <option value="TOP 25">TOP 25</option>
       <option value="TOP 30">TOP 30</option>
       <option value="TOP 40">TOP 40</option>
       <option value="TOP 50">TOP 50</option>
@@ -4606,9 +4604,7 @@ function _initConcFilters(){
 function _applyPriorFormula(r1,r2){
   const r=Math.min(r1||999,r2||999);
   if(r<=10) return 'TOP 10';
-  if(r<=15) return 'TOP 15';
   if(r<=20) return 'TOP 20';
-  if(r<=25) return 'TOP 25';
   if(r<=30) return 'TOP 30';
   if(r<=40) return 'TOP 40';
   if(r<=50) return 'TOP 50';
@@ -4627,8 +4623,8 @@ function _computeVolumePrioridade(concId){
   return _applyPriorFormula(cr,xr);
 }
 function _priorTierClass(tier){
-  if(tier==='TOP 10'||tier==='TOP 15') return 'prior-top10';
-  if(tier==='TOP 20'||tier==='TOP 25') return 'prior-top20';
+  if(tier==='TOP 10') return 'prior-top10';
+  if(tier==='TOP 20') return 'prior-top20';
   if(tier==='TOP 30'||tier==='TOP 40') return 'prior-top30';
   if(tier==='TOP 50') return 'prior-top50';
   if(tier==='Acima TOP 50') return 'prior-outros';
