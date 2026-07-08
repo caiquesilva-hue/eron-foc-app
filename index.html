@@ -4310,7 +4310,7 @@ function openConciliacaoModal(editIdx=-1){
   _selectedCashinIds=concMap.cashinIds?[...concMap.cashinIds]:(concMap.cashinId?[concMap.cashinId]:[]);
   _selectedCashoutIds=concMap.cashoutIds?[...concMap.cashoutIds]:(concMap.cashoutId?[concMap.cashoutId]:[]);
   const paisOpts=store.paises.map(p=>`<option value="${p}">${countryFlag(p)} ${p}</option>`).join('');
-  const agenteOpts=[...new Set(store.contas.map(c=>c.agente))].sort().map(a=>`<option value="${a}">${a}</option>`).join('');
+  const agenteOpts=[...new Set([...store.agentes.map(a=>a.nome),...store.contas.map(c=>c.agente)].filter(Boolean))].sort().map(a=>`<option value="${a}">${a}</option>`).join('');
   const m=document.getElementById('modal-cadastro');
   document.getElementById('cad-modal-title').textContent=(isEdit?'Editar: ':'')+conc.nome||'Nova Conciliação';
   const body=document.getElementById('cad-modal-body');
