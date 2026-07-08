@@ -4332,9 +4332,12 @@ function _getConcilStatus(conc,dateStr){
     const e=store.cronogramaData[`${ck}_${dateStr}`];
     return e?e.status:'pendente';
   });
-  if(stArr.includes('concluido')) return {status:'pronto_conciliacao'};
-  if(stArr.includes('sem_movimento')) return {status:'sem_movimento'};
-  if(stArr.includes('sem_acesso')) return {status:'sem_acesso'};
+  // "Pronto p/ Conc." somente quando TODAS as contas estão concluídas ou sem movimento
+  // (se alguma ainda está pendente, a conciliação também está pendente)
+  const allDone=stArr.every(s=>s==='concluido'||s==='sem_movimento');
+  if(allDone&&stArr.includes('concluido')) return {status:'pronto_conciliacao'};
+  if(allDone) return {status:'sem_movimento'};
+  if(stArr.includes('sem_acesso')&&!stArr.includes('pendente')) return {status:'sem_acesso'};
   return {status:'pendente'};
 }
 
