@@ -251,6 +251,15 @@
   .freq-toggle.active.ft-diario{border-color:#0f766e;background:#e0fdf4;color:#0f766e;}
   .freq-toggle.active.ft-mensal{border-color:#92400e;background:#fef9c3;color:#92400e;}
   .freq-toggle.active.ft-semanal{border-color:#9d174d;background:#fce7f3;color:#9d174d;}
+  .freq-dd-panel .freq-toggle.prior-top10{background:#fef3c7;color:#92400e;border-color:#fde68a;}
+  .freq-dd-panel .freq-toggle.prior-top20{background:#dbeafe;color:#1e40af;border-color:#93c5fd;}
+  .freq-dd-panel .freq-toggle.prior-top30{background:#dcfce7;color:#166534;border-color:#86efac;}
+  .freq-dd-panel .freq-toggle.prior-top50{background:#f3f4f6;color:#4b5563;border-color:#d1d5db;}
+  .freq-dd-panel .freq-toggle.prior-top10.active{border-color:#92400e;border-width:2px;}
+  .freq-dd-panel .freq-toggle.prior-top20.active{border-color:#1e40af;border-width:2px;}
+  .freq-dd-panel .freq-toggle.prior-top30.active{border-color:#166534;border-width:2px;}
+  .freq-dd-panel .freq-toggle.prior-top50.active{border-color:#4b5563;border-width:2px;}
+  .freq-dd-panel .freq-toggle.active:not([class*="prior-top"]){border-color:var(--e-purple);background:rgba(151,111,244,.12);color:var(--e-mid);}
   .d1-status-filter{display:flex;gap:6px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
   .d1-status-filter-label{font-size:12px;color:var(--e-muted);font-weight:600;margin-right:2px;}
   .d1-toggle{border:1px solid var(--e-pale);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:500;background:#fff;color:var(--e-muted);cursor:pointer;transition:all .15s;font-family:inherit;}
@@ -260,6 +269,7 @@
   .d1-toggle.active.dt-sem-acesso{border-color:#dc2626;background:#fef2f2;color:#dc2626;}
   .d1-toggle.active.dt-pendente{border-color:#d97706;background:#fef9c3;color:#d97706;}
   .d1-toggle.active.dt-ag-extrato{border-color:#0369a1;background:#e0f2fe;color:#0369a1;}
+  .d1-toggle.active.dt-pronto-conc{border-color:#0f766e;background:#e0fdf4;color:#0f766e;}
   .crono-d1-panel{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
   .d1-stat-card{background:#fff;border:1px solid var(--e-pale);border-radius:10px;padding:8px 14px;display:flex;align-items:center;gap:8px;}
   .d1-stat-num{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;}
@@ -682,12 +692,12 @@
     <div class="page" id="page-gerencial-conciliacoes">
   <div class="page-header">
     <div class="page-header-left"><div class="page-title-text">Conciliações</div><div class="page-title-count" id="conciliacoes-count"></div></div>
-    <div style="display:flex;gap:8px;align-items:flex-start">
-      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:3px">
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+      <div style="display:flex;gap:8px;align-items:stretch">
         <button class="btn-secondary" onclick="openVolumeImportModal()" data-requires-edit title="Importar CSVs de volume para calcular prioridade automaticamente" style="font-size:12px;padding:5px 12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Importar Volume</button>
-        <span id="vol-last-import-lbl" style="font-size:10px;color:var(--e-muted);white-space:nowrap;padding-left:2px"></span>
+        <button class="btn-primary" onclick="openConciliacaoModal()" data-requires-edit><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg> Adicionar conciliação</button>
       </div>
-      <button class="btn-primary" onclick="openConciliacaoModal()" data-requires-edit><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg> Adicionar conciliação</button>
+      <span id="vol-last-import-lbl" style="font-size:10px;color:var(--e-muted);white-space:nowrap"></span>
     </div>
   </div>
   <div class="table-wrap">
@@ -882,15 +892,17 @@
       <button class="freq-dd-btn" id="crono-conc-f-agente-btn" onclick="_fddToggle(event,'crono-conc-f-agente-panel')">Todos os agentes</button>
       <div class="freq-dd-panel" id="crono-conc-f-agente-panel" style="max-height:240px;overflow-y:auto"></div>
     </div>
-    <select id="crono-conc-f-prior" onchange="renderCronogramaConciliacoes()">
-      <option value="">Todas as prioridades</option>
-      <option value="TOP 10">TOP 10</option>
-      <option value="TOP 20">TOP 20</option>
-      <option value="TOP 30">TOP 30</option>
-      <option value="TOP 50">TOP 50</option>
-      <option value="Acima TOP 50">Acima TOP 50</option>
-      <option value="__none__">Sem prioridade</option>
-    </select>
+    <div class="freq-dd" id="crono-conc-f-prior-dd">
+      <button class="freq-dd-btn" id="crono-conc-f-prior-btn" onclick="_fddToggle(event,'crono-conc-f-prior-panel')">Todas as prioridades</button>
+      <div class="freq-dd-panel" id="crono-conc-f-prior-panel">
+        <button class="freq-toggle prior-chip prior-top10" data-val="TOP 10" onclick="this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 10</button>
+        <button class="freq-toggle prior-chip prior-top20" data-val="TOP 20" onclick="this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 20</button>
+        <button class="freq-toggle prior-chip prior-top30" data-val="TOP 30" onclick="this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 30</button>
+        <button class="freq-toggle prior-chip prior-top50" data-val="TOP 50" onclick="this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 50</button>
+        <button class="freq-toggle" data-val="Acima TOP 50" onclick="this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">Acima TOP 50</button>
+        <button class="freq-toggle" data-val="__none__" onclick="this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">Sem prioridade</button>
+      </div>
+    </div>
     <div class="freq-dd" id="crono-conc-resp-dd">
       <button class="freq-dd-btn" id="crono-conc-resp-btn" onclick="toggleConcRespDropdown(event)">Responsável</button>
       <div class="freq-dd-panel" id="crono-conc-resp-panel">
@@ -901,7 +913,7 @@
       <button class="freq-dd-btn" id="crono-conc-d1-btn" onclick="toggleConcD1Dropdown(event)">Acompanhamento</button>
       <div class="freq-dd-panel" id="crono-conc-d1-filter">
         <button class="d1-toggle dt-concluida" data-d1="concluido" onclick="toggleConcD1Filter(this)">Concluída</button>
-        <button class="d1-toggle" data-d1="pronto_conciliacao" onclick="toggleConcD1Filter(this)" style="background:#e0fdf4;color:#0f766e;border:1px solid #99f6e4">Pronto p/ Conc.</button>
+        <button class="d1-toggle dt-pronto-conc" data-d1="pronto_conciliacao" onclick="toggleConcD1Filter(this)">Pronto p/ Conc.</button>
         <button class="d1-toggle dt-sem-mov" data-d1="sem_movimento" onclick="toggleConcD1Filter(this)">Sem Movimento</button>
         <button class="d1-toggle dt-sem-acesso" data-d1="sem_acesso" onclick="toggleConcD1Filter(this)">Sem Acesso</button>
         <button class="d1-toggle dt-pendente" data-d1="pendente" onclick="toggleConcD1Filter(this)">Pendente</button>
@@ -2629,7 +2641,7 @@ document.addEventListener('click',function(e){
   if(!e.target.closest('#crono-resp-dd'))_closeRespDropdown();
   if(!e.target.closest('#crono-conc-resp-dd')){const p=document.getElementById('crono-conc-resp-panel');if(p)p.classList.remove('open');}
   if(!e.target.closest('#crono-conc-d1-dd')){const p=document.getElementById('crono-conc-d1-filter');if(p)p.classList.remove('open');}
-  ['crono-f-pais-dd','crono-f-agente-dd','crono-f-banco-dd','crono-conc-f-pais-dd','crono-conc-f-agente-dd'].forEach(id=>{
+  ['crono-f-pais-dd','crono-f-agente-dd','crono-f-banco-dd','crono-conc-f-pais-dd','crono-conc-f-agente-dd','crono-conc-f-prior-dd'].forEach(id=>{
     if(!e.target.closest('#'+id)){const dd=document.getElementById(id);const p=dd?.querySelector('.freq-dd-panel');if(p)p.classList.remove('open');}
   });
 });
@@ -4656,11 +4668,11 @@ function toggleConcD1Dropdown(e){
 function _hasConcFilters(){
   const hasPais=_fddVals('crono-conc-f-pais-panel').length>0;
   const hasAgente=_fddVals('crono-conc-f-agente-panel').length>0;
-  const fpr=document.getElementById('crono-conc-f-prior')?.value||'';
+  const hasPrior=_fddVals('crono-conc-f-prior-panel').length>0;
   const hasResp=document.querySelectorAll('#crono-conc-resp-toggles .freq-toggle.active').length>0;
   const hasD1=document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active').length>0;
   const hasSearch=(document.getElementById('crono-conc-search')?.value||'').trim()!=='';
-  return !!(hasPais||hasAgente||fpr||hasResp||hasD1||hasSearch||_sortState['crono-conc'].col);
+  return !!(hasPais||hasAgente||hasPrior||hasResp||hasD1||hasSearch||_sortState['crono-conc'].col);
 }
 
 function _updConcSearchClear(){
@@ -4680,7 +4692,8 @@ function clearCronconcFilters(){
   document.querySelectorAll('#crono-conc-f-pais-panel .freq-toggle.active,#crono-conc-f-agente-panel .freq-toggle.active').forEach(b=>b.classList.remove('active'));
   _fddLabel('crono-conc-f-pais-btn',[],t('crono-all-paises'));
   _fddLabel('crono-conc-f-agente-btn',[],t('crono-all-agentes'));
-  const pr=document.getElementById('crono-conc-f-prior');if(pr) pr.value='';
+  document.querySelectorAll('#crono-conc-f-prior-panel .freq-toggle.active').forEach(b=>b.classList.remove('active'));
+  _fddLabel('crono-conc-f-prior-btn',[],'Todas as prioridades');
   document.querySelectorAll('#crono-conc-resp-toggles .freq-toggle.active').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active').forEach(b=>b.classList.remove('active'));
   _updateConcRespLabel(); _updateConcD1Label();
@@ -4698,7 +4711,7 @@ function _initConcFilters(){
   const activeAgentes=_fddVals('crono-conc-f-agente-panel');
   const avP=[...new Set(store.conciliacoes.filter(c=>!activeAgentes.length||activeAgentes.includes(c.agente)).map(c=>c.pais))].filter(Boolean).sort();
   const avA=[...new Set(store.conciliacoes.filter(c=>!activePaises.length||activePaises.includes(c.pais)).map(c=>c.agente))].filter(Boolean).sort();
-  _fddRender('crono-conc-f-pais-panel',avP,activePaises,v=>v,'renderCronogramaConciliacoes()');
+  _fddRender('crono-conc-f-pais-panel',avP,activePaises,v=>`${countryFlag(v)} ${v}`,'renderCronogramaConciliacoes()');
   _fddRender('crono-conc-f-agente-panel',avA,activeAgentes,v=>v,'renderCronogramaConciliacoes()');
   _fddLabel('crono-conc-f-pais-btn',activePaises.filter(p=>avP.includes(p)),t('crono-all-paises'));
   _fddLabel('crono-conc-f-agente-btn',activeAgentes.filter(a=>avA.includes(a)),t('crono-all-agentes'));
@@ -4941,7 +4954,7 @@ function renderCronogramaConciliacoes(){
 
   const activePaises=_fddVals('crono-conc-f-pais-panel');
   const activeAgentes=_fddVals('crono-conc-f-agente-panel');
-  const fpr=document.getElementById('crono-conc-f-prior')?.value||'';
+  const activePriors=_fddVals('crono-conc-f-prior-panel');
   const activeResps=[...document.querySelectorAll('#crono-conc-resp-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
   const activeD1=[...document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active')].map(b=>b.dataset.d1);
   const searchQ=(document.getElementById('crono-conc-search')?.value||'').toLowerCase().trim();
@@ -4982,13 +4995,14 @@ function renderCronogramaConciliacoes(){
       const ru=store.responsaveis.find(r=>r.email===rEmail);
       if(!ru||!activeResps.includes(ru.sigla)) return;
     }
-    if(fpr){
+    if(activePriors.length){
       const concId=(c.id||c.nome).replace(/['"]/g,'');
       const vol=_computeVolumePrioridade(concId);
       const raw=(store.conciliacoesPrioridade[concId]||'').trim();
       const efectiva=vol||raw||null;
-      if(fpr==='__none__'){if(efectiva) return;}
-      else{if(efectiva!==fpr) return;}
+      if(activePriors.includes('__none__')&&activePriors.length===1){if(efectiva) return;}
+      else if(activePriors.includes('__none__')){if(efectiva&&!activePriors.includes(efectiva)) return;}
+      else{if(!efectiva||!activePriors.includes(efectiva)) return;}
     }
     if(searchQ&&!`${c.nome} ${c.pais} ${c.agente}`.toLowerCase().includes(searchQ)) return;
     if(Object.prototype.hasOwnProperty.call(d1C,d1Status)) d1C[d1Status]++;
@@ -5010,13 +5024,14 @@ function renderCronogramaConciliacoes(){
       const ru=store.responsaveis.find(r=>r.email===rEmail);
       if(!ru||!activeResps.includes(ru.sigla)) return false;
     }
-    if(fpr){
+    if(activePriors.length){
       const concId=(c.id||c.nome).replace(/['"]/g,'');
       const vol=_computeVolumePrioridade(concId);
       const raw=(store.conciliacoesPrioridade[concId]||'').trim();
       const efectiva=vol||raw||null;
-      if(fpr==='__none__'){if(efectiva) return false;}
-      else{if(efectiva!==fpr) return false;}
+      if(activePriors.includes('__none__')&&activePriors.length===1){if(efectiva) return false;}
+      else if(activePriors.includes('__none__')){if(efectiva&&!activePriors.includes(efectiva)) return false;}
+      else{if(!efectiva||!activePriors.includes(efectiva)) return false;}
     }
     if(activeD1.length&&!activeD1.includes(d1Status)) return false;
     if(searchQ&&!`${c.nome} ${c.pais} ${c.agente}`.toLowerCase().includes(searchQ)) return false;
