@@ -251,15 +251,11 @@
   .freq-toggle.active.ft-diario{border-color:#0f766e;background:#e0fdf4;color:#0f766e;}
   .freq-toggle.active.ft-mensal{border-color:#92400e;background:#fef9c3;color:#92400e;}
   .freq-toggle.active.ft-semanal{border-color:#9d174d;background:#fce7f3;color:#9d174d;}
-  .freq-dd-panel .freq-toggle.prior-top10{background:#fef3c7;color:#92400e;border-color:#fde68a;}
-  .freq-dd-panel .freq-toggle.prior-top20{background:#dbeafe;color:#1e40af;border-color:#93c5fd;}
-  .freq-dd-panel .freq-toggle.prior-top30{background:#dcfce7;color:#166534;border-color:#86efac;}
-  .freq-dd-panel .freq-toggle.prior-top50{background:#f3f4f6;color:#4b5563;border-color:#d1d5db;}
-  .freq-dd-panel .freq-toggle.prior-top10.active{border-color:#92400e;border-width:2px;}
-  .freq-dd-panel .freq-toggle.prior-top20.active{border-color:#1e40af;border-width:2px;}
-  .freq-dd-panel .freq-toggle.prior-top30.active{border-color:#166534;border-width:2px;}
-  .freq-dd-panel .freq-toggle.prior-top50.active{border-color:#4b5563;border-width:2px;}
-  .freq-dd-panel .freq-toggle.active:not([class*="prior-top"]){border-color:var(--e-purple);background:rgba(151,111,244,.12);color:var(--e-mid);}
+  .freq-dd-panel .freq-toggle.prior-top10.active{background:#fef3c7;color:#92400e;border-color:#92400e;}
+  .freq-dd-panel .freq-toggle.prior-top20.active{background:#dbeafe;color:#1e40af;border-color:#1e40af;}
+  .freq-dd-panel .freq-toggle.prior-top30.active{background:#dcfce7;color:#166534;border-color:#166534;}
+  .freq-dd-panel .freq-toggle.prior-top50.active{background:#f3f4f6;color:#4b5563;border-color:#4b5563;}
+  .freq-dd-panel .freq-toggle.active{border-color:var(--e-purple);background:rgba(151,111,244,.12);color:var(--e-mid);}
   .d1-status-filter{display:flex;gap:6px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
   .d1-status-filter-label{font-size:12px;color:var(--e-muted);font-weight:600;margin-right:2px;}
   .d1-toggle{border:1px solid var(--e-pale);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:500;background:#fff;color:var(--e-muted);cursor:pointer;transition:all .15s;font-family:inherit;}
@@ -895,12 +891,12 @@
     <div class="freq-dd" id="crono-conc-f-prior-dd">
       <button class="freq-dd-btn" id="crono-conc-f-prior-btn" onclick="_fddToggle(event,'crono-conc-f-prior-panel')">Todas as prioridades</button>
       <div class="freq-dd-panel" id="crono-conc-f-prior-panel">
-        <button class="freq-toggle prior-chip prior-top10" data-val="TOP 10" onclick="this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 10</button>
-        <button class="freq-toggle prior-chip prior-top20" data-val="TOP 20" onclick="this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 20</button>
-        <button class="freq-toggle prior-chip prior-top30" data-val="TOP 30" onclick="this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 30</button>
-        <button class="freq-toggle prior-chip prior-top50" data-val="TOP 50" onclick="this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 50</button>
-        <button class="freq-toggle" data-val="Acima TOP 50" onclick="this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">Acima TOP 50</button>
-        <button class="freq-toggle" data-val="__none__" onclick="this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">Sem prioridade</button>
+        <button class="freq-toggle prior-top10" data-val="TOP 10" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 10</button>
+        <button class="freq-toggle prior-top20" data-val="TOP 20" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 20</button>
+        <button class="freq-toggle prior-top30" data-val="TOP 30" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 30</button>
+        <button class="freq-toggle prior-top50" data-val="TOP 50" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 50</button>
+        <button class="freq-toggle" data-val="Acima TOP 50" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">Acima TOP 50</button>
+        <button class="freq-toggle" data-val="__none__" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">Sem prioridade</button>
       </div>
     </div>
     <div class="freq-dd" id="crono-conc-resp-dd">
@@ -912,11 +908,11 @@
     <div class="freq-dd" id="crono-conc-d1-dd">
       <button class="freq-dd-btn" id="crono-conc-d1-btn" onclick="toggleConcD1Dropdown(event)">Acompanhamento</button>
       <div class="freq-dd-panel" id="crono-conc-d1-filter">
-        <button class="d1-toggle dt-concluida" data-d1="concluido" onclick="toggleConcD1Filter(this)">Concluída</button>
-        <button class="d1-toggle dt-pronto-conc" data-d1="pronto_conciliacao" onclick="toggleConcD1Filter(this)">Pronto p/ Conc.</button>
-        <button class="d1-toggle dt-sem-mov" data-d1="sem_movimento" onclick="toggleConcD1Filter(this)">Sem Movimento</button>
-        <button class="d1-toggle dt-sem-acesso" data-d1="sem_acesso" onclick="toggleConcD1Filter(this)">Sem Acesso</button>
-        <button class="d1-toggle dt-pendente" data-d1="pendente" onclick="toggleConcD1Filter(this)">Pendente</button>
+        <button class="d1-toggle dt-concluida" data-d1="concluido" onclick="event.stopPropagation();toggleConcD1Filter(this)">Concluída</button>
+        <button class="d1-toggle dt-pronto-conc" data-d1="pronto_conciliacao" onclick="event.stopPropagation();toggleConcD1Filter(this)">Pronto p/ Conc.</button>
+        <button class="d1-toggle dt-sem-mov" data-d1="sem_movimento" onclick="event.stopPropagation();toggleConcD1Filter(this)">Sem Movimento</button>
+        <button class="d1-toggle dt-sem-acesso" data-d1="sem_acesso" onclick="event.stopPropagation();toggleConcD1Filter(this)">Sem Acesso</button>
+        <button class="d1-toggle dt-pendente" data-d1="pendente" onclick="event.stopPropagation();toggleConcD1Filter(this)">Pendente</button>
       </div>
     </div>
     <select id="crono-conc-date-preset" onchange="onCronconcDatePreset()">
@@ -2379,7 +2375,7 @@ function _fddRender(panelId,available,active,labelFn,onchangeCall){
   p.innerHTML=available.map(v=>{
     const ok=active.includes(v);
     const esc=v.replace(/'/g,"\\'");
-    return `<button class="freq-toggle${ok?' active':''}" data-val="${esc}" onclick="this.classList.toggle('active');${onchangeCall}">${labelFn(v)}</button>`;
+    return `<button class="freq-toggle${ok?' active':''}" data-val="${esc}" onclick="event.stopPropagation();this.classList.toggle('active');${onchangeCall}">${labelFn(v)}</button>`;
   }).join('');
   if(wasOpen) p.classList.add('open');
 }
@@ -4646,7 +4642,10 @@ function toggleConcRespDropdown(e){
   e.stopPropagation();
   _initConcRespToggles();
   const p=document.getElementById('crono-conc-resp-panel');
-  if(p) p.classList.toggle('open');
+  if(!p) return;
+  const open=p.classList.contains('open');
+  document.querySelectorAll('.freq-dd-panel').forEach(x=>x.classList.remove('open'));
+  if(!open) p.classList.add('open');
 }
 
 function _updateConcD1Label(){
@@ -4662,7 +4661,10 @@ function toggleConcD1Filter(btn){btn.classList.toggle('active');_updateConcD1Lab
 function toggleConcD1Dropdown(e){
   e.stopPropagation();
   const p=document.getElementById('crono-conc-d1-filter');
-  if(p) p.classList.toggle('open');
+  if(!p) return;
+  const open=p.classList.contains('open');
+  document.querySelectorAll('.freq-dd-panel').forEach(x=>x.classList.remove('open'));
+  if(!open) p.classList.add('open');
 }
 
 function _hasConcFilters(){
@@ -4718,7 +4720,7 @@ function _initConcFilters(){
   const rt=document.getElementById('crono-conc-resp-toggles');
   if(rt&&!rt.dataset.init){
     rt.dataset.init='1';
-    rt.innerHTML=store.responsaveis.map(r=>`<button class="freq-toggle" data-resp="${r.sigla}" onclick="toggleConcRespFilter(this)" title="${r.nome}">${r.sigla}</button>`).join('');
+    rt.innerHTML=store.responsaveis.map(r=>`<button class="freq-toggle" data-resp="${r.sigla}" onclick="event.stopPropagation();toggleConcRespFilter(this)" title="${r.nome}">${r.sigla}</button>`).join('');
   }
 }
 
