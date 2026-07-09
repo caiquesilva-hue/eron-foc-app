@@ -1648,6 +1648,8 @@ const i18n = {
     'ph-crono-con-desc':'Calendário de conciliações e prazos por processador.',
     'lbl-nome':'Nome','lbl-pais-vinculo':'País vinculado',
     'cad-pais-modal':'Adicionar país','cad-agente-modal':'Adicionar agente','cad-banco-modal':'Adicionar banco',
+    'edit-cad-pais-modal':'Editar país','edit-cad-agente-modal':'Editar agente','edit-cad-banco-modal':'Editar banco',
+    'cad-banco-resp-excl':'Responsável exclusivo por banco?',
     'confirm-encerrar-title':'Encerrar conta','confirm-encerrar-sub':'Esta ação é irreversível. Confirme antes de continuar.',
     'confirm-check-1':'Todos os extratos do período foram conferidos e estão fechados.',
     'confirm-check-2':'Todas as conciliações foram finalizadas e não há divergências pendentes.',
@@ -1719,6 +1721,8 @@ const i18n = {
     'ph-crono-con-desc':'Reconciliation calendar and deadlines by processor.',
     'lbl-nome':'Name','lbl-pais-vinculo':'Linked country',
     'cad-pais-modal':'Add country','cad-agente-modal':'Add agent','cad-banco-modal':'Add bank',
+    'edit-cad-pais-modal':'Edit country','edit-cad-agente-modal':'Edit agent','edit-cad-banco-modal':'Edit bank',
+    'cad-banco-resp-excl':'Exclusive bank manager?',
     'confirm-encerrar-title':'Close account','confirm-encerrar-sub':'This action is irreversible. Please confirm before proceeding.',
     'confirm-check-1':'All statements for the period have been reviewed and closed.',
     'confirm-check-2':'All reconciliations are finalized with no pending discrepancies.',
@@ -1783,6 +1787,8 @@ const i18n = {
     'ph-crono-con-desc':'Calendario de conciliaciones y plazos por procesador.',
     'lbl-nome':'Nombre','lbl-pais-vinculo':'País vinculado',
     'cad-pais-modal':'Agregar país','cad-agente-modal':'Agregar agente','cad-banco-modal':'Agregar banco',
+    'edit-cad-pais-modal':'Editar país','edit-cad-agente-modal':'Editar agente','edit-cad-banco-modal':'Editar banco',
+    'cad-banco-resp-excl':'¿Responsable exclusivo por banco?',
     'confirm-encerrar-title':'Cerrar cuenta','confirm-encerrar-sub':'Esta acción es irreversible. Confirma antes de continuar.',
     'confirm-check-1':'Todos los extractos del período fueron revisados y están cerrados.',
     'confirm-check-2':'Todas las conciliaciones están finalizadas sin divergencias pendientes.',
@@ -2234,8 +2240,9 @@ function openCadastroModal(type, editIdx=-1){
   _editCadIdx=editIdx;
   const isEdit=editIdx>=0;
   const titles={pais:t('cad-pais-modal'),agente:t('cad-agente-modal'),banco:t('cad-banco-modal')};
+  const editTitles={pais:t('edit-cad-pais-modal'),agente:t('edit-cad-agente-modal'),banco:t('edit-cad-banco-modal')};
   const phs={pais:'Ex: Bolivia',agente:'Ex: BO.Cowgromo',banco:'Ex: Banco do Brasil'};
-  document.getElementById('cad-modal-title').textContent=(isEdit?'Editar: ':'')+titles[type];
+  document.getElementById('cad-modal-title').textContent=isEdit?editTitles[type]:titles[type];
   const body=document.getElementById('cad-modal-body');
   const paisOpts=store.paises.map(p=>`<option value="${p}">${countryFlag(p)} ${p}</option>`).join('');
   const respOpts=store.responsaveis.map(r=>`<option value="${r.email}">${r.nome} [${r.sigla||'?'}]</option>`).join('');
@@ -2246,7 +2253,7 @@ function openCadastroModal(type, editIdx=-1){
       const hasResp=!!currentBancoResp;
       body.innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="cad-nome" placeholder="${phs[type]}" value="${currentVal}"></div>
         <div class="form-field" style="display:flex;flex-direction:row;align-items:center;justify-content:space-between;margin-bottom:4px;gap:0">
-          <label class="form-label" style="margin-bottom:0">Responsável exclusivo por banco?</label>
+          <label class="form-label" style="margin-bottom:0">${t('cad-banco-resp-excl')}</label>
           <input type="checkbox" id="cad-banco-has-resp" ${hasResp?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:var(--e-purple);flex-shrink:0" onchange="document.getElementById('cad-banco-resp-wrap').style.display=this.checked?'':'none'">
         </div>
         <div class="form-field" id="cad-banco-resp-wrap" style="display:${hasResp?'':'none'}">
