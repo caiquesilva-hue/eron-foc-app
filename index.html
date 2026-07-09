@@ -2363,11 +2363,13 @@ function _fddVals(panelId){
 function _fddRender(panelId,available,active,labelFn,onchangeCall){
   const p=document.getElementById(panelId);
   if(!p) return;
+  const wasOpen=p.classList.contains('open');
   p.innerHTML=available.map(v=>{
     const ok=active.includes(v);
     const esc=v.replace(/'/g,"\\'");
     return `<button class="freq-toggle${ok?' active':''}" data-val="${esc}" onclick="this.classList.toggle('active');${onchangeCall}">${labelFn(v)}</button>`;
   }).join('');
+  if(wasOpen) p.classList.add('open');
 }
 function _fddLabel(btnId,active,def){
   const b=document.getElementById(btnId);
