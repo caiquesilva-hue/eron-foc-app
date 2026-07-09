@@ -243,8 +243,8 @@
   .freq-dd-btn:hover,.freq-dd-btn:focus{border-color:var(--e-purple);}
   .freq-dd-btn.has-active{border-color:var(--e-purple);color:var(--e-purple);}
   .freq-dd-panel{position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid var(--e-pale);border-radius:10px;padding:6px 6px 8px;display:none;flex-direction:column;gap:4px;z-index:200;box-shadow:0 4px 16px rgba(27,19,60,.1);min-width:160px;}
-  .fdd-search-wrap{padding:2px 2px 4px;position:sticky;top:0;background:#fff;}
-  .fdd-search-input{width:100%;box-sizing:border-box;border:1px solid var(--e-pale);border-radius:6px;padding:4px 8px;font-size:12px;outline:none;font-family:inherit;color:var(--e-text);background:#fff;}
+  .fdd-search-wrap{padding-bottom:6px;border-bottom:1px solid var(--e-pale);margin-bottom:2px;}
+  .fdd-search-input{width:100%;box-sizing:border-box;border:1px solid var(--e-pale);border-radius:6px;padding:5px 8px;font-size:12px;outline:none;font-family:inherit;color:var(--e-text);background:#fff;display:block;}
   .fdd-search-input:focus{border-color:var(--e-purple);}
   .freq-dd-panel.open{display:flex;}
   .freq-toggle{border:1px solid var(--e-pale);border-radius:7px;padding:6px 11px;font-size:12px;font-weight:500;background:#fff;color:var(--e-muted);cursor:pointer;transition:all .15s;white-space:nowrap;font-family:inherit;text-align:left;}
@@ -2404,7 +2404,7 @@ function _fddRender(panelId,available,active,labelFn,onchangeCall){
   const wasOpen=p.classList.contains('open');
   const prevSearch=p.querySelector('.fdd-search-input')?.value||'';
   const q=prevSearch.toLowerCase();
-  const searchHtml=`<div class="fdd-search-wrap"><input class="fdd-search-input" type="text" placeholder="Pesquisar..." value="${prevSearch.replace(/"/g,'&quot;')}" oninput="_fddSearchFilter(this)" onclick="event.stopPropagation()" onkeydown="event.stopPropagation()"></div>`;
+  const searchHtml=`<div class="fdd-search-wrap" onclick="event.stopPropagation()"><input class="fdd-search-input" type="text" placeholder="Pesquisar..." value="${prevSearch.replace(/"/g,'&quot;')}" oninput="event.stopPropagation();_fddSearchFilter(this)" onkeydown="event.stopPropagation()"></div>`;
   const btns=available.map(v=>{
     const ok=active.includes(v);
     const esc=v.replace(/'/g,"\\'");
