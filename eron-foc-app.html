@@ -1588,7 +1588,7 @@
         <div style="font-size:11px;color:var(--e-muted);margin-top:3px">Mesmo formato do Cashout (rank pela ordem das linhas)</div>
       </div>
       <div style="background:var(--e-ghost);border-radius:6px;padding:10px;font-size:11px;color:var(--e-mid);line-height:1.5">
-        <strong>Fórmula:</strong> melhor rank entre todos os tipos vinculados → TOP N<br>
+        <strong>Fórmula:</strong> USD total da conciliação rankeado por posição entre todas as conciliações configuradas → TOP N<br>
         Após importar, edite cada conciliação, selecione os tipos de operação e os gateways correspondentes.
       </div>
       <div id="vol-import-result"></div>
@@ -4812,7 +4812,9 @@ function _applyPriorFormula(r1,r2){
 }
 function _computeVolumePrioridade(concId){
   if(!(store.concilVolumeMap||{})[concId]) return null;
-  const rank=(store.volumeRankings?.combined||{})[concId];
+  const entry=(store.volumeRankings?.combined||{})[concId];
+  if(!entry) return null;
+  const rank=typeof entry==='object'?entry.rank:entry;
   if(!rank) return null;
   return _applyPriorFormula(rank,rank);
 }
@@ -4897,8 +4899,6 @@ function _rebuildCombinedRanking(){
   const vr=store.volumeRankings||{};
   const cvm=store.concilVolumeMap||{};
   const _sum=(ids,src)=>ids.reduce((s,id)=>s+((src[id]?.usd)||0),0);
-  // Escala de referência: USD de todos os gateways cashin, ordenado desc
-  const refScale=Object.values(vr.cashin||{}).map(e=>e.usd||0).filter(u=>u>0).sort((a,b)=>b-a);
   const scores=[];
   for(const [concId,map] of Object.entries(cvm)){
     const cashinIds=map.cashinIds||(map.cashinId?[map.cashinId]:[]);
@@ -4908,17 +4908,9 @@ function _rebuildCombinedRanking(){
     const totalUSD=_sum(cashinIds,vr.cashin||{})+_sum(cashoutIds,vr.cashout||{})+_sum(refundIds,vr.refunds||{})+_sum(chargebackIds,vr.chargebacks||{});
     if(totalUSD>0) scores.push({concId,totalUSD});
   }
+  scores.sort((a,b)=>b.totalUSD-a.totalUSD);
   const combined={};
-  if(refScale.length>0){
-    // Rank absoluto: quantos gateways cashin têm volume maior que o total desta conciliação
-    for(const {concId,totalUSD} of scores){
-      combined[concId]=refScale.filter(u=>u>totalUSD).length+1;
-    }
-  } else {
-    // Sem dados cashin: ranking relativo entre conciliações
-    scores.sort((a,b)=>b.totalUSD-a.totalUSD);
-    scores.forEach(({concId},i)=>{combined[concId]=i+1;});
-  }
+  scores.forEach(({concId,totalUSD},i)=>{combined[concId]={rank:i+1,usd:totalUSD};});
   if(!store.volumeRankings) store.volumeRankings={cashin:{},cashout:{},refunds:{},chargebacks:{},combined:{}};
   store.volumeRankings.combined=combined;
 }
@@ -4956,9 +4948,9 @@ async function processVolumeImport(){
   const resultEl=document.getElementById('vol-import-result');
   if(!cashinFile&&!cashoutFile&&!refundsFile&&!chargebacksFile){resultEl.textContent='Selecione ao menos um arquivo CSV.';return;}
   resultEl.textContent='Processando...';
+  const msgs=[];
   const vr=store.volumeRankings||{};
   const newR={cashin:{...vr.cashin||{}},cashout:{...vr.cashout||{}},refunds:{...vr.refunds||{}},chargebacks:{...vr.chargebacks||{}}};
-  const msgs=[];
   if(cashinFile){const text=await cashinFile.text();const {cashin,count}=_parseCashinCSV(text);newR.cashin=cashin;msgs.push(`Cashin: ${count} gateways.`);}
   if(cashoutFile){const text=await cashoutFile.text();const {data,count}=_parseCashoutCSV(text);newR.cashout=data;msgs.push(`Cashout: ${count} processadores.`);}
   if(refundsFile){const text=await refundsFile.text();const {data,count}=_parseRefundsCbCSV(text);newR.refunds=data;msgs.push(`Refunds: ${count} entradas.`);}
@@ -4968,7 +4960,7 @@ async function processVolumeImport(){
   _rebuildCombinedRanking();
   saveStore(); _fbSync('volumeRankings');
   _renderVolLastImport();
-  resultEl.textContent=msgs.join(' ')+' Dados salvos no Firebase.';
+  resultEl.textContent=msgs.join(' ')+' Dados salvos.';
   renderCronogramaConciliacoes();
 }
 function _volSelectedArr(type){
@@ -5119,11 +5111,9 @@ function renderCronogramaConciliacoes(){
     if(activePriors.length){
       const concId=(c.id||c.nome).replace(/['"]/g,'');
       const vol=_computeVolumePrioridade(concId);
-      const raw=(store.conciliacoesPrioridade[concId]||'').trim();
-      const efectiva=vol||raw||null;
-      if(activePriors.includes('__none__')&&activePriors.length===1){if(efectiva) return;}
-      else if(activePriors.includes('__none__')){if(efectiva&&!activePriors.includes(efectiva)) return;}
-      else{if(!efectiva||!activePriors.includes(efectiva)) return;}
+      if(activePriors.includes('__none__')&&activePriors.length===1){if(vol) return;}
+      else if(activePriors.includes('__none__')){if(vol&&!activePriors.includes(vol)) return;}
+      else{if(!vol||!activePriors.includes(vol)) return;}
     }
     if(searchQ&&!`${c.nome} ${c.pais} ${c.agente}`.toLowerCase().includes(searchQ)) return;
     if(Object.prototype.hasOwnProperty.call(d1C,d1Status)) d1C[d1Status]++;
@@ -5148,11 +5138,9 @@ function renderCronogramaConciliacoes(){
     if(activePriors.length){
       const concId=(c.id||c.nome).replace(/['"]/g,'');
       const vol=_computeVolumePrioridade(concId);
-      const raw=(store.conciliacoesPrioridade[concId]||'').trim();
-      const efectiva=vol||raw||null;
-      if(activePriors.includes('__none__')&&activePriors.length===1){if(efectiva) return false;}
-      else if(activePriors.includes('__none__')){if(efectiva&&!activePriors.includes(efectiva)) return false;}
-      else{if(!efectiva||!activePriors.includes(efectiva)) return false;}
+      if(activePriors.includes('__none__')&&activePriors.length===1){if(vol) return false;}
+      else if(activePriors.includes('__none__')){if(vol&&!activePriors.includes(vol)) return false;}
+      else{if(!vol||!activePriors.includes(vol)) return false;}
     }
     if(activeD1.length&&!activeD1.includes(d1Status)) return false;
     if(searchQ&&!`${c.nome} ${c.pais} ${c.agente}`.toLowerCase().includes(searchQ)) return false;
