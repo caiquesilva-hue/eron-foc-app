@@ -251,10 +251,10 @@
   .freq-toggle.active.ft-diario{border-color:#0f766e;background:#e0fdf4;color:#0f766e;}
   .freq-toggle.active.ft-mensal{border-color:#92400e;background:#fef9c3;color:#92400e;}
   .freq-toggle.active.ft-semanal{border-color:#9d174d;background:#fce7f3;color:#9d174d;}
-  .freq-dd-panel .freq-toggle.prior-top10.active{background:#fef3c7;color:#92400e;border-color:#92400e;}
-  .freq-dd-panel .freq-toggle.prior-top20.active{background:#dbeafe;color:#1e40af;border-color:#1e40af;}
-  .freq-dd-panel .freq-toggle.prior-top30.active{background:#dcfce7;color:#166534;border-color:#166534;}
-  .freq-dd-panel .freq-toggle.prior-top50.active{background:#f3f4f6;color:#4b5563;border-color:#4b5563;}
+  .freq-dd-panel .freq-toggle.active[data-val="TOP 10"]{background:#fef3c7;color:#92400e;border-color:#92400e;}
+  .freq-dd-panel .freq-toggle.active[data-val="TOP 20"]{background:#dbeafe;color:#1e40af;border-color:#1e40af;}
+  .freq-dd-panel .freq-toggle.active[data-val="TOP 30"]{background:#dcfce7;color:#166534;border-color:#166534;}
+  .freq-dd-panel .freq-toggle.active[data-val="TOP 50"]{background:#f3f4f6;color:#4b5563;border-color:#4b5563;}
   .freq-dd-panel .freq-toggle.active{border-color:var(--e-purple);background:rgba(151,111,244,.12);color:var(--e-mid);}
   .d1-status-filter{display:flex;gap:6px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
   .d1-status-filter-label{font-size:12px;color:var(--e-muted);font-weight:600;margin-right:2px;}
@@ -891,10 +891,10 @@
     <div class="freq-dd" id="crono-conc-f-prior-dd">
       <button class="freq-dd-btn" id="crono-conc-f-prior-btn" onclick="_fddToggle(event,'crono-conc-f-prior-panel')">Todas as prioridades</button>
       <div class="freq-dd-panel" id="crono-conc-f-prior-panel">
-        <button class="freq-toggle prior-top10" data-val="TOP 10" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 10</button>
-        <button class="freq-toggle prior-top20" data-val="TOP 20" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 20</button>
-        <button class="freq-toggle prior-top30" data-val="TOP 30" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 30</button>
-        <button class="freq-toggle prior-top50" data-val="TOP 50" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 50</button>
+        <button class="freq-toggle" data-val="TOP 10" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 10</button>
+        <button class="freq-toggle" data-val="TOP 20" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 20</button>
+        <button class="freq-toggle" data-val="TOP 30" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 30</button>
+        <button class="freq-toggle" data-val="TOP 50" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 50</button>
         <button class="freq-toggle" data-val="Acima TOP 50" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">Acima TOP 50</button>
         <button class="freq-toggle" data-val="__none__" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">Sem prioridade</button>
       </div>
