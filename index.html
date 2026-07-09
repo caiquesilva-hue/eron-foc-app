@@ -968,6 +968,7 @@
         <div class="page-header-left"><div class="page-title-text" data-i18n="cad-pais-title">Países</div><div class="page-title-count" id="pais-count"></div></div>
         <button class="btn-primary" onclick="openCadastroModal('pais')" data-requires-edit><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn-add-pais">Adicionar país</span></button>
       </div>
+      <div style="padding:0 0 10px"><input type="search" id="cad-pais-search" placeholder="Pesquisar país..." style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderCadastro('pais')"></div>
       <div class="table-wrap"><div id="pais-empty" class="empty-state"><div class="empty-icon">🌎</div><div class="empty-title" data-i18n="pais-empty-title">Nenhum país cadastrado</div><div class="empty-sub" data-i18n="pais-empty-sub">Adicione países para alimentar os dropdowns do sistema.</div></div><div class="table-scroll" id="pais-table-inner" style="display:none"><table><thead><tr><th data-i18n="col-pais">País</th><th>Responsável Conciliações</th><th style="width:70px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="pais-tbody"></tbody></table></div></div>
     </div>
     <!-- CADASTRO > AGENTE -->
@@ -976,6 +977,7 @@
         <div class="page-header-left"><div class="page-title-text" data-i18n="cad-agente-title">Agentes</div><div class="page-title-count" id="agente-count"></div></div>
         <button class="btn-primary" onclick="openCadastroModal('agente')" data-requires-edit><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn-add-agente">Adicionar agente</span></button>
       </div>
+      <div style="padding:0 0 10px"><input type="search" id="cad-agente-search" placeholder="Pesquisar agente..." style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderCadastro('agente')"></div>
       <div class="table-wrap"><div id="agente-empty" class="empty-state"><div class="empty-icon">👤</div><div class="empty-title" data-i18n="agente-empty-title">Nenhum agente cadastrado</div><div class="empty-sub" data-i18n="agente-empty-sub">Adicione agentes vinculados a um país.</div></div><div class="table-scroll" id="agente-table-inner" style="display:none"><table><thead><tr><th data-i18n="nav-agente">Agente</th><th data-i18n="col-pais">País</th><th>Responsável Accounts</th><th style="width:70px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="agente-tbody"></tbody></table></div></div>
     </div>
     <!-- CADASTRO > BANCO -->
@@ -984,6 +986,7 @@
         <div class="page-header-left"><div class="page-title-text" data-i18n="cad-banco-title">Bancos</div><div class="page-title-count" id="banco-count"></div></div>
         <button class="btn-primary" onclick="openCadastroModal('banco')" data-requires-edit><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn-add-banco">Adicionar banco</span></button>
       </div>
+      <div style="padding:0 0 10px"><input type="search" id="cad-banco-search" placeholder="Pesquisar banco..." style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderCadastro('banco')"></div>
       <div class="table-wrap"><div id="banco-empty" class="empty-state"><div class="empty-icon">🏛️</div><div class="empty-title" data-i18n="banco-empty-title">Nenhum banco cadastrado</div><div class="empty-sub" data-i18n="banco-empty-sub">Adicione bancos ao sistema.</div></div><div class="table-scroll" id="banco-table-inner" style="display:none"><table><thead><tr><th data-i18n="nav-banco">Banco</th><th>Responsável exclusivo</th><th style="width:70px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="banco-tbody"></tbody></table></div></div>
     </div>
 
@@ -2341,31 +2344,38 @@ function deleteCadastro(type,idx){
 const trashIcon=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>`;
 function renderCadastro(type){
   const edit=canEdit();
+  const _q=id=>(document.getElementById(id)?.value||'').toLowerCase().trim();
   if(type==='pais'){
+    const q=_q('cad-pais-search');
     const e=document.getElementById('pais-empty'),i=document.getElementById('pais-table-inner'),b=document.getElementById('pais-tbody');
     if(!store.paises.length){e.style.display='';i.style.display='none';return;} e.style.display='none';i.style.display='';
     b.innerHTML=store.paises.map((p,pi)=>{
+      if(q&&!p.toLowerCase().includes(q)) return '';
       const rEmail=store.paisesResp[p]||'';
       const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;
       const rCell=rUser?`<span style="font-size:12px;color:var(--e-text)">${rUser.nome} <span style="font-family:monospace;background:var(--e-ghost);padding:1px 5px;border-radius:3px;font-weight:700;color:var(--e-mid)">${rUser.sigla||''}</span></span>`:`<span style="color:var(--e-muted);font-size:12px">—</span>`;
       return `<tr><td>${countryFlag(p)} ${p}</td><td>${rCell}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openCadastroModal('pais',${pi})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteCadastro('pais',${pi})">${trashIcon}</button></div>`:''}</td></tr>`;
     }).join('');
   } else if(type==='agente'){
+    const q=_q('cad-agente-search');
     const e=document.getElementById('agente-empty'),i=document.getElementById('agente-table-inner'),b=document.getElementById('agente-tbody');
     if(!store.agentes.length){e.style.display='';i.style.display='none';return;} e.style.display='none';i.style.display='';
     b.innerHTML=store.agentes.map((a,ai)=>{
+      if(q&&!`${a.nome} ${a.pais}`.toLowerCase().includes(q)) return '';
       const resp=store.responsaveis.find(r=>r.email===a.responsavel);
       const respCell=resp?`<span style="font-size:12px;color:var(--e-text)">${resp.nome} <span style="font-family:monospace;background:var(--e-ghost);padding:1px 5px;border-radius:3px;font-weight:700;color:var(--e-mid)">${resp.sigla||''}</span></span>`:`<span style="color:var(--e-muted);font-size:12px">—</span>`;
       return `<tr><td>${a.nome}</td><td><span class="pais-tag">${countryFlag(a.pais)} ${a.pais}</span></td><td>${respCell}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openCadastroModal('agente',${ai})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteCadastro('agente',${ai})">${trashIcon}</button></div>`:''}</td></tr>`;
     }).join('');
   } else {
+    const q=_q('cad-banco-search');
     const e=document.getElementById('banco-empty'),i=document.getElementById('banco-table-inner'),b=document.getElementById('banco-tbody');
     if(!store.bancos.length){e.style.display='';i.style.display='none';return;} e.style.display='none';i.style.display='';
-    b.innerHTML=store.bancos.map((bk,i)=>{
+    b.innerHTML=store.bancos.map((bk,bi)=>{
+      if(q&&!bk.toLowerCase().includes(q)) return '';
       const rEmail=store.bancosResp[bk]||'';
       const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;
       const rCell=rUser?`<span style="font-size:12px;color:var(--e-text)">${rUser.nome} <span style="font-family:monospace;background:var(--e-ghost);padding:1px 5px;border-radius:3px;font-weight:700;color:var(--e-mid)">${rUser.sigla||''}</span></span>`:`<span style="color:var(--e-muted);font-size:12px">—</span>`;
-      return `<tr><td>${bk}</td><td>${rCell}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openCadastroModal('banco',${i})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteCadastro('banco',${i})">${trashIcon}</button></div>`:''}</td></tr>`;
+      return `<tr><td>${bk}</td><td>${rCell}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openCadastroModal('banco',${bi})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteCadastro('banco',${bi})">${trashIcon}</button></div>`:''}</td></tr>`;
     }).join('');
   }
 }
@@ -2392,7 +2402,7 @@ function _fddToggle(e,panelId){
   const p=document.getElementById(panelId);
   if(!p) return;
   const open=p.classList.contains('open');
-  document.querySelectorAll('.freq-dd-panel').forEach(x=>x.classList.remove('open'));
+  _closeAllDropdowns();
   if(!open) p.classList.add('open');
 }
 function _fddVals(panelId){
@@ -2662,10 +2672,17 @@ function clearCronoFilters(){
   _sortState.crono={col:null,dir:1};
   renderCronogramaAccounts();
 }
+function _closeAllDropdowns(){
+  document.querySelectorAll('.freq-dd-panel').forEach(x=>x.classList.remove('open'));
+  ['crono-f-freq-wrap','crono-d1-filter','crono-resp-panel'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('open');});
+}
 function toggleFreqDropdown(e){
   e.stopPropagation();
   const p=document.getElementById('crono-f-freq-wrap');
-  if(p) p.classList.toggle('open');
+  if(!p) return;
+  const open=p.classList.contains('open');
+  _closeAllDropdowns();
+  if(!open) p.classList.add('open');
 }
 function _closeFreqDropdown(){
   const p=document.getElementById('crono-f-freq-wrap');
@@ -2692,7 +2709,10 @@ function toggleFreqFilter(btn){btn.classList.toggle('active');_updateFreqLabel()
 function toggleD1Dropdown(e){
   e.stopPropagation();
   const p=document.getElementById('crono-d1-filter');
-  if(p) p.classList.toggle('open');
+  if(!p) return;
+  const open=p.classList.contains('open');
+  _closeAllDropdowns();
+  if(!open) p.classList.add('open');
 }
 function _closeD1Dropdown(){
   const p=document.getElementById('crono-d1-filter');
@@ -2706,7 +2726,7 @@ function _updateD1Label(){
   else{btn.textContent=active.map(b=>b.textContent).join(', ');btn.classList.add('has-active');}
 }
 function toggleD1Filter(btn){btn.classList.toggle('active');_updateD1Label();renderCronogramaAccounts();}
-function toggleRespDropdown(e){e.stopPropagation();const p=document.getElementById('crono-resp-panel');if(p)p.classList.toggle('open');}
+function toggleRespDropdown(e){e.stopPropagation();const p=document.getElementById('crono-resp-panel');if(!p)return;const open=p.classList.contains('open');_closeAllDropdowns();if(!open)p.classList.add('open');}
 function _closeRespDropdown(){const p=document.getElementById('crono-resp-panel');if(p)p.classList.remove('open');}
 function _updateRespLabel(){
   const active=[...document.querySelectorAll('#crono-resp-toggles .freq-toggle.active')];
@@ -4693,7 +4713,7 @@ function toggleConcRespDropdown(e){
   const p=document.getElementById('crono-conc-resp-panel');
   if(!p) return;
   const open=p.classList.contains('open');
-  document.querySelectorAll('.freq-dd-panel').forEach(x=>x.classList.remove('open'));
+  _closeAllDropdowns();
   if(!open) p.classList.add('open');
 }
 
@@ -4712,7 +4732,7 @@ function toggleConcD1Dropdown(e){
   const p=document.getElementById('crono-conc-d1-filter');
   if(!p) return;
   const open=p.classList.contains('open');
-  document.querySelectorAll('.freq-dd-panel').forEach(x=>x.classList.remove('open'));
+  _closeAllDropdowns();
   if(!open) p.classList.add('open');
 }
 
