@@ -1592,9 +1592,14 @@
         Após importar, edite cada conciliação, selecione os tipos de operação e os gateways correspondentes.
       </div>
       <div id="vol-import-result"></div>
+      <div id="vol-ranking-section" style="display:none;margin-top:12px">
+        <div style="font-size:11px;font-weight:600;color:var(--e-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Ranking Atual (combinado)</div>
+        <div id="vol-ranking-table" style="max-height:260px;overflow-y:auto;border:1px solid var(--e-border);border-radius:6px;font-size:11px"></div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('modal-volume-import')">Fechar</button>
+      <button class="btn-secondary" onclick="_toggleVolRanking()" id="vol-ranking-btn">Ver Ranking</button>
       <button class="btn-primary" onclick="processVolumeImport()">Processar e Salvar</button>
     </div>
   </div>
@@ -4922,6 +4927,60 @@ function _renderVolLastImport(){
   const d=new Date(ts);
   const pad=n=>String(n).padStart(2,'0');
   lbl.textContent=`Última ingestão: ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function _toggleVolRanking(){
+  const sec=document.getElementById('vol-ranking-section');
+  const btn=document.getElementById('vol-ranking-btn');
+  if(!sec) return;
+  const visible=sec.style.display!=='none';
+  if(visible){sec.style.display='none';if(btn)btn.textContent='Ver Ranking';return;}
+  const combined=store.volumeRankings?.combined||{};
+  const cvm=store.concilVolumeMap||{};
+  const vr=store.volumeRankings||{};
+  const _sum=(ids,src)=>ids.reduce((s,id)=>s+((src[id]?.usd)||0),0);
+  const TIERS=['TOP 10','TOP 20','TOP 30','TOP 50','Acima TOP 50'];
+  const TIER_COLORS={'TOP 10':'#22c55e','TOP 20':'#3b82f6','TOP 30':'#f59e0b','TOP 50':'#f97316','Acima TOP 50':'#94a3b8'};
+  const rows=Object.entries(combined).sort((a,b)=>a[1].rank-b[1].rank);
+  const unmapped=Object.entries(cvm).filter(([id])=>!combined[id]);
+  let html=`<table style="width:100%;border-collapse:collapse">
+    <thead><tr style="background:var(--e-ghost);position:sticky;top:0">
+      <th style="padding:5px 8px;text-align:center;font-weight:600;color:var(--e-muted);width:28px">#</th>
+      <th style="padding:5px 8px;text-align:left;font-weight:600;color:var(--e-muted)">Conciliação</th>
+      <th style="padding:5px 8px;text-align:right;font-weight:600;color:var(--e-muted)">USD Total</th>
+      <th style="padding:5px 8px;text-align:center;font-weight:600;color:var(--e-muted)">Tier</th>
+    </tr></thead><tbody>`;
+  rows.forEach(([concId,{rank,usd}])=>{
+    const tier=_applyPriorFormula(rank,rank);
+    const color=TIER_COLORS[tier]||'#94a3b8';
+    const map=cvm[concId]||{};
+    const cashinIds=map.cashinIds||(map.cashinId?[map.cashinId]:[]);
+    const cashoutIds=map.cashoutIds||(map.cashoutId?[map.cashoutId]:[]);
+    const refundIds=map.refundIds||[];
+    const chargebackIds=map.chargebackIds||[];
+    const breakdown=[];
+    const cs=_sum(cashinIds,vr.cashin||{});
+    const xs=_sum(cashoutIds,vr.cashout||{});
+    const rs=_sum(refundIds,vr.refunds||{});
+    const cbs=_sum(chargebackIds,vr.chargebacks||{});
+    if(cs>0) breakdown.push(`CI:$${(cs/1e6).toFixed(2)}M`);
+    if(xs>0) breakdown.push(`CO:$${(xs/1e6).toFixed(2)}M`);
+    if(rs>0) breakdown.push(`RF:$${(rs/1e6).toFixed(2)}M`);
+    if(cbs>0) breakdown.push(`CB:$${(cbs/1e6).toFixed(2)}M`);
+    html+=`<tr style="border-bottom:1px solid var(--e-border)">
+      <td style="padding:5px 8px;text-align:center;color:var(--e-muted)">${rank}</td>
+      <td style="padding:5px 8px"><div style="font-weight:500">${concId}</div><div style="color:var(--e-muted);font-size:10px">${breakdown.join(' · ')||'—'}</div></td>
+      <td style="padding:5px 8px;text-align:right;font-variant-numeric:tabular-nums">$${(usd/1e6).toFixed(3)}M</td>
+      <td style="padding:5px 8px;text-align:center"><span style="background:${color}22;color:${color};border-radius:4px;padding:2px 6px;font-weight:600;font-size:10px">${tier}</span></td>
+    </tr>`;
+  });
+  if(unmapped.length){
+    html+=`<tr><td colspan="4" style="padding:6px 8px;color:var(--e-muted);font-style:italic">Sem volume ($0): ${unmapped.map(([id])=>id).join(', ')}</td></tr>`;
+  }
+  html+='</tbody></table>';
+  const tbl=document.getElementById('vol-ranking-table');
+  if(tbl) tbl.innerHTML=html;
+  sec.style.display='block';
+  if(btn) btn.textContent='Ocultar Ranking';
 }
 function openVolumeImportModal(){
   const vr=store.volumeRankings||{};
