@@ -4897,16 +4897,28 @@ function _rebuildCombinedRanking(){
   const vr=store.volumeRankings||{};
   const cvm=store.concilVolumeMap||{};
   const _sum=(ids,src)=>ids.reduce((s,id)=>s+((src[id]?.usd)||0),0);
-  const scores=Object.entries(cvm).map(([concId,map])=>{
+  // Escala de referência: USD de todos os gateways cashin, ordenado desc
+  const refScale=Object.values(vr.cashin||{}).map(e=>e.usd||0).filter(u=>u>0).sort((a,b)=>b-a);
+  const scores=[];
+  for(const [concId,map] of Object.entries(cvm)){
     const cashinIds=map.cashinIds||(map.cashinId?[map.cashinId]:[]);
     const cashoutIds=map.cashoutIds||(map.cashoutId?[map.cashoutId]:[]);
     const refundIds=map.refundIds||[];
     const chargebackIds=map.chargebackIds||[];
     const totalUSD=_sum(cashinIds,vr.cashin||{})+_sum(cashoutIds,vr.cashout||{})+_sum(refundIds,vr.refunds||{})+_sum(chargebackIds,vr.chargebacks||{});
-    return {concId,totalUSD};
-  }).filter(x=>x.totalUSD>0).sort((a,b)=>b.totalUSD-a.totalUSD);
+    if(totalUSD>0) scores.push({concId,totalUSD});
+  }
   const combined={};
-  scores.forEach(({concId},i)=>{combined[concId]=i+1;});
+  if(refScale.length>0){
+    // Rank absoluto: quantos gateways cashin têm volume maior que o total desta conciliação
+    for(const {concId,totalUSD} of scores){
+      combined[concId]=refScale.filter(u=>u>totalUSD).length+1;
+    }
+  } else {
+    // Sem dados cashin: ranking relativo entre conciliações
+    scores.sort((a,b)=>b.totalUSD-a.totalUSD);
+    scores.forEach(({concId},i)=>{combined[concId]=i+1;});
+  }
   if(!store.volumeRankings) store.volumeRankings={cashin:{},cashout:{},refunds:{},chargebacks:{},combined:{}};
   store.volumeRankings.combined=combined;
 }
