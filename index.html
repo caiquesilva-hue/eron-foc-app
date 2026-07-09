@@ -2061,6 +2061,19 @@ function resetAccountForm(){
   const toggle=document.getElementById('acc-encerrar');
   if(toggle) toggle.checked=false;
 }
+function onConcPaisChange(){
+  const pais=document.getElementById('conc-pais')?.value||'';
+  const aSel=document.getElementById('conc-agente');
+  if(!aSel) return;
+  const agentes=pais?store.agentes.filter(a=>a.pais===pais):store.agentes;
+  const prev=aSel.value;
+  aSel.innerHTML='<option value="">Selecione</option>';
+  agentes.sort((a,b)=>a.nome.localeCompare(b.nome)).forEach(a=>{
+    const o=document.createElement('option');
+    o.value=a.nome; o.textContent=a.nome; aSel.appendChild(o);
+  });
+  if(prev&&agentes.some(a=>a.nome===prev)) aSel.value=prev;
+}
 function onAccountPaisChange(){
   const pais=document.getElementById('acc-pais').value;
   refreshAgenteBanco(pais);
@@ -4486,7 +4499,7 @@ function openConciliacaoModal(editIdx=-1){
   const tipoAtual=conc.tipo||'bancos';
   body.innerHTML=`
     <div class="form-field"><label class="form-label">Nome<span class="req">*</span></label><input class="form-input" id="conc-nome" placeholder="Ex: Payout Mono Colprocesa" value="${conc.nome||''}"></div>
-    <div class="form-field"><label class="form-label">País</label><select class="form-select" id="conc-pais"><option value="">Selecione</option>${paisOpts}</select></div>
+    <div class="form-field"><label class="form-label">País</label><select class="form-select" id="conc-pais" onchange="onConcPaisChange()"><option value="">Selecione</option>${paisOpts}</select></div>
     <div class="form-field"><label class="form-label">Agente</label><select class="form-select" id="conc-agente"><option value="">Selecione</option>${agenteOpts}</select></div>
     <div class="form-field"><label class="form-label">Tipo<span class="req">*</span></label>
       <select class="form-select" id="conc-tipo" onchange="onConcTipoChange()">
@@ -4544,8 +4557,8 @@ function openConciliacaoModal(editIdx=-1){
         </div>
       </div>
     </div>`;
-  if(conc.pais) setTimeout(()=>{const s=document.getElementById('conc-pais');if(s)s.value=conc.pais;},0);
-  if(conc.agente) setTimeout(()=>{const s=document.getElementById('conc-agente');if(s)s.value=conc.agente;},0);
+  if(conc.pais) setTimeout(()=>{const s=document.getElementById('conc-pais');if(s){s.value=conc.pais;onConcPaisChange();}},0);
+  if(conc.agente) setTimeout(()=>{const s=document.getElementById('conc-agente');if(s)s.value=conc.agente;},10);
   setTimeout(()=>{
     const t=document.getElementById('conc-tipo');
     if(t) t.value=tipoAtual;
