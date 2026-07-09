@@ -701,9 +701,18 @@
         </div>
       </div>
       <div class="crono-filters">
-        <select id="crono-f-pais" onchange="renderCronogramaAccounts()"></select>
-        <select id="crono-f-agente" onchange="renderCronogramaAccounts()"></select>
-        <select id="crono-f-banco" onchange="renderCronogramaAccounts()"></select>
+        <div class="freq-dd" id="crono-f-pais-dd">
+          <button class="freq-dd-btn" id="crono-f-pais-btn" onclick="_fddToggle(event,'crono-f-pais-panel')">Todos os países</button>
+          <div class="freq-dd-panel" id="crono-f-pais-panel" style="max-height:240px;overflow-y:auto"></div>
+        </div>
+        <div class="freq-dd" id="crono-f-agente-dd">
+          <button class="freq-dd-btn" id="crono-f-agente-btn" onclick="_fddToggle(event,'crono-f-agente-panel')">Todos os agentes</button>
+          <div class="freq-dd-panel" id="crono-f-agente-panel" style="max-height:240px;overflow-y:auto"></div>
+        </div>
+        <div class="freq-dd" id="crono-f-banco-dd">
+          <button class="freq-dd-btn" id="crono-f-banco-btn" onclick="_fddToggle(event,'crono-f-banco-panel')">Todos os bancos</button>
+          <div class="freq-dd-panel" id="crono-f-banco-panel" style="max-height:240px;overflow-y:auto"></div>
+        </div>
         <select id="crono-f-tipo-conta" onchange="renderCronogramaAccounts()">
           <option value="">Todos os tipos</option>
           <option value="Operacional">Operacional</option>
@@ -862,8 +871,14 @@
     </div>
   </div>
   <div class="crono-filters">
-    <select id="crono-conc-f-pais" onchange="renderCronogramaConciliacoes()"></select>
-    <select id="crono-conc-f-agente" onchange="renderCronogramaConciliacoes()"></select>
+    <div class="freq-dd" id="crono-conc-f-pais-dd">
+      <button class="freq-dd-btn" id="crono-conc-f-pais-btn" onclick="_fddToggle(event,'crono-conc-f-pais-panel')">Todos os países</button>
+      <div class="freq-dd-panel" id="crono-conc-f-pais-panel" style="max-height:240px;overflow-y:auto"></div>
+    </div>
+    <div class="freq-dd" id="crono-conc-f-agente-dd">
+      <button class="freq-dd-btn" id="crono-conc-f-agente-btn" onclick="_fddToggle(event,'crono-conc-f-agente-panel')">Todos os agentes</button>
+      <div class="freq-dd-panel" id="crono-conc-f-agente-panel" style="max-height:240px;overflow-y:auto"></div>
+    </div>
     <select id="crono-conc-f-prior" onchange="renderCronogramaConciliacoes()">
       <option value="">Todas as prioridades</option>
       <option value="TOP 10">TOP 10</option>
@@ -1880,11 +1895,10 @@ function navigate(pageId){
   if(pageId==='cronograma-accounts'){ initCronoDates(); initCronoFilters(); renderCronogramaAccounts(); }
   if(pageId==='cronograma-cierre'){ initCierreFilters(); renderCierreTable(); }
   if(pageId==='cronograma-conciliacoes'){
-    // reset filter selects so _initConcFilters repopulates them fresh
-    const fpEl=document.getElementById('crono-conc-f-pais');
-    const faEl=document.getElementById('crono-conc-f-agente');
-    if(fpEl) fpEl.innerHTML='<option value="">Todos os países</option>';
-    if(faEl) faEl.innerHTML='<option value="">Todos os agentes</option>';
+    // reset filter panels so _initConcFilters repopulates them fresh
+    document.querySelectorAll('#crono-conc-f-pais-panel .freq-toggle.active,#crono-conc-f-agente-panel .freq-toggle.active').forEach(b=>b.classList.remove('active'));
+    _fddLabel('crono-conc-f-pais-btn',[],t('crono-all-paises'));
+    _fddLabel('crono-conc-f-agente-btn',[],t('crono-all-agentes'));
     const rt=document.getElementById('crono-conc-resp-toggles');
     if(rt){rt.innerHTML='';delete rt.dataset.init;}
     initCronconcDates();
@@ -2332,16 +2346,50 @@ function buildCronoDates(){
   while(cur<=end){ days.push(new Date(cur)); cur.setDate(cur.getDate()+1); }
   return days;
 }
+function _fddToggle(e,panelId){
+  e.stopPropagation();
+  const p=document.getElementById(panelId);
+  if(!p) return;
+  const open=p.classList.contains('open');
+  document.querySelectorAll('.freq-dd-panel').forEach(x=>x.classList.remove('open'));
+  if(!open) p.classList.add('open');
+}
+function _fddVals(panelId){
+  return [...document.querySelectorAll('#'+panelId+' .freq-toggle.active')].map(b=>b.dataset.val);
+}
+function _fddRender(panelId,available,active,labelFn,onchangeCall){
+  const p=document.getElementById(panelId);
+  if(!p) return;
+  p.innerHTML=available.map(v=>{
+    const ok=active.includes(v);
+    const esc=v.replace(/'/g,"\\'");
+    return `<button class="freq-toggle${ok?' active':''}" data-val="${esc}" onclick="this.classList.toggle('active');${onchangeCall}">${labelFn(v)}</button>`;
+  }).join('');
+}
+function _fddLabel(btnId,active,def){
+  const b=document.getElementById(btnId);
+  if(!b) return;
+  if(!active.length){b.textContent=def;b.classList.remove('has-active');}
+  else if(active.length===1){b.textContent=active[0];b.classList.add('has-active');}
+  else{b.textContent=active.length+' selecionados';b.classList.add('has-active');}
+}
 function initCronoFilters(){
-  const fp=document.getElementById('crono-f-pais');
-  const fa=document.getElementById('crono-f-agente');
-  const fb=document.getElementById('crono-f-banco');
-  if(!fp) return;
-  const pv=fp.value, av=fa.value, bv=fb.value;
-  fp.innerHTML=`<option value="">${t('crono-all-paises')}</option>`+[...new Set(store.contas.map(c=>c.pais))].map(p=>`<option value="${p}">${countryFlag(p)} ${p}</option>`).join('');
-  fa.innerHTML=`<option value="">${t('crono-all-agentes')}</option>`+[...new Set(store.contas.map(c=>c.agente))].map(a=>`<option value="${a}">${a}</option>`).join('');
-  fb.innerHTML=`<option value="">${t('crono-all-bancos')}</option>`+[...new Set(store.contas.map(c=>c.banco))].map(b=>`<option value="${b}">${b}</option>`).join('');
-  fp.value=pv; fa.value=av; fb.value=bv;
+  const activePaises=_fddVals('crono-f-pais-panel');
+  const activeAgentes=_fddVals('crono-f-agente-panel');
+  const activeBancos=_fddVals('crono-f-banco-panel');
+  const activeFreqs=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')].map(b=>b.dataset.freq);
+  const _m=(c,xP,xA,xB,xF)=>
+    (!xP.length||xP.includes(c.pais))&&(!xA.length||xA.includes(c.agente))&&
+    (!xB.length||xB.includes(c.banco))&&(!xF.length||xF.includes(c.tipo));
+  const avP=[...new Set(store.contas.filter(c=>c.status!=='encerrada'&&_m(c,[],activeAgentes,activeBancos,activeFreqs)).map(c=>c.pais))].filter(Boolean).sort();
+  const avA=[...new Set(store.contas.filter(c=>c.status!=='encerrada'&&_m(c,activePaises,[],activeBancos,activeFreqs)).map(c=>c.agente))].filter(Boolean).sort();
+  const avB=[...new Set(store.contas.filter(c=>c.status!=='encerrada'&&_m(c,activePaises,activeAgentes,[],activeFreqs)).map(c=>c.banco))].filter(Boolean).sort();
+  _fddRender('crono-f-pais-panel',avP,activePaises,v=>`${countryFlag(v)} ${v}`,'renderCronogramaAccounts()');
+  _fddRender('crono-f-agente-panel',avA,activeAgentes,v=>v,'renderCronogramaAccounts()');
+  _fddRender('crono-f-banco-panel',avB,activeBancos,v=>v,'renderCronogramaAccounts()');
+  _fddLabel('crono-f-pais-btn',activePaises.filter(p=>avP.includes(p)),t('crono-all-paises'));
+  _fddLabel('crono-f-agente-btn',activeAgentes.filter(a=>avA.includes(a)),t('crono-all-agentes'));
+  _fddLabel('crono-f-banco-btn',activeBancos.filter(b=>avB.includes(b)),t('crono-all-bancos'));
   const rt=document.getElementById('crono-resp-toggles');
   if(rt){
     const activeResps=[...document.querySelectorAll('#crono-resp-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
@@ -2358,9 +2406,9 @@ function renderCronogramaAccounts(){
   if(bulkBtn) bulkBtn.style.display=canEdit()?'flex':'none';
   initCronoFilters();
   _updateClearBtn();
-  const fp=document.getElementById('crono-f-pais')?.value||'';
-  const fa=document.getElementById('crono-f-agente')?.value||'';
-  const fb=document.getElementById('crono-f-banco')?.value||'';
+  const activePaises=_fddVals('crono-f-pais-panel');
+  const activeAgentes=_fddVals('crono-f-agente-panel');
+  const activeBancos=_fddVals('crono-f-banco-panel');
   const ftc=document.getElementById('crono-f-tipo-conta')?.value||'';
   const activeFreqs=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')].map(b=>b.dataset.freq);
   const activeD1=[...document.querySelectorAll('#crono-d1-filter .d1-toggle.active')].map(b=>b.dataset.d1);
@@ -2390,9 +2438,9 @@ function renderCronogramaAccounts(){
   };
   const listBase=store.contas.filter(c=>{
     if(c.status==='encerrada') return false;
-    if(fp&&c.pais!==fp) return false;
-    if(fa&&c.agente!==fa) return false;
-    if(fb&&c.banco!==fb) return false;
+    if(activePaises.length&&!activePaises.includes(c.pais)) return false;
+    if(activeAgentes.length&&!activeAgentes.includes(c.agente)) return false;
+    if(activeBancos.length&&!activeBancos.includes(c.banco)) return false;
     if(ftc&&c.tipoConta!==ftc) return false;
     if(activeFreqs.length&&!activeFreqs.includes(c.tipo)) return false;
     if(searchFilters&&!matchesCronoSearch(c,searchFilters)) return false;
@@ -2530,9 +2578,9 @@ function toggleSort(tbl,col){
   else if(tbl==='crono-conc') renderCronogramaConciliacoes();
 }
 function _hasCronoFilters(){
-  const fp=document.getElementById('crono-f-pais')?.value||'';
-  const fa=document.getElementById('crono-f-agente')?.value||'';
-  const fb=document.getElementById('crono-f-banco')?.value||'';
+  const fp=_fddVals('crono-f-pais-panel').length>0;
+  const fa=_fddVals('crono-f-agente-panel').length>0;
+  const fb=_fddVals('crono-f-banco-panel').length>0;
   const ftc=document.getElementById('crono-f-tipo-conta')?.value||'';
   const hasFreq=document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active').length>0;
   const hasD1=document.querySelectorAll('#crono-d1-filter .d1-toggle.active').length>0;
@@ -2546,9 +2594,10 @@ function _updateClearBtn(){
 }
 function clearCronoFilters(){
   const sel=id=>document.getElementById(id);
-  if(sel('crono-f-pais')) sel('crono-f-pais').value='';
-  if(sel('crono-f-agente')) sel('crono-f-agente').value='';
-  if(sel('crono-f-banco')) sel('crono-f-banco').value='';
+  document.querySelectorAll('#crono-f-pais-panel .freq-toggle.active,#crono-f-agente-panel .freq-toggle.active,#crono-f-banco-panel .freq-toggle.active').forEach(b=>b.classList.remove('active'));
+  _fddLabel('crono-f-pais-btn',[],t('crono-all-paises'));
+  _fddLabel('crono-f-agente-btn',[],t('crono-all-agentes'));
+  _fddLabel('crono-f-banco-btn',[],t('crono-all-bancos'));
   if(sel('crono-f-tipo-conta')) sel('crono-f-tipo-conta').value='';
   document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active').forEach(b=>b.classList.remove('active'));
   _updateFreqLabel();
@@ -2575,6 +2624,9 @@ document.addEventListener('click',function(e){
   if(!e.target.closest('#crono-resp-dd'))_closeRespDropdown();
   if(!e.target.closest('#crono-conc-resp-dd')){const p=document.getElementById('crono-conc-resp-panel');if(p)p.classList.remove('open');}
   if(!e.target.closest('#crono-conc-d1-dd')){const p=document.getElementById('crono-conc-d1-filter');if(p)p.classList.remove('open');}
+  ['crono-f-pais-dd','crono-f-agente-dd','crono-f-banco-dd','crono-conc-f-pais-dd','crono-conc-f-agente-dd'].forEach(id=>{
+    if(!e.target.closest('#'+id)){const dd=document.getElementById(id);const p=dd?.querySelector('.freq-dd-panel');if(p)p.classList.remove('open');}
+  });
 });
 function _updateFreqLabel(){
   const active=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')];
@@ -2752,9 +2804,9 @@ function importContasFromSheet(){
 // ─── APLICAR EM MASSA ────────────────────────────────────────────
 const LOCKED_STATUSES=['concluido','sem_movimento'];
 function _getFilteredCronoContext(){
-  const fp=document.getElementById('crono-f-pais')?.value||'';
-  const fa=document.getElementById('crono-f-agente')?.value||'';
-  const fb=document.getElementById('crono-f-banco')?.value||'';
+  const activePaises=_fddVals('crono-f-pais-panel');
+  const activeAgentes=_fddVals('crono-f-agente-panel');
+  const activeBancos=_fddVals('crono-f-banco-panel');
   const ftc=document.getElementById('crono-f-tipo-conta')?.value||'';
   const activeFreqs=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')].map(b=>b.dataset.freq);
   const activeResps=[...document.querySelectorAll('#crono-resp-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
@@ -2763,9 +2815,9 @@ function _getFilteredCronoContext(){
   const days=buildCronoDates();
   const fmtDateCtx=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const list=store.contas.filter(c=>{
-    if(fp&&c.pais!==fp) return false;
-    if(fa&&c.agente!==fa) return false;
-    if(fb&&c.banco!==fb) return false;
+    if(activePaises.length&&!activePaises.includes(c.pais)) return false;
+    if(activeAgentes.length&&!activeAgentes.includes(c.agente)) return false;
+    if(activeBancos.length&&!activeBancos.includes(c.banco)) return false;
     if(ftc&&c.tipoConta!==ftc) return false;
     if(activeFreqs.length&&!activeFreqs.includes(c.tipo)) return false;
     if(searchFilters&&!matchesCronoSearch(c,searchFilters)) return false;
@@ -2842,9 +2894,9 @@ function submitBulkApply(){
       });
     });
     saveStore(); if(changed) _fbSync('cronogramaData');
-    const _bfp=document.getElementById('crono-f-pais')?.value||'';
-    const _bfa=document.getElementById('crono-f-agente')?.value||'';
-    const _bfb=document.getElementById('crono-f-banco')?.value||'';
+    const _bfp=_fddVals('crono-f-pais-panel').join(', ');
+    const _bfa=_fddVals('crono-f-agente-panel').join(', ');
+    const _bfb=_fddVals('crono-f-banco-panel').join(', ');
     const _bff=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')].map(b=>b.dataset.freq).join(', ');
     const _bfd1=[...document.querySelectorAll('#crono-d1-filter .d1-toggle.active')].map(b=>b.textContent.trim()).join(', ');
     const _bfs=(document.getElementById('crono-search')?.value||'').trim();
@@ -4597,13 +4649,13 @@ function toggleConcD1Dropdown(e){
 }
 
 function _hasConcFilters(){
-  const fp=document.getElementById('crono-conc-f-pais')?.value||'';
-  const fa=document.getElementById('crono-conc-f-agente')?.value||'';
+  const hasPais=_fddVals('crono-conc-f-pais-panel').length>0;
+  const hasAgente=_fddVals('crono-conc-f-agente-panel').length>0;
   const fpr=document.getElementById('crono-conc-f-prior')?.value||'';
   const hasResp=document.querySelectorAll('#crono-conc-resp-toggles .freq-toggle.active').length>0;
   const hasD1=document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active').length>0;
   const hasSearch=(document.getElementById('crono-conc-search')?.value||'').trim()!=='';
-  return !!(fp||fa||fpr||hasResp||hasD1||hasSearch||_sortState['crono-conc'].col);
+  return !!(hasPais||hasAgente||fpr||hasResp||hasD1||hasSearch||_sortState['crono-conc'].col);
 }
 
 function _updConcSearchClear(){
@@ -4620,10 +4672,9 @@ function clearConcSearch(){
 }
 
 function clearCronconcFilters(){
-  const ps=document.getElementById('crono-conc-f-pais');
-  const ag=document.getElementById('crono-conc-f-agente');
-  if(ps) ps.value='';
-  if(ag) ag.value='';
+  document.querySelectorAll('#crono-conc-f-pais-panel .freq-toggle.active,#crono-conc-f-agente-panel .freq-toggle.active').forEach(b=>b.classList.remove('active'));
+  _fddLabel('crono-conc-f-pais-btn',[],t('crono-all-paises'));
+  _fddLabel('crono-conc-f-agente-btn',[],t('crono-all-agentes'));
   const pr=document.getElementById('crono-conc-f-prior');if(pr) pr.value='';
   document.querySelectorAll('#crono-conc-resp-toggles .freq-toggle.active').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active').forEach(b=>b.classList.remove('active'));
@@ -4638,19 +4689,18 @@ function clearCronconcFilters(){
 }
 
 function _initConcFilters(){
-  const fpEl=document.getElementById('crono-conc-f-pais');
-  const faEl=document.getElementById('crono-conc-f-agente');
-  if(fpEl&&fpEl.options.length<=1){
-    fpEl.innerHTML=`<option value="">Todos os países</option>`;
-    [...new Set(store.conciliacoes.map(c=>c.pais).filter(Boolean))].sort().forEach(p=>{
-      const o=document.createElement('option');o.value=p;o.textContent=p;fpEl.appendChild(o);
-    });
-  }
-  if(faEl&&faEl.options.length<=1){
-    faEl.innerHTML=`<option value="">Todos os agentes</option>`;
-    [...new Set(store.conciliacoes.map(c=>c.agente).filter(Boolean))].sort().forEach(a=>{
-      const o=document.createElement('option');o.value=a;o.textContent=a;faEl.appendChild(o);
-    });
+  const activePaises=_fddVals('crono-conc-f-pais-panel');
+  const activeAgentes=_fddVals('crono-conc-f-agente-panel');
+  const avP=[...new Set(store.conciliacoes.filter(c=>!activeAgentes.length||activeAgentes.includes(c.agente)).map(c=>c.pais))].filter(Boolean).sort();
+  const avA=[...new Set(store.conciliacoes.filter(c=>!activePaises.length||activePaises.includes(c.pais)).map(c=>c.agente))].filter(Boolean).sort();
+  _fddRender('crono-conc-f-pais-panel',avP,activePaises,v=>v,'renderCronogramaConciliacoes()');
+  _fddRender('crono-conc-f-agente-panel',avA,activeAgentes,v=>v,'renderCronogramaConciliacoes()');
+  _fddLabel('crono-conc-f-pais-btn',activePaises.filter(p=>avP.includes(p)),t('crono-all-paises'));
+  _fddLabel('crono-conc-f-agente-btn',activeAgentes.filter(a=>avA.includes(a)),t('crono-all-agentes'));
+  const rt=document.getElementById('crono-conc-resp-toggles');
+  if(rt&&!rt.dataset.init){
+    rt.dataset.init='1';
+    rt.innerHTML=store.responsaveis.map(r=>`<button class="freq-toggle" data-resp="${r.sigla}" onclick="toggleConcRespFilter(this)" title="${r.nome}">${r.sigla}</button>`).join('');
   }
 }
 
@@ -4873,8 +4923,8 @@ function renderCronogramaConciliacoes(){
 
   _initConcFilters();
 
-  const fp=document.getElementById('crono-conc-f-pais')?.value||'';
-  const fa=document.getElementById('crono-conc-f-agente')?.value||'';
+  const activePaises=_fddVals('crono-conc-f-pais-panel');
+  const activeAgentes=_fddVals('crono-conc-f-agente-panel');
   const fpr=document.getElementById('crono-conc-f-prior')?.value||'';
   const activeResps=[...document.querySelectorAll('#crono-conc-resp-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
   const activeD1=[...document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active')].map(b=>b.dataset.d1);
@@ -4909,8 +4959,8 @@ function renderCronogramaConciliacoes(){
   // stat counters over unfiltered-by-d1 list (matching país/agente/resp/search/prior)
   const d1C={concluido:0,pronto_conciliacao:0,sem_movimento:0,sem_acesso:0,pendente:0};
   listWithD1.forEach(({c,d1Status})=>{
-    if(fp&&c.pais!==fp) return;
-    if(fa&&c.agente!==fa) return;
+    if(activePaises.length&&!activePaises.includes(c.pais)) return;
+    if(activeAgentes.length&&!activeAgentes.includes(c.agente)) return;
     if(activeResps.length){
       const rEmail=store.paisesResp[c.pais]||'';
       const ru=store.responsaveis.find(r=>r.email===rEmail);
@@ -4937,8 +4987,8 @@ function renderCronogramaConciliacoes(){
 
   // full filter including d1 status filter
   let list=listWithD1.filter(({c,d1Status})=>{
-    if(fp&&c.pais!==fp) return false;
-    if(fa&&c.agente!==fa) return false;
+    if(activePaises.length&&!activePaises.includes(c.pais)) return false;
+    if(activeAgentes.length&&!activeAgentes.includes(c.agente)) return false;
     if(activeResps.length){
       const rEmail=store.paisesResp[c.pais]||'';
       const ru=store.responsaveis.find(r=>r.email===rEmail);
