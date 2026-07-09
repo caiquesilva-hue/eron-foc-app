@@ -1885,7 +1885,7 @@ const store = {
   cronogramaConciliacoes:{},
   paisesResp:{},bancosResp:{},
   conciliacoesPrioridade:{},
-  volumeRankings:{cashin:{},cashout:{},refunds:{},chargebacks:{}},
+  volumeRankings:{cashin:{},cashout:{},refunds:{},chargebacks:{},combined:{}},
   concilVolumeMap:{},
   auditLog:[],
   permissions:{},
@@ -3794,6 +3794,7 @@ function loadStore(){
     if(saved.auditLog) store.auditLog=(Array.isArray(saved.auditLog)?saved.auditLog:Object.values(saved.auditLog)).filter(Boolean);
     if(saved.permissions) store.permissions=saved.permissions;
     if(saved.credentials) store.credentials=saved.credentials;
+    if(store.volumeRankings&&store.concilVolumeMap) _rebuildCombinedRanking();
   } catch(e){}
 }
 // ─── FIREBASE REALTIME DATABASE ──────────────────────────────────
@@ -3911,6 +3912,7 @@ function _applyFbData(saved){
   if(saved.conciliacoesPrioridade&&!_ownWrites.conciliacoesPrioridade)store.conciliacoesPrioridade=saved.conciliacoesPrioridade;
   if(saved.volumeRankings&&!_ownWrites.volumeRankings)store.volumeRankings=saved.volumeRankings;
   if(saved.concilVolumeMap&&!_ownWrites.concilVolumeMap)store.concilVolumeMap=saved.concilVolumeMap;
+  if(store.volumeRankings&&store.concilVolumeMap) _rebuildCombinedRanking();
   // cronogramaData gerenciado pelo listener específico em _fbRef.child('cronogramaData')
   if(saved.cierreData&&!_ownWrites.cierreData){
     const cierre={};
@@ -4045,7 +4047,7 @@ async function switchEnvironment(envKey){
   _acessosTabEnv=null; _acessosOtherStore=null;
   if(_acessosOtherApp){try{_acessosOtherApp.delete();}catch(e){} _acessosOtherApp=null;}
   // Reset store to defaults for the new environment
-  Object.assign(store,{paises:[],agentes:[],bancos:[],responsaveis:[],contas:[],cronogramaData:{},cierreData:{},conciliacoes:[],cronogramaConciliacoes:{},paisesResp:{},bancosResp:{},conciliacoesPrioridade:{},volumeRankings:{cashin:{},cashout:{},refunds:{},chargebacks:{}},concilVolumeMap:{},auditLog:[],permissions:{},credentials:{}});
+  Object.assign(store,{paises:[],agentes:[],bancos:[],responsaveis:[],contas:[],cronogramaData:{},cierreData:{},conciliacoes:[],cronogramaConciliacoes:{},paisesResp:{},bancosResp:{},conciliacoesPrioridade:{},volumeRankings:{cashin:{},cashout:{},refunds:{},chargebacks:{},combined:{}},concilVolumeMap:{},auditLog:[],permissions:{},credentials:{}});
   loadStore();
   _updateEnvSwitcher();
   document.getElementById('env-dd').style.display='none';
@@ -4615,9 +4617,11 @@ function submitConciliacao(){
   if(tiposOperacao.length){
     if(!store.concilVolumeMap) store.concilVolumeMap={};
     store.concilVolumeMap[concId]={tiposOperacao,cashinIds,cashoutIds,refundIds,chargebackIds};
+    _rebuildCombinedRanking();
     _fbSync('concilVolumeMap');
   } else if(store.concilVolumeMap?.[concId]){
     delete store.concilVolumeMap[concId];
+    _rebuildCombinedRanking();
     _fbSync('concilVolumeMap');
   }
   saveStore(); _fbSync('conciliacoes');
@@ -4807,22 +4811,10 @@ function _applyPriorFormula(r1,r2){
   return 'Acima TOP 50';
 }
 function _computeVolumePrioridade(concId){
-  const map=(store.concilVolumeMap||{})[concId];
-  if(!map) return null;
-  const vr=store.volumeRankings||{};
-  const cashinIds=map.cashinIds||(map.cashinId?[map.cashinId]:[]);
-  const cashoutIds=map.cashoutIds||(map.cashoutId?[map.cashoutId]:[]);
-  const refundIds=map.refundIds||[];
-  const chargebackIds=map.chargebackIds||[];
-  const _minRank=(ids,src)=>ids.length?Math.min(...ids.map(id=>(src[id]?.rank)||999)):999;
-  const best=Math.min(
-    _minRank(cashinIds,vr.cashin||{}),
-    _minRank(cashoutIds,vr.cashout||{}),
-    _minRank(refundIds,vr.refunds||{}),
-    _minRank(chargebackIds,vr.chargebacks||{})
-  );
-  if(best===999) return null;
-  return _applyPriorFormula(best,best);
+  if(!(store.concilVolumeMap||{})[concId]) return null;
+  const rank=(store.volumeRankings?.combined||{})[concId];
+  if(!rank) return null;
+  return _applyPriorFormula(rank,rank);
 }
 function _priorTierClass(tier){
   if(tier==='TOP 10') return 'prior-top10';
@@ -4859,23 +4851,64 @@ function _parseCashinCSV(text){
   }
   const sorted=Object.values(agg).sort((a,b)=>b.usd-a.usd);
   const cashin={};
-  sorted.forEach((e,i)=>{cashin[e.id]={rank:i+1,name:e.name,country:e.country};});
+  sorted.forEach((e,i)=>{cashin[e.id]={rank:i+1,name:e.name,country:e.country,usd:e.usd};});
   return {cashin,count:sorted.length};
 }
-function _parseRankedCSV(text){
+// Cashout: row(0), id(1), country(2), name(3), usd(4)
+function _parseCashoutCSV(text){
   const lines=text.trim().split('\n');
-  const data={};
+  const agg={};
   for(let i=1;i<lines.length;i++){
     const cols=_parseCSVLine(lines[i]);
-    if(cols.length<4) continue;
-    const rank=parseInt(cols[0])||0;
+    if(cols.length<5) continue;
     const id=cols[1]?.trim();
     const country=cols[2]?.trim();
     const name=cols[3]?.trim();
-    if(!rank||!id||!name) continue;
-    data[id]={rank,name,country};
+    const usd=parseFloat((cols[4]||'0').replace(/,/g,''))||0;
+    if(!id||!name) continue;
+    if(!agg[id]) agg[id]={id,name,country,usd:0};
+    agg[id].usd+=usd;
   }
-  return {data,count:Object.keys(data).length};
+  const sorted=Object.values(agg).sort((a,b)=>b.usd-a.usd);
+  const data={};
+  sorted.forEach((e,i)=>{data[e.id]={rank:i+1,name:e.name,country:e.country,usd:e.usd};});
+  return {data,count:sorted.length};
+}
+// Refunds/Chargebacks: row(0), country(1), name(2), usd(3) — keyed by name
+function _parseRefundsCbCSV(text){
+  const lines=text.trim().split('\n');
+  const agg={};
+  for(let i=1;i<lines.length;i++){
+    const cols=_parseCSVLine(lines[i]);
+    if(cols.length<4) continue;
+    const country=cols[1]?.trim();
+    const name=cols[2]?.trim();
+    const usd=parseFloat((cols[3]||'0').replace(/,/g,''))||0;
+    if(!name) continue;
+    if(!agg[name]) agg[name]={name,country,usd:0};
+    agg[name].usd+=usd;
+  }
+  const sorted=Object.values(agg).sort((a,b)=>b.usd-a.usd);
+  const data={};
+  sorted.forEach((e,i)=>{data[e.name]={rank:i+1,country:e.country,usd:e.usd};});
+  return {data,count:sorted.length};
+}
+function _rebuildCombinedRanking(){
+  const vr=store.volumeRankings||{};
+  const cvm=store.concilVolumeMap||{};
+  const _sum=(ids,src)=>ids.reduce((s,id)=>s+((src[id]?.usd)||0),0);
+  const scores=Object.entries(cvm).map(([concId,map])=>{
+    const cashinIds=map.cashinIds||(map.cashinId?[map.cashinId]:[]);
+    const cashoutIds=map.cashoutIds||(map.cashoutId?[map.cashoutId]:[]);
+    const refundIds=map.refundIds||[];
+    const chargebackIds=map.chargebackIds||[];
+    const totalUSD=_sum(cashinIds,vr.cashin||{})+_sum(cashoutIds,vr.cashout||{})+_sum(refundIds,vr.refunds||{})+_sum(chargebackIds,vr.chargebacks||{});
+    return {concId,totalUSD};
+  }).filter(x=>x.totalUSD>0).sort((a,b)=>b.totalUSD-a.totalUSD);
+  const combined={};
+  scores.forEach(({concId},i)=>{combined[concId]=i+1;});
+  if(!store.volumeRankings) store.volumeRankings={cashin:{},cashout:{},refunds:{},chargebacks:{},combined:{}};
+  store.volumeRankings.combined=combined;
 }
 function _renderVolLastImport(){
   const lbl=document.getElementById('vol-last-import-lbl');
@@ -4915,11 +4948,12 @@ async function processVolumeImport(){
   const newR={cashin:{...vr.cashin||{}},cashout:{...vr.cashout||{}},refunds:{...vr.refunds||{}},chargebacks:{...vr.chargebacks||{}}};
   const msgs=[];
   if(cashinFile){const text=await cashinFile.text();const {cashin,count}=_parseCashinCSV(text);newR.cashin=cashin;msgs.push(`Cashin: ${count} gateways.`);}
-  if(cashoutFile){const text=await cashoutFile.text();const {data,count}=_parseRankedCSV(text);newR.cashout=data;msgs.push(`Cashout: ${count} processadores.`);}
-  if(refundsFile){const text=await refundsFile.text();const {data,count}=_parseRankedCSV(text);newR.refunds=data;msgs.push(`Refunds: ${count} entradas.`);}
-  if(chargebacksFile){const text=await chargebacksFile.text();const {data,count}=_parseRankedCSV(text);newR.chargebacks=data;msgs.push(`Chargebacks: ${count} entradas.`);}
+  if(cashoutFile){const text=await cashoutFile.text();const {data,count}=_parseCashoutCSV(text);newR.cashout=data;msgs.push(`Cashout: ${count} processadores.`);}
+  if(refundsFile){const text=await refundsFile.text();const {data,count}=_parseRefundsCbCSV(text);newR.refunds=data;msgs.push(`Refunds: ${count} entradas.`);}
+  if(chargebacksFile){const text=await chargebacksFile.text();const {data,count}=_parseRefundsCbCSV(text);newR.chargebacks=data;msgs.push(`Chargebacks: ${count} entradas.`);}
   newR.lastImport=new Date().toISOString();
   store.volumeRankings=newR;
+  _rebuildCombinedRanking();
   saveStore(); _fbSync('volumeRankings');
   _renderVolLastImport();
   resultEl.textContent=msgs.join(' ')+' Dados salvos no Firebase.';
