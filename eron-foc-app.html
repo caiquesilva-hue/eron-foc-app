@@ -2245,7 +2245,7 @@ function openCadastroModal(type, editIdx=-1){
       const currentBancoResp=isEdit?(store.bancosResp[currentVal]||''):'';
       const hasResp=!!currentBancoResp;
       body.innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="cad-nome" placeholder="${phs[type]}" value="${currentVal}"></div>
-        <div class="form-field" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div class="form-field" style="display:flex;flex-direction:row;align-items:center;justify-content:space-between;margin-bottom:4px;gap:0">
           <label class="form-label" style="margin-bottom:0">Responsável exclusivo por banco?</label>
           <input type="checkbox" id="cad-banco-has-resp" ${hasResp?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:var(--e-purple);flex-shrink:0" onchange="document.getElementById('cad-banco-resp-wrap').style.display=this.checked?'':'none'">
         </div>
