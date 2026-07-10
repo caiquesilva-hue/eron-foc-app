@@ -1101,8 +1101,8 @@
         <div class="empty-sub" data-i18n="acessos-no-perm-sub">Somente o administrador pode gerenciar acessos.</div>
       </div>
       <div id="acessos-content">
-        <div style="padding:0 0 10px"><input type="search" id="acessos-search" placeholder="Buscar nome, email, sigla..." style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderAcessos()"></div>
-        <div class="table-wrap"><div id="acessos-empty" class="empty-state"><div class="empty-icon">👤</div><div class="empty-title" data-i18n="acessos-empty-title">Nenhum acesso cadastrado</div><div class="empty-sub" data-i18n="acessos-empty-sub">Adicione responsáveis que aparecerão no sistema.</div></div><div class="table-scroll" id="acessos-table-inner" style="display:none"><table><thead><tr><th data-i18n="lbl-nome">Nome</th><th>Email</th><th style="width:60px">Sigla</th><th style="width:130px">Perfil</th><th style="width:110px">Ambientes</th><th style="width:140px">Status</th><th style="width:130px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="acessos-tbody"></tbody></table></div></div>
+        <div style="padding:0 0 10px"><input type="search" id="acessos-search" placeholder="Buscar nome, email, sigla..." data-i18n-placeholder="acessos-search-ph" style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderAcessos()"></div>
+        <div class="table-wrap"><div id="acessos-empty" class="empty-state"><div class="empty-icon">👤</div><div class="empty-title" data-i18n="acessos-empty-title">Nenhum acesso cadastrado</div><div class="empty-sub" data-i18n="acessos-empty-sub">Adicione responsáveis que aparecerão no sistema.</div></div><div class="table-scroll" id="acessos-table-inner" style="display:none"><table><thead><tr><th data-i18n="lbl-nome">Nome</th><th data-i18n="col-email">Email</th><th style="width:60px" data-i18n="col-sigla">Sigla</th><th style="width:130px" data-i18n="col-perfil">Perfil</th><th style="width:110px" data-i18n="col-ambientes">Ambientes</th><th style="width:140px" data-i18n="col-status">Status</th><th style="width:130px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="acessos-tbody"></tbody></table></div></div>
       </div>
     </div>
   </div>
@@ -1764,6 +1764,9 @@ const i18n = {
     'col-tipo':'Frequência','col-tipo-conta':'Tipo','col-responsavel':'Responsável','col-status':'Status','col-actions':'Ações',
     'crono-all-paises':'Todos os países','crono-all-agentes':'Todos os agentes','crono-all-bancos':'Todos os bancos','crono-all-freq':'Todas as freq.','crono-apply':'Aplicar','crono-empty':'Nenhuma conta para o período.',
     'nav-acessos':'Acessos','btn-add-acesso':'Adicionar acesso','acessos-empty-title':'Nenhum acesso cadastrado','acessos-empty-sub':'Adicione responsáveis que aparecerão no sistema.','acessos-no-perm':'Acesso restrito','acessos-no-perm-sub':'Somente o administrador pode gerenciar acessos.',
+    'col-email':'Email','col-perfil':'Perfil','col-ambientes':'Ambientes',
+    'acessos-search-ph':'Buscar nome, email, sigla...','acessos-sem-senha':'Sem senha','acessos-ag-troca':'Aguardando troca','acessos-ativo':'Ativo',
+    'count-acesso':'acesso','count-acessos':'acessos',
     'status-ativa':'Ativa','status-encerrada':'Encerrada',
     'filter-all-status':'Todos os status',
     'acc-empty-title':'Nenhuma conta cadastrada','acc-empty-sub':'Clique em "Adicionar conta" para começar.',
@@ -1844,6 +1847,9 @@ const i18n = {
     'col-tipo':'Frequency','col-tipo-conta':'Type','col-responsavel':'Responsible','col-status':'Status','col-actions':'Actions',
     'crono-all-paises':'All countries','crono-all-agentes':'All agents','crono-all-bancos':'All banks','crono-all-freq':'All freq.','crono-apply':'Apply','crono-empty':'No accounts for this period.',
     'nav-acessos':'Access','btn-add-acesso':'Add access','acessos-empty-title':'No access registered','acessos-empty-sub':'Add users who will appear in the system.','acessos-no-perm':'Restricted access','acessos-no-perm-sub':'Only the administrator can manage access.',
+    'col-email':'Email','col-perfil':'Profile','col-ambientes':'Environments',
+    'acessos-search-ph':'Search name, email, initials...','acessos-sem-senha':'No password','acessos-ag-troca':'Awaiting change','acessos-ativo':'Active',
+    'count-acesso':'access','count-acessos':'accesses',
     'status-ativa':'Active','status-encerrada':'Closed',
     'filter-all-status':'All statuses',
     'acc-empty-title':'No accounts registered','acc-empty-sub':'Click "Add account" to get started.',
@@ -1917,6 +1923,9 @@ const i18n = {
     'col-tipo':'Frecuencia','col-tipo-conta':'Tipo','col-responsavel':'Responsable','col-status':'Estado','col-actions':'Acciones',
     'crono-all-paises':'Todos los países','crono-all-agentes':'Todos los agentes','crono-all-bancos':'Todos los bancos','crono-all-freq':'Todas las freq.','crono-apply':'Aplicar','crono-empty':'Sin cuentas para el período.',
     'nav-acessos':'Accesos','btn-add-acesso':'Agregar acceso','acessos-empty-title':'Sin accesos registrados','acessos-empty-sub':'Agrega usuarios que aparecerán en el sistema.','acessos-no-perm':'Acceso restringido','acessos-no-perm-sub':'Solo el administrador puede gestionar accesos.',
+    'col-email':'Email','col-perfil':'Perfil','col-ambientes':'Entornos',
+    'acessos-search-ph':'Buscar nombre, email, sigla...','acessos-sem-senha':'Sin contraseña','acessos-ag-troca':'Esperando cambio','acessos-ativo':'Activo',
+    'count-acesso':'acceso','count-acessos':'accesos',
     'status-ativa':'Activa','status-encerrada':'Cerrada',
     'filter-all-status':'Todos los estados',
     'acc-empty-title':'No hay cuentas registradas','acc-empty-sub':'Haz clic en "Agregar cuenta" para comenzar.',
@@ -3417,7 +3426,7 @@ function renderAcessos(){
   if(searchQ) resp=resp.filter(r=>`${r.nome} ${r.email} ${r.sigla}`.toLowerCase().includes(searchQ));
   const creds=_acessosCreds();
   const el=document.getElementById('acessos-count');
-  if(el) el.textContent=resp.length+' acesso'+(resp.length===1?'':'s');
+  if(el) el.textContent=resp.length+' '+t(resp.length===1?'count-acesso':'count-acessos');
   const e=document.getElementById('acessos-empty');
   const i=document.getElementById('acessos-table-inner');
   const b=document.getElementById('acessos-tbody');
@@ -3426,9 +3435,9 @@ function renderAcessos(){
   const isOther=_acessosIsOther();
   b.innerHTML=resp.map((r,idx)=>{
     const cred=creds[r.email];
-    const credBadge=!cred?`<span class="cred-badge cred-none">Sem senha</span>`:
-      cred.mustChange?`<span class="cred-badge cred-pending">⏳ Aguardando troca</span>`:
-      `<span class="cred-badge cred-active">✓ Ativo</span>`;
+    const credBadge=!cred?`<span class="cred-badge cred-none">${t('acessos-sem-senha')}</span>`:
+      cred.mustChange?`<span class="cred-badge cred-pending">⏳ ${t('acessos-ag-troca')}</span>`:
+      `<span class="cred-badge cred-active">✓ ${t('acessos-ativo')}</span>`;
     const roleKey=r.role||'visualizacao';
     const roleBadgeHtml=`<span class="role-badge ${getRoleClass(roleKey)}">${getRoleBadge(roleKey)} ${getRoleLabel(roleKey)}</span>`;
     const isSelf=r.email===window._loggedEmail;
