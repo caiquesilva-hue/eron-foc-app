@@ -5445,7 +5445,7 @@ function renderCronogramaConciliacoes(){
       if(r.status==='pendente'){
         return `<td class="day-cell conc-cell" data-ck="${_ck}" data-dt="${dateStr}" style="cursor:pointer"><div class="day-dot" style="opacity:.4">·</div></td>`;
       }
-      const lbl=r.entry?r.entry.sigla:(r.status==='pronto_conciliacao'?'✓':r.status==='sem_movimento'?'s/m':'s/a');
+      const lbl=r.status==='sem_movimento'?'s/m':r.status==='sem_acesso'?'s/a':r.entry?r.entry.sigla:(r.status==='pronto_conciliacao'?'✓':'?');
       return `<td class="day-cell conc-cell" data-ck="${_ck}" data-dt="${dateStr}" style="cursor:pointer;padding:2px 1px"><div class="day-filled" style="background:${cfg.bg};color:${cfg.color}">${lbl}</div></td>`;
     }).join('');
     return `<tr class="row-ativa"><td class="cal-sticky" style="font-size:12px;font-weight:600;white-space:nowrap">${conc.nome}</td><td style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td><td class="sub" style="font-size:11px">${conc.agente||'—'}</td><td>${respCell}</td><td style="padding:4px 8px">${priorCell}</td><td style="white-space:nowrap;padding:4px 8px">${d1ChipHtml}</td>${cells}</tr>`;
@@ -5613,15 +5613,15 @@ function _liqConcilList(){
 }
 function _liqLastElab(c){
   const prefix=(c.id||c.nome)+'_';
-  let lastDate='',lastSigla='';
+  let lastDate='',lastSigla='',lastStatus='';
   Object.entries(store.cronogramaConciliacoes||{}).forEach(([k,v])=>{
     if(!k.startsWith(prefix)||!['concluido','sem_movimento','sem_acesso'].includes(v.status)) return;
     const ds=k.slice(prefix.length);
-    if(ds>lastDate){lastDate=ds;lastSigla=v.sigla||'';}
+    if(ds>lastDate){lastDate=ds;lastSigla=v.sigla||'';lastStatus=v.status;}
   });
-  if(!lastDate) return {sigla:'',date:'',_raw:''};
+  if(!lastDate) return {sigla:'',date:'',_raw:'',status:''};
   const [,m,d]=lastDate.split('-');
-  return {sigla:lastSigla, date:`${parseInt(d)}/${parseInt(m)}`, _raw:lastDate};
+  return {sigla:lastSigla, date:`${parseInt(d)}/${parseInt(m)}`, _raw:lastDate, status:lastStatus};
 }
 function _liqConcId(c){ return (c.id||c.nome||'').replace(/['"]/g,''); }
 function _liqSKey(concId){ return `${concId}|${_liqMonth}|${_liqYear}`; }
@@ -5782,10 +5782,16 @@ function renderCronogramaLiquidacoes(){
       estadoChip='<span class="chip" style="background:#fef9c3;color:#854d0e;font-size:11px">Aguardar conciliação</span>';
     } else {
       const [eDateY,eDateM]=elab._raw.split('-').map(Number);
-      const concilOk=eDateY>_liqYear||(eDateY===_liqYear&&eDateM>=(_liqMonth+1));
-      estadoChip=concilOk
-        ?'<span class="chip" style="background:#dcfce7;color:#15803d;font-size:11px">Conciliação OK</span>'
-        :'<span class="chip" style="background:#fef9c3;color:#854d0e;font-size:11px">Aguardar conciliação</span>';
+      const inMonth=eDateY>_liqYear||(eDateY===_liqYear&&eDateM>=(_liqMonth+1));
+      if(!inMonth){
+        estadoChip='<span class="chip" style="background:#fef9c3;color:#854d0e;font-size:11px">Aguardar conciliação</span>';
+      } else if(elab.status==='sem_movimento'){
+        estadoChip='<span class="chip" style="background:#ede9fe;color:#5b21b6;font-size:11px">Sem Movimento</span>';
+      } else if(elab.status==='sem_acesso'){
+        estadoChip='<span class="chip" style="background:#fef2f2;color:#dc2626;font-size:11px">Sem Acesso</span>';
+      } else {
+        estadoChip='<span class="chip" style="background:#dcfce7;color:#15803d;font-size:11px">Conciliação OK</span>';
+      }
     }
     return `<tr>
       <td><div style="font-weight:600">${c.nome}</div><div style="font-size:11px;color:var(--e-muted);display:flex;align-items:center;gap:4px;margin-top:2px">${c.agente||''} <span class="chip ${tcCls}" style="font-size:9px">${tcLbl}</span></div></td>
