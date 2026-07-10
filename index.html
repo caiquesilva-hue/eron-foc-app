@@ -5104,11 +5104,7 @@ function _getConcilResp(conc){
 }
 
 function _initConcRespToggles(){
-  const wrap=document.getElementById('crono-conc-resp-toggles');
-  if(!wrap||wrap.dataset.init) return;
-  wrap.dataset.init='1';
-  const activeResps=[...document.querySelectorAll('#crono-conc-resp-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
-  wrap.innerHTML=store.responsaveis.map(r=>`<button class="freq-toggle${activeResps.includes(r.sigla)?' active':''}" data-resp="${r.sigla}" title="${r.nome}" onclick="this.classList.toggle('active');_updateConcRespLabel();renderCronogramaConciliacoes()">${r.sigla}</button>`).join('');
+  // buttons are initialized by _initConcFilters; this is a no-op kept for compat
 }
 
 function _updateConcRespLabel(){
@@ -5201,7 +5197,7 @@ function _initConcFilters(){
   const rt=document.getElementById('crono-conc-resp-toggles');
   if(rt&&!rt.dataset.init){
     rt.dataset.init='1';
-    rt.innerHTML=store.responsaveis.map(r=>`<button class="freq-toggle" data-resp="${r.sigla}" onclick="event.stopPropagation();toggleConcRespFilter(this)" title="${r.nome}">${r.sigla}</button>`).join('');
+    rt.innerHTML=store.responsaveis.map(r=>`<button class="freq-toggle" data-resp="${r.sigla}" title="${r.nome}" onclick="this.classList.toggle('active');_updateConcRespLabel();renderCronogramaConciliacoes()">${r.sigla}</button>`).join('');
   }
 }
 
