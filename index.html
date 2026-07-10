@@ -936,7 +936,7 @@
     <div class="table-scroll" id="liq-crono-table-inner" style="display:none">
       <table><thead><tr>
         <th>Conciliação</th><th>País</th>
-        <th>Tipo Liquidação</th><th style="min-width:110px">Última Elab.</th><th style="min-width:90px">Data Última</th><th style="min-width:180px">Observações</th>
+        <th>Tipo Liquidação</th><th style="min-width:150px">Estado Concil.</th><th style="min-width:100px">Última Elab.</th><th style="min-width:90px">Data Última</th><th style="min-width:180px">Observações</th>
         <th>LIQ</th><th>VIN</th>
       </tr></thead>
       <tbody id="liq-crono-tbody"></tbody></table>
@@ -5490,6 +5490,18 @@ let _liqMonth=new Date().getMonth(), _liqYear=new Date().getFullYear();
 function _liqConcilList(){
   return store.conciliacoes.filter(c=>c.status!=='encerrada'&&(c.tipo==='processadores'||c.tipo==='mista'));
 }
+function _liqLastElab(c){
+  const prefix=(c.id||c.nome)+'_';
+  let lastDate='',lastSigla='';
+  Object.entries(store.cronogramaConciliacoes||{}).forEach(([k,v])=>{
+    if(!k.startsWith(prefix)||v.status!=='concluido') return;
+    const ds=k.slice(prefix.length);
+    if(ds>lastDate){lastDate=ds;lastSigla=v.sigla||'';}
+  });
+  if(!lastDate) return {sigla:'',date:'',_raw:''};
+  const [,m,d]=lastDate.split('-');
+  return {sigla:lastSigla, date:`${parseInt(d)}/${parseInt(m)}`, _raw:lastDate};
+}
 function _liqConcId(c){ return (c.id||c.nome||'').replace(/['"]/g,''); }
 function _liqSKey(concId){ return `${concId}|${_liqMonth}|${_liqYear}`; }
 function _liqGetStatus(concId,type){ return (store.liquidacoesStatus[_liqSKey(concId)]||{})[type]||null; }
@@ -5614,12 +5626,24 @@ function renderCronogramaLiquidacoes(){
     const [tcCls,tcLbl]=tipoMap[c.tipo||'bancos']||tipoMap.bancos;
     const tl=LIQ_TIPOS[cfg.tipo_liq]||null;
     const tlChip=tl?`<span class="chip" style="font-size:10px;background:${tl.bg};color:${tl.color}">${tl.short}</span>`:`<span style="color:var(--e-muted);font-size:11px">—</span>`;
+    const elab=_liqLastElab(c);
+    let estadoChip;
+    if(!elab._raw){
+      estadoChip='<span class="chip" style="background:#fef9c3;color:#854d0e;font-size:11px">Aguardar conciliação</span>';
+    } else {
+      const [eDateY,eDateM]=elab._raw.split('-').map(Number);
+      const concilOk=eDateY>_liqYear||(eDateY===_liqYear&&eDateM>=(_liqMonth+1));
+      estadoChip=concilOk
+        ?'<span class="chip" style="background:#dcfce7;color:#15803d;font-size:11px">Conciliação OK</span>'
+        :'<span class="chip" style="background:#fef9c3;color:#854d0e;font-size:11px">Aguardar conciliação</span>';
+    }
     return `<tr>
       <td><div style="font-weight:600">${c.nome}</div><div style="font-size:11px;color:var(--e-muted);display:flex;align-items:center;gap:4px;margin-top:2px">${c.agente||''} <span class="chip ${tcCls}" style="font-size:9px">${tcLbl}</span></div></td>
       <td>${c.pais?`${countryFlag(c.pais)} ${c.pais}`:'—'}</td>
       <td>${tlChip}</td>
-      <td><input type="text" value="${(cfg.ult_elab||'').replace(/"/g,'&quot;')}" placeholder="—" style="width:100%;border:1px solid var(--e-pale);border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit;color:var(--e-text);background:#fff" onchange="_liqSaveConfig('${id}',{ult_elab:this.value})"></td>
-      <td><input type="text" value="${(cfg.dt_ult_elab||'').replace(/"/g,'&quot;')}" placeholder="—" style="width:80px;border:1px solid var(--e-pale);border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit;color:var(--e-text);background:#fff" onchange="_liqSaveConfig('${id}',{dt_ult_elab:this.value})"></td>
+      <td>${estadoChip}</td>
+      <td style="font-size:12px;color:var(--e-text);font-weight:600">${elab.sigla||'<span style="color:var(--e-muted)">—</span>'}</td>
+      <td style="font-size:12px;color:var(--e-muted)">${elab.date||'—'}</td>
       <td><textarea class="liq-obs" placeholder="Observações..." style="width:100%;min-height:32px;border:1px solid var(--e-pale);border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit;color:var(--e-text);background:#fff;resize:none;overflow:hidden;box-sizing:border-box;display:block" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';_liqSaveConfig('${id}',{obs:this.value})">${cfg.obs||''}</textarea></td>
       <td>${_liqPillHtml(lSt,id,'liq')}</td>
       <td>${_liqPillHtml(vSt,id,'vin')}</td>
