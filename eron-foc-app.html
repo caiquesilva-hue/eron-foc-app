@@ -874,23 +874,41 @@
     <!-- CRONOGRAMA > ACCOUNTS – CIERRE -->
     <div class="page" id="page-cronograma-cierre">
       <div class="page-header">
-        <div class="page-header-left">
+        <div class="page-title-group">
           <div class="page-title-text">Accounts – Cierre</div>
           <div class="page-title-count" id="cierre-count-header"></div>
         </div>
+        <button id="cierre-clear-btn" onclick="clearCierreFilters()" style="display:none;align-items:center;gap:6px;font-size:12px;padding:5px 12px;background:var(--e-ghost);color:var(--e-muted);border:1px solid var(--e-pale);border-radius:8px;cursor:pointer;font-family:inherit" title="Limpar filtros">
+          <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          Limpar filtros
+        </button>
       </div>
       <div class="crono-filters">
-        <select id="cierre-f-mes" onchange="renderCierreTable()"></select>
-        <select id="cierre-f-pais" onchange="renderCierreTable()"></select>
-        <select id="cierre-f-agente" onchange="renderCierreTable()"></select>
-        <select id="cierre-f-banco" onchange="renderCierreTable()"></select>
-        <select id="cierre-f-resp" onchange="renderCierreTable()"></select>
-        <select id="cierre-f-status" onchange="renderCierreTable()">
-          <option value="">Todos os status</option>
-          <option value="pendente">Pendente</option>
-          <option value="verificando">Verificando</option>
-          <option value="concluido">Concluído</option>
-        </select>
+        <select id="cierre-f-mes" onchange="renderCierreTable()" style="height:36px;padding:0 28px 0 12px;border:1px solid var(--e-pale);border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;color:var(--e-text);background:#fff;cursor:pointer;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239898c3' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 10px center"></select>
+        <div class="freq-dd" id="cierre-f-pais-dd">
+          <button class="freq-dd-btn" id="cierre-f-pais-btn" onclick="_fddToggle(event,'cierre-f-pais-panel')">Todos os países</button>
+          <div class="freq-dd-panel" id="cierre-f-pais-panel" style="max-height:240px;overflow-y:auto"></div>
+        </div>
+        <div class="freq-dd" id="cierre-f-agente-dd">
+          <button class="freq-dd-btn" id="cierre-f-agente-btn" onclick="_fddToggle(event,'cierre-f-agente-panel')">Todos os agentes</button>
+          <div class="freq-dd-panel" id="cierre-f-agente-panel" style="max-height:240px;overflow-y:auto"></div>
+        </div>
+        <div class="freq-dd" id="cierre-f-banco-dd">
+          <button class="freq-dd-btn" id="cierre-f-banco-btn" onclick="_fddToggle(event,'cierre-f-banco-panel')">Todos os bancos</button>
+          <div class="freq-dd-panel" id="cierre-f-banco-panel" style="max-height:240px;overflow-y:auto"></div>
+        </div>
+        <div class="freq-dd" id="cierre-f-resp-dd">
+          <button class="freq-dd-btn" id="cierre-f-resp-btn" onclick="_fddToggle(event,'cierre-f-resp-panel')">Todos os responsáveis</button>
+          <div class="freq-dd-panel" id="cierre-f-resp-panel" style="max-height:240px;overflow-y:auto"></div>
+        </div>
+        <div class="freq-dd" id="cierre-f-status-dd">
+          <button class="freq-dd-btn" id="cierre-f-status-btn" onclick="_fddToggle(event,'cierre-f-status-panel')">Todos os status</button>
+          <div class="freq-dd-panel" id="cierre-f-status-panel">
+            <button class="freq-toggle" data-val="pendente" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),'Todos os status');renderCierreTable()">Pendente</button>
+            <button class="freq-toggle" data-val="verificando" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),'Todos os status');renderCierreTable()">Verificando</button>
+            <button class="freq-toggle" data-val="concluido" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),'Todos os status');renderCierreTable()">Concluído</button>
+          </div>
+        </div>
       </div>
       <div class="cierre-stats-row" id="cierre-stats"></div>
       <div class="crono-search-wrap">
@@ -2093,7 +2111,7 @@ function navigate(pageId){
   }
   if(pageId==='gerencial-conciliacoes'){ renderGerencialConciliacoes(); _renderVolLastImport(); }
   if(pageId==='gerencial-custos'){ renderGerencialLiquidacoes(); }
-  if(pageId==='cronograma-custos'){ _initLiqPaisFilter(); renderCronogramaLiquidacoes(); }
+  if(pageId==='cronograma-custos'){ renderCronogramaLiquidacoes(); }
 }
 function updateBreadcrumb(){
   const m=pagesMeta[currentPageId];
@@ -3835,31 +3853,75 @@ function initCierreFilters(){
     opts+=`<option value="${val}"${sel}>${lbl.charAt(0).toUpperCase()+lbl.slice(1)}</option>`;
   }
   mesEl.innerHTML=opts;
-  const contas=store.contas.filter(c=>!_isCierreExcluded(c));
-  const paises=[...new Set(contas.map(c=>c.pais))].sort();
-  document.getElementById('cierre-f-pais').innerHTML=`<option value="">Todos os países</option>`+paises.map(p=>`<option>${p}</option>`).join('');
-  const agentes=[...new Set(contas.map(c=>c.agente))].sort();
-  document.getElementById('cierre-f-agente').innerHTML=`<option value="">Todos os agentes</option>`+agentes.map(a=>`<option>${a}</option>`).join('');
-  const bancos=[...new Set(contas.map(c=>c.banco))].sort();
-  document.getElementById('cierre-f-banco').innerHTML=`<option value="">Todos os bancos</option>`+bancos.map(b=>`<option>${b}</option>`).join('');
-  const respEmails=[...new Set(contas.map(c=>{const ag=store.agentes.find(a=>a.nome===c.agente);return ag?.responsavel||'';}).filter(Boolean))];
+  // Populate país panel (base; cascade happens in _updateCierreCascade)
+  const baseCon=store.contas.filter(c=>c.status!=='encerrada'&&!_isCierreExcluded(c));
+  const avPaises=[...new Set(baseCon.map(c=>c.pais).filter(Boolean))].sort();
+  const activePaises=_fddVals('cierre-f-pais-panel');
+  _fddRender('cierre-f-pais-panel',avPaises,activePaises,v=>`${countryFlag(v)} ${v}`,'_updateCierreCascade();renderCierreTable()');
+  _fddLabel('cierre-f-pais-btn',activePaises.filter(p=>avPaises.includes(p)),'Todos os países');
+  _updateCierreCascade();
+}
+function _updateCierreCascade(){
+  const baseCon=store.contas.filter(c=>c.status!=='encerrada'&&!_isCierreExcluded(c));
+  const activePaises=_fddVals('cierre-f-pais-panel');
+  // Agentes disponíveis = filtrados pelo país selecionado
+  let contasPA=baseCon;
+  if(activePaises.length) contasPA=contasPA.filter(c=>activePaises.includes(c.pais));
+  const avAgentes=[...new Set(contasPA.map(c=>c.agente).filter(Boolean))].sort();
+  const activeAgentes=_fddVals('cierre-f-agente-panel').filter(a=>avAgentes.includes(a));
+  _fddRender('cierre-f-agente-panel',avAgentes,activeAgentes,v=>v,'_updateCierreCascade();renderCierreTable()');
+  _fddLabel('cierre-f-agente-btn',activeAgentes,'Todos os agentes');
+  // Bancos disponíveis = filtrados por país + agente
+  let contasPAB=contasPA;
+  if(activeAgentes.length) contasPAB=contasPAB.filter(c=>activeAgentes.includes(c.agente));
+  const avBancos=[...new Set(contasPAB.map(c=>c.banco).filter(Boolean))].sort();
+  const activeBancos=_fddVals('cierre-f-banco-panel').filter(b=>avBancos.includes(b));
+  _fddRender('cierre-f-banco-panel',avBancos,activeBancos,v=>v,'renderCierreTable()');
+  _fddLabel('cierre-f-banco-btn',activeBancos,'Todos os bancos');
+  // Responsáveis disponíveis = filtrados por país + agente
+  const respEmails=[...new Set(contasPAB.map(c=>{const ag=store.agentes.find(a=>a.nome===c.agente);return ag?.responsavel||'';}).filter(Boolean))];
   const resps=respEmails.map(e=>store.responsaveis.find(r=>r.email===e)).filter(Boolean).sort((a,b)=>a.nome.localeCompare(b.nome));
-  document.getElementById('cierre-f-resp').innerHTML=`<option value="">Todos os responsáveis</option>`+resps.map(r=>`<option value="${r.email}">${r.nome}</option>`).join('');
+  const avResps=resps.map(r=>r.email);
+  const activeResps=_fddVals('cierre-f-resp-panel').filter(r=>avResps.includes(r));
+  _fddRender('cierre-f-resp-panel',avResps,activeResps,v=>{const r=store.responsaveis.find(x=>x.email===v);return r?r.nome:v;},'renderCierreTable()');
+  _fddLabel('cierre-f-resp-btn',activeResps,'Todos os responsáveis');
+}
+function _hasCierreFilters(){
+  return _fddVals('cierre-f-pais-panel').length>0||
+    _fddVals('cierre-f-agente-panel').length>0||
+    _fddVals('cierre-f-banco-panel').length>0||
+    _fddVals('cierre-f-resp-panel').length>0||
+    _fddVals('cierre-f-status-panel').length>0||
+    (document.getElementById('cierre-search')?.value||'').trim()!=='';
+}
+function clearCierreFilters(){
+  document.querySelectorAll('#cierre-f-pais-panel .freq-toggle.active,#cierre-f-agente-panel .freq-toggle.active,#cierre-f-banco-panel .freq-toggle.active,#cierre-f-resp-panel .freq-toggle.active,#cierre-f-status-panel .freq-toggle.active').forEach(b=>b.classList.remove('active'));
+  _fddLabel('cierre-f-pais-btn',[],'Todos os países');
+  _fddLabel('cierre-f-agente-btn',[],'Todos os agentes');
+  _fddLabel('cierre-f-banco-btn',[],'Todos os bancos');
+  _fddLabel('cierre-f-resp-btn',[],'Todos os responsáveis');
+  _fddLabel('cierre-f-status-btn',[],'Todos os status');
+  const inp=document.getElementById('cierre-search');
+  if(inp){inp.value='';updateCierreSearchClear();}
+  _updateCierreCascade();
+  renderCierreTable();
 }
 function renderCierreTable(){
   const mes=document.getElementById('cierre-f-mes')?.value||'';
-  const fPais=document.getElementById('cierre-f-pais')?.value||'';
-  const fAgente=document.getElementById('cierre-f-agente')?.value||'';
-  const fBanco=document.getElementById('cierre-f-banco')?.value||'';
-  const fResp=document.getElementById('cierre-f-resp')?.value||'';
-  const fStatus=document.getElementById('cierre-f-status')?.value||'';
+  const activePaises=_fddVals('cierre-f-pais-panel');
+  const activeAgentes=_fddVals('cierre-f-agente-panel');
+  const activeBancos=_fddVals('cierre-f-banco-panel');
+  const activeResps=_fddVals('cierre-f-resp-panel');
+  const activeStatus=_fddVals('cierre-f-status-panel');
   const q=(document.getElementById('cierre-search')?.value||'').toLowerCase().trim();
+  const clearBtn=document.getElementById('cierre-clear-btn');
+  if(clearBtn) clearBtn.style.display=_hasCierreFilters()?'inline-flex':'none';
   let contas=store.contas.filter(c=>c.status!=='encerrada'&&!_isCierreExcluded(c));
-  if(fPais) contas=contas.filter(c=>c.pais===fPais);
-  if(fAgente) contas=contas.filter(c=>c.agente===fAgente);
-  if(fBanco) contas=contas.filter(c=>c.banco===fBanco);
-  if(fResp) contas=contas.filter(c=>{const r=_contaResp(c);return r?.email===fResp;});
-  if(fStatus) contas=contas.filter(c=>_cierreStatus(store.cierreData[_cierreKey(c,mes)])===fStatus);
+  if(activePaises.length) contas=contas.filter(c=>activePaises.includes(c.pais));
+  if(activeAgentes.length) contas=contas.filter(c=>activeAgentes.includes(c.agente));
+  if(activeBancos.length) contas=contas.filter(c=>activeBancos.includes(c.banco));
+  if(activeResps.length) contas=contas.filter(c=>{const r=_contaResp(c);return r&&activeResps.includes(r.email);});
+  if(activeStatus.length) contas=contas.filter(c=>activeStatus.includes(_cierreStatus(store.cierreData[_cierreKey(c,mes)])));
   if(q) contas=contas.filter(c=>[c.sigla,c.pais,c.agente,c.banco,c.numeroConta].some(v=>(v||'').toLowerCase().includes(q)));
   const _isConcluido=c=>_cierreStatus(store.cierreData[_cierreKey(c,mes)])==='concluido';
   const _ciSort=(list)=>{
