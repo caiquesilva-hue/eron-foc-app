@@ -5093,11 +5093,21 @@ function initCronconcDates(){
 
 function onCronconcDatePreset(){initCronconcDates();renderCronogramaConciliacoes();}
 
+function _getConcilResp(conc){
+  if(conc.processadores?.length){
+    for(const p of conc.processadores){
+      const email=(store.processadoresResp||{})[p];
+      if(email) return email;
+    }
+  }
+  return (store.paisesResp||{})[conc.pais]||'';
+}
+
 function _initConcRespToggles(){
   const wrap=document.getElementById('crono-conc-resp-toggles');
   if(!wrap||wrap.dataset.init) return;
   wrap.dataset.init='1';
-  const emails=[...new Set(store.conciliacoes.map(c=>store.paisesResp[c.pais]).filter(Boolean))];
+  const emails=[...new Set(store.conciliacoes.map(c=>_getConcilResp(c)).filter(Boolean))];
   emails.forEach(email=>{
     const u=store.responsaveis.find(r=>r.email===email);
     if(!u) return;
@@ -5569,7 +5579,7 @@ function renderCronogramaConciliacoes(){
     if(activePaises.length&&!activePaises.includes(c.pais)) return;
     if(activeAgentes.length&&!activeAgentes.includes(c.agente)) return;
     if(activeResps.length){
-      const rEmail=store.paisesResp[c.pais]||'';
+      const rEmail=_getConcilResp(c);
       const ru=store.responsaveis.find(r=>r.email===rEmail);
       if(!ru||!activeResps.includes(ru.sigla)) return;
     }
@@ -5597,7 +5607,7 @@ function renderCronogramaConciliacoes(){
     if(activePaises.length&&!activePaises.includes(c.pais)) return false;
     if(activeAgentes.length&&!activeAgentes.includes(c.agente)) return false;
     if(activeResps.length){
-      const rEmail=store.paisesResp[c.pais]||'';
+      const rEmail=_getConcilResp(c);
       const ru=store.responsaveis.find(r=>r.email===rEmail);
       if(!ru||!activeResps.includes(ru.sigla)) return false;
     }
@@ -5660,7 +5670,7 @@ function renderCronogramaConciliacoes(){
     <tr>${colInfos}${dayHdrs}</tr>
     <tr>${emptyInfoCols}${wdHdrs}</tr>
   </thead><tbody>${list.map(conc=>{
-    const rEmail=store.paisesResp[conc.pais]||'';
+    const rEmail=_getConcilResp(conc);
     const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;
     const respCell=rUser?`<span style="font-family:monospace;font-size:10px;font-weight:700;background:rgba(151,111,244,.1);color:var(--e-mid);padding:1px 5px;border-radius:3px">${rUser.sigla}</span>`:'<span style="color:var(--e-muted);font-size:11px">—</span>';
     const concId=(conc.id||conc.nome).replace(/['"]/g,'');
