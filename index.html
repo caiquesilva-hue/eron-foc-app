@@ -965,11 +965,11 @@
     <div class="freq-dd" id="liq-f-tipo-dd">
       <button class="freq-dd-btn" id="liq-f-tipo-btn" onclick="_fddToggle(event,'liq-f-tipo-panel')" data-i18n-default="liq-all-tipos">Todos os tipos</button>
       <div class="freq-dd-panel" id="liq-f-tipo-panel">
-        <button class="freq-toggle" data-val="1" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('liq-f-tipo-btn',_fddVals('liq-f-tipo-panel'),t('liq-all-tipos'));renderCronogramaLiquidacoes()">1 · Processador</button>
-        <button class="freq-toggle" data-val="2" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('liq-f-tipo-btn',_fddVals('liq-f-tipo-panel'),t('liq-all-tipos'));renderCronogramaLiquidacoes()">2 · Forjada 1×/mês</button>
-        <button class="freq-toggle" data-val="3" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('liq-f-tipo-btn',_fddVals('liq-f-tipo-panel'),t('liq-all-tipos'));renderCronogramaLiquidacoes()">3 · Fatura</button>
-        <button class="freq-toggle" data-val="4" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('liq-f-tipo-btn',_fddVals('liq-f-tipo-panel'),t('liq-all-tipos'));renderCronogramaLiquidacoes()">4 · Forjada</button>
-        <button class="freq-toggle" data-val="5" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('liq-f-tipo-btn',_fddVals('liq-f-tipo-panel'),t('liq-all-tipos'));renderCronogramaLiquidacoes()">5 · Sem Liquidação</button>
+        <button class="freq-toggle" data-val="1" onclick="event.stopPropagation();this.classList.toggle('active');_liqTipoUpdateLabel();renderCronogramaLiquidacoes()">1 · Processador</button>
+        <button class="freq-toggle" data-val="2" onclick="event.stopPropagation();this.classList.toggle('active');_liqTipoUpdateLabel();renderCronogramaLiquidacoes()">2 · Forjada 1×/mês</button>
+        <button class="freq-toggle" data-val="3" onclick="event.stopPropagation();this.classList.toggle('active');_liqTipoUpdateLabel();renderCronogramaLiquidacoes()">3 · Fatura</button>
+        <button class="freq-toggle" data-val="4" onclick="event.stopPropagation();this.classList.toggle('active');_liqTipoUpdateLabel();renderCronogramaLiquidacoes()">4 · Forjada</button>
+        <button class="freq-toggle" data-val="5" onclick="event.stopPropagation();this.classList.toggle('active');_liqTipoUpdateLabel();renderCronogramaLiquidacoes()">5 · Sem Liquidação</button>
       </div>
     </div>
     <div class="freq-dd" id="liq-f-status-dd">
@@ -988,10 +988,17 @@
   <div class="table-wrap">
     <div id="liq-crono-empty" class="empty-state" style="display:none"><div class="empty-icon">💳</div><div class="empty-title">Nenhuma conciliação encontrada</div><div class="empty-sub">Adicione conciliações em Gerencial › Conciliações com tipo Processadores ou Mista.</div></div>
     <div class="table-scroll" id="liq-crono-table-inner" style="display:none">
-      <table class="no-row-border"><thead><tr>
-        <th data-i18n="liq-col-concil">Conciliação</th><th data-i18n="liq-col-pais">País</th><th data-i18n="liq-col-agente">Agente</th>
-        <th data-i18n="liq-col-tipo">Tipo Liquidação</th><th style="min-width:150px" data-i18n="liq-col-estado-concil">Estado Concil.</th><th style="min-width:100px" data-i18n="liq-col-ult-elab">Última Elab.</th><th style="min-width:90px" data-i18n="liq-col-data-ult">Data Última</th><th style="min-width:180px" data-i18n="liq-col-obs">Observações</th><th style="min-width:180px" data-i18n="liq-col-custo-info">Informações de custo</th>
-        <th style="min-width:190px" data-i18n="liq-col-status">Status</th>
+      <table class="no-row-border" style="table-layout:fixed;width:100%;min-width:1050px"><thead><tr>
+        <th style="width:17%" data-i18n="liq-col-concil">Conciliação</th>
+        <th style="width:7%" data-i18n="liq-col-pais">País</th>
+        <th style="width:9%" data-i18n="liq-col-agente">Agente</th>
+        <th style="width:10%" data-i18n="liq-col-tipo">Tipo Liquidação</th>
+        <th style="width:10%" data-i18n="liq-col-estado-concil">Estado Concil.</th>
+        <th style="width:6%" data-i18n="liq-col-ult-elab">Últ. Elab.</th>
+        <th style="width:6%" data-i18n="liq-col-data-ult">Data</th>
+        <th style="width:12%" data-i18n="liq-col-obs">Observações</th>
+        <th style="width:12%" data-i18n="liq-col-custo-info">Inf. Custo</th>
+        <th style="width:11%" data-i18n="liq-col-status">Status</th>
       </tr></thead>
       <tbody id="liq-crono-tbody"></tbody></table>
     </div>
@@ -5833,6 +5840,14 @@ function _liqSaveConfig(concId,updates){
   Object.assign(store.liquidacoesConfig[concId],updates);
   saveStore(); _fbSync('liquidacoesConfig');
 }
+function _liqTipoUpdateLabel(){
+  const active=_fddVals('liq-f-tipo-panel');
+  const b=document.getElementById('liq-f-tipo-btn');
+  if(!b) return;
+  if(!active.length){b.textContent=t('liq-all-tipos');b.classList.remove('has-active');}
+  else if(active.length===1){b.textContent=LIQ_TIPOS[active[0]]?.short||active[0];b.classList.add('has-active');}
+  else{b.textContent=active.length+' selecionados';b.classList.add('has-active');}
+}
 function _initLiqFilters(){
   const all=_liqConcilList();
   // País
@@ -5858,7 +5873,7 @@ function clearLiqFilters(){
   document.querySelectorAll('#liq-f-pais-panel .freq-toggle.active,#liq-f-agente-panel .freq-toggle.active,#liq-f-tipo-panel .freq-toggle.active,#liq-f-status-panel .freq-toggle.active').forEach(b=>b.classList.remove('active'));
   _fddLabel('liq-f-pais-btn',[],t('liq-all-paises'));
   _fddLabel('liq-f-agente-btn',[],t('liq-all-agentes'));
-  _fddLabel('liq-f-tipo-btn',[],t('liq-all-tipos'));
+  _liqTipoUpdateLabel();
   _fddLabel('liq-f-status-btn',[],t('liq-all-status'));
   const inp=document.getElementById('liq-crono-search');
   if(inp) inp.value='';
