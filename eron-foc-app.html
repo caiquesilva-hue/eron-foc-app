@@ -2316,7 +2316,7 @@ function onConcPaisChange(){
     o.value=a.nome; o.textContent=a.nome; aSel.appendChild(o);
   });
   if(prev&&agentes.some(a=>a.nome===prev)) aSel.value=prev;
-  renderContasMSList();
+  renderConcVincList();
 }
 function onAccountPaisChange(){
   const pais=document.getElementById('acc-pais').value;
@@ -4793,6 +4793,8 @@ async function submitResetPwd(){
 let _editConcIdx=-1;
 let _selectedContas=[];
 let _selectedProcessadores=[];
+let _tipoAtivosConc=[];
+let _selectedGatewayIds=[];
 let _selectedCashinIds=[];
 let _selectedCashoutIds=[];
 let _selectedRefundIds=[];
@@ -4834,12 +4836,15 @@ function openConciliacaoModal(editIdx=-1){
   const conc=isEdit?store.conciliacoes[editIdx]:{};
   _selectedContas=isEdit&&conc.contas?[...conc.contas]:[];
   _selectedProcessadores=isEdit&&conc.processadores?[...conc.processadores]:[];
+  const tipoAtualInit=conc.tipo||'bancos';
+  _tipoAtivosConc=tipoAtualInit==='mista'?['processadores','bancos']:tipoAtualInit==='processadores'?['processadores']:['bancos'];
   const concId=isEdit?(conc.id||conc.nome).replace(/['"]/g,''):'';
   const concMap=(store.concilVolumeMap||{})[concId]||{};
   _selectedCashinIds=concMap.cashinIds?[...concMap.cashinIds]:(concMap.cashinId?[concMap.cashinId]:[]);
   _selectedCashoutIds=concMap.cashoutIds?[...concMap.cashoutIds]:(concMap.cashoutId?[concMap.cashoutId]:[]);
   _selectedRefundIds=concMap.refundIds?[...concMap.refundIds]:[];
   _selectedChargebackIds=concMap.chargebackIds?[...concMap.chargebackIds]:[];
+  _selectedGatewayIds=[...new Set([..._selectedCashinIds,..._selectedCashoutIds,..._selectedRefundIds,..._selectedChargebackIds])];
   // backward compat: infer tiposOperacao from existing linked IDs
   _selectedOpTypes=concMap.tiposOperacao?[...concMap.tiposOperacao]:[
     ...(_selectedCashinIds.length?['cashin']:[]),
@@ -4858,21 +4863,18 @@ function openConciliacaoModal(editIdx=-1){
     <div class="form-field"><label class="form-label">País</label><select class="form-select" id="conc-pais" onchange="onConcPaisChange()"><option value="">Selecione</option>${paisOpts}</select></div>
     <div class="form-field"><label class="form-label">Agente</label><select class="form-select" id="conc-agente" onchange="renderContasMSList()"><option value="">Selecione</option>${agenteOpts}</select></div>
     <div class="form-field"><label class="form-label">Tipo<span class="req">*</span></label>
-      <select class="form-select" id="conc-tipo" onchange="onConcTipoChange()">
-        <option value="bancos">Bancos</option>
-        <option value="mista">Mista (bancos + processadores)</option>
-        <option value="processadores">Processadores</option>
-      </select>
-    </div>
-    <div id="conc-contas-wrap" class="form-field"><label class="form-label">Contas vinculadas</label>
-      <div class="contas-ms-wrap">
-        <div class="contas-ms-search"><input type="text" placeholder="Buscar por sigla, banco ou agente..." id="contas-ms-input" oninput="renderContasMSList()"></div>
-        <div class="contas-ms-list" id="contas-ms-list"></div>
-        <div class="contas-ms-tags" id="contas-ms-tags"></div>
+      <div style="display:flex;gap:6px">
+        <button type="button" id="tipo-proc-btn" class="op-type-toggle" onclick="toggleConcTipo('processadores')">Processadores</button>
+        <button type="button" id="tipo-bancos-btn" class="op-type-toggle" onclick="toggleConcTipo('bancos')">Bancos</button>
       </div>
     </div>
-    <div id="conc-procs-wrap" class="form-field" style="display:none"><label class="form-label" id="conc-procs-label">Processadores vinculados</label>
-      <div id="procs-toggles" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
+    <div id="conc-vinc-wrap" class="form-field">
+      <label class="form-label" id="conc-vinc-label">Vínculos</label>
+      <div class="contas-ms-wrap">
+        <div class="contas-ms-search"><input type="text" placeholder="Buscar..." id="conc-vinc-search" oninput="renderConcVincList()"></div>
+        <div class="contas-ms-list" id="conc-vinc-list"></div>
+        <div class="contas-ms-tags" id="conc-vinc-tags"></div>
+      </div>
     </div>
     <div class="form-field" style="border-top:1px solid var(--e-pale);padding-top:12px;margin-top:4px">
       <label class="form-label" style="color:var(--e-muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em">Prioridade por Volume</label>
@@ -4883,36 +4885,12 @@ function openConciliacaoModal(editIdx=-1){
         <button type="button" class="op-type-toggle" data-type="refunds" onclick="toggleOpType('refunds')">Refunds</button>
         <button type="button" class="op-type-toggle" data-type="chargebacks" onclick="toggleOpType('chargebacks')">Chargebacks</button>
       </div>
-      <div id="vol-cashin-wrap" style="display:none" class="form-field">
-        <label class="form-label" style="font-size:11px">Cashin — Gateways</label>
+      <div id="vol-combined-wrap" style="display:none" class="form-field" style="margin-bottom:0">
+        <label class="form-label" style="font-size:11px">Gateways vinculados</label>
         <div class="contas-ms-wrap">
-          <div class="contas-ms-search"><input type="text" placeholder="Buscar por ID, nome ou país..." id="vol-cashin-ms-input" oninput="renderVolMSList('cashin')"></div>
-          <div class="contas-ms-list" id="vol-cashin-ms-list"></div>
-          <div class="contas-ms-tags" id="vol-cashin-ms-tags"></div>
-        </div>
-      </div>
-      <div id="vol-cashout-wrap" style="display:none" class="form-field">
-        <label class="form-label" style="font-size:11px">Cashout — Processadores</label>
-        <div class="contas-ms-wrap">
-          <div class="contas-ms-search"><input type="text" placeholder="Buscar por ID, nome ou país..." id="vol-cashout-ms-input" oninput="renderVolMSList('cashout')"></div>
-          <div class="contas-ms-list" id="vol-cashout-ms-list"></div>
-          <div class="contas-ms-tags" id="vol-cashout-ms-tags"></div>
-        </div>
-      </div>
-      <div id="vol-refunds-wrap" style="display:none" class="form-field">
-        <label class="form-label" style="font-size:11px">Refunds — Gateways</label>
-        <div class="contas-ms-wrap">
-          <div class="contas-ms-search"><input type="text" placeholder="Buscar por ID, nome ou país..." id="vol-refunds-ms-input" oninput="renderVolMSList('refunds')"></div>
-          <div class="contas-ms-list" id="vol-refunds-ms-list"></div>
-          <div class="contas-ms-tags" id="vol-refunds-ms-tags"></div>
-        </div>
-      </div>
-      <div id="vol-chargebacks-wrap" style="display:none" class="form-field" style="margin-bottom:0">
-        <label class="form-label" style="font-size:11px">Chargebacks — Gateways</label>
-        <div class="contas-ms-wrap">
-          <div class="contas-ms-search"><input type="text" placeholder="Buscar por ID, nome ou país..." id="vol-chargebacks-ms-input" oninput="renderVolMSList('chargebacks')"></div>
-          <div class="contas-ms-list" id="vol-chargebacks-ms-list"></div>
-          <div class="contas-ms-tags" id="vol-chargebacks-ms-tags"></div>
+          <div class="contas-ms-search"><input type="text" placeholder="Buscar por ID, nome ou país..." id="vol-combined-ms-input" oninput="renderVolCombinedList()"></div>
+          <div class="contas-ms-list" id="vol-combined-ms-list"></div>
+          <div class="contas-ms-tags" id="vol-combined-ms-tags"></div>
         </div>
       </div>
     </div>
@@ -4932,91 +4910,83 @@ function openConciliacaoModal(editIdx=-1){
   if(conc.agente) setTimeout(()=>{const s=document.getElementById('conc-agente');if(s)s.value=conc.agente;},10);
   if(isEdit){const ec=document.getElementById('conc-encerrar');if(ec)ec.checked=conc.status==='encerrada';}
   setTimeout(()=>{
-    const t=document.getElementById('conc-tipo');
-    if(t) t.value=tipoAtual;
-    onConcTipoChange();
-    renderContasMSList();
-    renderContasMSTags();
-    renderProcsMSList();
-    _selectedOpTypes.forEach(t=>{
-      const btn=document.querySelector(`.op-type-toggle[data-type="${t}"]`);
+    // Tipo toggles
+    document.getElementById('tipo-proc-btn')?.classList.toggle('active',_tipoAtivosConc.includes('processadores'));
+    document.getElementById('tipo-bancos-btn')?.classList.toggle('active',_tipoAtivosConc.includes('bancos'));
+    renderConcVincList(); renderConcVincTags();
+    // Gateway op-type toggles
+    _selectedOpTypes.forEach(tp=>{
+      const btn=document.querySelector(`.op-type-toggle[data-type="${tp}"]`);
       if(btn) btn.classList.add('active');
-      const wrap=document.getElementById(`vol-${t}-wrap`);
-      if(wrap) wrap.style.display='';
-      renderVolMSList(t);
-      renderVolMSTags(t);
     });
+    const combWrap=document.getElementById('vol-combined-wrap');
+    if(combWrap) combWrap.style.display=_selectedOpTypes.length?'':'none';
+    if(_selectedOpTypes.length){ renderVolCombinedList(); renderVolCombinedTags(); }
   },0);
   document.getElementById('cad-submit').onclick=submitConciliacao;
   openModal('modal-cadastro');
 }
 
-function renderContasMSList(){
-  const q=(document.getElementById('contas-ms-input')?.value||'').toLowerCase();
-  const list=document.getElementById('contas-ms-list');
+function renderConcVincList(){
+  const q=(document.getElementById('conc-vinc-search')?.value||'').toLowerCase();
+  const list=document.getElementById('conc-vinc-list');
   if(!list) return;
-  const paisSel=(document.getElementById('conc-pais')?.value||'').trim();
-  const agenteSel=(document.getElementById('conc-agente')?.value||'').trim();
-  const filtered=store.contas.filter(c=>{
-    if(c.status==='encerrada') return false;
-    if(paisSel&&c.pais!==paisSel) return false;
-    if(agenteSel&&c.agente!==agenteSel) return false;
-    if(q&&!`${c.sigla} ${c.banco} ${c.agente}`.toLowerCase().includes(q)) return false;
-    return true;
-  });
-  list.innerHTML=filtered.map(c=>{
-    const checked=_selectedContas.includes(c.sigla);
+  const showProc=_tipoAtivosConc.includes('processadores');
+  const showBancos=_tipoAtivosConc.includes('bancos');
+  const lbl=document.getElementById('conc-vinc-label');
+  if(lbl) lbl.textContent=showProc&&showBancos?'Processadores e contas vinculadas':showProc?'Processadores vinculados':'Contas vinculadas';
+  let items=[];
+  if(showProc) items.push(...store.processadores.map(p=>({type:'proc',key:p,label:p,sub:'Processador'})));
+  if(showBancos){
+    const paisSel=(document.getElementById('conc-pais')?.value||'').trim();
+    const agenteSel=(document.getElementById('conc-agente')?.value||'').trim();
+    const contas=store.contas.filter(c=>c.status!=='encerrada'&&(!paisSel||c.pais===paisSel)&&(!agenteSel||c.agente===agenteSel));
+    items.push(...contas.map(c=>({type:'conta',key:c.sigla,label:c.sigla,sub:`${c.banco} · ${c.agente}`})));
+  }
+  const filtered=q?items.filter(i=>`${i.label} ${i.sub}`.toLowerCase().includes(q)):items;
+  if(!filtered.length){list.innerHTML=`<div style="padding:8px 12px;font-size:12px;color:var(--e-muted)">${items.length?'Nenhum resultado':'Nenhum item cadastrado'}</div>`;return;}
+  list.innerHTML=filtered.map(i=>{
+    const checked=i.type==='proc'?_selectedProcessadores.includes(i.key):_selectedContas.includes(i.key);
+    const safe=i.key.replace(/'/g,"\\'");
     return `<label class="contas-ms-item">
-      <input type="checkbox" value="${c.sigla}" ${checked?'checked':''} onchange="toggleContaMS('${c.sigla.replace(/'/g,"\\'")}',this.checked)">
-      <span class="contas-ms-sigla">${c.sigla}</span>
-      <span class="contas-ms-sub">${c.banco} · ${c.agente}</span>
+      <input type="checkbox" value="${i.key}" ${checked?'checked':''} onchange="toggleConcVinc('${i.type}','${safe}',this.checked)">
+      <span class="contas-ms-sigla">${i.label}</span>
+      <span class="contas-ms-sub">${i.sub}</span>
     </label>`;
   }).join('');
 }
-
-function toggleContaMS(sigla,checked){
-  if(checked&&!_selectedContas.includes(sigla)) _selectedContas.push(sigla);
-  else if(!checked) _selectedContas=_selectedContas.filter(s=>s!==sigla);
-  renderContasMSTags();
-}
-
-function renderContasMSTags(){
-  const tags=document.getElementById('contas-ms-tags');
-  if(!tags) return;
-  tags.innerHTML=_selectedContas.map(s=>`<span class="contas-tag">${s}<button type="button" onclick="toggleContaMS('${s.replace(/'/g,"\\'")}',false);renderContasMSList();renderContasMSTags()">×</button></span>`).join('');
-}
-
-function renderProcsMSList(){
-  const container=document.getElementById('procs-toggles');
-  if(!container) return;
-  const tipo=document.getElementById('conc-tipo')?.value||'bancos';
-  let items=[];
-  if(tipo==='processadores') items=[...store.processadores];
-  else if(tipo==='mista') items=[...store.processadores,...store.bancos];
-  const lbl=document.getElementById('conc-procs-label');
-  if(lbl) lbl.textContent=tipo==='mista'?'Processadores e bancos vinculados':tipo==='bancos'?'Bancos vinculados':'Processadores vinculados';
-  if(!items.length){ container.innerHTML=`<span style="font-size:12px;color:var(--e-muted)">Nenhum item cadastrado em Cadastro</span>`; return; }
-  container.innerHTML=items.map(p=>{
-    const active=_selectedProcessadores.includes(p)?'active':'';
-    const safe=p.replace(/'/g,"\\'");
-    return `<button type="button" class="freq-toggle ${active}" onclick="toggleProcMS('${safe}',this)">${p}</button>`;
-  }).join('');
-}
-function toggleProcMS(nome,btn){
-  if(_selectedProcessadores.includes(nome)){
-    _selectedProcessadores=_selectedProcessadores.filter(s=>s!==nome);
-    if(btn) btn.classList.remove('active');
+function toggleConcVinc(type,key,checked){
+  if(type==='proc'){
+    if(checked&&!_selectedProcessadores.includes(key)) _selectedProcessadores.push(key);
+    else if(!checked) _selectedProcessadores=_selectedProcessadores.filter(s=>s!==key);
   } else {
-    _selectedProcessadores.push(nome);
-    if(btn) btn.classList.add('active');
+    if(checked&&!_selectedContas.includes(key)) _selectedContas.push(key);
+    else if(!checked) _selectedContas=_selectedContas.filter(s=>s!==key);
   }
+  renderConcVincTags();
 }
-function onConcTipoChange(){
-  const tipo=document.getElementById('conc-tipo')?.value||'bancos';
-  const contasWrap=document.getElementById('conc-contas-wrap');
-  const procsWrap=document.getElementById('conc-procs-wrap');
-  if(contasWrap) contasWrap.style.display=tipo==='processadores'?'none':'';
-  if(procsWrap){ procsWrap.style.display=tipo==='bancos'?'none':''; if(tipo!=='bancos') renderProcsMSList(); }
+function renderConcVincTags(){
+  const tags=document.getElementById('conc-vinc-tags');
+  if(!tags) return;
+  const allTags=[
+    ..._selectedProcessadores.map(p=>`<span class="contas-tag">${p}<button type="button" onclick="toggleConcVinc('proc','${p.replace(/'/g,"\\'")}',false);renderConcVincList();renderConcVincTags()">×</button></span>`),
+    ..._selectedContas.map(s=>`<span class="contas-tag">${s}<button type="button" onclick="toggleConcVinc('conta','${s.replace(/'/g,"\\'")}',false);renderConcVincList();renderConcVincTags()">×</button></span>`),
+  ];
+  tags.innerHTML=allTags.join('');
+}
+// kept for compat (agente onchange calls renderConcVincList via onConcPaisChange)
+function renderContasMSList(){ renderConcVincList(); }
+function renderContasMSTags(){ renderConcVincTags(); }
+
+function toggleConcTipo(tipo){
+  const idx=_tipoAtivosConc.indexOf(tipo);
+  if(idx>=0){ if(_tipoAtivosConc.length>1) _tipoAtivosConc.splice(idx,1); }
+  else _tipoAtivosConc.push(tipo);
+  document.getElementById('tipo-proc-btn')?.classList.toggle('active',_tipoAtivosConc.includes('processadores'));
+  document.getElementById('tipo-bancos-btn')?.classList.toggle('active',_tipoAtivosConc.includes('bancos'));
+  if(!_tipoAtivosConc.includes('bancos')) _selectedContas=[];
+  if(!_tipoAtivosConc.includes('processadores')) _selectedProcessadores=[];
+  renderConcVincList(); renderConcVincTags();
 }
 
 function submitConciliacao(){
@@ -5024,13 +4994,16 @@ function submitConciliacao(){
   if(!nome){document.getElementById('conc-nome')?.classList.add('err');return;}
   const pais=document.getElementById('conc-pais')?.value||'';
   const agente=document.getElementById('conc-agente')?.value||'';
-  const tipo=document.getElementById('conc-tipo')?.value||'bancos';
-  const contas=tipo==='processadores'?[]:[..._selectedContas];
-  const processadores=(tipo==='bancos')?[]:[..._selectedProcessadores];
-  const cashinIds=[..._selectedCashinIds];
-  const cashoutIds=[..._selectedCashoutIds];
-  const refundIds=[..._selectedRefundIds];
-  const chargebackIds=[..._selectedChargebackIds];
+  const hasProc=_tipoAtivosConc.includes('processadores');
+  const hasBancos=_tipoAtivosConc.includes('bancos');
+  const tipo=hasProc&&hasBancos?'mista':hasProc?'processadores':'bancos';
+  const contas=hasBancos?[..._selectedContas]:[];
+  const processadores=hasProc?[..._selectedProcessadores]:[];
+  // Distribute unified gateway selection to all active op-types
+  const cashinIds=_selectedOpTypes.includes('cashin')?[..._selectedGatewayIds]:[];
+  const cashoutIds=_selectedOpTypes.includes('cashout')?[..._selectedGatewayIds]:[];
+  const refundIds=_selectedOpTypes.includes('refunds')?[..._selectedGatewayIds]:[];
+  const chargebackIds=_selectedOpTypes.includes('chargebacks')?[..._selectedGatewayIds]:[];
   const tiposOperacao=[..._selectedOpTypes];
   const isEdit=_editConcIdx>=0;
   const encerrado=isEdit&&(document.getElementById('conc-encerrar')?.checked||false);
@@ -5470,24 +5443,22 @@ function _volSelectedArr(type){
 function _volMSEntries(type){
   return Object.entries(store.volumeRankings?.[type]||{}).sort((a,b)=>a[1].rank-b[1].rank);
 }
-function renderVolMSList(type){
-  const q=(document.getElementById(`vol-${type}-ms-input`)?.value||'').toLowerCase().trim();
-  const list=document.getElementById(`vol-${type}-ms-list`);
+function renderVolCombinedList(){
+  const q=(document.getElementById('vol-combined-ms-input')?.value||'').toLowerCase().trim();
+  const list=document.getElementById('vol-combined-ms-list');
   if(!list) return;
-  const selected=_volSelectedArr(type);
-  const entries=_volMSEntries(type);
+  const allEntries=new Map();
+  _selectedOpTypes.forEach(type=>{
+    Object.entries(store.volumeRankings?.[type]||{}).forEach(([id,e])=>{ if(!allEntries.has(id)) allEntries.set(id,e); });
+  });
+  const entries=[...allEntries.entries()].sort((a,b)=>a[1].rank-b[1].rank);
   if(!entries.length){list.innerHTML='<div style="padding:8px 12px;font-size:12px;color:var(--e-muted)">Importe os dados primeiro em Gerencial › Conciliações → Importar Volume</div>';return;}
-  const filtered=q?entries.filter(([id,e])=>
-    e.name.toLowerCase().includes(q)||
-    (e.country||'').toLowerCase().includes(q)||
-    id.toString().includes(q)||
-    String(e.rank).startsWith(q)
-  ):entries;
+  const filtered=q?entries.filter(([id,e])=>e.name.toLowerCase().includes(q)||(e.country||'').toLowerCase().includes(q)||id.toString().includes(q)||String(e.rank).startsWith(q)):entries;
   list.innerHTML=filtered.slice(0,80).map(([id,e])=>{
-    const chk=selected.includes(id);
+    const chk=_selectedGatewayIds.includes(id);
     const sid=id.replace(/'/g,"\\'");
     return `<label class="contas-ms-item">
-      <input type="checkbox" value="${id}" ${chk?'checked':''} onchange="toggleVolMS('${type}','${sid}',this.checked)">
+      <input type="checkbox" value="${id}" ${chk?'checked':''} onchange="toggleVolCombined('${sid}',this.checked)">
       <span class="vol-ms-rank">#${e.rank}</span>
       <span class="contas-ms-sigla">${id}</span>
       <span class="contas-ms-sub">${e.name} · ${e.country||''}</span>
@@ -5495,38 +5466,34 @@ function renderVolMSList(type){
   }).join('')+(filtered.length>80?`<div style="padding:6px 12px;font-size:11px;color:var(--e-muted)">${filtered.length} entradas — refine a busca</div>`:'')
   ||(filtered.length===0?'<div style="padding:8px 12px;font-size:12px;color:var(--e-muted)">Nenhum resultado</div>':'');
 }
-function toggleVolMS(type,id,checked){
-  const arr=_volSelectedArr(type);
-  if(checked&&!arr.includes(id)) arr.push(id);
-  else if(!checked){const i=arr.indexOf(id);if(i>=0)arr.splice(i,1);}
-  renderVolMSTags(type);
+function toggleVolCombined(id,checked){
+  if(checked&&!_selectedGatewayIds.includes(id)) _selectedGatewayIds.push(id);
+  else if(!checked){const i=_selectedGatewayIds.indexOf(id);if(i>=0)_selectedGatewayIds.splice(i,1);}
+  renderVolCombinedTags();
+}
+function renderVolCombinedTags(){
+  const tags=document.getElementById('vol-combined-ms-tags');
+  if(!tags) return;
+  tags.innerHTML=_selectedGatewayIds.map(id=>{
+    let e=null;
+    for(const tp of [..._selectedOpTypes,'cashin','cashout','refunds','chargebacks']){e=(store.volumeRankings?.[tp]||{})[id];if(e) break;}
+    const lbl=e?`#${e.rank} ${e.name} (${e.country||'?'})`:id;
+    const sid=id.replace(/'/g,"\\'");
+    return `<span class="contas-tag">${lbl}<button type="button" onclick="toggleVolCombined('${sid}',false);renderVolCombinedList();renderVolCombinedTags()">×</button></span>`;
+  }).join('');
 }
 function toggleOpType(type){
   const idx=_selectedOpTypes.indexOf(type);
   if(idx>=0) _selectedOpTypes.splice(idx,1);
   else _selectedOpTypes.push(type);
-  document.querySelectorAll('.op-type-toggle').forEach(b=>b.classList.toggle('active',_selectedOpTypes.includes(b.dataset.type)));
-  ['cashin','cashout','refunds','chargebacks'].forEach(t=>{
-    const wrap=document.getElementById(`vol-${t}-wrap`);
-    if(wrap){
-      const show=_selectedOpTypes.includes(t);
-      wrap.style.display=show?'':'none';
-      if(show){renderVolMSList(t);renderVolMSTags(t);}
-    }
-  });
+  document.querySelectorAll('.op-type-toggle[data-type]').forEach(b=>b.classList.toggle('active',_selectedOpTypes.includes(b.dataset.type)));
+  const wrap=document.getElementById('vol-combined-wrap');
+  if(wrap) wrap.style.display=_selectedOpTypes.length?'':'none';
+  if(_selectedOpTypes.length){ renderVolCombinedList(); renderVolCombinedTags(); }
 }
-function renderVolMSTags(type){
-  const tags=document.getElementById(`vol-${type}-ms-tags`);
-  if(!tags) return;
-  const selected=_volSelectedArr(type);
-  const src=store.volumeRankings?.[type]||{};
-  tags.innerHTML=selected.map(id=>{
-    const e=(src||{})[id];
-    const lbl=e?`#${e.rank} ${e.name} (${e.country||'?'})`:id;
-    const sid=id.replace(/'/g,"\\'");
-    return `<span class="contas-tag">${lbl}<button type="button" onclick="toggleVolMS('${type}','${sid}',false);renderVolMSList('${type}');renderVolMSTags('${type}')">×</button></span>`;
-  }).join('');
-}
+// compat stubs (may be called in rare paths)
+function renderVolMSList(){ renderVolCombinedList(); }
+function renderVolMSTags(){ renderVolCombinedTags(); }
 // ─────────────────────────────────────────────────────────────────
 
 function _priorChip(concId){
