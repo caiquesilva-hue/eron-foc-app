@@ -2134,14 +2134,15 @@ function deleteAccount(idx){
 }
 
 // ─── TOGGLE ENCERRAR ──────────────────────────────────────────────
+let _encerrarTarget='acc-encerrar';
 function onToggleEncerrar(checkbox){
-  if(checkbox.checked){
-    checkbox.checked=false;
-    openModal('modal-confirm-encerrar');
-  }
+  if(checkbox.checked){checkbox.checked=false;_encerrarTarget='acc-encerrar';openModal('modal-confirm-encerrar');}
+}
+function onToggleConcEncerrar(checkbox){
+  if(checkbox.checked){checkbox.checked=false;_encerrarTarget='conc-encerrar';openModal('modal-confirm-encerrar');}
 }
 function confirmEncerrar(){
-  document.getElementById('acc-encerrar').checked=true;
+  document.getElementById(_encerrarTarget).checked=true;
   closeModal('modal-confirm-encerrar');
 }
 function cancelEncerrar(){ closeModal('modal-confirm-encerrar'); }
@@ -4469,7 +4470,9 @@ function renderGerencialConciliacoes(){
     const tipoMap={bancos:['chip-tipo-bancos','Bancos'],mista:['chip-tipo-mista','Mista'],processadores:['chip-tipo-proc','Processadores']};
     const [tipoCls,tipoLbl]=tipoMap[c.tipo||'bancos']||tipoMap.bancos;
     const tipoChipHtml=`<span class="chip ${tipoCls}" style="font-size:10px">${tipoLbl}</span>`;
-    return `<tr><td style="font-weight:600">${c.nome}</td><td>${c.pais?`${countryFlag(c.pais)} ${c.pais}`:'—'}</td><td style="font-size:12px;color:var(--e-muted)">${c.agente||'—'}</td><td>${tipoChipHtml}</td><td style="white-space:normal">${tags}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openConciliacaoModal(${origIdx})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteConciliacao(${origIdx})">${trashIcon}</button></div>`:''}</td></tr>`;
+    const isEncerrada=c.status==='encerrada';
+    const statusChip=isEncerrada?`<span class="chip chip-red" style="font-size:10px;margin-left:6px">${t('status-encerrada')}</span>`:'';
+    return `<tr class="${isEncerrada?'row-encerrada':''}"><td style="font-weight:600">${c.nome}${statusChip}</td><td>${c.pais?`${countryFlag(c.pais)} ${c.pais}`:'—'}</td><td style="font-size:12px;color:var(--e-muted)">${c.agente||'—'}</td><td>${tipoChipHtml}</td><td style="white-space:normal">${tags}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openConciliacaoModal(${origIdx})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteConciliacao(${origIdx})">${trashIcon}</button></div>`:''}</td></tr>`;
   }).join('');
 }
 
@@ -4556,9 +4559,22 @@ function openConciliacaoModal(editIdx=-1){
           <div class="contas-ms-tags" id="vol-chargebacks-ms-tags"></div>
         </div>
       </div>
-    </div>`;
+    </div>
+    ${isEdit?`<div id="conc-encerrar-section" style="border-top:1px solid var(--e-pale);padding-top:12px;margin-top:4px">
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-title" style="color:#ef4444">Encerrar conciliação</div>
+          <div class="toggle-desc">Marca a conciliação como inativa permanentemente.</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="conc-encerrar" onchange="onToggleConcEncerrar(this)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>`:''}`;
   if(conc.pais) setTimeout(()=>{const s=document.getElementById('conc-pais');if(s){s.value=conc.pais;onConcPaisChange();}},0);
   if(conc.agente) setTimeout(()=>{const s=document.getElementById('conc-agente');if(s)s.value=conc.agente;},10);
+  if(isEdit){const ec=document.getElementById('conc-encerrar');if(ec)ec.checked=conc.status==='encerrada';}
   setTimeout(()=>{
     const t=document.getElementById('conc-tipo');
     if(t) t.value=tipoAtual;
@@ -4624,9 +4640,10 @@ function submitConciliacao(){
   const chargebackIds=[..._selectedChargebackIds];
   const tiposOperacao=[..._selectedOpTypes];
   const isEdit=_editConcIdx>=0;
+  const encerrado=isEdit&&(document.getElementById('conc-encerrar')?.checked||false);
   let concId;
   if(isEdit){
-    store.conciliacoes[_editConcIdx]={...store.conciliacoes[_editConcIdx],nome,pais,agente,tipo,contas};
+    store.conciliacoes[_editConcIdx]={...store.conciliacoes[_editConcIdx],nome,pais,agente,tipo,contas,status:encerrado?'encerrada':'ativa'};
     concId=(store.conciliacoes[_editConcIdx].id||nome).replace(/['"]/g,'');
   } else {
     concId=nome.toLowerCase().replace(/[^a-z0-9]/g,'_')+'_'+Date.now();
@@ -5164,8 +5181,8 @@ function renderCronogramaConciliacoes(){
     while(cur<=end){days.push(new Date(cur));cur.setDate(cur.getDate()+1);}
   }
 
-  // build full list with D1 status pre-computed
-  const listWithD1=store.conciliacoes.map(c=>{
+  // build full list with D1 status pre-computed (exclude encerradas)
+  const listWithD1=store.conciliacoes.filter(c=>c.status!=='encerrada').map(c=>{
     const d1r=_getConcilStatus(c,d1Str);
     return {c,d1Status:d1r.status};
   });
