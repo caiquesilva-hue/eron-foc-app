@@ -722,7 +722,7 @@
     <!-- GERENCIAL > CONCILIAÇÕES -->
     <div class="page" id="page-gerencial-conciliacoes">
   <div class="page-header">
-    <div class="page-header-left"><div class="page-title-text">Conciliações</div><div class="page-title-count" id="conciliacoes-count"></div></div>
+    <div class="page-header-left"><div class="page-title-text" data-i18n="nav-conciliacoes">Conciliações</div><div class="page-title-count" id="conciliacoes-count"></div></div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
       <div style="display:flex;gap:8px;align-items:stretch">
         <button class="btn-secondary" onclick="openVolumeImportModal()" data-requires-edit title="Importar CSVs de volume para calcular prioridade automaticamente" style="font-size:12px;padding:5px 12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Importar Volume</button>
@@ -733,8 +733,8 @@
   </div>
   <div style="padding:0 0 10px"><input type="search" id="conc-ger-search" placeholder="Buscar nome, país, agente..." style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderGerencialConciliacoes()"></div>
   <div class="table-wrap">
-    <div id="conciliacoes-empty" class="empty-state"><div class="empty-icon">🔗</div><div class="empty-title">Nenhuma conciliação cadastrada</div><div class="empty-sub">Adicione conciliações vinculando contas de Gerencial > Accounts.</div></div>
-    <div class="table-scroll" id="conciliacoes-table-inner" style="display:none"><table><thead><tr><th>Nome</th><th>País</th><th>Agente</th><th>Tipo</th><th>Contas vinculadas</th><th style="width:80px">Ações</th></tr></thead><tbody id="conciliacoes-tbody"></tbody></table></div>
+    <div id="conciliacoes-empty" class="empty-state"><div class="empty-icon">🔗</div><div class="empty-title" data-i18n="conc-empty-title">Nenhuma conciliação cadastrada</div><div class="empty-sub" data-i18n="conc-empty-sub">Adicione conciliações vinculando contas de Gerencial > Accounts.</div></div>
+    <div class="table-scroll" id="conciliacoes-table-inner" style="display:none"><table><thead><tr><th data-i18n="lbl-nome">Nome</th><th data-i18n="col-pais">País</th><th data-i18n="col-agente">Agente</th><th data-i18n="conc-col-tipo">Tipo</th><th data-i18n="conc-col-contas">Contas vinculadas</th><th style="width:80px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="conciliacoes-tbody"></tbody></table></div>
   </div>
 </div>
     <!-- CRONOGRAMA > ACCOUNTS -->
@@ -971,7 +971,7 @@
     <div class="page" id="page-cronograma-conciliacoes">
   <div class="page-header">
     <div class="page-title-group">
-      <div class="page-title-text">Conciliações</div>
+      <div class="page-title-text" data-i18n="nav-conciliacoes">Conciliações</div>
       <div class="page-title-count" id="crono-conc-count"></div>
     </div>
   </div>
@@ -1819,6 +1819,8 @@ const i18n = {
     'liq-all-paises':'Todos os países','liq-all-tipos':'Todos os tipos','liq-all-status':'Todos os status',
     'liq-st-nao-iniciado':'Não iniciado','liq-st-em-elab':'Em Elaboração','liq-st-concluida':'Concluída','liq-st-sem-mov':'Sem Movimento','liq-st-pendente':'Pendente',
     'liq-search-ph':'Buscar nome, país, agente...','liq-empty-ger-title':'Nenhuma conciliação de Processadores ou Mista','liq-empty-crono-title':'Nenhuma conciliação encontrada',
+    'conc-col-tipo':'Tipo','conc-col-contas':'Contas vinculadas',
+    'conc-empty-title':'Nenhuma conciliação cadastrada','conc-empty-sub':'Adicione conciliações vinculando contas de Gerencial > Accounts.',
   },
   'en': {
     'ops-platform':'FOC App','login-welcome':'Welcome back',
@@ -1890,6 +1892,8 @@ const i18n = {
     'liq-all-paises':'All countries','liq-all-tipos':'All types','liq-all-status':'All statuses',
     'liq-st-nao-iniciado':'Not started','liq-st-em-elab':'In Progress','liq-st-concluida':'Completed','liq-st-sem-mov':'No Movement','liq-st-pendente':'Pending',
     'liq-search-ph':'Search name, country, agent...','liq-empty-ger-title':'No Processor or Mixed reconciliations','liq-empty-crono-title':'No reconciliation found',
+    'conc-col-tipo':'Type','conc-col-contas':'Linked accounts',
+    'conc-empty-title':'No reconciliations registered','conc-empty-sub':'Add reconciliations linking accounts from Management > Accounts.',
   },
   'es': {
     'ops-platform':'FOC App','login-welcome':'Bienvenido de nuevo',
@@ -1961,6 +1965,8 @@ const i18n = {
     'liq-all-paises':'Todos los países','liq-all-tipos':'Todos los tipos','liq-all-status':'Todos los estados',
     'liq-st-nao-iniciado':'No iniciado','liq-st-em-elab':'En Elaboración','liq-st-concluida':'Concluida','liq-st-sem-mov':'Sin Movimiento','liq-st-pendente':'Pendiente',
     'liq-search-ph':'Buscar nombre, país, agente...','liq-empty-ger-title':'Sin conciliaciones de Procesadores o Mixtas','liq-empty-crono-title':'No se encontraron conciliaciones',
+    'conc-col-tipo':'Tipo','conc-col-contas':'Cuentas vinculadas',
+    'conc-empty-title':'Sin conciliaciones registradas','conc-empty-sub':'Agrega conciliaciones vinculando cuentas desde Gerencial > Accounts.',
   }
 };
 
