@@ -5674,7 +5674,7 @@ function _liqOpenPop(evt,concId,type){
   const sig=store.responsaveis.find(r=>r.email===window._loggedEmail)?.sigla||'?';
   const opts=[
     {v:null,  lbl:'Não iniciado',   sub:'',         bg:'#f3f4f6',color:'#6b7280'},
-    {v:'ini', lbl:'Em Elaboração',  sub:sig,         bg:'#dbeafe',color:'#1d4ed8'},
+    {v:'ini', lbl:'Em Elaboração',  sub:'Elab '+sig,  bg:'#dbeafe',color:'#1d4ed8'},
     {v:'ok',  lbl:'Conferida (OK)', sub:sig,         bg:'#dcfce7',color:'#15803d'},
     {v:'sm',  lbl:'Sem Movimento',  sub:sig+' s/m',  bg:'#ede9fe',color:'#5b21b6'},
     {v:'pend',lbl:'Pendente',       sub:'',          bg:'#fef9c3',color:'#854d0e'},
