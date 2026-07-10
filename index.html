@@ -5724,6 +5724,17 @@ function liqSetMonth(val){
   renderCronogramaLiquidacoes();
 }
 
+let _liqObsTimer=null;
+function _liqObsInput(ta,id){
+  ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';
+  clearTimeout(_liqObsTimer);
+  _liqObsTimer=setTimeout(()=>_liqSaveConfig(id,{obs:ta.value}),5000);
+}
+function _liqObsBlur(ta,id){
+  clearTimeout(_liqObsTimer);
+  _liqSaveConfig(id,{obs:ta.value});
+}
+
 // ── Render Cronograma > Liquidações ──
 function renderCronogramaLiquidacoes(){
   _liqPopulateMonthSel();
@@ -5783,7 +5794,7 @@ function renderCronogramaLiquidacoes(){
       <td>${estadoChip}</td>
       <td style="font-size:12px;color:var(--e-text);font-weight:600">${elab.sigla||'<span style="color:var(--e-muted)">—</span>'}</td>
       <td style="font-size:12px;color:var(--e-muted)">${elab.date||'—'}</td>
-      <td><textarea class="liq-obs" placeholder="Observações..." style="width:100%;min-height:32px;border:1px solid var(--e-pale);border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit;color:var(--e-text);background:#fff;resize:none;overflow:hidden;box-sizing:border-box;display:block" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';_liqSaveConfig('${id}',{obs:this.value})">${cfg.obs||''}</textarea></td>
+      <td><textarea class="liq-obs" placeholder="Observações..." style="width:100%;min-height:32px;border:1px solid var(--e-pale);border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit;color:var(--e-text);background:#fff;resize:none;overflow:hidden;box-sizing:border-box;display:block" oninput="_liqObsInput(this,'${id}')" onblur="_liqObsBlur(this,'${id}')">${cfg.obs||''}</textarea></td>
       <td>${_liqPillHtml(lSt,id,'liq')}</td>
     </tr>`;
   }).join('');
