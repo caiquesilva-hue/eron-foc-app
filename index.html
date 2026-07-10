@@ -382,9 +382,9 @@
   .day-cell{cursor:pointer;transition:background .1s;}
   .day-cell:hover{background:rgba(151,111,244,.06);}
   .cal-dropdown{position:fixed;z-index:600;background:#fff;border:1px solid var(--e-pale);border-radius:10px;box-shadow:0 8px 24px rgba(27,19,60,.13);overflow:hidden;min-width:180px;}
-  .cal-dd-item{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;font-size:12.5px;font-weight:500;transition:background .1s;border-bottom:1px solid #f3f4f6;}
+  .cal-dd-item{padding:9px 14px;cursor:pointer;font-size:12px;font-weight:600;transition:opacity .1s;border-bottom:1px solid rgba(255,255,255,.3);}
   .cal-dd-item:last-child{border-bottom:none;}
-  .cal-dd-item:hover{background:var(--e-ghost);}
+  .cal-dd-item:hover{opacity:.8;}
   .day-filled{border-radius:5px;font-size:10px;font-weight:700;padding:3px 7px;text-align:center;white-space:nowrap;line-height:1.5;display:inline-block;}
 
   /* PERMISSIONS MODAL */
@@ -3633,13 +3633,11 @@ function onDayCellClick(event, contaKey, dateStr, active, tdEl){
     opts.push({status:'sem_acesso',label:'Sem acesso',sub:sigla+' s/a',bg:'#fef2f2',color:'#dc2626'});
     opts.push({status:'aguardando_extrato',label:'Aguardando extrato',sub:sigla+' ag.',bg:'#e0f2fe',color:'#0369a1'});
   }
-  if(existing) opts.push({status:'clear',label:'Limpar',sub:'',bg:'#e5e7eb',color:'#6b7280'});
+  if(existing) opts.push({status:'clear',label:'Limpar',sub:'',bg:'#f3f4f6',color:'#6b7280'});
   if(!opts.length){ dd.remove(); return; }
-  dd.innerHTML=`<div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--e-muted);padding:7px 12px 4px">${dateStr}</div>`+
-    opts.map(o=>`<div class="cal-dd-item" data-status="${o.status}">
-      <div style="width:7px;height:7px;border-radius:50%;background:${o.bg};flex-shrink:0"></div>
-      <div><div style="color:${o.color};font-weight:600">${o.label}</div>${o.sub?`<div style="font-size:10px;color:var(--e-muted);font-family:monospace">${o.sub}</div>`:''}</div>
-    </div>`).join('');
+  dd.innerHTML=opts.map(o=>`<div class="cal-dd-item" data-status="${o.status}" style="color:${o.color};background:${o.bg}">
+    <div style="font-weight:600">${o.label}</div>${o.sub?`<div style="font-size:10px;opacity:.7;font-family:monospace">${o.sub}</div>`:''}
+  </div>`).join('');
   dd.addEventListener('click',function(ev){
     const item=ev.target.closest('.cal-dd-item');
     if(!item)return;
@@ -5499,14 +5497,10 @@ function onConcCellClick(evt,ck,dateStr){
     {v:null,           lbl:'Limpar',       sub:'',           bg:'#e5e7eb',color:'#6b7280'},
   ];
   const pop=document.createElement('div');
-  pop.style.cssText='position:absolute;top:calc(100% + 2px);left:0;background:#fff;border:1px solid var(--e-pale);border-radius:10px;box-shadow:0 8px 24px rgba(27,19,60,.13);z-index:600;min-width:180px;overflow:hidden;';
-  pop.innerHTML=`<div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--e-muted);padding:7px 12px 4px">${dateStr}</div>`+
-    opts.map(o=>`<div class="cal-dd-item" style="${existing?.status===o.v||(!existing&&!o.v)?'background:rgba(151,111,244,.09);':''}"
-      onmouseenter="this.style.background='var(--e-ghost)'"
-      onmouseleave="this.style.background='${existing?.status===o.v||(!existing&&!o.v)?'rgba(151,111,244,.09)':'transparent'}'"
+  pop.style.cssText='position:absolute;top:calc(100% + 2px);left:0;border:1px solid var(--e-pale);border-radius:10px;box-shadow:0 8px 24px rgba(27,19,60,.13);z-index:600;min-width:180px;overflow:hidden;';
+  pop.innerHTML=opts.map(o=>`<div class="cal-dd-item" style="color:${o.color};background:${o.bg}"
       onclick="_concChooseSt(event,'${ck}','${dateStr}',${o.v===null?'null':"'"+o.v+"'"})">
-      <div style="width:7px;height:7px;border-radius:50%;background:${o.bg};flex-shrink:0"></div>
-      <div><div style="color:${o.color};font-weight:600">${o.lbl}</div>${o.sub?`<div style="font-size:10px;color:var(--e-muted);font-family:monospace">${o.sub}</div>`:''}</div>
+      <div style="font-weight:600">${o.lbl}</div>${o.sub?`<div style="font-size:10px;opacity:.7;font-family:monospace">${o.sub}</div>`:''}
     </div>`).join('');
   td.style.position='relative';
   td.appendChild(pop);
@@ -5679,21 +5673,17 @@ function _liqOpenPop(evt,concId,type){
   const st=_liqGetStatus(concId,type);
   const sig=store.responsaveis.find(r=>r.email===window._loggedEmail)?.sigla||'?';
   const opts=[
-    {v:null,  lbl:'Não iniciado',          dot:'#9898c3'},
-    {v:'ini', lbl:`Elab ${sig} · Iniciada`,dot:'#93c5fd'},
-    {v:'ok',  lbl:'Conferida (OK)',         dot:'#16a34a'},
-    {v:'sm',  lbl:'Sem Movimento (s/m)',    dot:'#ede9fe'},
-    {v:'pend',lbl:'Pendente',              dot:'#d97706'},
+    {v:null,  lbl:'Não iniciado',          bg:'#f3f4f6',color:'#6b7280'},
+    {v:'ini', lbl:`Elab ${sig} · Iniciada`,bg:'#dbeafe',color:'#1d4ed8'},
+    {v:'ok',  lbl:'Conferida (OK)',         bg:'#dcfce7',color:'#15803d'},
+    {v:'sm',  lbl:'Sem Movimento (s/m)',    bg:'#ede9fe',color:'#5b21b6'},
+    {v:'pend',lbl:'Pendente',              bg:'#fef9c3',color:'#854d0e'},
   ];
   const pop=document.createElement('div');
   pop.id='_liq_pop';
-  pop.style.cssText='position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid var(--e-pale);border-radius:10px;box-shadow:0 8px 24px rgba(27,19,60,.13);z-index:600;min-width:200px;overflow:hidden;';
-  pop.innerHTML=`<div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--e-muted);padding:8px 12px 4px">${type.toUpperCase()} · Status</div>`+
-    opts.map(o=>`<div style="display:flex;align-items:center;gap:9px;padding:8px 12px;cursor:pointer;font-size:12.5px;${st?.v===o.v||(!st&&!o.v)?'background:rgba(151,111,244,.09);':''}"
-      onmouseenter="this.style.background='var(--e-ghost)'"
-      onmouseleave="this.style.background='${st?.v===o.v||(!st&&!o.v)?'rgba(151,111,244,.09)':'transparent'}'"
+  pop.style.cssText='position:absolute;top:calc(100% + 4px);left:0;border:1px solid var(--e-pale);border-radius:10px;box-shadow:0 8px 24px rgba(27,19,60,.13);z-index:600;min-width:200px;overflow:hidden;';
+  pop.innerHTML=opts.map(o=>`<div class="cal-dd-item" style="color:${o.color};background:${o.bg}"
       onclick="_liqChooseSt(event,'${concId}','${type}',${o.v===null?'null':"'"+o.v+"'"})">
-      <div style="width:7px;height:7px;border-radius:50%;background:${o.dot};flex-shrink:0"></div>
       <span>${o.lbl}</span>
     </div>`).join('');
   const td=btn.closest('td');
