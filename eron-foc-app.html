@@ -338,21 +338,21 @@
   .cal-table thead tr:first-child th{top:0;}
   .cal-table thead tr:last-child th{top:31px;border-top:none;}
   .cal-table thead th.col-info{text-align:left;padding:8px 14px;}
-  .cal-table thead th.col-day{min-width:44px;width:auto;padding:5px 3px;}
+  .cal-table thead th.col-day{min-width:58px;width:auto;padding:5px 3px;}
   .cal-table thead th.weekend{background:#faf5ff;}
   .cal-table tbody tr{border-bottom:1px solid var(--e-pale);border-left:3px solid transparent;}
   .cal-table tbody tr:last-child{border-bottom:none;}
   .cal-table tbody tr.row-ativa{border-left-color:#22c55e;}
   .cal-table tbody tr.row-encerrada{border-left-color:#d1d5db;opacity:.6;}
   .cal-table td{padding:7px 14px;font-size:12px;color:var(--e-text);white-space:nowrap;vertical-align:middle;}
-  .cal-table td.day-cell{padding:2px 1px;text-align:center;width:auto;min-width:36px;}
-  .day-dot{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin:0 auto;}
+  .cal-table td.day-cell{padding:4px 2px;text-align:center;width:auto;min-width:58px;}
+  .day-dot{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin:0 auto;}
   .day-dot.active-t1{background:rgba(111,115,244,.2);color:var(--e-violet);}
   .day-dot.active-t2{background:rgba(151,111,244,.2);color:var(--e-mid);}
   .day-dot.active-diario{background:#e0fdf4;color:#0f766e;}
   .day-dot.active-once{background:#fef9c3;color:#92400e;}
   .day-dot.active-semanal{background:#fce7f3;color:#9d174d;}
-  .day-dot.inactive{width:6px;height:6px;background:var(--e-pale);border-radius:50%;margin:9px auto;}
+  .day-dot.inactive{width:8px;height:8px;background:var(--e-pale);border-radius:50%;margin:12px auto;}
   .sortable-th{cursor:pointer;user-select:none;}
   .sortable-th:hover{color:var(--e-purple);}
   .sort-arrow{font-size:9px;margin-left:3px;opacity:.35;display:inline-block;}
@@ -381,11 +381,11 @@
   /* CALENDAR INTERACTIVE */
   .day-cell{cursor:pointer;transition:background .1s;}
   .day-cell:hover{background:rgba(151,111,244,.06);}
-  .cal-dropdown{position:fixed;z-index:600;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.14);overflow:hidden;min-width:170px;}
-  .cal-dd-item{padding:9px 14px;cursor:pointer;font-size:12px;font-weight:500;transition:opacity .1s;border-bottom:1px solid #f3f4f6;}
+  .cal-dropdown{position:fixed;z-index:600;background:#fff;border:1px solid var(--e-pale);border-radius:10px;box-shadow:0 8px 24px rgba(27,19,60,.13);overflow:hidden;min-width:180px;}
+  .cal-dd-item{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;font-size:12.5px;font-weight:500;transition:background .1s;border-bottom:1px solid #f3f4f6;}
   .cal-dd-item:last-child{border-bottom:none;}
-  .cal-dd-item:hover{opacity:.8;}
-  .day-filled{border-radius:4px;font-size:9px;font-weight:700;padding:2px 5px;text-align:center;white-space:nowrap;line-height:1.5;display:inline-block;}
+  .cal-dd-item:hover{background:var(--e-ghost);}
+  .day-filled{border-radius:5px;font-size:10px;font-weight:700;padding:3px 7px;text-align:center;white-space:nowrap;line-height:1.5;display:inline-block;}
 
   /* PERMISSIONS MODAL */
   .perm-btn{font-size:11px;padding:3px 10px;border-radius:5px;border:1px solid var(--e-pale);background:#fff;color:var(--e-muted);cursor:pointer;font-weight:500;transition:all .15s;}
@@ -3624,11 +3624,13 @@ function onDayCellClick(event, contaKey, dateStr, active, tdEl){
     opts.push({status:'sem_acesso',label:'Sem acesso',sub:sigla+' s/a',bg:'#fef2f2',color:'#dc2626'});
     opts.push({status:'aguardando_extrato',label:'Aguardando extrato',sub:sigla+' ag.',bg:'#e0f2fe',color:'#0369a1'});
   }
-  if(existing) opts.push({status:'clear',label:'Limpar',sub:'',bg:'transparent',color:'#6b7280'});
+  if(existing) opts.push({status:'clear',label:'Limpar',sub:'',bg:'#e5e7eb',color:'#6b7280'});
   if(!opts.length){ dd.remove(); return; }
-  dd.innerHTML=opts.map(o=>`<div class="cal-dd-item" data-status="${o.status}" style="color:${o.color};background:${o.bg}">
-    <div style="font-weight:600">${o.label}</div>${o.sub?`<div style="font-size:10px;opacity:.8;font-family:monospace">${o.sub}</div>`:''}
-  </div>`).join('');
+  dd.innerHTML=`<div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--e-muted);padding:7px 12px 4px">${dateStr}</div>`+
+    opts.map(o=>`<div class="cal-dd-item" data-status="${o.status}">
+      <div style="width:7px;height:7px;border-radius:50%;background:${o.bg};flex-shrink:0"></div>
+      <div><div style="color:${o.color};font-weight:600">${o.label}</div>${o.sub?`<div style="font-size:10px;color:var(--e-muted);font-family:monospace">${o.sub}</div>`:''}</div>
+    </div>`).join('');
   dd.addEventListener('click',function(ev){
     const item=ev.target.closest('.cal-dd-item');
     if(!item)return;
@@ -5669,7 +5671,7 @@ function _liqOpenPop(evt,concId,type){
     {v:null,  lbl:'Não iniciado',          dot:'#9898c3'},
     {v:'ini', lbl:`Elab ${sig} · Iniciada`,dot:'#8b5cf6'},
     {v:'ok',  lbl:'Conferida (OK)',         dot:'#16a34a'},
-    {v:'sm',  lbl:'Sem Movimento (s/m)',    dot:'#9898c3'},
+    {v:'sm',  lbl:'Sem Movimento (s/m)',    dot:'#ede9fe'},
     {v:'pend',lbl:'Pendente',              dot:'#d97706'},
   ];
   const pop=document.createElement('div');
@@ -5705,7 +5707,7 @@ function _liqPillHtml(st,concId,type){
   let bg,col,lbl;
   if(st.v==='ok')  {bg='#dcfce7';col='#166534';lbl='✓ OK';}
   else if(st.v==='ini'){bg='#ede9fe';col='#6d28d9';lbl=`Elab ${st.by||''}`;}
-  else if(st.v==='sm') {bg='#f1f5f9';col='#475569';lbl='s/m';}
+  else if(st.v==='sm') {bg='#ede9fe';col='#5b21b6';lbl='s/m';}
   else               {bg='#fef9c3';col='#854d0e';lbl='! Pendente';}
   const byPart=(st.v!=='ini'&&st.by)?`<span style="font-size:10px;font-family:monospace;opacity:.7"> · ${st.by}${st.dt?' '+st.dt:''}</span>`:'';
   return `<button style="${base}background:${bg};color:${col}" ${oc}>${lbl}${byPart}</button>`;
@@ -5783,7 +5785,7 @@ function renderCronogramaLiquidacoes(){
     const lSt=_liqGetStatus(id,'liq');
     const [tcCls,tcLbl]=tipoMap[c.tipo||'bancos']||tipoMap.bancos;
     const tl=LIQ_TIPOS[cfg.tipo_liq]||null;
-    const tlChip=tl?`<span class="chip" style="font-size:10px;background:${tl.bg};color:${tl.color}">${tl.short}</span>`:`<span style="color:var(--e-muted);font-size:11px">—</span>`;
+    const tlChip=tl?`<span class="chip" style="font-size:11px;background:${tl.bg};color:${tl.color}">${tl.lbl}</span>`:`<span style="color:var(--e-muted);font-size:11px">—</span>`;
     const elab=_liqLastElab(c);
     let estadoChip;
     if(!elab._raw){
