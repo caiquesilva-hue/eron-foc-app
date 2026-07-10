@@ -926,6 +926,14 @@
       <option value="4">4 · Forjada</option>
       <option value="5">5 · Sem Liquidação</option>
     </select>
+    <select id="liq-f-status" onchange="renderCronogramaLiquidacoes()">
+      <option value="">Todos os status</option>
+      <option value="none">Não iniciado</option>
+      <option value="ini">Em Elaboração</option>
+      <option value="ok">Liquidação OK</option>
+      <option value="sm">Sem Movimento</option>
+      <option value="pend">Pendente</option>
+    </select>
   </div>
   <div style="padding:4px 0 8px"><input type="search" id="liq-crono-search" placeholder="Buscar nome, país, agente..." style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderCronogramaLiquidacoes()"></div>
   <div class="liq-stat-row" id="liq-stats-row"></div>
@@ -935,7 +943,7 @@
       <table class="no-row-border"><thead><tr>
         <th>Conciliação</th><th>País</th>
         <th>Tipo Liquidação</th><th style="min-width:150px">Estado Concil.</th><th style="min-width:100px">Última Elab.</th><th style="min-width:90px">Data Última</th><th style="min-width:180px">Observações</th>
-        <th style="min-width:100px">Liquidação</th>
+        <th style="min-width:190px">Status</th>
       </tr></thead>
       <tbody id="liq-crono-tbody"></tbody></table>
     </div>
@@ -5672,7 +5680,7 @@ function _liqOpenPop(evt,concId,type){
   const sig=store.responsaveis.find(r=>r.email===window._loggedEmail)?.sigla||'?';
   const opts=[
     {v:null,  lbl:'Não iniciado',          dot:'#9898c3'},
-    {v:'ini', lbl:`Elab ${sig} · Iniciada`,dot:'#8b5cf6'},
+    {v:'ini', lbl:`Elab ${sig} · Iniciada`,dot:'#93c5fd'},
     {v:'ok',  lbl:'Conferida (OK)',         dot:'#16a34a'},
     {v:'sm',  lbl:'Sem Movimento (s/m)',    dot:'#ede9fe'},
     {v:'pend',lbl:'Pendente',              dot:'#d97706'},
@@ -5705,11 +5713,11 @@ function _liqClosePop(){
 }
 function _liqPillHtml(st,concId,type){
   const oc=`onclick="_liqOpenPop(event,'${concId}','${type}')"`;
-  const base='border:none;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;display:inline-flex;align-items:center;gap:4px;min-width:76px;white-space:nowrap;';
+  const base='border:none;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;display:inline-flex;align-items:center;gap:4px;min-width:110px;white-space:nowrap;';
   if(!st) return `<button style="${base}background:#fff;border:1px solid var(--e-pale);color:var(--e-muted)" ${oc}>—</button>`;
   let bg,col,lbl;
   if(st.v==='ok')  {bg='#dcfce7';col='#166534';lbl='✓ OK';}
-  else if(st.v==='ini'){bg='#ede9fe';col='#6d28d9';lbl='Elab';}
+  else if(st.v==='ini'){bg='#dbeafe';col='#1d4ed8';lbl='Elab';}
   else if(st.v==='sm') {bg='#ede9fe';col='#5b21b6';lbl='s/m';}
   else               {bg='#fef9c3';col='#854d0e';lbl='! Pendente';}
   const byPart=st.by?`<span style="font-size:10px;font-family:monospace;opacity:.7"> · ${st.by}${st.dt?' '+st.dt:''}</span>`:'';
@@ -5753,10 +5761,13 @@ function renderCronogramaLiquidacoes(){
   _liqPopulateMonthSel();
   const fp=document.getElementById('liq-f-pais')?.value||'';
   const ft=document.getElementById('liq-f-tipo')?.value||'';
+  const fs=document.getElementById('liq-f-status')?.value||'';
   const fq=(document.getElementById('liq-crono-search')?.value||'').toLowerCase().trim();
   let list=_liqConcilList();
   if(fp) list=list.filter(c=>c.pais===fp);
   if(ft) list=list.filter(c=>_liqGetConfig(_liqConcId(c)).tipo_liq===ft);
+  if(fs==='none') list=list.filter(c=>!_liqGetStatus(_liqConcId(c),'liq'));
+  else if(fs) list=list.filter(c=>_liqGetStatus(_liqConcId(c),'liq')?.v===fs);
   if(fq) list=list.filter(c=>`${c.nome} ${c.pais} ${c.agente}`.toLowerCase().includes(fq));
   const cnt=document.getElementById('liq-crono-count');
   if(cnt) cnt.textContent=list.length+' conciliação'+(list.length!==1?'s':'');
