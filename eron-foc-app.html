@@ -4840,13 +4840,12 @@ function _getConcilStatus(conc,dateStr){
   const hasConcluido=stArr.includes('concluido');
   const hasSemMov=stArr.includes('sem_movimento');
   const hasSemAcesso=stArr.includes('sem_acesso')||stArr.includes('aguardando_extrato');
-  // 1. Qualquer pendente → pendente (estrito)
   if(hasPendente) return {status:'pendente'};
-  // 2. Todas concluídas/sem movimento → pronto limpo
-  // 3. Nenhuma pendente, mas tem proibitivos junto de concluídas/sem movimento
-  //    → pronto com aviso (⚠️ tooltip via _getConcilProblems no render)
+  // Bancos: todas as contas sem_movimento → derivar automaticamente
+  if(conc.tipo==='bancos'&&!hasConcluido&&stArr.every(s=>s==='sem_movimento')) return {status:'sem_movimento'};
+  // Bancos: todas as contas sem_acesso (e nenhuma concluída/sem_mov) → derivar sem_acesso
+  if(conc.tipo==='bancos'&&!hasConcluido&&!hasSemMov&&hasSemAcesso&&stArr.every(s=>s==='sem_acesso'||s==='aguardando_extrato')) return {status:'sem_acesso'};
   if(hasConcluido||hasSemMov) return {status:'pronto_conciliacao'};
-  // 4. Só proibitivos, sem nenhuma concluída/sem movimento → sem acesso
   if(hasSemAcesso) return {status:'sem_acesso'};
   return {status:'pendente'};
 }
@@ -5490,6 +5489,18 @@ function onConcCellClick(evt,ck,dateStr){
   const existing=store.cronogramaConciliacoes[manualKey];
   const user=store.responsaveis.find(r=>r.email===window._loggedEmail);
   const sigla=user?.sigla||(user?.nome?.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase())||'?';
+  // Bancos: sem popup — clique no check confirma/desfaz concluido
+  if(conc.tipo==='bancos'){
+    const r=_getConcilStatus(conc,dateStr);
+    if(r.status==='pronto_conciliacao'){
+      store.cronogramaConciliacoes[manualKey]={status:'concluido',sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')};
+      saveStore(); _fbSync('cronogramaConciliacoes'); renderCronogramaConciliacoes();
+    } else if(r.status==='concluido'){
+      delete store.cronogramaConciliacoes[manualKey];
+      saveStore(); _fbSync('cronogramaConciliacoes'); renderCronogramaConciliacoes();
+    }
+    return;
+  }
   const opts=[
     {v:'concluido',    lbl:'Concluída',    sub:sigla,        bg:'#dcfce7',color:'#15803d'},
     {v:'sem_movimento',lbl:'Sem Movimento',sub:sigla+' s/m', bg:'#ede9fe',color:'#5b21b6'},
