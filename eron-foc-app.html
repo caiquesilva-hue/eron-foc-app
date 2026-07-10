@@ -913,11 +913,7 @@
     </div>
   </div>
   <div class="crono-filters">
-    <div class="liq-month-nav">
-      <button class="liq-m-btn" onclick="liqPrevMonth()">&#8249;</button>
-      <div class="liq-m-lbl" id="liq-month-lbl">Julho 2025</div>
-      <button class="liq-m-btn" onclick="liqNextMonth()">&#8250;</button>
-    </div>
+    <select id="liq-month-sel" onchange="liqSetMonth(this.value)" style="height:36px;padding:0 28px 0 12px;border:1px solid var(--e-pale);border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;color:var(--e-text);background:#fff;cursor:pointer;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239898c3' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 10px center"></select>
     <select id="liq-f-pais" onchange="renderCronogramaLiquidacoes()">
       <option value="">Todos os países</option>
     </select>
@@ -5485,7 +5481,7 @@ const LIQ_TIPOS={
 };
 const LIQ_PEGAR_EM=['gmail/rackspace','site','bank','drive de extrato','sem info'];
 const LIQ_FREQ=['Diária','Semanal','Mensal','1×/mês'];
-let _liqMonth=new Date().getMonth(), _liqYear=new Date().getFullYear();
+let _liqMonth=(new Date().getMonth()===0?11:new Date().getMonth()-1), _liqYear=(new Date().getMonth()===0?new Date().getFullYear()-1:new Date().getFullYear());
 
 function _liqConcilList(){
   return store.conciliacoes.filter(c=>c.status!=='encerrada'&&(c.tipo==='processadores'||c.tipo==='mista'));
@@ -5581,13 +5577,31 @@ function _liqPillHtml(st,concId,type){
   const byPart=(st.v!=='ini'&&st.by)?`<span style="font-size:10px;font-family:monospace;opacity:.7"> · ${st.by}${st.dt?' '+st.dt:''}</span>`:'';
   return `<button style="${base}background:${bg};color:${col}" ${oc}>${lbl}${byPart}</button>`;
 }
-function liqPrevMonth(){ _liqMonth--; if(_liqMonth<0){_liqMonth=11;_liqYear--;} renderCronogramaLiquidacoes(); }
-function liqNextMonth(){ _liqMonth++; if(_liqMonth>11){_liqMonth=0;_liqYear++;} renderCronogramaLiquidacoes(); }
+function _liqPopulateMonthSel(){
+  const sel=document.getElementById('liq-month-sel');
+  if(!sel) return;
+  const now=new Date();
+  const opts=[];
+  // 18 meses atrás até 3 meses à frente
+  for(let i=-18;i<=3;i++){
+    let m=now.getMonth()+i, y=now.getFullYear();
+    while(m<0){m+=12;y--;}
+    while(m>11){m-=12;y++;}
+    const val=`${y}-${m}`;
+    const selected=(m===_liqMonth&&y===_liqYear)?'selected':'';
+    opts.push(`<option value="${val}" ${selected}>${MESES_PT[m]} ${y}</option>`);
+  }
+  sel.innerHTML=opts.join('');
+}
+function liqSetMonth(val){
+  const [y,m]=val.split('-').map(Number);
+  _liqYear=y; _liqMonth=m;
+  renderCronogramaLiquidacoes();
+}
 
 // ── Render Cronograma > Liquidações ──
 function renderCronogramaLiquidacoes(){
-  const mlbl=document.getElementById('liq-month-lbl');
-  if(mlbl) mlbl.textContent=`${MESES_PT[_liqMonth]} ${_liqYear}`;
+  _liqPopulateMonthSel();
   const fp=document.getElementById('liq-f-pais')?.value||'';
   const ft=document.getElementById('liq-f-tipo')?.value||'';
   let list=_liqConcilList();
