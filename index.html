@@ -5555,7 +5555,7 @@ function submitConcBulkApply(){
     days.forEach(dateStr=>{
       const k=`${concId}_${dateStr}`;
       if(status==='clear'){if(store.cronogramaConciliacoes[k]){delete store.cronogramaConciliacoes[k];changed++;}}
-      else{store.cronogramaConciliacoes[k]={status:'concluido',sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')};changed++;}
+      else{store.cronogramaConciliacoes[k]={status,sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')};changed++;}
     });
   });
   saveStore(); if(changed) _fbSync('cronogramaConciliacoes');
