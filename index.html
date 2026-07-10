@@ -2073,6 +2073,7 @@ function onConcPaisChange(){
     o.value=a.nome; o.textContent=a.nome; aSel.appendChild(o);
   });
   if(prev&&agentes.some(a=>a.nome===prev)) aSel.value=prev;
+  renderContasMSList();
 }
 function onAccountPaisChange(){
   const pais=document.getElementById('acc-pais').value;
@@ -4497,13 +4498,13 @@ function openConciliacaoModal(editIdx=-1){
   const paisOpts=store.paises.map(p=>`<option value="${p}">${countryFlag(p)} ${p}</option>`).join('');
   const agenteOpts=[...new Set([...store.agentes.map(a=>a.nome),...store.contas.map(c=>c.agente)].filter(Boolean))].sort().map(a=>`<option value="${a}">${a}</option>`).join('');
   const m=document.getElementById('modal-cadastro');
-  document.getElementById('cad-modal-title').textContent=(isEdit?'Editar: ':'')+conc.nome||'Nova Conciliação';
+  document.getElementById('cad-modal-title').textContent=isEdit?('Editar: '+conc.nome):'Nova Conciliação';
   const body=document.getElementById('cad-modal-body');
   const tipoAtual=conc.tipo||'bancos';
   body.innerHTML=`
     <div class="form-field"><label class="form-label">Nome<span class="req">*</span></label><input class="form-input" id="conc-nome" placeholder="Ex: Payout Mono Colprocesa" value="${conc.nome||''}"></div>
     <div class="form-field"><label class="form-label">País</label><select class="form-select" id="conc-pais" onchange="onConcPaisChange()"><option value="">Selecione</option>${paisOpts}</select></div>
-    <div class="form-field"><label class="form-label">Agente</label><select class="form-select" id="conc-agente"><option value="">Selecione</option>${agenteOpts}</select></div>
+    <div class="form-field"><label class="form-label">Agente</label><select class="form-select" id="conc-agente" onchange="renderContasMSList()"><option value="">Selecione</option>${agenteOpts}</select></div>
     <div class="form-field"><label class="form-label">Tipo<span class="req">*</span></label>
       <select class="form-select" id="conc-tipo" onchange="onConcTipoChange()">
         <option value="bancos">Bancos</option>
@@ -4598,7 +4599,15 @@ function renderContasMSList(){
   const q=(document.getElementById('contas-ms-input')?.value||'').toLowerCase();
   const list=document.getElementById('contas-ms-list');
   if(!list) return;
-  const filtered=store.contas.filter(c=>c.status!=='encerrada'&&(!q||`${c.sigla} ${c.banco} ${c.agente}`.toLowerCase().includes(q)));
+  const paisSel=(document.getElementById('conc-pais')?.value||'').trim();
+  const agenteSel=(document.getElementById('conc-agente')?.value||'').trim();
+  const filtered=store.contas.filter(c=>{
+    if(c.status==='encerrada') return false;
+    if(paisSel&&c.pais!==paisSel) return false;
+    if(agenteSel&&c.agente!==agenteSel) return false;
+    if(q&&!`${c.sigla} ${c.banco} ${c.agente}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
   list.innerHTML=filtered.map(c=>{
     const checked=_selectedContas.includes(c.sigla);
     return `<label class="contas-ms-item">
