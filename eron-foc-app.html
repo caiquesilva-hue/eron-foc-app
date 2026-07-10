@@ -941,6 +941,7 @@
     <div class="d1-stat-card d1-stat-pronto-conc"><div class="d1-stat-num" id="conc-d1-pronto">—</div><div class="d1-stat-lbl">Pronto p/ Conc.</div></div>
     <div class="d1-stat-card d1-stat-sem-mov"><div class="d1-stat-num" id="conc-d1-sem-mov">—</div><div class="d1-stat-lbl">Sem Movimento</div></div>
     <div class="d1-stat-card d1-stat-sem-acesso"><div class="d1-stat-num" id="conc-d1-sem-acesso">—</div><div class="d1-stat-lbl">Sem Acesso</div></div>
+    <div class="d1-stat-card" style="border-left-color:#94a3b8"><div class="d1-stat-num" id="conc-d1-conta-encerrada" style="color:#475569">—</div><div class="d1-stat-lbl">Conta Encerrada</div></div>
     <div class="d1-stat-card d1-stat-pendente"><div class="d1-stat-num" id="conc-d1-pendente">—</div><div class="d1-stat-lbl">Pendente</div></div>
   </div>
   <div class="crono-search-wrap">
@@ -1111,7 +1112,7 @@
 </div>
 
 <!-- ── MODAL: CONFIRMAR ENCERRAMENTO ─────────────────────────── -->
-<div class="modal-overlay" id="modal-confirm-encerrar" onclick="if(event.target===this)cancelEncerrar()">
+<div class="modal-overlay" id="modal-confirm-encerrar" style="z-index:400" onclick="if(event.target===this)cancelEncerrar()">
   <div class="confirm-card">
     <div class="modal-header">
       <div class="confirm-header-inner">
@@ -1123,20 +1124,7 @@
       </div>
     </div>
     <div class="modal-body">
-      <div class="confirm-checklist">
-        <div class="confirm-item">
-          <div class="confirm-item-icon">📋</div>
-          <div class="confirm-item-text" data-i18n="confirm-check-1">Todos os extratos do período foram conferidos e estão fechados.</div>
-        </div>
-        <div class="confirm-item">
-          <div class="confirm-item-icon">🔗</div>
-          <div class="confirm-item-text" data-i18n="confirm-check-2">Todas as conciliações foram finalizadas e não há divergências pendentes.</div>
-        </div>
-        <div class="confirm-item">
-          <div class="confirm-item-icon">💰</div>
-          <div class="confirm-item-text" data-i18n="confirm-check-3">O saldo foi zerado ou transferido para outra conta ativa.</div>
-        </div>
-      </div>
+      <div class="confirm-checklist" id="encerrar-checklist"></div>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="cancelEncerrar()" data-i18n="btn-cancel">Cancelar</button>
@@ -2136,11 +2124,29 @@ function deleteAccount(idx){
 
 // ─── TOGGLE ENCERRAR ──────────────────────────────────────────────
 let _encerrarTarget='acc-encerrar';
+function _openEncerrarModal(target,items){
+  _encerrarTarget=target;
+  const cl=document.getElementById('encerrar-checklist');
+  if(cl) cl.innerHTML=items.map(([icon,txt])=>`<div class="confirm-item"><div class="confirm-item-icon">${icon}</div><div class="confirm-item-text">${txt}</div></div>`).join('');
+  openModal('modal-confirm-encerrar');
+}
 function onToggleEncerrar(checkbox){
-  if(checkbox.checked){checkbox.checked=false;_encerrarTarget='acc-encerrar';openModal('modal-confirm-encerrar');}
+  if(checkbox.checked){
+    checkbox.checked=false;
+    _openEncerrarModal('acc-encerrar',[
+      ['📋','Todos os extratos do período foram conferidos e estão fechados.'],
+      ['🔗','Todas as conciliações foram finalizadas e não há divergências pendentes.'],
+      ['💰','O saldo foi zerado ou transferido para outra conta ativa.'],
+    ]);
+  }
 }
 function onToggleConcEncerrar(checkbox){
-  if(checkbox.checked){checkbox.checked=false;_encerrarTarget='conc-encerrar';openModal('modal-confirm-encerrar');}
+  if(checkbox.checked){
+    checkbox.checked=false;
+    _openEncerrarModal('conc-encerrar',[
+      ['🔗','Todas as conciliações foram finalizadas e não há divergências pendentes.'],
+    ]);
+  }
 }
 function confirmEncerrar(){
   document.getElementById(_encerrarTarget).checked=true;
@@ -4693,6 +4699,9 @@ function _getConcilStatus(conc,dateStr){
   if(manual&&manual.status==='concluido') return {status:'concluido',entry:manual};
   const sigs=conc.contas||[];
   if(!sigs.length) return {status:'pendente'};
+  // Se qualquer conta vinculada estiver encerrada → conta_encerrada
+  const hasContaEncerrada=sigs.some(sig=>store.contas.find(ct=>ct.sigla===sig)?.status==='encerrada');
+  if(hasContaEncerrada) return {status:'conta_encerrada'};
   const stArr=sigs.map(sig=>{
     const c=store.contas.find(ct=>ct.sigla===sig);
     if(!c) return 'pendente';
@@ -5197,7 +5206,7 @@ function renderCronogramaConciliacoes(){
   });
 
   // stat counters over unfiltered-by-d1 list (matching país/agente/resp/search/prior)
-  const d1C={concluido:0,pronto_conciliacao:0,sem_movimento:0,sem_acesso:0,pendente:0};
+  const d1C={concluido:0,pronto_conciliacao:0,sem_movimento:0,sem_acesso:0,conta_encerrada:0,pendente:0};
   listWithD1.forEach(({c,d1Status})=>{
     if(activePaises.length&&!activePaises.includes(c.pais)) return;
     if(activeAgentes.length&&!activeAgentes.includes(c.agente)) return;
@@ -5222,6 +5231,7 @@ function renderCronogramaConciliacoes(){
   _upd('conc-d1-pronto',d1C.pronto_conciliacao);
   _upd('conc-d1-sem-mov',d1C.sem_movimento);
   _upd('conc-d1-sem-acesso',d1C.sem_acesso);
+  _upd('conc-d1-conta-encerrada',d1C.conta_encerrada);
   _upd('conc-d1-pendente',d1C.pendente);
 
   // full filter including d1 status filter
@@ -5276,6 +5286,7 @@ function renderCronogramaConciliacoes(){
     pronto_conciliacao:{bg:'#ccfbf1',color:'#0f766e'},
     sem_movimento:{bg:'#ede9fe',color:'#5b21b6'},
     sem_acesso:{bg:'#fef2f2',color:'#dc2626'},
+    conta_encerrada:{bg:'#f1f5f9',color:'#475569'},
     pendente:{bg:'',color:''}
   };
   const chipHtml={
@@ -5283,6 +5294,7 @@ function renderCronogramaConciliacoes(){
     pronto_conciliacao:`<span class="chip chip-teal" style="font-size:10px">Pronto p/ Conc.</span>`,
     sem_movimento:`<span class="chip chip-purple" style="font-size:10px">Sem Movimento</span>`,
     sem_acesso:`<span class="chip chip-red" style="font-size:10px">Sem Acesso</span>`,
+    conta_encerrada:`<span class="chip" style="font-size:10px;background:#f1f5f9;color:#475569">Conta Encerrada</span>`,
     pendente:`<span class="chip chip-amber" style="font-size:10px">Pendente</span>`
   };
 
