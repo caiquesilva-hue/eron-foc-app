@@ -338,15 +338,15 @@
   .cal-table thead tr:first-child th{top:0;}
   .cal-table thead tr:last-child th{top:31px;border-top:none;}
   .cal-table thead th.col-info{text-align:left;padding:8px 14px;}
-  .cal-table thead th.col-day{min-width:58px;width:auto;padding:5px 3px;}
+  .cal-table thead th.col-day{min-width:50px;width:auto;padding:5px 3px;}
   .cal-table thead th.weekend{background:#faf5ff;}
   .cal-table tbody tr{border-bottom:1px solid var(--e-pale);border-left:3px solid transparent;}
   .cal-table tbody tr:last-child{border-bottom:none;}
   .cal-table tbody tr.row-ativa{border-left-color:#22c55e;}
   .cal-table tbody tr.row-encerrada{border-left-color:#d1d5db;opacity:.6;}
   .cal-table td{padding:7px 14px;font-size:12px;color:var(--e-text);white-space:nowrap;vertical-align:middle;}
-  .cal-table td.day-cell{padding:4px 2px;text-align:center;width:auto;min-width:58px;}
-  .day-dot{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin:0 auto;}
+  .cal-table td.day-cell{padding:4px 2px;text-align:center;width:auto;min-width:50px;}
+  .day-dot{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin:0 auto;}
   .day-dot.active-t1{background:rgba(111,115,244,.2);color:var(--e-violet);}
   .day-dot.active-t2{background:rgba(151,111,244,.2);color:var(--e-mid);}
   .day-dot.active-diario{background:#e0fdf4;color:#0f766e;}
@@ -704,7 +704,7 @@
   </div>
   <div style="display:flex;align-items:flex-start;gap:10px;background:#f5f3ff;border:1px solid rgba(151,111,244,.22);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--e-sub);line-height:1.55">
     <span style="flex-shrink:0;margin-top:1px">ℹ️</span>
-    <span>Conciliações do tipo <strong>Processadores</strong> e <strong>Mista</strong> são incluídas automaticamente a partir de <strong>Gerencial › Conciliações</strong>. Configure o tipo de liquidação e a origem do arquivo para cada uma.</span>
+    <span>Conciliações do tipo <strong>Processadores</strong> e <strong>Mista</strong> são incluídas automaticamente a partir de <strong>Gerencial › Conciliações</strong>. Conciliações do tipo <strong>Chargeback</strong> e <strong>Refunds</strong> não estão contempladas aqui. Configure o tipo de liquidação e a origem do arquivo para cada uma.</span>
   </div>
   <div style="padding:0 0 10px"><input type="search" id="liq-ger-search" placeholder="Buscar nome, país, agente..." style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderGerencialLiquidacoes()"></div>
   <div class="table-wrap">
@@ -927,6 +927,7 @@
       <option value="5">5 · Sem Liquidação</option>
     </select>
   </div>
+  <div style="padding:4px 0 8px"><input type="search" id="liq-crono-search" placeholder="Buscar nome, país, agente..." style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderCronogramaLiquidacoes()"></div>
   <div class="liq-stat-row" id="liq-stats-row"></div>
   <div class="table-wrap">
     <div id="liq-crono-empty" class="empty-state" style="display:none"><div class="empty-icon">💳</div><div class="empty-title">Nenhuma conciliação encontrada</div><div class="empty-sub">Adicione conciliações em Gerencial › Conciliações com tipo Processadores ou Mista.</div></div>
@@ -5445,11 +5446,11 @@ function renderCronogramaConciliacoes(){
       const cfg=statusCfg[r.status];
       const _ck=concId.replace(/&/g,'&amp;');
       if(r.status==='pendente'){
-        return `<td class="day-cell conc-cell" data-ck="${_ck}" data-dt="${dateStr}" style="cursor:pointer"><div class="day-dot" style="opacity:.4">·</div></td>`;
+        return `<td class="day-cell conc-cell" data-ck="${_ck}" data-dt="${dateStr}" style="cursor:pointer"><div class="day-dot" style="background:rgba(151,111,244,.1);font-size:8px;opacity:.6">·</div></td>`;
       }
       const _sig=r.entry?.sigla||'';
       const lbl=r.status==='sem_movimento'?(_sig?`${_sig} s/m`:'s/m'):r.status==='sem_acesso'?(_sig?`${_sig} s/a`:'s/a'):r.entry?_sig:(r.status==='pronto_conciliacao'?'✓':'?');
-      return `<td class="day-cell conc-cell" data-ck="${_ck}" data-dt="${dateStr}" style="cursor:pointer;padding:2px 1px"><div class="day-filled" style="background:${cfg.bg};color:${cfg.color}">${lbl}</div></td>`;
+      return `<td class="day-cell conc-cell" data-ck="${_ck}" data-dt="${dateStr}" style="cursor:pointer"><div class="day-filled" style="background:${cfg.bg};color:${cfg.color}">${lbl}</div></td>`;
     }).join('');
     return `<tr class="row-ativa"><td class="cal-sticky" style="font-size:12px;font-weight:600;white-space:nowrap">${conc.nome}</td><td style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td><td class="sub" style="font-size:11px">${conc.agente||'—'}</td><td>${respCell}</td><td style="padding:4px 8px">${priorCell}</td><td style="white-space:nowrap;padding:4px 8px">${d1ChipHtml}</td>${cells}</tr>`;
   }).join('')}</tbody>`;
@@ -5481,21 +5482,23 @@ function onConcCellClick(evt,ck,dateStr){
   if(!conc) return;
   const manualKey=`${conc.id||conc.nome}_${dateStr}`;
   const existing=store.cronogramaConciliacoes[manualKey];
+  const user=store.responsaveis.find(r=>r.email===window._loggedEmail);
+  const sigla=user?.sigla||(user?.nome?.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase())||'?';
   const opts=[
-    {v:'concluido',  lbl:'Concluída',    bg:'#dcfce7',color:'#15803d'},
-    {v:'sem_movimento',lbl:'Sem Movimento',bg:'#ede9fe',color:'#5b21b6'},
-    {v:'sem_acesso', lbl:'Sem Acesso',   bg:'#fef2f2',color:'#dc2626'},
-    {v:null,         lbl:'Limpar',       bg:'#f3f4f6',color:'#6b7280'},
+    {v:'concluido',    lbl:'Concluída',    sub:sigla,        bg:'#dcfce7',color:'#15803d'},
+    {v:'sem_movimento',lbl:'Sem Movimento',sub:sigla+' s/m', bg:'#ede9fe',color:'#5b21b6'},
+    {v:'sem_acesso',   lbl:'Sem Acesso',   sub:sigla+' s/a', bg:'#fef2f2',color:'#dc2626'},
+    {v:null,           lbl:'Limpar',       sub:'',           bg:'#e5e7eb',color:'#6b7280'},
   ];
   const pop=document.createElement('div');
-  pop.style.cssText='position:absolute;top:calc(100% + 2px);left:0;background:#fff;border:1px solid var(--e-pale);border-radius:10px;box-shadow:0 8px 24px rgba(27,19,60,.13);z-index:600;min-width:160px;overflow:hidden;';
+  pop.style.cssText='position:absolute;top:calc(100% + 2px);left:0;background:#fff;border:1px solid var(--e-pale);border-radius:10px;box-shadow:0 8px 24px rgba(27,19,60,.13);z-index:600;min-width:180px;overflow:hidden;';
   pop.innerHTML=`<div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--e-muted);padding:7px 12px 4px">${dateStr}</div>`+
-    opts.map(o=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;font-size:12.5px;${existing?.status===o.v||(!existing&&!o.v)?'background:rgba(151,111,244,.09)':''}"
+    opts.map(o=>`<div class="cal-dd-item" style="${existing?.status===o.v||(!existing&&!o.v)?'background:rgba(151,111,244,.09);':''}"
       onmouseenter="this.style.background='var(--e-ghost)'"
       onmouseleave="this.style.background='${existing?.status===o.v||(!existing&&!o.v)?'rgba(151,111,244,.09)':'transparent'}'"
       onclick="_concChooseSt(event,'${ck}','${dateStr}',${o.v===null?'null':"'"+o.v+"'"})">
       <div style="width:7px;height:7px;border-radius:50%;background:${o.bg};flex-shrink:0"></div>
-      <span>${o.lbl}</span>
+      <div><div style="color:${o.color};font-weight:600">${o.lbl}</div>${o.sub?`<div style="font-size:10px;color:var(--e-muted);font-family:monospace">${o.sub}</div>`:''}</div>
     </div>`).join('');
   td.style.position='relative';
   td.appendChild(pop);
@@ -5693,7 +5696,7 @@ function _liqChooseSt(evt,concId,type,v){
   evt.stopPropagation();
   const sig=store.responsaveis.find(r=>r.email===window._loggedEmail)?.sigla||'?';
   if(!v){ _liqSetStatus(concId,type,null,null,null); }
-  else if(v==='ini'){ _liqSetStatus(concId,type,'ini',sig,null); }
+  else if(v==='ini'){ const now=new Date(); _liqSetStatus(concId,type,'ini',sig,`${now.getDate()}/${now.getMonth()+1}`); }
   else { const now=new Date(); _liqSetStatus(concId,type,v,sig,`${now.getDate()}/${now.getMonth()+1}`); }
   _liqClosePop();
 }
@@ -5706,10 +5709,10 @@ function _liqPillHtml(st,concId,type){
   if(!st) return `<button style="${base}background:#fff;border:1px solid var(--e-pale);color:var(--e-muted)" ${oc}>—</button>`;
   let bg,col,lbl;
   if(st.v==='ok')  {bg='#dcfce7';col='#166534';lbl='✓ OK';}
-  else if(st.v==='ini'){bg='#ede9fe';col='#6d28d9';lbl=`Elab ${st.by||''}`;}
+  else if(st.v==='ini'){bg='#ede9fe';col='#6d28d9';lbl='Elab';}
   else if(st.v==='sm') {bg='#ede9fe';col='#5b21b6';lbl='s/m';}
   else               {bg='#fef9c3';col='#854d0e';lbl='! Pendente';}
-  const byPart=(st.v!=='ini'&&st.by)?`<span style="font-size:10px;font-family:monospace;opacity:.7"> · ${st.by}${st.dt?' '+st.dt:''}</span>`:'';
+  const byPart=st.by?`<span style="font-size:10px;font-family:monospace;opacity:.7"> · ${st.by}${st.dt?' '+st.dt:''}</span>`:'';
   return `<button style="${base}background:${bg};color:${col}" ${oc}>${lbl}${byPart}</button>`;
 }
 function _liqPopulateMonthSel(){
@@ -5750,9 +5753,11 @@ function renderCronogramaLiquidacoes(){
   _liqPopulateMonthSel();
   const fp=document.getElementById('liq-f-pais')?.value||'';
   const ft=document.getElementById('liq-f-tipo')?.value||'';
+  const fq=(document.getElementById('liq-crono-search')?.value||'').toLowerCase().trim();
   let list=_liqConcilList();
   if(fp) list=list.filter(c=>c.pais===fp);
   if(ft) list=list.filter(c=>_liqGetConfig(_liqConcId(c)).tipo_liq===ft);
+  if(fq) list=list.filter(c=>`${c.nome} ${c.pais} ${c.agente}`.toLowerCase().includes(fq));
   const cnt=document.getElementById('liq-crono-count');
   if(cnt) cnt.textContent=list.length+' conciliação'+(list.length!==1?'s':'');
   let ok=0,ini=0,sm=0,pend=0;
@@ -5767,9 +5772,9 @@ function renderCronogramaLiquidacoes(){
   const sr=document.getElementById('liq-stats-row');
   if(sr) sr.innerHTML=`
     <div class="liq-stat"><div class="liq-stat-lbl">Total</div><div class="liq-stat-n">${list.length}</div></div>
-    <div class="liq-stat"><div class="liq-stat-lbl">LIQ + VIN OK</div><div class="liq-stat-n" style="color:#166534">${ok}</div></div>
+    <div class="liq-stat"><div class="liq-stat-lbl">Liquidação OK</div><div class="liq-stat-n" style="color:#166534">${ok}</div></div>
     <div class="liq-stat"><div class="liq-stat-lbl">Em Elaboração</div><div class="liq-stat-n" style="color:#6d28d9">${ini}</div></div>
-    <div class="liq-stat"><div class="liq-stat-lbl">Sem Movimento</div><div class="liq-stat-n" style="color:var(--e-muted)">${sm}</div></div>
+    <div class="liq-stat"><div class="liq-stat-lbl">Sem Movimento</div><div class="liq-stat-n" style="color:#5b21b6">${sm}</div></div>
     <div class="liq-stat"><div class="liq-stat-lbl">Pendentes</div><div class="liq-stat-n" style="color:#854d0e">${pend}</div></div>`;
   const emptyEl=document.getElementById('liq-crono-empty');
   const tblInner=document.getElementById('liq-crono-table-inner');
