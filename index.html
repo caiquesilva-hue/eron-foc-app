@@ -764,15 +764,17 @@
           <option value="Administrativa">Administrativa</option>
           <option value="BB Pix">BB Pix</option>
         </select>
-        <select id="crono-f-top" onchange="renderCronogramaAccounts()">
-          <option value="">Todos os TOPs</option>
-          <option value="TOP 10">TOP 10</option>
-          <option value="TOP 20">TOP 20</option>
-          <option value="TOP 30">TOP 30</option>
-          <option value="TOP 50">TOP 50</option>
-          <option value="Acima TOP 50">Acima TOP 50</option>
-          <option value="__none__">Sem TOP</option>
-        </select>
+        <div class="freq-dd" id="crono-f-top-dd">
+          <button class="freq-dd-btn" id="crono-f-top-btn" onclick="_fddToggle(event,'crono-f-top-panel')">Todos os TOPs</button>
+          <div class="freq-dd-panel" id="crono-f-top-panel">
+            <button class="freq-toggle" data-val="TOP 10" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-f-top-btn',_fddVals('crono-f-top-panel'),'Todos os TOPs');renderCronogramaAccounts()">TOP 10</button>
+            <button class="freq-toggle" data-val="TOP 20" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-f-top-btn',_fddVals('crono-f-top-panel'),'Todos os TOPs');renderCronogramaAccounts()">TOP 20</button>
+            <button class="freq-toggle" data-val="TOP 30" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-f-top-btn',_fddVals('crono-f-top-panel'),'Todos os TOPs');renderCronogramaAccounts()">TOP 30</button>
+            <button class="freq-toggle" data-val="TOP 50" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-f-top-btn',_fddVals('crono-f-top-panel'),'Todos os TOPs');renderCronogramaAccounts()">TOP 50</button>
+            <button class="freq-toggle" data-val="Acima TOP 50" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-f-top-btn',_fddVals('crono-f-top-panel'),'Todos os TOPs');renderCronogramaAccounts()">Acima TOP 50</button>
+            <button class="freq-toggle" data-val="__none__" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-f-top-btn',_fddVals('crono-f-top-panel'),'Todos os TOPs');renderCronogramaAccounts()">Sem TOP</button>
+          </div>
+        </div>
         <div class="freq-dd" id="crono-resp-dd">
           <button class="freq-dd-btn" id="crono-resp-btn" onclick="toggleRespDropdown(event)" data-i18n-default="crono-resp">Responsável</button>
           <div class="freq-dd-panel" id="crono-resp-panel">
@@ -2665,7 +2667,7 @@ function renderCronogramaAccounts(){
   const activeAgentes=_fddVals('crono-f-agente-panel');
   const activeBancos=_fddVals('crono-f-banco-panel');
   const ftc=document.getElementById('crono-f-tipo-conta')?.value||'';
-  const ftop=document.getElementById('crono-f-top')?.value||'';
+  const activeTops=_fddVals('crono-f-top-panel');
   const activeFreqs=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')].map(b=>b.dataset.freq);
   const activeD1=[...document.querySelectorAll('#crono-d1-filter .d1-toggle.active')].map(b=>b.dataset.d1);
   const activeResps=[...document.querySelectorAll('#crono-resp-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
@@ -2699,7 +2701,7 @@ function renderCronogramaAccounts(){
     if(activeBancos.length&&!activeBancos.includes(c.banco)) return false;
     if(ftc&&c.tipoConta!==ftc) return false;
     if(activeFreqs.length&&!activeFreqs.includes(c.tipo)) return false;
-    if(ftop){const tier=_contaTopTier(c.sigla);if(ftop==='__none__'){if(tier) return false;}else if(tier!==ftop) return false;}
+    if(activeTops.length){const tier=_contaTopTier(c.sigla);if(activeTops.includes('__none__')&&activeTops.length===1){if(tier) return false;}else if(activeTops.includes('__none__')){if(tier&&!activeTops.includes(tier)) return false;}else if(!tier||!activeTops.includes(tier)) return false;}
     if(searchFilters&&!matchesCronoSearch(c,searchFilters)) return false;
     if(activeResps.length){
       const ck=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
@@ -2838,7 +2840,7 @@ function _hasCronoFilters(){
   const fa=_fddVals('crono-f-agente-panel').length>0;
   const fb=_fddVals('crono-f-banco-panel').length>0;
   const ftc=document.getElementById('crono-f-tipo-conta')?.value||'';
-  const ftop=document.getElementById('crono-f-top')?.value||'';
+  const ftop=_fddVals('crono-f-top-panel').length>0;
   const hasFreq=document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active').length>0;
   const hasD1=document.querySelectorAll('#crono-d1-filter .d1-toggle.active').length>0;
   const hasResp=document.querySelectorAll('#crono-resp-toggles .freq-toggle.active').length>0;
@@ -2856,7 +2858,8 @@ function clearCronoFilters(){
   _fddLabel('crono-f-agente-btn',[],t('crono-all-agentes'));
   _fddLabel('crono-f-banco-btn',[],t('crono-all-bancos'));
   if(sel('crono-f-tipo-conta')) sel('crono-f-tipo-conta').value='';
-  if(sel('crono-f-top')) sel('crono-f-top').value='';
+  document.querySelectorAll('#crono-f-top-panel .freq-toggle.active').forEach(b=>b.classList.remove('active'));
+  _fddLabel('crono-f-top-btn',[],'Todos os TOPs');
   document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active').forEach(b=>b.classList.remove('active'));
   _updateFreqLabel();
   document.querySelectorAll('#crono-d1-filter .d1-toggle.active').forEach(b=>b.classList.remove('active'));
