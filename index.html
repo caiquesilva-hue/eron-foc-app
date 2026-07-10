@@ -941,10 +941,16 @@
       <div class="page-title-text" data-i18n="nav-custos">Liquidações</div>
       <div class="page-title-count" id="liq-crono-count"></div>
     </div>
-    <button id="liq-crono-clear-btn" onclick="clearLiqFilters()" style="display:none;align-items:center;gap:6px;font-size:12px;padding:5px 12px;background:var(--e-ghost);color:var(--e-muted);border:1px solid var(--e-pale);border-radius:8px;cursor:pointer;font-family:inherit">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
-      Limpar filtros
-    </button>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button id="liq-crono-clear-btn" onclick="clearLiqFilters()" style="display:none;align-items:center;gap:6px;font-size:12px;padding:5px 12px;background:var(--e-ghost);color:var(--e-muted);border:1px solid var(--e-pale);border-radius:8px;cursor:pointer;font-family:inherit">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        Limpar filtros
+      </button>
+      <button onclick="openLiqManualModal()" id="btn-liq-manual" style="display:none;align-items:center;gap:6px;font-size:12px;padding:5px 12px;background:var(--e-purple);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:500">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        Incluir liquidação
+      </button>
+    </div>
   </div>
   <div class="crono-filters">
     <select id="liq-month-sel" onchange="liqSetMonth(this.value)" style="height:36px;padding:0 28px 0 12px;border:1px solid var(--e-pale);border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;color:var(--e-text);background:#fff;cursor:pointer;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239898c3' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 10px center"></select>
@@ -984,7 +990,7 @@
     <div class="table-scroll" id="liq-crono-table-inner" style="display:none">
       <table class="no-row-border"><thead><tr>
         <th data-i18n="liq-col-concil">Conciliação</th><th data-i18n="liq-col-pais">País</th><th data-i18n="liq-col-agente">Agente</th>
-        <th data-i18n="liq-col-tipo">Tipo Liquidação</th><th style="min-width:150px" data-i18n="liq-col-estado-concil">Estado Concil.</th><th style="min-width:100px" data-i18n="liq-col-ult-elab">Última Elab.</th><th style="min-width:90px" data-i18n="liq-col-data-ult">Data Última</th><th style="min-width:180px" data-i18n="liq-col-obs">Observações</th>
+        <th data-i18n="liq-col-tipo">Tipo Liquidação</th><th style="min-width:150px" data-i18n="liq-col-estado-concil">Estado Concil.</th><th style="min-width:100px" data-i18n="liq-col-ult-elab">Última Elab.</th><th style="min-width:90px" data-i18n="liq-col-data-ult">Data Última</th><th style="min-width:180px" data-i18n="liq-col-obs">Observações</th><th style="min-width:180px" data-i18n="liq-col-custo-info">Informações de custo</th>
         <th style="min-width:190px" data-i18n="liq-col-status">Status</th>
       </tr></thead>
       <tbody id="liq-crono-tbody"></tbody></table>
@@ -1454,6 +1460,31 @@
   </div>
 </div>
 
+<!-- MODAL: INCLUIR LIQUIDAÇÃO MANUAL -->
+<div class="modal-overlay" id="modal-liq-manual" onclick="if(event.target===this)closeModal('modal-liq-manual')">
+  <div class="modal-card" style="width:520px;max-height:90vh;display:flex;flex-direction:column">
+    <div class="modal-header">
+      <div class="modal-title">Incluir liquidação manual</div>
+      <button class="modal-close" onclick="closeModal('modal-liq-manual')">×</button>
+    </div>
+    <div style="padding:16px 24px;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:14px">
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--e-sub);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Conciliação vinculada</label>
+        <input id="liq-manual-search" type="search" class="form-input" placeholder="Buscar conciliação..." oninput="_renderLiqManualList()" style="width:100%;box-sizing:border-box;margin-bottom:8px">
+        <div id="liq-manual-list" style="border:1px solid var(--e-border);border-radius:8px;max-height:220px;overflow-y:auto"></div>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--e-sub);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Nome personalizado <span style="font-weight:400;text-transform:none">(opcional)</span></label>
+        <input id="liq-manual-nome" type="text" class="form-input" placeholder="Deixe em branco para usar o nome da conciliação" style="width:100%;box-sizing:border-box">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-liq-manual')">Cancelar</button>
+      <button class="btn-primary" id="btn-submit-liq-manual" onclick="submitLiqManual()" disabled>Incluir</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: ALTERAR FREQUÊNCIA EM MASSA -->
 <div class="modal-overlay" id="modal-bulk-freq" onclick="if(event.target===this)closeModal('modal-bulk-freq')">
   <div class="modal-card" style="width:420px">
@@ -1842,7 +1873,7 @@ const i18n = {
     'hist-col-datetime':'Data/Hora','hist-col-user':'Usuário','hist-col-module':'Módulo','hist-col-action':'Ação',
     'hist-records-one':'registro','hist-records-many':'registros',
     'liq-col-concil':'Conciliação','liq-col-pais':'País','liq-col-agente':'Agente','liq-col-tipo':'Tipo Liquidação','liq-col-freq':'Frequência',
-    'liq-col-estado-concil':'Estado Concil.','liq-col-ult-elab':'Última Elab.','liq-col-data-ult':'Data Última','liq-col-obs':'Observações','liq-col-status':'Status',
+    'liq-col-estado-concil':'Estado Concil.','liq-col-ult-elab':'Última Elab.','liq-col-data-ult':'Data Última','liq-col-obs':'Observações','liq-col-custo-info':'Informações de custo','liq-col-status':'Status',
     'liq-all-paises':'Todos os países','liq-all-agentes':'Todos os agentes','liq-all-tipos':'Todos os tipos','liq-all-status':'Todos os status',
     'liq-st-nao-iniciado':'Não iniciado','liq-st-em-elab':'Em Elaboração','liq-st-concluida':'Concluída','liq-st-sem-mov':'Sem Movimento','liq-st-pendente':'Pendente',
     'liq-search-ph':'Buscar nome, país, agente...','liq-empty-ger-title':'Nenhuma conciliação de Processadores ou Mista','liq-empty-crono-title':'Nenhuma conciliação encontrada',
@@ -1918,7 +1949,7 @@ const i18n = {
     'hist-records-one':'record','hist-records-many':'records',
     'nav-cierre':'Accounts – Cierre',
     'liq-col-concil':'Reconciliation','liq-col-pais':'Country','liq-col-agente':'Agent','liq-col-tipo':'Settlement Type','liq-col-freq':'Frequency',
-    'liq-col-estado-concil':'Reconcil. Status','liq-col-ult-elab':'Last Elab.','liq-col-data-ult':'Last Date','liq-col-obs':'Notes','liq-col-status':'Status',
+    'liq-col-estado-concil':'Reconcil. Status','liq-col-ult-elab':'Last Elab.','liq-col-data-ult':'Last Date','liq-col-obs':'Notes','liq-col-custo-info':'Cost information','liq-col-status':'Status',
     'liq-all-paises':'All countries','liq-all-agentes':'All agents','liq-all-tipos':'All types','liq-all-status':'All statuses',
     'liq-st-nao-iniciado':'Not started','liq-st-em-elab':'In Progress','liq-st-concluida':'Completed','liq-st-sem-mov':'No Movement','liq-st-pendente':'Pending',
     'liq-search-ph':'Search name, country, agent...','liq-empty-ger-title':'No Processor or Mixed reconciliations','liq-empty-crono-title':'No reconciliation found',
@@ -1994,7 +2025,7 @@ const i18n = {
     'hist-records-one':'registro','hist-records-many':'registros',
     'nav-cierre':'Accounts – Cierre',
     'liq-col-concil':'Conciliación','liq-col-pais':'País','liq-col-agente':'Agente','liq-col-tipo':'Tipo Liquidación','liq-col-freq':'Frecuencia',
-    'liq-col-estado-concil':'Estado Concil.','liq-col-ult-elab':'Última Elab.','liq-col-data-ult':'Última Fecha','liq-col-obs':'Observaciones','liq-col-status':'Estado',
+    'liq-col-estado-concil':'Estado Concil.','liq-col-ult-elab':'Última Elab.','liq-col-data-ult':'Última Fecha','liq-col-obs':'Observaciones','liq-col-custo-info':'Información de costos','liq-col-status':'Estado',
     'liq-all-paises':'Todos los países','liq-all-agentes':'Todos los agentes','liq-all-tipos':'Todos los tipos','liq-all-status':'Todos los estados',
     'liq-st-nao-iniciado':'No iniciado','liq-st-em-elab':'En Elaboración','liq-st-concluida':'Concluida','liq-st-sem-mov':'Sin Movimiento','liq-st-pendente':'Pendiente',
     'liq-search-ph':'Buscar nombre, país, agente...','liq-empty-ger-title':'Sin conciliaciones de Procesadores o Mixtas','liq-empty-crono-title':'No se encontraron conciliaciones',
@@ -2076,6 +2107,7 @@ const store = {
   // credentials: { email: {hash:string, mustChange:bool} }
   liquidacoesConfig:{},
   liquidacoesStatus:{},
+  liquidacoesManual:[],
 };
 
 // ─── NAVIGATION ───────────────────────────────────────────────────
@@ -4021,7 +4053,7 @@ function saveStore(){
     conciliacoes:store.conciliacoes,cronogramaConciliacoes:store.cronogramaConciliacoes,
     paisesResp:store.paisesResp,bancosResp:store.bancosResp,conciliacoesPrioridade:store.conciliacoesPrioridade,
     volumeRankings:store.volumeRankings,concilVolumeMap:store.concilVolumeMap,
-    liquidacoesConfig:store.liquidacoesConfig,liquidacoesStatus:store.liquidacoesStatus,
+    liquidacoesConfig:store.liquidacoesConfig,liquidacoesStatus:store.liquidacoesStatus,liquidacoesManual:store.liquidacoesManual,
     auditLog:store.auditLog,
     permissions:store.permissions,credentials:store.credentials};
   try{localStorage.setItem(STORE_KEY,JSON.stringify(_ls));}catch(e){}
@@ -4052,6 +4084,7 @@ function loadStore(){
     if(saved.concilVolumeMap) store.concilVolumeMap=saved.concilVolumeMap;
     if(saved.liquidacoesConfig) store.liquidacoesConfig=saved.liquidacoesConfig||{};
     if(saved.liquidacoesStatus) store.liquidacoesStatus=saved.liquidacoesStatus||{};
+    if(saved.liquidacoesManual) store.liquidacoesManual=Array.isArray(saved.liquidacoesManual)?saved.liquidacoesManual:Object.values(saved.liquidacoesManual||{}).filter(Boolean);
     if(saved.auditLog) store.auditLog=(Array.isArray(saved.auditLog)?saved.auditLog:Object.values(saved.auditLog)).filter(Boolean);
     if(saved.permissions) store.permissions=saved.permissions;
     if(saved.credentials) store.credentials=saved.credentials;
@@ -4175,6 +4208,7 @@ function _applyFbData(saved){
   if(saved.concilVolumeMap&&!_ownWrites.concilVolumeMap)store.concilVolumeMap=saved.concilVolumeMap;
   if(saved.liquidacoesConfig&&!_ownWrites.liquidacoesConfig)store.liquidacoesConfig=saved.liquidacoesConfig;
   if(saved.liquidacoesStatus&&!_ownWrites.liquidacoesStatus)store.liquidacoesStatus=saved.liquidacoesStatus;
+  if(saved.liquidacoesManual&&!_ownWrites.liquidacoesManual)store.liquidacoesManual=_fbArr(saved.liquidacoesManual);
   if(store.volumeRankings&&store.concilVolumeMap) _rebuildCombinedRanking();
   // cronogramaData gerenciado pelo listener específico em _fbRef.child('cronogramaData')
   if(saved.cierreData&&!_ownWrites.cierreData){
@@ -4719,8 +4753,7 @@ function renderGerencialConciliacoes(){
     const concId2=(c.id||c.nome||'').replace(/['"]/g,'');
     const cvm=(store.concilVolumeMap||{})[concId2]||{};
     const allGwIds=[...new Set([...(cvm.cashinIds||[]),...(cvm.cashoutIds||[]),...(cvm.refundIds||[]),...(cvm.chargebackIds||[])])];
-    const vr=store.volumeRankings||{};
-    const gwTags=allGwIds.length?allGwIds.map(gid=>{const nm=vr.cashin?.[gid]?.name||vr.cashout?.[gid]?.name||vr.refunds?.[gid]?.name||gid;return `<span style="font-family:monospace;font-size:10px;background:var(--e-ghost);padding:1px 5px;border-radius:3px;margin-right:3px;display:inline-block;margin-bottom:2px">${nm}</span>`;}).join(''):`<span style="color:var(--e-muted);font-size:11px">—</span>`;
+    const gwTags=allGwIds.length?allGwIds.map(gid=>`<span style="font-family:monospace;font-size:10px;background:var(--e-ghost);padding:1px 5px;border-radius:3px;margin-right:3px;display:inline-block;margin-bottom:2px">${gid}</span>`).join(''):`<span style="color:var(--e-muted);font-size:11px">—</span>`;
     return `<tr class="${isEncerrada?'row-encerrada':''}"><td style="font-weight:600">${c.nome}${statusChip}</td><td>${c.pais?`${countryFlag(c.pais)} ${c.pais}`:'—'}</td><td style="font-size:12px;color:var(--e-muted)">${c.agente||'—'}</td><td>${tipoChipHtml}</td><td style="white-space:normal">${tags}</td><td style="white-space:normal">${gwTags}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openConciliacaoModal(${origIdx})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteConciliacao(${origIdx})">${trashIcon}</button></div>`:''}</td></tr>`;
   }).join('');
 }
@@ -5754,18 +5787,22 @@ const LIQ_TIPOS={
   '5':{lbl:'5 - Sem Liquidação',       short:'5·s/liq',  bg:'#f1f5f9',color:'#475569'},
 };
 const LIQ_PEGAR_EM=['gmail/rackspace','site','bank','drive de extrato','sem info'];
-const LIQ_FREQ=['Diária','Semanal','Mensal','1×/mês'];
+const LIQ_FREQ=['Diária','Semanal','Mensal'];
 let _liqMonth=(new Date().getMonth()===0?11:new Date().getMonth()-1), _liqYear=(new Date().getMonth()===0?new Date().getFullYear()-1:new Date().getFullYear());
 
 function _liqConcilList(){
-  return store.conciliacoes.filter(c=>{
+  const auto=store.conciliacoes.filter(c=>{
     if(c.status==='encerrada') return false;
     if(c.tipo!=='processadores'&&c.tipo!=='mista') return false;
     const concId=_liqConcId(c);
     const vm=store.concilVolumeMap?.[concId];
-    if(!vm) return true; // sem mapa de volume: inclui
+    if(!vm) return true;
     return (vm.cashinIds?.length>0)||(vm.cashoutIds?.length>0);
   });
+  const manual=(store.liquidacoesManual||[]).map(m=>({
+    id:m.id, nome:m.nome, pais:m.pais, agente:m.agente, tipo:m.tipo||'processadores', _manual:true, _manualId:m.id
+  }));
+  return [...auto,...manual];
 }
 function _liqLastElab(c){
   const prefix=(c.id||c.nome)+'_';
@@ -5910,6 +5947,75 @@ function _liqObsBlur(ta,id){
   clearTimeout(_liqObsTimer);
   _liqSaveConfig(id,{obs:ta.value});
 }
+// Observações mensais (por mês, não migram)
+function _liqGetMonthlyObs(concId){
+  return (store.liquidacoesStatus[_liqSKey(concId)]||{}).obs||'';
+}
+function _liqSaveMonthlyObs(concId,val){
+  const k=_liqSKey(concId);
+  if(!store.liquidacoesStatus[k]) store.liquidacoesStatus[k]={};
+  store.liquidacoesStatus[k].obs=val;
+  saveStore(); _fbSync('liquidacoesStatus');
+}
+let _liqMonthlyObsTimer=null;
+function _liqMonthlyObsInput(ta,id){
+  ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';
+  clearTimeout(_liqMonthlyObsTimer);
+  _liqMonthlyObsTimer=setTimeout(()=>_liqSaveMonthlyObs(id,ta.value),5000);
+}
+function _liqMonthlyObsBlur(ta,id){
+  clearTimeout(_liqMonthlyObsTimer);
+  _liqSaveMonthlyObs(id,ta.value);
+}
+// Liquidações manuais
+let _liqManualSelectedConcId=null;
+function openLiqManualModal(){
+  if(!canEdit()) return;
+  _liqManualSelectedConcId=null;
+  const si=document.getElementById('liq-manual-search');
+  const ni=document.getElementById('liq-manual-nome');
+  if(si) si.value='';
+  if(ni) ni.value='';
+  _renderLiqManualList();
+  openModal('modal-liq-manual');
+}
+function _renderLiqManualList(){
+  const q=(document.getElementById('liq-manual-search')?.value||'').toLowerCase().trim();
+  const concs=store.conciliacoes.filter(c=>c.status!=='encerrada');
+  const filtered=q?concs.filter(c=>`${c.nome} ${c.pais||''} ${c.agente||''}`.toLowerCase().includes(q)):concs;
+  const list=document.getElementById('liq-manual-list');
+  if(!list) return;
+  list.innerHTML=filtered.slice(0,40).map(c=>{
+    const cid=(c.id||c.nome).replace(/['"]/g,'');
+    const sel=_liqManualSelectedConcId===cid;
+    return `<div onclick="_selectLiqManualConc('${cid}',this)" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--e-pale);font-size:13px;${sel?'background:var(--e-ghost);font-weight:600;':''}">${countryFlag(c.pais)} ${c.nome} <span style="color:var(--e-muted);font-size:11px;margin-left:4px">${c.agente||''}</span></div>`;
+  }).join('')||'<div style="padding:12px;color:var(--e-muted);text-align:center;font-size:12px">Nenhuma conciliação encontrada</div>';
+}
+function _selectLiqManualConc(concId,el){
+  _liqManualSelectedConcId=concId;
+  document.querySelectorAll('#liq-manual-list div').forEach(d=>{d.style.background='';d.style.fontWeight='';});
+  el.style.background='var(--e-ghost)';el.style.fontWeight='600';
+  const btn=document.getElementById('btn-submit-liq-manual');
+  if(btn) btn.disabled=false;
+}
+function submitLiqManual(){
+  if(!_liqManualSelectedConcId){alert('Selecione uma conciliação.');return;}
+  const conc=store.conciliacoes.find(c=>(c.id||c.nome).replace(/['"]/g,'')===_liqManualSelectedConcId);
+  if(!conc){alert('Conciliação não encontrada.');return;}
+  const nome=(document.getElementById('liq-manual-nome')?.value||'').trim()||conc.nome;
+  const id='manual_'+Date.now();
+  if(!store.liquidacoesManual) store.liquidacoesManual=[];
+  store.liquidacoesManual.push({id,nome,concId:_liqManualSelectedConcId,pais:conc.pais,agente:conc.agente,tipo:conc.tipo});
+  saveStore(); _fbSync('liquidacoesManual');
+  closeModal('modal-liq-manual');
+  renderCronogramaLiquidacoes();
+}
+function deleteLiqManual(id){
+  if(!confirm('Remover esta liquidação manual?')) return;
+  store.liquidacoesManual=(store.liquidacoesManual||[]).filter(m=>m.id!==id);
+  saveStore(); _fbSync('liquidacoesManual');
+  renderCronogramaLiquidacoes();
+}
 
 // ── Render Cronograma > Liquidações ──
 function renderCronogramaLiquidacoes(){
@@ -5922,6 +6028,8 @@ function renderCronogramaLiquidacoes(){
   const fq=(document.getElementById('liq-crono-search')?.value||'').toLowerCase().trim();
   const clearBtn=document.getElementById('liq-crono-clear-btn');
   if(clearBtn) clearBtn.style.display=_hasLiqFilters()?'flex':'none';
+  const manualBtn=document.getElementById('btn-liq-manual');
+  if(manualBtn) manualBtn.style.display=canEdit()?'inline-flex':'none';
   let list=_liqConcilList();
   if(activePaises.length) list=list.filter(c=>activePaises.includes(c.pais));
   if(activeAgentes.length) list=list.filter(c=>activeAgentes.includes(c.agente));
@@ -5990,11 +6098,12 @@ function renderCronogramaLiquidacoes(){
       <td>${estadoChip}</td>
       <td style="font-size:12px;color:var(--e-text);font-weight:600">${elab.sigla||'<span style="color:var(--e-muted)">—</span>'}</td>
       <td style="font-size:12px;color:var(--e-muted)">${elab.date||'—'}</td>
-      <td><textarea class="liq-obs" placeholder="Observações..." style="width:100%;min-height:32px;border:1px solid var(--e-pale);border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit;color:var(--e-text);background:#fff;resize:none;overflow:hidden;box-sizing:border-box;display:block" oninput="_liqObsInput(this,'${id}')" onblur="_liqObsBlur(this,'${id}')">${cfg.obs||''}</textarea></td>
-      <td>${_liqPillHtml(lSt,id,'liq')}</td>
+      <td><textarea class="liq-obs" placeholder="Observações do mês..." style="width:100%;min-height:32px;border:1px solid var(--e-pale);border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit;color:var(--e-text);background:#fff;resize:none;overflow:hidden;box-sizing:border-box;display:block" oninput="_liqMonthlyObsInput(this,'${id}')" onblur="_liqMonthlyObsBlur(this,'${id}')">${_liqGetMonthlyObs(id)}</textarea></td>
+      <td><textarea class="liq-obs" placeholder="Informações de custo..." style="width:100%;min-height:32px;border:1px solid var(--e-pale);border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit;color:var(--e-text);background:#fff;resize:none;overflow:hidden;box-sizing:border-box;display:block" oninput="_liqObsInput(this,'${id}')" onblur="_liqObsBlur(this,'${id}')">${cfg.obs||''}</textarea></td>
+      <td><div style="display:flex;align-items:center;gap:6px">${_liqPillHtml(lSt,id,'liq')}${c._manual?`<button onclick="deleteLiqManual('${c._manualId}')" style="flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--e-muted);padding:2px;line-height:1" title="Remover">${trashIcon}</button>`:''}</div></td>
     </tr>`;
   }).join('');
-  tb.querySelectorAll('textarea.liq-obs').forEach(ta=>{ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';});
+  tb.querySelectorAll('textarea.liq-obs').forEach(ta=>{ta.style.height='auto';ta.style.height=Math.max(ta.scrollHeight,32)+'px';});
 }
 
 // ── Render Gerencial > Liquidações ──
