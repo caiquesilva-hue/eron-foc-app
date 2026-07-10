@@ -995,6 +995,10 @@
       <span class="crono-sep">→</span>
       <input type="date" id="crono-conc-date-end" onchange="renderCronogramaConciliacoes()">
     </div>
+    <button class="btn-bulk-apply" id="btn-conc-bulk-apply" onclick="openConcBulkApply()" data-requires-edit="1">
+      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      Aplicar em massa
+    </button>
     <button class="btn-bulk-apply" id="crono-conc-clear-btn" onclick="clearCronconcFilters()" style="background:var(--e-ghost);color:var(--e-muted);border-color:var(--e-pale);display:none" title="Limpar filtros">
       <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
       Limpar filtros
@@ -1336,6 +1340,36 @@
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('modal-bulk-apply')">Cancelar</button>
       <button class="btn-primary" onclick="submitBulkApply()" style="background:#976ff4">Aplicar em massa</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: APLICAR EM MASSA — CONCILIAÇÕES -->
+<div class="modal-overlay" id="modal-conc-bulk-apply" onclick="if(event.target===this)closeModal('modal-conc-bulk-apply')">
+  <div class="modal-card" style="max-width:440px">
+    <div class="modal-header">
+      <div class="modal-title">Aplicar em massa · Conciliações</div>
+      <button class="modal-close" onclick="closeModal('modal-conc-bulk-apply')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="conc-bulk-preview" style="background:var(--e-ghost);border-radius:8px;padding:10px 14px;margin-bottom:18px;font-size:13px;color:var(--e-sub)"></div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+        <label class="bulk-opt">
+          <input type="radio" name="conc-bulk-status" value="concluido">
+          <span class="bulk-chip" style="background:#dcfce7;color:#15803d">Concluída</span>
+          <span style="font-size:12px;color:var(--e-sub)">Marca cada dia do período como concluída</span>
+        </label>
+        <label class="bulk-opt" style="border-style:dashed">
+          <input type="radio" name="conc-bulk-status" value="clear">
+          <span class="bulk-chip" style="background:#f3f4f6;color:#6b7280">Limpar</span>
+          <span style="font-size:12px;color:var(--e-sub)">Remove marcações manuais do período</span>
+        </label>
+      </div>
+      <div id="conc-bulk-err" style="display:none;color:#dc2626;font-size:12px;margin-bottom:8px;padding:8px 12px;background:#fef2f2;border-radius:6px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-conc-bulk-apply')">Cancelar</button>
+      <button class="btn-primary" onclick="submitConcBulkApply()" style="background:#976ff4">Aplicar em massa</button>
     </div>
   </div>
 </div>
@@ -5438,6 +5472,59 @@ function onConcCellClick(ck,dateStr){
     renderCronogramaConciliacoes();
     _toast(`✓ ${conc.nome} concluída em ${dateStr}`);
   }
+}
+
+function _getConcBulkContext(){
+  const dsStr=document.getElementById('crono-conc-date-start')?.value||'';
+  const deStr=document.getElementById('crono-conc-date-end')?.value||'';
+  const days=[];
+  if(dsStr&&deStr){
+    let cur=new Date(dsStr+'T12:00:00');
+    const end=new Date(deStr+'T12:00:00');
+    while(cur<=end){days.push(`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`);cur.setDate(cur.getDate()+1);}
+  }
+  const searchQ=(document.getElementById('crono-conc-search')?.value||'').toLowerCase().trim();
+  const activePaises=_fddVals('crono-conc-f-pais-panel');
+  const activeAgentes=_fddVals('crono-conc-f-agente-panel');
+  const activePriors=_fddVals('crono-conc-f-prior-panel');
+  let list=store.conciliacoes.filter(c=>c.status!=='encerrada');
+  if(activePaises.length) list=list.filter(c=>activePaises.includes(c.pais));
+  if(activeAgentes.length) list=list.filter(c=>activeAgentes.includes(c.agente));
+  if(searchQ) list=list.filter(c=>`${c.nome} ${c.pais} ${c.agente}`.toLowerCase().includes(searchQ));
+  return {list,days,dsStr,deStr};
+}
+function openConcBulkApply(){
+  if(!canEdit()) return;
+  const {list,days,dsStr,deStr}=_getConcBulkContext();
+  const prev=document.getElementById('conc-bulk-preview');
+  prev.innerHTML=`<strong>${list.length}</strong> conciliação${list.length!==1?'s':''} · <strong>${days.length}</strong> dia${days.length!==1?'s':''}<div style="margin-top:4px;opacity:.7">Período: ${dsStr} → ${deStr}</div>`;
+  document.querySelectorAll('input[name="conc-bulk-status"]').forEach(r=>r.checked=false);
+  document.getElementById('conc-bulk-err').style.display='none';
+  openModal('modal-conc-bulk-apply');
+}
+function submitConcBulkApply(){
+  const status=document.querySelector('input[name="conc-bulk-status"]:checked')?.value;
+  const errEl=document.getElementById('conc-bulk-err');
+  if(!status){errEl.style.display='block';errEl.textContent='Selecione uma opção.';return;}
+  const {list,days}=_getConcBulkContext();
+  const total=list.length*days.length;
+  if(!confirm(`Aplicar em ${list.length} conciliação${list.length!==1?'s':''} × ${days.length} dia${days.length!==1?'s':''} (${total} célula${total!==1?'s':''})?`)) return;
+  const user=store.responsaveis.find(r=>r.email===window._loggedEmail);
+  const sigla=user?.sigla||'?';
+  let changed=0;
+  list.forEach(c=>{
+    const concId=(c.id||c.nome).replace(/['"]/g,'');
+    days.forEach(dateStr=>{
+      const k=`${concId}_${dateStr}`;
+      if(status==='clear'){if(store.cronogramaConciliacoes[k]){delete store.cronogramaConciliacoes[k];changed++;}}
+      else{store.cronogramaConciliacoes[k]={status:'concluido',sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')};changed++;}
+    });
+  });
+  saveStore(); if(changed) _fbSync('cronogramaConciliacoes');
+  logAudit('cronograma-conciliacoes','bulk-apply',{status,changed,conciliacoes:list.length,dias:days.length});
+  closeModal('modal-conc-bulk-apply');
+  renderCronogramaConciliacoes();
+  _toast(`✓ ${changed} célula${changed!==1?'s':''} atualizadas`);
 }
 
 function renderAll(){ renderAccountsTable(); initCronoDates(); renderCronogramaAccounts(); renderCadastro('pais'); renderCadastro('agente'); renderCadastro('banco'); renderAcessos(); renderGerencialConciliacoes(); renderCronogramaConciliacoes(); }
