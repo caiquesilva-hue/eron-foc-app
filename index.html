@@ -734,7 +734,7 @@
   <div style="padding:0 0 10px"><input type="search" id="conc-ger-search" placeholder="Buscar nome, país, agente..." style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderGerencialConciliacoes()"></div>
   <div class="table-wrap">
     <div id="conciliacoes-empty" class="empty-state"><div class="empty-icon">🔗</div><div class="empty-title" data-i18n="conc-empty-title">Nenhuma conciliação cadastrada</div><div class="empty-sub" data-i18n="conc-empty-sub">Adicione conciliações vinculando contas de Gerencial > Accounts.</div></div>
-    <div class="table-scroll" id="conciliacoes-table-inner" style="display:none"><table><thead><tr><th data-i18n="lbl-nome">Nome</th><th data-i18n="col-pais">País</th><th data-i18n="col-agente">Agente</th><th data-i18n="conc-col-tipo">Tipo</th><th data-i18n="conc-col-contas">Contas vinculadas</th><th style="width:80px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="conciliacoes-tbody"></tbody></table></div>
+    <div class="table-scroll" id="conciliacoes-table-inner" style="display:none"><table><thead><tr><th data-i18n="lbl-nome">Nome</th><th data-i18n="col-pais">País</th><th data-i18n="col-agente">Agente</th><th data-i18n="conc-col-tipo">Tipo</th><th data-i18n="conc-col-contas">Contas vinculadas</th><th data-i18n="conc-col-gateways">Gateways vinculados</th><th style="width:80px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="conciliacoes-tbody"></tbody></table></div>
   </div>
 </div>
     <!-- CRONOGRAMA > ACCOUNTS -->
@@ -1846,7 +1846,7 @@ const i18n = {
     'liq-all-paises':'Todos os países','liq-all-agentes':'Todos os agentes','liq-all-tipos':'Todos os tipos','liq-all-status':'Todos os status',
     'liq-st-nao-iniciado':'Não iniciado','liq-st-em-elab':'Em Elaboração','liq-st-concluida':'Concluída','liq-st-sem-mov':'Sem Movimento','liq-st-pendente':'Pendente',
     'liq-search-ph':'Buscar nome, país, agente...','liq-empty-ger-title':'Nenhuma conciliação de Processadores ou Mista','liq-empty-crono-title':'Nenhuma conciliação encontrada',
-    'conc-col-tipo':'Tipo','conc-col-contas':'Contas vinculadas',
+    'conc-col-tipo':'Tipo','conc-col-contas':'Contas vinculadas','conc-col-gateways':'Gateways vinculados',
     'conc-empty-title':'Nenhuma conciliação cadastrada','conc-empty-sub':'Adicione conciliações vinculando contas de Gerencial > Accounts.',
   },
   'en': {
@@ -1922,7 +1922,7 @@ const i18n = {
     'liq-all-paises':'All countries','liq-all-agentes':'All agents','liq-all-tipos':'All types','liq-all-status':'All statuses',
     'liq-st-nao-iniciado':'Not started','liq-st-em-elab':'In Progress','liq-st-concluida':'Completed','liq-st-sem-mov':'No Movement','liq-st-pendente':'Pending',
     'liq-search-ph':'Search name, country, agent...','liq-empty-ger-title':'No Processor or Mixed reconciliations','liq-empty-crono-title':'No reconciliation found',
-    'conc-col-tipo':'Type','conc-col-contas':'Linked accounts',
+    'conc-col-tipo':'Type','conc-col-contas':'Linked accounts','conc-col-gateways':'Linked gateways',
     'conc-empty-title':'No reconciliations registered','conc-empty-sub':'Add reconciliations linking accounts from Management > Accounts.',
   },
   'es': {
@@ -1998,7 +1998,7 @@ const i18n = {
     'liq-all-paises':'Todos los países','liq-all-agentes':'Todos los agentes','liq-all-tipos':'Todos los tipos','liq-all-status':'Todos los estados',
     'liq-st-nao-iniciado':'No iniciado','liq-st-em-elab':'En Elaboración','liq-st-concluida':'Concluida','liq-st-sem-mov':'Sin Movimiento','liq-st-pendente':'Pendiente',
     'liq-search-ph':'Buscar nombre, país, agente...','liq-empty-ger-title':'Sin conciliaciones de Procesadores o Mixtas','liq-empty-crono-title':'No se encontraron conciliaciones',
-    'conc-col-tipo':'Tipo','conc-col-contas':'Cuentas vinculadas',
+    'conc-col-tipo':'Tipo','conc-col-contas':'Cuentas vinculadas','conc-col-gateways':'Gateways vinculados',
     'conc-empty-title':'Sin conciliaciones registradas','conc-empty-sub':'Agrega conciliaciones vinculando cuentas desde Gerencial > Accounts.',
   }
 };
@@ -4716,7 +4716,12 @@ function renderGerencialConciliacoes(){
     const tipoChipHtml=`<span class="chip ${tipoCls}" style="font-size:10px">${tipoLbl}</span>`;
     const isEncerrada=c.status==='encerrada';
     const statusChip=isEncerrada?`<span class="chip chip-red" style="font-size:10px;margin-left:6px">${t('status-encerrada')}</span>`:'';
-    return `<tr class="${isEncerrada?'row-encerrada':''}"><td style="font-weight:600">${c.nome}${statusChip}</td><td>${c.pais?`${countryFlag(c.pais)} ${c.pais}`:'—'}</td><td style="font-size:12px;color:var(--e-muted)">${c.agente||'—'}</td><td>${tipoChipHtml}</td><td style="white-space:normal">${tags}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openConciliacaoModal(${origIdx})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteConciliacao(${origIdx})">${trashIcon}</button></div>`:''}</td></tr>`;
+    const concId2=(c.id||c.nome||'').replace(/['"]/g,'');
+    const cvm=(store.concilVolumeMap||{})[concId2]||{};
+    const allGwIds=[...new Set([...(cvm.cashinIds||[]),...(cvm.cashoutIds||[]),...(cvm.refundIds||[]),...(cvm.chargebackIds||[])])];
+    const vr=store.volumeRankings||{};
+    const gwTags=allGwIds.length?allGwIds.map(gid=>{const nm=vr.cashin?.[gid]?.name||vr.cashout?.[gid]?.name||vr.refunds?.[gid]?.name||gid;return `<span style="font-family:monospace;font-size:10px;background:var(--e-ghost);padding:1px 5px;border-radius:3px;margin-right:3px;display:inline-block;margin-bottom:2px">${nm}</span>`;}).join(''):`<span style="color:var(--e-muted);font-size:11px">—</span>`;
+    return `<tr class="${isEncerrada?'row-encerrada':''}"><td style="font-weight:600">${c.nome}${statusChip}</td><td>${c.pais?`${countryFlag(c.pais)} ${c.pais}`:'—'}</td><td style="font-size:12px;color:var(--e-muted)">${c.agente||'—'}</td><td>${tipoChipHtml}</td><td style="white-space:normal">${tags}</td><td style="white-space:normal">${gwTags}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openConciliacaoModal(${origIdx})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteConciliacao(${origIdx})">${trashIcon}</button></div>`:''}</td></tr>`;
   }).join('');
 }
 
