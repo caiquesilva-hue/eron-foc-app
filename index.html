@@ -698,22 +698,22 @@
     <div class="page" id="page-gerencial-custos">
   <div class="page-header">
     <div class="page-header-left">
-      <div class="page-title-text">Liquidações</div>
+      <div class="page-title-text" data-i18n="nav-custos">Liquidações</div>
       <div class="page-title-count" id="liq-ger-count"></div>
     </div>
   </div>
   <div style="display:flex;align-items:flex-start;gap:10px;background:#f5f3ff;border:1px solid rgba(151,111,244,.22);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--e-sub);line-height:1.55">
     <span style="flex-shrink:0;margin-top:1px">ℹ️</span>
-    <span>Conciliações do tipo <strong>Processadores</strong> e <strong>Mista</strong> são incluídas automaticamente a partir de <strong>Gerencial › Conciliações</strong>. Conciliações do tipo <strong>Chargeback</strong> e <strong>Refunds</strong> não estão contempladas aqui. Configure o tipo de liquidação e a origem do arquivo para cada uma.</span>
+    <span>Conciliações do tipo <strong>Processadores</strong> e <strong>Mista</strong> são incluídas automaticamente a partir de <strong>Gerencial › Conciliações</strong>. Conciliações do tipo <strong>Chargeback</strong> e <strong>Refunds</strong> não estão contempladas aqui. Configure o tipo de liquidação para cada uma.</span>
   </div>
   <div style="padding:0 0 10px"><input type="search" id="liq-ger-search" placeholder="Buscar nome, país, agente..." style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderGerencialLiquidacoes()"></div>
   <div class="table-wrap">
     <div id="liq-ger-empty" class="empty-state" style="display:none"><div class="empty-icon">💳</div><div class="empty-title">Nenhuma conciliação de Processadores ou Mista</div><div class="empty-sub">Adicione conciliações em Gerencial › Conciliações com tipo Processadores ou Mista para que apareçam aqui.</div></div>
     <div class="table-scroll" id="liq-ger-table-inner" style="display:none">
       <table><thead><tr>
-        <th>Conciliação</th><th>País</th><th>Agente</th>
-        <th style="min-width:185px">Tipo Liquidação</th>
-        <th style="min-width:110px">Frequência</th>
+        <th data-i18n="liq-col-concil">Conciliação</th><th data-i18n="liq-col-pais">País</th><th data-i18n="liq-col-agente">Agente</th>
+        <th style="min-width:185px" data-i18n="liq-col-tipo">Tipo Liquidação</th>
+        <th style="min-width:110px" data-i18n="liq-col-freq">Frequência</th>
       </tr></thead>
       <tbody id="liq-ger-tbody"></tbody></table>
     </div>
@@ -763,6 +763,15 @@
           <option value="Operacional">Operacional</option>
           <option value="Administrativa">Administrativa</option>
           <option value="BB Pix">BB Pix</option>
+        </select>
+        <select id="crono-f-top" onchange="renderCronogramaAccounts()">
+          <option value="">Todos os TOPs</option>
+          <option value="TOP 10">TOP 10</option>
+          <option value="TOP 20">TOP 20</option>
+          <option value="TOP 30">TOP 30</option>
+          <option value="TOP 50">TOP 50</option>
+          <option value="Acima TOP 50">Acima TOP 50</option>
+          <option value="__none__">Sem TOP</option>
         </select>
         <div class="freq-dd" id="crono-resp-dd">
           <button class="freq-dd-btn" id="crono-resp-btn" onclick="toggleRespDropdown(event)" data-i18n-default="crono-resp">Responsável</button>
@@ -909,31 +918,40 @@
     <div class="page" id="page-cronograma-custos">
   <div class="page-header">
     <div class="page-title-group">
-      <div class="page-title-text">Liquidações</div>
+      <div class="page-title-text" data-i18n="nav-custos">Liquidações</div>
       <div class="page-title-count" id="liq-crono-count"></div>
     </div>
   </div>
   <div class="crono-filters">
     <select id="liq-month-sel" onchange="liqSetMonth(this.value)" style="height:36px;padding:0 28px 0 12px;border:1px solid var(--e-pale);border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;color:var(--e-text);background:#fff;cursor:pointer;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239898c3' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 10px center"></select>
-    <select id="liq-f-pais" onchange="renderCronogramaLiquidacoes()">
-      <option value="">Todos os países</option>
-    </select>
-    <select id="liq-f-tipo" onchange="renderCronogramaLiquidacoes()">
-      <option value="">Todos os tipos</option>
-      <option value="1">1 · Processador</option>
-      <option value="2">2 · Forjada 1×/mês</option>
-      <option value="3">3 · Fatura</option>
-      <option value="4">4 · Forjada</option>
-      <option value="5">5 · Sem Liquidação</option>
-    </select>
-    <select id="liq-f-status" onchange="renderCronogramaLiquidacoes()">
-      <option value="">Todos os status</option>
-      <option value="none">Não iniciado</option>
-      <option value="ini">Em Elaboração</option>
-      <option value="ok">Liquidação OK</option>
-      <option value="sm">Sem Movimento</option>
-      <option value="pend">Pendente</option>
-    </select>
+    <div class="freq-dd" id="liq-f-pais-dd">
+      <button class="freq-dd-btn" id="liq-f-pais-btn" onclick="_fddToggle(event,'liq-f-pais-panel')" data-i18n-default="liq-all-paises">Todos os países</button>
+      <div class="freq-dd-panel" id="liq-f-pais-panel" style="max-height:240px;overflow-y:auto"></div>
+    </div>
+    <div class="freq-dd" id="liq-f-tipo-dd">
+      <button class="freq-dd-btn" id="liq-f-tipo-btn" onclick="_fddToggle(event,'liq-f-tipo-panel')" data-i18n-default="liq-all-tipos">Todos os tipos</button>
+      <div class="freq-dd-panel" id="liq-f-tipo-panel">
+        <button class="freq-toggle" data-val="1" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('liq-f-tipo-btn',_fddVals('liq-f-tipo-panel'),t('liq-all-tipos'));renderCronogramaLiquidacoes()">1 · Processador</button>
+        <button class="freq-toggle" data-val="2" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('liq-f-tipo-btn',_fddVals('liq-f-tipo-panel'),t('liq-all-tipos'));renderCronogramaLiquidacoes()">2 · Forjada 1×/mês</button>
+        <button class="freq-toggle" data-val="3" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('liq-f-tipo-btn',_fddVals('liq-f-tipo-panel'),t('liq-all-tipos'));renderCronogramaLiquidacoes()">3 · Fatura</button>
+        <button class="freq-toggle" data-val="4" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('liq-f-tipo-btn',_fddVals('liq-f-tipo-panel'),t('liq-all-tipos'));renderCronogramaLiquidacoes()">4 · Forjada</button>
+        <button class="freq-toggle" data-val="5" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('liq-f-tipo-btn',_fddVals('liq-f-tipo-panel'),t('liq-all-tipos'));renderCronogramaLiquidacoes()">5 · Sem Liquidação</button>
+      </div>
+    </div>
+    <div class="freq-dd" id="liq-f-status-dd">
+      <button class="freq-dd-btn" id="liq-f-status-btn" onclick="_fddToggle(event,'liq-f-status-panel')" data-i18n-default="liq-all-status">Todos os status</button>
+      <div class="freq-dd-panel" id="liq-f-status-panel">
+        <button class="freq-toggle" data-val="none" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('liq-f-status-btn',_fddVals('liq-f-status-panel'),t('liq-all-status'));renderCronogramaLiquidacoes()">Não iniciado</button>
+        <button class="freq-toggle" data-val="ini" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('liq-f-status-btn',_fddVals('liq-f-status-panel'),t('liq-all-status'));renderCronogramaLiquidacoes()">Em Elaboração</button>
+        <button class="freq-toggle" data-val="ok" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('liq-f-status-btn',_fddVals('liq-f-status-panel'),t('liq-all-status'));renderCronogramaLiquidacoes()">Concluída</button>
+        <button class="freq-toggle" data-val="sm" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('liq-f-status-btn',_fddVals('liq-f-status-panel'),t('liq-all-status'));renderCronogramaLiquidacoes()">Sem Movimento</button>
+        <button class="freq-toggle" data-val="pend" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('liq-f-status-btn',_fddVals('liq-f-status-panel'),t('liq-all-status'));renderCronogramaLiquidacoes()">Pendente</button>
+      </div>
+    </div>
+    <button id="liq-crono-clear-btn" class="btn-secondary" style="display:none;align-items:center;gap:6px;font-size:12px;padding:5px 12px" onclick="clearLiqFilters()">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      Limpar filtros
+    </button>
   </div>
   <div style="padding:4px 0 8px"><input type="search" id="liq-crono-search" placeholder="Buscar nome, país, agente..." style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderCronogramaLiquidacoes()"></div>
   <div class="liq-stat-row" id="liq-stats-row"></div>
@@ -941,9 +959,9 @@
     <div id="liq-crono-empty" class="empty-state" style="display:none"><div class="empty-icon">💳</div><div class="empty-title">Nenhuma conciliação encontrada</div><div class="empty-sub">Adicione conciliações em Gerencial › Conciliações com tipo Processadores ou Mista.</div></div>
     <div class="table-scroll" id="liq-crono-table-inner" style="display:none">
       <table class="no-row-border"><thead><tr>
-        <th>Conciliação</th><th>País</th>
-        <th>Tipo Liquidação</th><th style="min-width:150px">Estado Concil.</th><th style="min-width:100px">Última Elab.</th><th style="min-width:90px">Data Última</th><th style="min-width:180px">Observações</th>
-        <th style="min-width:190px">Status</th>
+        <th data-i18n="liq-col-concil">Conciliação</th><th data-i18n="liq-col-pais">País</th>
+        <th data-i18n="liq-col-tipo">Tipo Liquidação</th><th style="min-width:150px" data-i18n="liq-col-estado-concil">Estado Concil.</th><th style="min-width:100px" data-i18n="liq-col-ult-elab">Última Elab.</th><th style="min-width:90px" data-i18n="liq-col-data-ult">Data Última</th><th style="min-width:180px" data-i18n="liq-col-obs">Observações</th>
+        <th style="min-width:190px" data-i18n="liq-col-status">Status</th>
       </tr></thead>
       <tbody id="liq-crono-tbody"></tbody></table>
     </div>
@@ -1080,8 +1098,8 @@
         <div class="empty-title" data-i18n="acessos-no-perm">Acesso restrito</div>
         <div class="empty-sub" data-i18n="acessos-no-perm-sub">Somente o administrador pode gerenciar acessos.</div>
       </div>
-      <div id="acessos-env-tabs" style="display:none;margin-bottom:14px;display:flex;gap:6px;flex-wrap:wrap"></div>
       <div id="acessos-content">
+        <div style="padding:0 0 10px"><input type="search" id="acessos-search" placeholder="Buscar nome, email, sigla..." style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderAcessos()"></div>
         <div class="table-wrap"><div id="acessos-empty" class="empty-state"><div class="empty-icon">👤</div><div class="empty-title" data-i18n="acessos-empty-title">Nenhum acesso cadastrado</div><div class="empty-sub" data-i18n="acessos-empty-sub">Adicione responsáveis que aparecerão no sistema.</div></div><div class="table-scroll" id="acessos-table-inner" style="display:none"><table><thead><tr><th data-i18n="lbl-nome">Nome</th><th>Email</th><th style="width:60px">Sigla</th><th style="width:130px">Perfil</th><th style="width:110px">Ambientes</th><th style="width:140px">Status</th><th style="width:130px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="acessos-tbody"></tbody></table></div></div>
       </div>
     </div>
@@ -1796,6 +1814,11 @@ const i18n = {
     'hist-close':'Fechar','hist-download-csv':'Baixar CSV',
     'hist-col-datetime':'Data/Hora','hist-col-user':'Usuário','hist-col-module':'Módulo','hist-col-action':'Ação',
     'hist-records-one':'registro','hist-records-many':'registros',
+    'liq-col-concil':'Conciliação','liq-col-pais':'País','liq-col-agente':'Agente','liq-col-tipo':'Tipo Liquidação','liq-col-freq':'Frequência',
+    'liq-col-estado-concil':'Estado Concil.','liq-col-ult-elab':'Última Elab.','liq-col-data-ult':'Data Última','liq-col-obs':'Observações','liq-col-status':'Status',
+    'liq-all-paises':'Todos os países','liq-all-tipos':'Todos os tipos','liq-all-status':'Todos os status',
+    'liq-st-nao-iniciado':'Não iniciado','liq-st-em-elab':'Em Elaboração','liq-st-concluida':'Concluída','liq-st-sem-mov':'Sem Movimento','liq-st-pendente':'Pendente',
+    'liq-search-ph':'Buscar nome, país, agente...','liq-empty-ger-title':'Nenhuma conciliação de Processadores ou Mista','liq-empty-crono-title':'Nenhuma conciliação encontrada',
   },
   'en': {
     'ops-platform':'FOC App','login-welcome':'Welcome back',
@@ -1862,6 +1885,11 @@ const i18n = {
     'hist-col-datetime':'Date/Time','hist-col-user':'User','hist-col-module':'Module','hist-col-action':'Action',
     'hist-records-one':'record','hist-records-many':'records',
     'nav-cierre':'Accounts – Cierre',
+    'liq-col-concil':'Reconciliation','liq-col-pais':'Country','liq-col-agente':'Agent','liq-col-tipo':'Settlement Type','liq-col-freq':'Frequency',
+    'liq-col-estado-concil':'Reconcil. Status','liq-col-ult-elab':'Last Elab.','liq-col-data-ult':'Last Date','liq-col-obs':'Notes','liq-col-status':'Status',
+    'liq-all-paises':'All countries','liq-all-tipos':'All types','liq-all-status':'All statuses',
+    'liq-st-nao-iniciado':'Not started','liq-st-em-elab':'In Progress','liq-st-concluida':'Completed','liq-st-sem-mov':'No Movement','liq-st-pendente':'Pending',
+    'liq-search-ph':'Search name, country, agent...','liq-empty-ger-title':'No Processor or Mixed reconciliations','liq-empty-crono-title':'No reconciliation found',
   },
   'es': {
     'ops-platform':'FOC App','login-welcome':'Bienvenido de nuevo',
@@ -1928,6 +1956,11 @@ const i18n = {
     'hist-col-datetime':'Fecha/Hora','hist-col-user':'Usuario','hist-col-module':'Módulo','hist-col-action':'Acción',
     'hist-records-one':'registro','hist-records-many':'registros',
     'nav-cierre':'Accounts – Cierre',
+    'liq-col-concil':'Conciliación','liq-col-pais':'País','liq-col-agente':'Agente','liq-col-tipo':'Tipo Liquidación','liq-col-freq':'Frecuencia',
+    'liq-col-estado-concil':'Estado Concil.','liq-col-ult-elab':'Última Elab.','liq-col-data-ult':'Última Fecha','liq-col-obs':'Observaciones','liq-col-status':'Estado',
+    'liq-all-paises':'Todos los países','liq-all-tipos':'Todos los tipos','liq-all-status':'Todos los estados',
+    'liq-st-nao-iniciado':'No iniciado','liq-st-em-elab':'En Elaboración','liq-st-concluida':'Concluida','liq-st-sem-mov':'Sin Movimiento','liq-st-pendente':'Pendiente',
+    'liq-search-ph':'Buscar nombre, país, agente...','liq-empty-ger-title':'Sin conciliaciones de Procesadores o Mixtas','liq-empty-crono-title':'No se encontraron conciliaciones',
   }
 };
 
@@ -2626,6 +2659,7 @@ function renderCronogramaAccounts(){
   const activeAgentes=_fddVals('crono-f-agente-panel');
   const activeBancos=_fddVals('crono-f-banco-panel');
   const ftc=document.getElementById('crono-f-tipo-conta')?.value||'';
+  const ftop=document.getElementById('crono-f-top')?.value||'';
   const activeFreqs=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')].map(b=>b.dataset.freq);
   const activeD1=[...document.querySelectorAll('#crono-d1-filter .d1-toggle.active')].map(b=>b.dataset.d1);
   const activeResps=[...document.querySelectorAll('#crono-resp-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
@@ -2659,6 +2693,7 @@ function renderCronogramaAccounts(){
     if(activeBancos.length&&!activeBancos.includes(c.banco)) return false;
     if(ftc&&c.tipoConta!==ftc) return false;
     if(activeFreqs.length&&!activeFreqs.includes(c.tipo)) return false;
+    if(ftop){const tier=_contaTopTier(c.sigla);if(ftop==='__none__'){if(tier) return false;}else if(tier!==ftop) return false;}
     if(searchFilters&&!matchesCronoSearch(c,searchFilters)) return false;
     if(activeResps.length){
       const ck=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
@@ -2699,7 +2734,7 @@ function renderCronogramaAccounts(){
     return `<th class="col-day${isWk?' weekend':''}" style="font-size:9px;color:var(--e-muted);background:${isWk?'#faf5ff':'var(--e-ghost)'}">${wd[d.getDay()]}</th>`;
   }).join('');
   const _sth=(col,lbl,extra='')=>`<th class="${_sortThCls('crono',col)} col-info${extra?' cal-sticky':''}" ${extra} onclick="toggleSort('crono','${col}')" style="cursor:pointer">${lbl}${_sortArrow('crono',col)}</th>`;
-  const colInfos=`${_sth('sigla',t('col-sigla'),'cal-sticky')}${_sth('pais',t('col-pais'))}${_sth('agente',t('col-agente'))}<th class="col-info">Resp.</th>${_sth('banco',t('col-banco'))}${_sth('numeroConta',t('col-num-conta'))}${_sth('tipo',t('col-tipo'))}${_sth('tipoConta',t('col-tipo-conta'))}${_sth('status',t('col-status'))}<th class="col-info" style="white-space:nowrap">Acompanhamento</th>`;
+  const colInfos=`${_sth('sigla',t('col-sigla'),'cal-sticky')}${_sth('pais',t('col-pais'))}${_sth('agente',t('col-agente'))}<th class="col-info">Resp.</th>${_sth('banco',t('col-banco'))}${_sth('numeroConta',t('col-num-conta'))}${_sth('tipo',t('col-tipo'))}${_sth('tipoConta',t('col-tipo-conta'))}<th class="col-info" style="cursor:default">TOP</th><th class="col-info" style="white-space:nowrap">Acompanhamento</th>`;
   const emptyInfoCols='<th class="col-info cal-sticky" style="background:var(--e-ghost)"></th>'+'<th class="col-info" style="background:var(--e-ghost)"></th>'.repeat(INFO_COLS-1);
   const fmtDate=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   tbl.innerHTML=`<thead><tr>${colInfos}${dayHeaders}</tr><tr>${emptyInfoCols}${wdHeaders}</tr></thead><tbody>${
@@ -2707,7 +2742,7 @@ function renderCronogramaAccounts(){
       const contaKey=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
       const resp=_contaResp(c);
       const respCell=resp?`<span style="font-family:monospace;font-size:10px;font-weight:700;background:rgba(151,111,244,.1);color:var(--e-mid);padding:1px 5px;border-radius:3px">${resp.sigla}</span>`:'<span style="color:var(--e-muted);font-size:11px">—</span>';
-      const statusChip=c.status==='encerrada'?`<span class="chip chip-red">${t('status-encerrada')}</span>`:`<span class="chip chip-green">${t('status-ativa')}</span>`;
+      const topChip=_contaTopChip(c.sigla);
       const dotCls=dayDotClass(c.tipo);
       const _d1s=d1Map[contaKey];
       const _d1chipHtml={concluido:`<span class="chip chip-green" style="font-size:10px">${t('status-concluido')}</span>`,sem_movimento:`<span class="chip chip-purple" style="font-size:10px">${t('status-sem-mov')}</span>`,sem_acesso:`<span class="chip chip-red" style="font-size:10px">${t('status-sem-acesso')}</span>`,pendente:`<span class="chip chip-amber" style="font-size:10px">${t('status-pendente')}</span>`,aguardando_extrato:`<span class="chip chip-bbpix" style="font-size:10px">${t('status-ag-extrato')}</span>`}[_d1s]||'<span style="color:var(--e-muted);font-size:11px">—</span>';
@@ -2741,7 +2776,7 @@ function renderCronogramaAccounts(){
             <div class="day-dot inactive"></div></td>`;
         }
       }).join('');
-      return `<tr class="row-${c.status}"><td class="cal-sticky" style="font-family:ui-monospace,monospace;font-size:12px">${c.sigla}</td><td>${countryFlag(c.pais)} ${c.pais}</td><td class="sub">${c.agente}</td><td>${respCell}</td><td>${c.banco}</td><td class="mono">${c.numeroConta||'—'}</td><td>${tipoChip(c.tipo)}</td><td>${tipoContaChip(c.tipoConta)}</td><td>${statusChip}</td>${d1Cell}${cells}</tr>`;
+      return `<tr class="row-${c.status}"><td class="cal-sticky" style="font-family:ui-monospace,monospace;font-size:12px">${c.sigla}</td><td>${countryFlag(c.pais)} ${c.pais}</td><td class="sub">${c.agente}</td><td>${respCell}</td><td>${c.banco}</td><td class="mono">${c.numeroConta||'—'}</td><td>${tipoChip(c.tipo)}</td><td>${tipoContaChip(c.tipoConta)}</td><td>${topChip}</td>${d1Cell}${cells}</tr>`;
     }).join('')
   }</tbody>`;
   if(calScrollEl){calScrollEl.scrollLeft=_savedSL;calScrollEl.scrollTop=_savedST;}
@@ -2797,11 +2832,12 @@ function _hasCronoFilters(){
   const fa=_fddVals('crono-f-agente-panel').length>0;
   const fb=_fddVals('crono-f-banco-panel').length>0;
   const ftc=document.getElementById('crono-f-tipo-conta')?.value||'';
+  const ftop=document.getElementById('crono-f-top')?.value||'';
   const hasFreq=document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active').length>0;
   const hasD1=document.querySelectorAll('#crono-d1-filter .d1-toggle.active').length>0;
   const hasResp=document.querySelectorAll('#crono-resp-toggles .freq-toggle.active').length>0;
   const hasSearch=(document.getElementById('crono-search')?.value||'').trim()!=='';
-  return !!(fp||fa||fb||ftc||hasFreq||hasD1||hasResp||hasSearch||_sortState.crono.col);
+  return !!(fp||fa||fb||ftc||ftop||hasFreq||hasD1||hasResp||hasSearch||_sortState.crono.col);
 }
 function _updateClearBtn(){
   const btn=document.getElementById('btn-clear-filters');
@@ -2814,6 +2850,7 @@ function clearCronoFilters(){
   _fddLabel('crono-f-agente-btn',[],t('crono-all-agentes'));
   _fddLabel('crono-f-banco-btn',[],t('crono-all-bancos'));
   if(sel('crono-f-tipo-conta')) sel('crono-f-tipo-conta').value='';
+  if(sel('crono-f-top')) sel('crono-f-top').value='';
   document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active').forEach(b=>b.classList.remove('active'));
   _updateFreqLabel();
   document.querySelectorAll('#crono-d1-filter .d1-toggle.active').forEach(b=>b.classList.remove('active'));
@@ -3259,9 +3296,9 @@ function _populateAcessoEnvCheckboxes(selectedEnvs){
 let _acessosTabEnv=null;
 let _acessosOtherStore=null;
 let _acessosOtherApp=null;
-function _acessosIsOther(){return _acessosTabEnv&&_acessosTabEnv!==_currentEnv;}
-function _acessosResp(){return _acessosIsOther()?(_acessosOtherStore?.responsaveis||[]):store.responsaveis;}
-function _acessosCreds(){return _acessosIsOther()?(_acessosOtherStore?.credentials||{}):store.credentials;}
+function _acessosIsOther(){return false;}
+function _acessosResp(){return store.responsaveis;}
+function _acessosCreds(){return store.credentials;}
 async function _loadAcessosOtherEnv(envKey){
   const env=ENVIRONMENTS[envKey];
   if(!env?.cfg) return null;
@@ -3288,23 +3325,7 @@ function _envChips(envs){
   const colors={eron:'color:#c4b5fd;background:rgba(151,111,244,.15);border:1px solid rgba(151,111,244,.3)',astropay:'color:#6ee7b7;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.25)'};
   return list.map(k=>'<span style="font-size:10px;padding:1px 7px;border-radius:10px;font-weight:600;white-space:nowrap;display:inline-block;'+(colors[k]||'')+'">'+(ENVIRONMENTS[k]?.label||k)+'</span>').join(' ');
 }
-function renderAcessosTabs(){
-  const tabsEl=document.getElementById('acessos-env-tabs');
-  if(!tabsEl) return;
-  const adminEnvs=_getAdminEnvs();
-  if(adminEnvs.length<=1){tabsEl.style.display='none';return;}
-  tabsEl.style.display='flex';
-  if(!_acessosTabEnv) _acessosTabEnv=_currentEnv;
-  tabsEl.innerHTML=adminEnvs.map(k=>{
-    const env=ENVIRONMENTS[k];
-    const isActive=k===_acessosTabEnv;
-    const borderC=isActive?'var(--e-purple)':'rgba(255,255,255,.12)';
-    const bgC=isActive?'rgba(151,111,244,.12)':'transparent';
-    const colorC=isActive?'var(--e-purple)':'var(--e-sub)';
-    const fwC=isActive?'700':'500';
-    return `<button onclick="switchAcessosTab('${k}')" style="padding:5px 16px;border-radius:7px;border:1.5px solid ${borderC};background:${bgC};color:${colorC};font-size:12px;font-weight:${fwC};cursor:pointer;font-family:inherit;transition:.15s">${env.label}</button>`;
-  }).join('');
-}
+function renderAcessosTabs(){}
 async function _submitAcessoInner(){
   if(_editAcessoIdx>=0){
     // Modo edição — nome, sigla, e role (se super_admin)
@@ -3382,7 +3403,9 @@ function renderAcessos(){
   document.getElementById('acessos-content').style.display=canView?'':'none';
   document.getElementById('btn-add-acesso').style.display=isAdm?'':'none';
   renderAcessosTabs();
-  const resp=_acessosResp();
+  const searchQ=(document.getElementById('acessos-search')?.value||'').toLowerCase().trim();
+  let resp=_acessosResp();
+  if(searchQ) resp=resp.filter(r=>`${r.nome} ${r.email} ${r.sigla}`.toLowerCase().includes(searchQ));
   const creds=_acessosCreds();
   const el=document.getElementById('acessos-count');
   if(el) el.textContent=resp.length+' acesso'+(resp.length===1?'':'s');
@@ -3560,7 +3583,7 @@ function openHistorico(){
   openModal('modal-historico');
 }
 // ─── CALENDÁRIO INTERATIVO ────────────────────────────────────────
-function closeCalDropdown(){ document.querySelectorAll('.cal-dropdown').forEach(d=>d.remove()); }
+function closeCalDropdown(){ document.querySelectorAll('.cal-dropdown').forEach(d=>d.remove()); _calOpenCell=null; }
 let _noteHideTimer=null;
 function showNoteTooltip(event,el){
   clearTimeout(_noteHideTimer);
@@ -3600,15 +3623,18 @@ function scheduleHideConcWarn(){
   _concWarnTimer=setTimeout(()=>{const tip=document.getElementById('conc-warn-tip');if(tip)tip.style.display='none';},150);
 }
 document.addEventListener('click', function(e){ if(!e.target.closest('.cal-dropdown')) closeCalDropdown(); });
+let _calOpenCell=null;
 function onDayCellClick(event, contaKey, dateStr, active, tdEl){
+  const cell=tdEl||event.currentTarget;
+  if(_calOpenCell===cell){ closeCalDropdown(); event.stopPropagation(); return; }
   closeCalDropdown();
-  if(!canEdit()){ event.stopPropagation(); return; }
+  _calOpenCell=cell;
+  if(!canEdit()){ _calOpenCell=null; event.stopPropagation(); return; }
   const user=store.responsaveis.find(r=>r.email===window._loggedEmail);
   const sigla=user?.sigla||(user?.nome?.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase())||'??';
   const storeKey=`${contaKey}_${dateStr}`;
   const existing=store.cronogramaData[storeKey];
   const isLocked=existing&&LOCKED_STATUSES.includes(existing.status)&&!isAdmin();
-  const cell=tdEl||event.currentTarget;
   const rect=cell.getBoundingClientRect();
   const dd=document.createElement('div');
   dd.className='cal-dropdown';
@@ -5005,6 +5031,20 @@ function _priorTierClass(tier){
   if(tier==='Acima TOP 50') return 'prior-outros';
   return 'prior-outros';
 }
+function _contaTopTier(sigla){
+  const conc=store.conciliacoes.find(c=>c.tipo==='bancos'&&(c.contas||[]).includes(sigla));
+  if(!conc) return null;
+  const concId=(conc.id||conc.nome).replace(/['"]/g,'');
+  const vol=_computeVolumePrioridade(concId);
+  if(vol) return vol;
+  const raw=((store.conciliacoesPrioridade||{})[concId]||'').trim();
+  return raw||null;
+}
+function _contaTopChip(sigla){
+  const tier=_contaTopTier(sigla);
+  if(!tier) return '<span style="color:var(--e-muted);font-size:11px">—</span>';
+  return `<span class="prior-chip ${_priorTierClass(tier)}">${tier}</span>`;
+}
 function _parseCSVLine(line){
   const result=[];let cur='';let inQ=false;
   for(let i=0;i<line.length;i++){
@@ -5480,9 +5520,10 @@ function _closeConcPop(){
 function onConcCellClick(evt,ck,dateStr){
   if(!canEdit()) return;
   evt.stopPropagation();
-  _closeConcPop();
   const td=evt.target.closest('td.conc-cell');
   if(!td) return;
+  if(_concPop&&_concPop.td===td){ _closeConcPop(); return; }
+  _closeConcPop();
   const conc=store.conciliacoes.find(c=>(c.id||c.nome).replace(/['"]/g,'')===ck);
   if(!conc) return;
   const manualKey=`${conc.id||conc.nome}_${dateStr}`;
@@ -5666,27 +5707,42 @@ function _liqSaveConfig(concId,updates){
   Object.assign(store.liquidacoesConfig[concId],updates);
   saveStore(); _fbSync('liquidacoesConfig');
 }
-function _initLiqPaisFilter(){
-  const sel=document.getElementById('liq-f-pais');
-  if(!sel) return;
-  const paises=[...new Set(_liqConcilList().map(c=>c.pais).filter(Boolean))].sort();
-  const prev=sel.value;
-  sel.innerHTML='<option value="">Todos os países</option>'+paises.map(p=>`<option value="${p}">${countryFlag(p)} ${p}</option>`).join('');
-  if(prev&&paises.includes(prev)) sel.value=prev;
+function _initLiqFilters(){
+  const activePaises=_fddVals('liq-f-pais-panel');
+  const avP=[...new Set(_liqConcilList().map(c=>c.pais).filter(Boolean))].sort();
+  _fddRender('liq-f-pais-panel',avP,activePaises,v=>`${countryFlag(v)} ${v}`,'renderCronogramaLiquidacoes()');
+  _fddLabel('liq-f-pais-btn',activePaises.filter(p=>avP.includes(p)),t('liq-all-paises'));
+}
+function _hasLiqFilters(){
+  return _fddVals('liq-f-pais-panel').length>0||
+    _fddVals('liq-f-tipo-panel').length>0||
+    _fddVals('liq-f-status-panel').length>0||
+    (document.getElementById('liq-crono-search')?.value||'').trim()!=='';
+}
+function clearLiqFilters(){
+  document.querySelectorAll('#liq-f-pais-panel .freq-toggle.active,#liq-f-tipo-panel .freq-toggle.active,#liq-f-status-panel .freq-toggle.active').forEach(b=>b.classList.remove('active'));
+  _fddLabel('liq-f-pais-btn',[],t('liq-all-paises'));
+  _fddLabel('liq-f-tipo-btn',[],t('liq-all-tipos'));
+  _fddLabel('liq-f-status-btn',[],t('liq-all-status'));
+  const inp=document.getElementById('liq-crono-search');
+  if(inp) inp.value='';
+  renderCronogramaLiquidacoes();
 }
 
 // ── Status popover ──
 let _liqPop=null;
 function _liqOpenPop(evt,concId,type){
   evt.stopPropagation();
-  _liqClosePop();
   const btn=evt.currentTarget;
+  const td=btn.closest('td');
+  if(_liqPop&&_liqPop.td===td){ _liqClosePop(); return; }
+  _liqClosePop();
   const st=_liqGetStatus(concId,type);
   const sig=store.responsaveis.find(r=>r.email===window._loggedEmail)?.sigla||'?';
   const opts=[
     {v:null,  lbl:'Não iniciado',   sub:'',         bg:'#f3f4f6',color:'#6b7280'},
     {v:'ini', lbl:'Em Elaboração',  sub:'Elab '+sig,  bg:'#dbeafe',color:'#1d4ed8'},
-    {v:'ok',  lbl:'Conferida (OK)', sub:sig,         bg:'#dcfce7',color:'#15803d'},
+    {v:'ok',  lbl:'Concluída',       sub:sig,         bg:'#dcfce7',color:'#15803d'},
     {v:'sm',  lbl:'Sem Movimento',  sub:sig+' s/m',  bg:'#ede9fe',color:'#5b21b6'},
     {v:'pend',lbl:'Pendente',       sub:'',          bg:'#fef9c3',color:'#854d0e'},
   ];
@@ -5697,7 +5753,6 @@ function _liqOpenPop(evt,concId,type){
       onclick="_liqChooseSt(event,'${concId}','${type}',${o.v===null?'null':"'"+o.v+"'"})">
       <div style="font-weight:600">${o.lbl}</div>${o.sub?`<div style="font-size:11px;font-family:monospace;margin-top:1px">${o.sub}</div>`:''}
     </div>`).join('');
-  const td=btn.closest('td');
   if(td){td.style.position='relative';td.appendChild(pop);_liqPop={td,pop};}
   setTimeout(()=>document.addEventListener('click',_liqClosePop,{once:true}),0);
 }
@@ -5717,10 +5772,10 @@ function _liqPillHtml(st,concId,type){
   const base='border:none;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;display:inline-flex;align-items:center;gap:4px;min-width:110px;white-space:nowrap;';
   if(!st) return `<button style="${base}background:#fff;border:1px solid var(--e-pale);color:var(--e-muted)" ${oc}>—</button>`;
   let bg,col,lbl;
-  if(st.v==='ok')  {bg='#dcfce7';col='#166534';lbl='✓ OK';}
+  if(st.v==='ok')  {bg='#dcfce7';col='#166534';lbl='Concluída';}
   else if(st.v==='ini'){bg='#dbeafe';col='#1d4ed8';lbl='Elab';}
   else if(st.v==='sm') {bg='#ede9fe';col='#5b21b6';lbl='s/m';}
-  else               {bg='#fef9c3';col='#854d0e';lbl='! Pendente';}
+  else               {bg='#fef9c3';col='#854d0e';lbl='Pendente';}
   const byPart=st.by?`<span style="font-size:10px;font-family:monospace;opacity:.7"> · ${st.by}${st.dt?' '+st.dt:''}</span>`:'';
   return `<button style="${base}background:${bg};color:${col}" ${oc}>${lbl}${byPart}</button>`;
 }
@@ -5760,15 +5815,21 @@ function _liqObsBlur(ta,id){
 // ── Render Cronograma > Liquidações ──
 function renderCronogramaLiquidacoes(){
   _liqPopulateMonthSel();
-  const fp=document.getElementById('liq-f-pais')?.value||'';
-  const ft=document.getElementById('liq-f-tipo')?.value||'';
-  const fs=document.getElementById('liq-f-status')?.value||'';
+  _initLiqFilters();
+  const activePaises=_fddVals('liq-f-pais-panel');
+  const activeTipos=_fddVals('liq-f-tipo-panel');
+  const activeStatus=_fddVals('liq-f-status-panel');
   const fq=(document.getElementById('liq-crono-search')?.value||'').toLowerCase().trim();
+  const clearBtn=document.getElementById('liq-crono-clear-btn');
+  if(clearBtn) clearBtn.style.display=_hasLiqFilters()?'flex':'none';
   let list=_liqConcilList();
-  if(fp) list=list.filter(c=>c.pais===fp);
-  if(ft) list=list.filter(c=>_liqGetConfig(_liqConcId(c)).tipo_liq===ft);
-  if(fs==='none') list=list.filter(c=>!_liqGetStatus(_liqConcId(c),'liq'));
-  else if(fs) list=list.filter(c=>_liqGetStatus(_liqConcId(c),'liq')?.v===fs);
+  if(activePaises.length) list=list.filter(c=>activePaises.includes(c.pais));
+  if(activeTipos.length) list=list.filter(c=>activeTipos.includes(_liqGetConfig(_liqConcId(c)).tipo_liq));
+  if(activeStatus.length){
+    if(activeStatus.includes('none')&&activeStatus.length===1) list=list.filter(c=>!_liqGetStatus(_liqConcId(c),'liq'));
+    else if(activeStatus.includes('none')) list=list.filter(c=>{const s=_liqGetStatus(_liqConcId(c),'liq'); return !s||activeStatus.includes(s.v);});
+    else list=list.filter(c=>activeStatus.includes(_liqGetStatus(_liqConcId(c),'liq')?.v));
+  }
   if(fq) list=list.filter(c=>`${c.nome} ${c.pais} ${c.agente}`.toLowerCase().includes(fq));
   const cnt=document.getElementById('liq-crono-count');
   if(cnt) cnt.textContent=list.length+' conciliação'+(list.length!==1?'s':'');
@@ -5784,7 +5845,7 @@ function renderCronogramaLiquidacoes(){
   const sr=document.getElementById('liq-stats-row');
   if(sr) sr.innerHTML=`
     <div class="liq-stat"><div class="liq-stat-lbl">Total</div><div class="liq-stat-n">${list.length}</div></div>
-    <div class="liq-stat"><div class="liq-stat-lbl">Liquidação OK</div><div class="liq-stat-n" style="color:#166534">${ok}</div></div>
+    <div class="liq-stat"><div class="liq-stat-lbl">Concluída</div><div class="liq-stat-n" style="color:#166534">${ok}</div></div>
     <div class="liq-stat"><div class="liq-stat-lbl">Em Elaboração</div><div class="liq-stat-n" style="color:#6d28d9">${ini}</div></div>
     <div class="liq-stat"><div class="liq-stat-lbl">Sem Movimento</div><div class="liq-stat-n" style="color:#5b21b6">${sm}</div></div>
     <div class="liq-stat"><div class="liq-stat-lbl">Pendentes</div><div class="liq-stat-n" style="color:#854d0e">${pend}</div></div>`;
@@ -5806,12 +5867,12 @@ function renderCronogramaLiquidacoes(){
     const elab=_liqLastElab(c);
     let estadoChip;
     if(!elab._raw){
-      estadoChip='<span class="chip" style="background:#fef9c3;color:#854d0e;font-size:11px">Aguardar conciliação</span>';
+      estadoChip='<span class="chip" style="background:#fef9c3;color:#854d0e;font-size:11px">Aguardando conciliação</span>';
     } else {
       const [eDateY,eDateM]=elab._raw.split('-').map(Number);
       const inMonth=eDateY>_liqYear||(eDateY===_liqYear&&eDateM>=(_liqMonth+1));
       if(!inMonth){
-        estadoChip='<span class="chip" style="background:#fef9c3;color:#854d0e;font-size:11px">Aguardar conciliação</span>';
+        estadoChip='<span class="chip" style="background:#fef9c3;color:#854d0e;font-size:11px">Aguardando conciliação</span>';
       } else if(elab.status==='sem_movimento'){
         estadoChip='<span class="chip" style="background:#ede9fe;color:#5b21b6;font-size:11px">Sem Movimento</span>';
       } else if(elab.status==='sem_acesso'){
