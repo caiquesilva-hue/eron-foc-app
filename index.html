@@ -744,6 +744,10 @@
           <div class="page-title-text" data-i18n="nav-accounts">Accounts</div>
           <div class="page-title-count" id="crono-accounts-count"></div>
         </div>
+        <button id="btn-clear-filters" onclick="clearCronoFilters()" style="display:none;align-items:center;gap:6px;font-size:12px;padding:5px 12px;background:var(--e-ghost);color:var(--e-muted);border:1px solid var(--e-pale);border-radius:8px;cursor:pointer;font-family:inherit" title="Limpar todos os filtros">
+          <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          Limpar filtros
+        </button>
       </div>
       <div class="crono-filters">
         <div class="freq-dd" id="crono-f-pais-dd">
@@ -816,10 +820,6 @@
         <button id="btn-bulk-apply" class="btn-bulk-apply" onclick="openBulkApply()" data-requires-edit="1">
           <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 16l2 2 4-4"/></svg>
           <span data-i18n="crono-bulk-apply">Aplicar em massa</span>
-        </button>
-        <button class="btn-bulk-apply" id="btn-clear-filters" onclick="clearCronoFilters()" style="background:var(--e-ghost);color:var(--e-muted);border-color:var(--e-pale);display:none" title="Limpar todos os filtros">
-          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-          Limpar filtros
         </button>
       </div>
       <div class="crono-d1-panel" id="crono-d1-panel">
@@ -923,6 +923,10 @@
       <div class="page-title-text" data-i18n="nav-custos">Liquidações</div>
       <div class="page-title-count" id="liq-crono-count"></div>
     </div>
+    <button id="liq-crono-clear-btn" onclick="clearLiqFilters()" style="display:none;align-items:center;gap:6px;font-size:12px;padding:5px 12px;background:var(--e-ghost);color:var(--e-muted);border:1px solid var(--e-pale);border-radius:8px;cursor:pointer;font-family:inherit">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      Limpar filtros
+    </button>
   </div>
   <div class="crono-filters">
     <select id="liq-month-sel" onchange="liqSetMonth(this.value)" style="height:36px;padding:0 28px 0 12px;border:1px solid var(--e-pale);border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;color:var(--e-text);background:#fff;cursor:pointer;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239898c3' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 10px center"></select>
@@ -950,10 +954,6 @@
         <button class="freq-toggle" data-val="pend" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('liq-f-status-btn',_fddVals('liq-f-status-panel'),t('liq-all-status'));renderCronogramaLiquidacoes()">Pendente</button>
       </div>
     </div>
-    <button id="liq-crono-clear-btn" class="btn-secondary" style="display:none;align-items:center;gap:6px;font-size:12px;padding:5px 12px" onclick="clearLiqFilters()">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
-      Limpar filtros
-    </button>
   </div>
   <div style="padding:4px 0 8px"><input type="search" id="liq-crono-search" placeholder="Buscar nome, país, agente..." style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderCronogramaLiquidacoes()"></div>
   <div class="liq-stat-row" id="liq-stats-row"></div>
@@ -976,6 +976,10 @@
       <div class="page-title-text" data-i18n="nav-conciliacoes">Conciliações</div>
       <div class="page-title-count" id="crono-conc-count"></div>
     </div>
+    <button id="crono-conc-clear-btn" onclick="clearCronconcFilters()" style="display:none;align-items:center;gap:6px;font-size:12px;padding:5px 12px;background:var(--e-ghost);color:var(--e-muted);border:1px solid var(--e-pale);border-radius:8px;cursor:pointer;font-family:inherit" title="Limpar filtros">
+      <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      Limpar filtros
+    </button>
   </div>
   <div class="crono-filters">
     <div class="freq-dd" id="crono-conc-f-pais-dd">
@@ -1028,10 +1032,6 @@
     <button class="btn-bulk-apply" id="btn-conc-bulk-apply" onclick="openConcBulkApply()" data-requires-edit="1">
       <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
       Aplicar em massa
-    </button>
-    <button class="btn-bulk-apply" id="crono-conc-clear-btn" onclick="clearCronconcFilters()" style="background:var(--e-ghost);color:var(--e-muted);border-color:var(--e-pale);display:none" title="Limpar filtros">
-      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-      Limpar filtros
     </button>
   </div>
   <div class="crono-d1-panel" id="crono-conc-d1-panel">
