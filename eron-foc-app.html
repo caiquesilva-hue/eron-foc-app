@@ -3636,7 +3636,7 @@ function onDayCellClick(event, contaKey, dateStr, active, tdEl){
   if(existing) opts.push({status:'clear',label:'Limpar',sub:'',bg:'#f3f4f6',color:'#6b7280'});
   if(!opts.length){ dd.remove(); return; }
   dd.innerHTML=opts.map(o=>`<div class="cal-dd-item" data-status="${o.status}" style="color:${o.color};background:${o.bg}">
-    <div style="font-weight:600">${o.label}</div>${o.sub?`<div style="font-size:10px;opacity:.7;font-family:monospace">${o.sub}</div>`:''}
+    <div style="font-weight:600">${o.label}</div>${o.sub?`<div style="font-size:11px;font-family:monospace;margin-top:1px">${o.sub}</div>`:''}
   </div>`).join('');
   dd.addEventListener('click',function(ev){
     const item=ev.target.closest('.cal-dd-item');
@@ -5500,7 +5500,7 @@ function onConcCellClick(evt,ck,dateStr){
   pop.style.cssText='position:absolute;top:calc(100% + 2px);left:0;border:1px solid var(--e-pale);border-radius:10px;box-shadow:0 8px 24px rgba(27,19,60,.13);z-index:600;min-width:180px;overflow:hidden;text-align:left;';
   pop.innerHTML=opts.map(o=>`<div class="cal-dd-item" style="color:${o.color};background:${o.bg}"
       onclick="_concChooseSt(event,'${ck}','${dateStr}',${o.v===null?'null':"'"+o.v+"'"})">
-      <div style="font-weight:600">${o.lbl}</div>${o.sub?`<div style="font-size:10px;opacity:.7;font-family:monospace">${o.sub}</div>`:''}
+      <div style="font-weight:600">${o.lbl}</div>${o.sub?`<div style="font-size:11px;font-family:monospace;margin-top:1px">${o.sub}</div>`:''}
     </div>`).join('');
   td.style.position='relative';
   td.appendChild(pop);
@@ -5673,18 +5673,18 @@ function _liqOpenPop(evt,concId,type){
   const st=_liqGetStatus(concId,type);
   const sig=store.responsaveis.find(r=>r.email===window._loggedEmail)?.sigla||'?';
   const opts=[
-    {v:null,  lbl:'Não iniciado',          bg:'#f3f4f6',color:'#6b7280'},
-    {v:'ini', lbl:`Elab ${sig} · Iniciada`,bg:'#dbeafe',color:'#1d4ed8'},
-    {v:'ok',  lbl:'Conferida (OK)',         bg:'#dcfce7',color:'#15803d'},
-    {v:'sm',  lbl:'Sem Movimento (s/m)',    bg:'#ede9fe',color:'#5b21b6'},
-    {v:'pend',lbl:'Pendente',              bg:'#fef9c3',color:'#854d0e'},
+    {v:null,  lbl:'Não iniciado',   sub:'',         bg:'#f3f4f6',color:'#6b7280'},
+    {v:'ini', lbl:'Em Elaboração',  sub:sig,         bg:'#dbeafe',color:'#1d4ed8'},
+    {v:'ok',  lbl:'Conferida (OK)', sub:sig,         bg:'#dcfce7',color:'#15803d'},
+    {v:'sm',  lbl:'Sem Movimento',  sub:sig+' s/m',  bg:'#ede9fe',color:'#5b21b6'},
+    {v:'pend',lbl:'Pendente',       sub:'',          bg:'#fef9c3',color:'#854d0e'},
   ];
   const pop=document.createElement('div');
   pop.id='_liq_pop';
   pop.style.cssText='position:absolute;top:calc(100% + 4px);left:0;border:1px solid var(--e-pale);border-radius:10px;box-shadow:0 8px 24px rgba(27,19,60,.13);z-index:600;min-width:200px;overflow:hidden;text-align:left;';
   pop.innerHTML=opts.map(o=>`<div class="cal-dd-item" style="color:${o.color};background:${o.bg}"
       onclick="_liqChooseSt(event,'${concId}','${type}',${o.v===null?'null':"'"+o.v+"'"})">
-      <span>${o.lbl}</span>
+      <div style="font-weight:600">${o.lbl}</div>${o.sub?`<div style="font-size:11px;font-family:monospace;margin-top:1px">${o.sub}</div>`:''}
     </div>`).join('');
   const td=btn.closest('td');
   if(td){td.style.position='relative';td.appendChild(pop);_liqPop={td,pop};}
