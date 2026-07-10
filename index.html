@@ -952,6 +952,10 @@
       <button class="freq-dd-btn" id="liq-f-pais-btn" onclick="_fddToggle(event,'liq-f-pais-panel')" data-i18n-default="liq-all-paises">Todos os países</button>
       <div class="freq-dd-panel" id="liq-f-pais-panel" style="max-height:240px;overflow-y:auto"></div>
     </div>
+    <div class="freq-dd" id="liq-f-agente-dd">
+      <button class="freq-dd-btn" id="liq-f-agente-btn" onclick="_fddToggle(event,'liq-f-agente-panel')" data-i18n-default="liq-all-agentes">Todos os agentes</button>
+      <div class="freq-dd-panel" id="liq-f-agente-panel" style="max-height:240px;overflow-y:auto"></div>
+    </div>
     <div class="freq-dd" id="liq-f-tipo-dd">
       <button class="freq-dd-btn" id="liq-f-tipo-btn" onclick="_fddToggle(event,'liq-f-tipo-panel')" data-i18n-default="liq-all-tipos">Todos os tipos</button>
       <div class="freq-dd-panel" id="liq-f-tipo-panel">
@@ -979,7 +983,7 @@
     <div id="liq-crono-empty" class="empty-state" style="display:none"><div class="empty-icon">💳</div><div class="empty-title">Nenhuma conciliação encontrada</div><div class="empty-sub">Adicione conciliações em Gerencial › Conciliações com tipo Processadores ou Mista.</div></div>
     <div class="table-scroll" id="liq-crono-table-inner" style="display:none">
       <table class="no-row-border"><thead><tr>
-        <th data-i18n="liq-col-concil">Conciliação</th><th data-i18n="liq-col-pais">País</th>
+        <th data-i18n="liq-col-concil">Conciliação</th><th data-i18n="liq-col-pais">País</th><th data-i18n="liq-col-agente">Agente</th>
         <th data-i18n="liq-col-tipo">Tipo Liquidação</th><th style="min-width:150px" data-i18n="liq-col-estado-concil">Estado Concil.</th><th style="min-width:100px" data-i18n="liq-col-ult-elab">Última Elab.</th><th style="min-width:90px" data-i18n="liq-col-data-ult">Data Última</th><th style="min-width:180px" data-i18n="liq-col-obs">Observações</th>
         <th style="min-width:190px" data-i18n="liq-col-status">Status</th>
       </tr></thead>
@@ -1839,7 +1843,7 @@ const i18n = {
     'hist-records-one':'registro','hist-records-many':'registros',
     'liq-col-concil':'Conciliação','liq-col-pais':'País','liq-col-agente':'Agente','liq-col-tipo':'Tipo Liquidação','liq-col-freq':'Frequência',
     'liq-col-estado-concil':'Estado Concil.','liq-col-ult-elab':'Última Elab.','liq-col-data-ult':'Data Última','liq-col-obs':'Observações','liq-col-status':'Status',
-    'liq-all-paises':'Todos os países','liq-all-tipos':'Todos os tipos','liq-all-status':'Todos os status',
+    'liq-all-paises':'Todos os países','liq-all-agentes':'Todos os agentes','liq-all-tipos':'Todos os tipos','liq-all-status':'Todos os status',
     'liq-st-nao-iniciado':'Não iniciado','liq-st-em-elab':'Em Elaboração','liq-st-concluida':'Concluída','liq-st-sem-mov':'Sem Movimento','liq-st-pendente':'Pendente',
     'liq-search-ph':'Buscar nome, país, agente...','liq-empty-ger-title':'Nenhuma conciliação de Processadores ou Mista','liq-empty-crono-title':'Nenhuma conciliação encontrada',
     'conc-col-tipo':'Tipo','conc-col-contas':'Contas vinculadas',
@@ -1915,7 +1919,7 @@ const i18n = {
     'nav-cierre':'Accounts – Cierre',
     'liq-col-concil':'Reconciliation','liq-col-pais':'Country','liq-col-agente':'Agent','liq-col-tipo':'Settlement Type','liq-col-freq':'Frequency',
     'liq-col-estado-concil':'Reconcil. Status','liq-col-ult-elab':'Last Elab.','liq-col-data-ult':'Last Date','liq-col-obs':'Notes','liq-col-status':'Status',
-    'liq-all-paises':'All countries','liq-all-tipos':'All types','liq-all-status':'All statuses',
+    'liq-all-paises':'All countries','liq-all-agentes':'All agents','liq-all-tipos':'All types','liq-all-status':'All statuses',
     'liq-st-nao-iniciado':'Not started','liq-st-em-elab':'In Progress','liq-st-concluida':'Completed','liq-st-sem-mov':'No Movement','liq-st-pendente':'Pending',
     'liq-search-ph':'Search name, country, agent...','liq-empty-ger-title':'No Processor or Mixed reconciliations','liq-empty-crono-title':'No reconciliation found',
     'conc-col-tipo':'Type','conc-col-contas':'Linked accounts',
@@ -1991,7 +1995,7 @@ const i18n = {
     'nav-cierre':'Accounts – Cierre',
     'liq-col-concil':'Conciliación','liq-col-pais':'País','liq-col-agente':'Agente','liq-col-tipo':'Tipo Liquidación','liq-col-freq':'Frecuencia',
     'liq-col-estado-concil':'Estado Concil.','liq-col-ult-elab':'Última Elab.','liq-col-data-ult':'Última Fecha','liq-col-obs':'Observaciones','liq-col-status':'Estado',
-    'liq-all-paises':'Todos los países','liq-all-tipos':'Todos los tipos','liq-all-status':'Todos los estados',
+    'liq-all-paises':'Todos los países','liq-all-agentes':'Todos los agentes','liq-all-tipos':'Todos los tipos','liq-all-status':'Todos los estados',
     'liq-st-nao-iniciado':'No iniciado','liq-st-em-elab':'En Elaboración','liq-st-concluida':'Concluida','liq-st-sem-mov':'Sin Movimiento','liq-st-pendente':'Pendiente',
     'liq-search-ph':'Buscar nombre, país, agente...','liq-empty-ger-title':'Sin conciliaciones de Procesadores o Mixtas','liq-empty-crono-title':'No se encontraron conciliaciones',
     'conc-col-tipo':'Tipo','conc-col-contas':'Cuentas vinculadas',
@@ -5788,20 +5792,30 @@ function _liqSaveConfig(concId,updates){
   saveStore(); _fbSync('liquidacoesConfig');
 }
 function _initLiqFilters(){
+  const all=_liqConcilList();
+  // País
   const activePaises=_fddVals('liq-f-pais-panel');
-  const avP=[...new Set(_liqConcilList().map(c=>c.pais).filter(Boolean))].sort();
-  _fddRender('liq-f-pais-panel',avP,activePaises,v=>`${countryFlag(v)} ${v}`,'renderCronogramaLiquidacoes()');
+  const avP=[...new Set(all.map(c=>c.pais).filter(Boolean))].sort();
+  _fddRender('liq-f-pais-panel',avP,activePaises,v=>`${countryFlag(v)} ${v}`,'_initLiqFilters();renderCronogramaLiquidacoes()');
   _fddLabel('liq-f-pais-btn',activePaises.filter(p=>avP.includes(p)),t('liq-all-paises'));
+  // Agente (cascade: só agentes dos países selecionados)
+  const activeAgentes=_fddVals('liq-f-agente-panel');
+  const filtByPais=activePaises.length?all.filter(c=>activePaises.includes(c.pais)):all;
+  const avA=[...new Set(filtByPais.map(c=>c.agente).filter(Boolean))].sort();
+  _fddRender('liq-f-agente-panel',avA,activeAgentes.filter(a=>avA.includes(a)),v=>v,'renderCronogramaLiquidacoes()');
+  _fddLabel('liq-f-agente-btn',activeAgentes.filter(a=>avA.includes(a)),t('liq-all-agentes'));
 }
 function _hasLiqFilters(){
   return _fddVals('liq-f-pais-panel').length>0||
+    _fddVals('liq-f-agente-panel').length>0||
     _fddVals('liq-f-tipo-panel').length>0||
     _fddVals('liq-f-status-panel').length>0||
     (document.getElementById('liq-crono-search')?.value||'').trim()!=='';
 }
 function clearLiqFilters(){
-  document.querySelectorAll('#liq-f-pais-panel .freq-toggle.active,#liq-f-tipo-panel .freq-toggle.active,#liq-f-status-panel .freq-toggle.active').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#liq-f-pais-panel .freq-toggle.active,#liq-f-agente-panel .freq-toggle.active,#liq-f-tipo-panel .freq-toggle.active,#liq-f-status-panel .freq-toggle.active').forEach(b=>b.classList.remove('active'));
   _fddLabel('liq-f-pais-btn',[],t('liq-all-paises'));
+  _fddLabel('liq-f-agente-btn',[],t('liq-all-agentes'));
   _fddLabel('liq-f-tipo-btn',[],t('liq-all-tipos'));
   _fddLabel('liq-f-status-btn',[],t('liq-all-status'));
   const inp=document.getElementById('liq-crono-search');
@@ -5897,6 +5911,7 @@ function renderCronogramaLiquidacoes(){
   _liqPopulateMonthSel();
   _initLiqFilters();
   const activePaises=_fddVals('liq-f-pais-panel');
+  const activeAgentes=_fddVals('liq-f-agente-panel');
   const activeTipos=_fddVals('liq-f-tipo-panel');
   const activeStatus=_fddVals('liq-f-status-panel');
   const fq=(document.getElementById('liq-crono-search')?.value||'').toLowerCase().trim();
@@ -5904,6 +5919,7 @@ function renderCronogramaLiquidacoes(){
   if(clearBtn) clearBtn.style.display=_hasLiqFilters()?'flex':'none';
   let list=_liqConcilList();
   if(activePaises.length) list=list.filter(c=>activePaises.includes(c.pais));
+  if(activeAgentes.length) list=list.filter(c=>activeAgentes.includes(c.agente));
   if(activeTipos.length) list=list.filter(c=>activeTipos.includes(_liqGetConfig(_liqConcId(c)).tipo_liq));
   if(activeStatus.length){
     if(activeStatus.includes('none')&&activeStatus.length===1) list=list.filter(c=>!_liqGetStatus(_liqConcId(c),'liq'));
@@ -5962,8 +5978,9 @@ function renderCronogramaLiquidacoes(){
       }
     }
     return `<tr>
-      <td><div style="font-weight:600">${c.nome}</div><div style="font-size:11px;color:var(--e-muted);display:flex;align-items:center;gap:4px;margin-top:2px">${c.agente||''} <span class="chip ${tcCls}" style="font-size:9px">${tcLbl}</span></div></td>
+      <td><div style="font-weight:600">${c.nome}</div><div style="font-size:11px;color:var(--e-muted);display:flex;align-items:center;gap:4px;margin-top:2px"><span class="chip ${tcCls}" style="font-size:9px">${tcLbl}</span></div></td>
       <td>${c.pais?`${countryFlag(c.pais)} ${c.pais}`:'—'}</td>
+      <td style="font-size:12px;color:var(--e-text)">${c.agente||'<span style="color:var(--e-muted)">—</span>'}</td>
       <td>${tlChip}</td>
       <td>${estadoChip}</td>
       <td style="font-size:12px;color:var(--e-text);font-weight:600">${elab.sigla||'<span style="color:var(--e-muted)">—</span>'}</td>
