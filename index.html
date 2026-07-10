@@ -701,6 +701,10 @@
       <div class="page-title-text" data-i18n="nav-custos">Liquidações</div>
       <div class="page-title-count" id="liq-ger-count"></div>
     </div>
+    <button onclick="openLiqManualModal()" id="btn-liq-manual" style="display:none;align-items:center;gap:6px;font-size:12px;padding:5px 12px;background:var(--e-purple);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:500">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      Incluir liquidação
+    </button>
   </div>
   <div style="display:flex;align-items:flex-start;gap:10px;background:#f5f3ff;border:1px solid rgba(151,111,244,.22);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--e-sub);line-height:1.55">
     <span style="flex-shrink:0;margin-top:1px">ℹ️</span>
@@ -945,10 +949,6 @@
       <button id="liq-crono-clear-btn" onclick="clearLiqFilters()" style="display:none;align-items:center;gap:6px;font-size:12px;padding:5px 12px;background:var(--e-ghost);color:var(--e-muted);border:1px solid var(--e-pale);border-radius:8px;cursor:pointer;font-family:inherit">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
         Limpar filtros
-      </button>
-      <button onclick="openLiqManualModal()" id="btn-liq-manual" style="display:none;align-items:center;gap:6px;font-size:12px;padding:5px 12px;background:var(--e-purple);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:500">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-        Incluir liquidação
       </button>
     </div>
   </div>
@@ -6028,8 +6028,6 @@ function renderCronogramaLiquidacoes(){
   const fq=(document.getElementById('liq-crono-search')?.value||'').toLowerCase().trim();
   const clearBtn=document.getElementById('liq-crono-clear-btn');
   if(clearBtn) clearBtn.style.display=_hasLiqFilters()?'flex':'none';
-  const manualBtn=document.getElementById('btn-liq-manual');
-  if(manualBtn) manualBtn.style.display=canEdit()?'inline-flex':'none';
   let list=_liqConcilList();
   if(activePaises.length) list=list.filter(c=>activePaises.includes(c.pais));
   if(activeAgentes.length) list=list.filter(c=>activeAgentes.includes(c.agente));
@@ -6108,6 +6106,8 @@ function renderCronogramaLiquidacoes(){
 
 // ── Render Gerencial > Liquidações ──
 function renderGerencialLiquidacoes(){
+  const manualBtn=document.getElementById('btn-liq-manual');
+  if(manualBtn) manualBtn.style.display=canEdit()?'inline-flex':'none';
   const list=_liqConcilList();
   const searchQ=(document.getElementById('liq-ger-search')?.value||'').toLowerCase().trim();
   const filtered=searchQ?list.filter(c=>`${c.nome} ${c.pais} ${c.agente}`.toLowerCase().includes(searchQ)):list;
