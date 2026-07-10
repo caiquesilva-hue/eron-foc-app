@@ -126,6 +126,7 @@
   table{width:100%;border-collapse:collapse;}
   thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--e-muted);text-transform:uppercase;letter-spacing:.07em;background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap;position:sticky;top:0;z-index:2;}
   tbody tr{border-bottom:1px solid var(--e-pale);transition:background .1s;border-left:3px solid transparent;}
+  .no-row-border tbody tr{border-left:0;}
   tbody tr:last-child{border-bottom:none;}
   tbody tr:hover{background:var(--e-ghost);}
   tbody tr.row-ativa{border-left-color:#22c55e;}
@@ -930,10 +931,10 @@
   <div class="table-wrap">
     <div id="liq-crono-empty" class="empty-state" style="display:none"><div class="empty-icon">💳</div><div class="empty-title">Nenhuma conciliação encontrada</div><div class="empty-sub">Adicione conciliações em Gerencial › Conciliações com tipo Processadores ou Mista.</div></div>
     <div class="table-scroll" id="liq-crono-table-inner" style="display:none">
-      <table><thead><tr>
+      <table class="no-row-border"><thead><tr>
         <th>Conciliação</th><th>País</th>
         <th>Tipo Liquidação</th><th style="min-width:150px">Estado Concil.</th><th style="min-width:100px">Última Elab.</th><th style="min-width:90px">Data Última</th><th style="min-width:180px">Observações</th>
-        <th>LIQ</th><th>VIN</th>
+        <th style="min-width:100px">Liquidação</th>
       </tr></thead>
       <tbody id="liq-crono-tbody"></tbody></table>
     </div>
@@ -1358,6 +1359,16 @@
           <input type="radio" name="conc-bulk-status" value="concluido">
           <span class="bulk-chip" style="background:#dcfce7;color:#15803d">Concluída</span>
           <span style="font-size:12px;color:var(--e-sub)">Marca cada dia do período como concluída</span>
+        </label>
+        <label class="bulk-opt">
+          <input type="radio" name="conc-bulk-status" value="sem_movimento">
+          <span class="bulk-chip" style="background:#ede9fe;color:#5b21b6">Sem Movimento</span>
+          <span style="font-size:12px;color:var(--e-sub)">Sem movimentação no período</span>
+        </label>
+        <label class="bulk-opt">
+          <input type="radio" name="conc-bulk-status" value="sem_acesso">
+          <span class="bulk-chip" style="background:#fef2f2;color:#dc2626">Sem Acesso</span>
+          <span style="font-size:12px;color:var(--e-sub)">Sem acesso ao processador</span>
         </label>
         <label class="bulk-opt" style="border-style:dashed">
           <input type="radio" name="conc-bulk-status" value="clear">
@@ -4803,7 +4814,7 @@ function deleteConciliacao(idx){
 function _getConcilStatus(conc,dateStr){
   const manualKey=`${conc.id||conc.nome}_${dateStr}`;
   const manual=store.cronogramaConciliacoes[manualKey];
-  if(manual&&manual.status==='concluido') return {status:'concluido',entry:manual};
+  if(manual&&['concluido','sem_movimento','sem_acesso'].includes(manual.status)) return {status:manual.status,entry:manual};
   const sigs=conc.contas||[];
   if(!sigs.length) return {status:'pendente'};
   // Se qualquer conta vinculada estiver encerrada → conta_encerrada
@@ -5448,30 +5459,57 @@ function renderCronogramaConciliacoes(){
       const td=ev.target.closest('td.conc-cell');
       if(!td) return;
       ev.stopPropagation();
-      onConcCellClick(td.dataset.ck,td.dataset.dt);
+      onConcCellClick(ev,td.dataset.ck,td.dataset.dt);
     });
   }
 }
 
-function onConcCellClick(ck,dateStr){
+let _concPop=null;
+function _closeConcPop(){
+  if(_concPop){_concPop.pop.remove();if(_concPop.td&&_concPop.td.style.position==='relative')_concPop.td.style.position='';_concPop=null;}
+}
+function onConcCellClick(evt,ck,dateStr){
+  if(!canEdit()) return;
+  evt.stopPropagation();
+  _closeConcPop();
+  const td=evt.target.closest('td.conc-cell');
+  if(!td) return;
   const conc=store.conciliacoes.find(c=>(c.id||c.nome).replace(/['"]/g,'')===ck);
   if(!conc) return;
-  const user=store.responsaveis.find(r=>r.email===window._loggedEmail);
-  const sigla=user?.sigla||'?';
   const manualKey=`${conc.id||conc.nome}_${dateStr}`;
   const existing=store.cronogramaConciliacoes[manualKey];
-  if(existing&&existing.status==='concluido'){
-    showDeleteConfirm(`Limpar marcação em ${dateStr}`,`Remover "Concluída" da conciliação "${conc.nome}"?`,()=>{
-      delete store.cronogramaConciliacoes[manualKey];
-      saveStore(); _fbSync('cronogramaConciliacoes');
-      renderCronogramaConciliacoes();
-    });
-  } else {
-    store.cronogramaConciliacoes[manualKey]={status:'concluido',sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')};
-    saveStore(); _fbSync('cronogramaConciliacoes');
-    renderCronogramaConciliacoes();
-    _toast(`✓ ${conc.nome} concluída em ${dateStr}`);
-  }
+  const opts=[
+    {v:'concluido',  lbl:'Concluída',    bg:'#dcfce7',color:'#15803d'},
+    {v:'sem_movimento',lbl:'Sem Movimento',bg:'#ede9fe',color:'#5b21b6'},
+    {v:'sem_acesso', lbl:'Sem Acesso',   bg:'#fef2f2',color:'#dc2626'},
+    {v:null,         lbl:'Limpar',       bg:'#f3f4f6',color:'#6b7280'},
+  ];
+  const pop=document.createElement('div');
+  pop.style.cssText='position:absolute;top:calc(100% + 2px);left:0;background:#fff;border:1px solid var(--e-pale);border-radius:10px;box-shadow:0 8px 24px rgba(27,19,60,.13);z-index:600;min-width:160px;overflow:hidden;';
+  pop.innerHTML=`<div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--e-muted);padding:7px 12px 4px">${dateStr}</div>`+
+    opts.map(o=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;font-size:12.5px;${existing?.status===o.v||(!existing&&!o.v)?'background:rgba(151,111,244,.09)':''}"
+      onmouseenter="this.style.background='var(--e-ghost)'"
+      onmouseleave="this.style.background='${existing?.status===o.v||(!existing&&!o.v)?'rgba(151,111,244,.09)':'transparent'}'"
+      onclick="_concChooseSt(event,'${ck}','${dateStr}',${o.v===null?'null':"'"+o.v+"'"})">
+      <div style="width:7px;height:7px;border-radius:50%;background:${o.bg};flex-shrink:0"></div>
+      <span>${o.lbl}</span>
+    </div>`).join('');
+  td.style.position='relative';
+  td.appendChild(pop);
+  _concPop={pop,td};
+  setTimeout(()=>document.addEventListener('click',_closeConcPop,{once:true}),0);
+}
+function _concChooseSt(evt,ck,dateStr,v){
+  evt.stopPropagation();
+  _closeConcPop();
+  const conc=store.conciliacoes.find(c=>(c.id||c.nome).replace(/['"]/g,'')===ck);
+  if(!conc) return;
+  const sigla=store.responsaveis.find(r=>r.email===window._loggedEmail)?.sigla||'?';
+  const manualKey=`${conc.id||conc.nome}_${dateStr}`;
+  if(!v){ delete store.cronogramaConciliacoes[manualKey]; }
+  else { store.cronogramaConciliacoes[manualKey]={status:v,sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')}; }
+  saveStore(); _fbSync('cronogramaConciliacoes');
+  renderCronogramaConciliacoes();
 }
 
 function _getConcBulkContext(){
@@ -5577,7 +5615,7 @@ function _liqLastElab(c){
   const prefix=(c.id||c.nome)+'_';
   let lastDate='',lastSigla='';
   Object.entries(store.cronogramaConciliacoes||{}).forEach(([k,v])=>{
-    if(!k.startsWith(prefix)||v.status!=='concluido') return;
+    if(!k.startsWith(prefix)||!['concluido','sem_movimento','sem_acesso'].includes(v.status)) return;
     const ds=k.slice(prefix.length);
     if(ds>lastDate){lastDate=ds;lastSigla=v.sigla||'';}
   });
@@ -5699,11 +5737,11 @@ function renderCronogramaLiquidacoes(){
   let ok=0,ini=0,sm=0,pend=0;
   list.forEach(c=>{
     const id=_liqConcId(c);
-    const l=_liqGetStatus(id,'liq'),v=_liqGetStatus(id,'vin');
-    if(l?.v==='ok'&&(v?.v==='ok'||!v)) ok++;
-    else if(l?.v==='ini'||v?.v==='ini') ini++;
+    const l=_liqGetStatus(id,'liq');
+    if(l?.v==='ok') ok++;
+    else if(l?.v==='ini') ini++;
     else if(l?.v==='sm') sm++;
-    else if(l?.v==='pend'||v?.v==='pend') pend++;
+    else if(l?.v==='pend') pend++;
   });
   const sr=document.getElementById('liq-stats-row');
   if(sr) sr.innerHTML=`
@@ -5723,7 +5761,7 @@ function renderCronogramaLiquidacoes(){
   tb.innerHTML=list.map(c=>{
     const id=_liqConcId(c);
     const cfg=_liqGetConfig(id);
-    const lSt=_liqGetStatus(id,'liq'),vSt=_liqGetStatus(id,'vin');
+    const lSt=_liqGetStatus(id,'liq');
     const [tcCls,tcLbl]=tipoMap[c.tipo||'bancos']||tipoMap.bancos;
     const tl=LIQ_TIPOS[cfg.tipo_liq]||null;
     const tlChip=tl?`<span class="chip" style="font-size:10px;background:${tl.bg};color:${tl.color}">${tl.short}</span>`:`<span style="color:var(--e-muted);font-size:11px">—</span>`;
@@ -5747,7 +5785,6 @@ function renderCronogramaLiquidacoes(){
       <td style="font-size:12px;color:var(--e-muted)">${elab.date||'—'}</td>
       <td><textarea class="liq-obs" placeholder="Observações..." style="width:100%;min-height:32px;border:1px solid var(--e-pale);border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit;color:var(--e-text);background:#fff;resize:none;overflow:hidden;box-sizing:border-box;display:block" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';_liqSaveConfig('${id}',{obs:this.value})">${cfg.obs||''}</textarea></td>
       <td>${_liqPillHtml(lSt,id,'liq')}</td>
-      <td>${_liqPillHtml(vSt,id,'vin')}</td>
     </tr>`;
   }).join('');
   tb.querySelectorAll('textarea.liq-obs').forEach(ta=>{ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';});
