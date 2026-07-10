@@ -5445,7 +5445,8 @@ function renderCronogramaConciliacoes(){
       if(r.status==='pendente'){
         return `<td class="day-cell conc-cell" data-ck="${_ck}" data-dt="${dateStr}" style="cursor:pointer"><div class="day-dot" style="opacity:.4">·</div></td>`;
       }
-      const lbl=r.status==='sem_movimento'?'s/m':r.status==='sem_acesso'?'s/a':r.entry?r.entry.sigla:(r.status==='pronto_conciliacao'?'✓':'?');
+      const _sig=r.entry?.sigla||'';
+      const lbl=r.status==='sem_movimento'?(_sig?`${_sig} s/m`:'s/m'):r.status==='sem_acesso'?(_sig?`${_sig} s/a`:'s/a'):r.entry?_sig:(r.status==='pronto_conciliacao'?'✓':'?');
       return `<td class="day-cell conc-cell" data-ck="${_ck}" data-dt="${dateStr}" style="cursor:pointer;padding:2px 1px"><div class="day-filled" style="background:${cfg.bg};color:${cfg.color}">${lbl}</div></td>`;
     }).join('');
     return `<tr class="row-ativa"><td class="cal-sticky" style="font-size:12px;font-weight:600;white-space:nowrap">${conc.nome}</td><td style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td><td class="sub" style="font-size:11px">${conc.agente||'—'}</td><td>${respCell}</td><td style="padding:4px 8px">${priorCell}</td><td style="white-space:nowrap;padding:4px 8px">${d1ChipHtml}</td>${cells}</tr>`;
@@ -5609,7 +5610,14 @@ const LIQ_FREQ=['Diária','Semanal','Mensal','1×/mês'];
 let _liqMonth=(new Date().getMonth()===0?11:new Date().getMonth()-1), _liqYear=(new Date().getMonth()===0?new Date().getFullYear()-1:new Date().getFullYear());
 
 function _liqConcilList(){
-  return store.conciliacoes.filter(c=>c.status!=='encerrada'&&(c.tipo==='processadores'||c.tipo==='mista'));
+  return store.conciliacoes.filter(c=>{
+    if(c.status==='encerrada') return false;
+    if(c.tipo!=='processadores'&&c.tipo!=='mista') return false;
+    const concId=_liqConcId(c);
+    const vm=store.concilVolumeMap?.[concId];
+    if(!vm) return true; // sem mapa de volume: inclui
+    return (vm.cashinIds?.length>0)||(vm.cashoutIds?.length>0);
+  });
 }
 function _liqLastElab(c){
   const prefix=(c.id||c.nome)+'_';
