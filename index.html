@@ -712,7 +712,6 @@
       <table><thead><tr>
         <th>Conciliação</th><th>País</th><th>Agente</th>
         <th style="min-width:185px">Tipo Liquidação</th>
-        <th style="min-width:150px">Pegar liq em</th>
         <th style="min-width:110px">Frequência</th>
       </tr></thead>
       <tbody id="liq-ger-tbody"></tbody></table>
@@ -937,7 +936,7 @@
     <div class="table-scroll" id="liq-crono-table-inner" style="display:none">
       <table><thead><tr>
         <th>Conciliação</th><th>País</th>
-        <th>Tipo Liquidação</th><th>Origem</th>
+        <th>Tipo Liquidação</th><th style="min-width:110px">Última Elab.</th><th style="min-width:90px">Data Última</th><th style="min-width:180px">Observações</th>
         <th>LIQ</th><th>VIN</th>
       </tr></thead>
       <tbody id="liq-crono-tbody"></tbody></table>
@@ -5539,7 +5538,7 @@ function _liqOpenPop(evt,concId,type){
     opts.map(o=>`<div style="display:flex;align-items:center;gap:9px;padding:8px 12px;cursor:pointer;font-size:12.5px;${st?.v===o.v||(!st&&!o.v)?'background:rgba(151,111,244,.09);':''}"
       onmouseenter="this.style.background='var(--e-ghost)'"
       onmouseleave="this.style.background='${st?.v===o.v||(!st&&!o.v)?'rgba(151,111,244,.09)':'transparent'}'"
-      onclick="_liqChooseSt(event,'${concId}','${type}',${JSON.stringify(o.v)})">
+      onclick="_liqChooseSt(event,'${concId}','${type}',${o.v===null?'null':"'"+o.v+"'"})">
       <div style="width:7px;height:7px;border-radius:50%;background:${o.dot};flex-shrink:0"></div>
       <span>${o.lbl}</span>
     </div>`).join('');
@@ -5611,7 +5610,7 @@ function renderCronogramaLiquidacoes(){
   tb.innerHTML=list.map(c=>{
     const id=_liqConcId(c);
     const cfg=_liqGetConfig(id);
-    const lSt=_liqGetStatus(id,'liq'), vSt=_liqGetStatus(id,'vin');
+    const lSt=_liqGetStatus(id,'liq'),vSt=_liqGetStatus(id,'vin');
     const [tcCls,tcLbl]=tipoMap[c.tipo||'bancos']||tipoMap.bancos;
     const tl=LIQ_TIPOS[cfg.tipo_liq]||null;
     const tlChip=tl?`<span class="chip" style="font-size:10px;background:${tl.bg};color:${tl.color}">${tl.short}</span>`:`<span style="color:var(--e-muted);font-size:11px">—</span>`;
@@ -5619,11 +5618,14 @@ function renderCronogramaLiquidacoes(){
       <td><div style="font-weight:600">${c.nome}</div><div style="font-size:11px;color:var(--e-muted);display:flex;align-items:center;gap:4px;margin-top:2px">${c.agente||''} <span class="chip ${tcCls}" style="font-size:9px">${tcLbl}</span></div></td>
       <td>${c.pais?`${countryFlag(c.pais)} ${c.pais}`:'—'}</td>
       <td>${tlChip}</td>
-      <td style="font-size:12px;color:var(--e-sub)">${cfg.pegar_em||'—'}</td>
+      <td><input type="text" value="${(cfg.ult_elab||'').replace(/"/g,'&quot;')}" placeholder="—" style="width:100%;border:1px solid var(--e-pale);border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit;color:var(--e-text);background:#fff" onchange="_liqSaveConfig('${id}',{ult_elab:this.value})"></td>
+      <td><input type="text" value="${(cfg.dt_ult_elab||'').replace(/"/g,'&quot;')}" placeholder="—" style="width:80px;border:1px solid var(--e-pale);border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit;color:var(--e-text);background:#fff" onchange="_liqSaveConfig('${id}',{dt_ult_elab:this.value})"></td>
+      <td><textarea class="liq-obs" placeholder="Observações..." style="width:100%;min-height:32px;border:1px solid var(--e-pale);border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit;color:var(--e-text);background:#fff;resize:none;overflow:hidden;box-sizing:border-box;display:block" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';_liqSaveConfig('${id}',{obs:this.value})">${cfg.obs||''}</textarea></td>
       <td>${_liqPillHtml(lSt,id,'liq')}</td>
       <td>${_liqPillHtml(vSt,id,'vin')}</td>
     </tr>`;
   }).join('');
+  tb.querySelectorAll('textarea.liq-obs').forEach(ta=>{ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';});
 }
 
 // ── Render Gerencial > Liquidações ──
@@ -5655,7 +5657,6 @@ function renderGerencialLiquidacoes(){
       <td>${c.pais?`${countryFlag(c.pais)} ${c.pais}`:'—'}</td>
       <td style="font-size:12px;color:var(--e-muted)">${c.agente||'—'}</td>
       <td><select style="${selStyle}" onchange="_liqSaveConfig('${id}',{tipo_liq:this.value});renderCronogramaLiquidacoes()">${tOpts}</select></td>
-      <td><select style="${selStyle}" onchange="_liqSaveConfig('${id}',{pegar_em:this.value});renderCronogramaLiquidacoes()">${peOpts}</select></td>
       <td><select style="${selStyle}" onchange="_liqSaveConfig('${id}',{freq:this.value})">${frOpts}</select></td>
     </tr>`;
   }).join('');
