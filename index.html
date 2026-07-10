@@ -563,6 +563,7 @@
         <div class="sb-item" data-page="cadastro-pais" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-pais">País</span></div>
         <div class="sb-item" data-page="cadastro-agente" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-agente">Agente</span></div>
         <div class="sb-item" data-page="cadastro-banco" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-banco">Banco</span></div>
+        <div class="sb-item" data-page="cadastro-processadores" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-processadores">Processadores</span></div>
         <div class="sb-item" data-page="cadastro-acessos" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-acessos">Acessos</span></div>
       </div>
       <div class="sb-divider"></div>
@@ -1122,6 +1123,16 @@
       </div>
       <div style="padding:0 0 10px"><input type="search" id="cad-banco-search" placeholder="Pesquisar banco..." style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderCadastro('banco')"></div>
       <div class="table-wrap"><div id="banco-empty" class="empty-state"><div class="empty-icon">🏛️</div><div class="empty-title" data-i18n="banco-empty-title">Nenhum banco cadastrado</div><div class="empty-sub" data-i18n="banco-empty-sub">Adicione bancos ao sistema.</div></div><div class="table-scroll" id="banco-table-inner" style="display:none"><table><thead><tr><th data-i18n="nav-banco">Banco</th><th>Responsável exclusivo</th><th style="width:70px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="banco-tbody"></tbody></table></div></div>
+    </div>
+
+    <!-- CADASTRO > PROCESSADORES -->
+    <div class="page" id="page-cadastro-processadores">
+      <div class="page-header">
+        <div class="page-header-left"><div class="page-title-text" data-i18n="cad-proc-title">Processadores</div><div class="page-title-count" id="proc-count"></div></div>
+        <button class="btn-primary" onclick="openCadastroModal('processadores')" data-requires-edit><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn-add-processador">Adicionar processador</span></button>
+      </div>
+      <div style="padding:0 0 10px"><input type="search" id="cad-proc-search" placeholder="Pesquisar processador..." style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderCadastro('processadores')"></div>
+      <div class="table-wrap"><div id="proc-empty" class="empty-state"><div class="empty-icon">⚙️</div><div class="empty-title" data-i18n="proc-empty-title">Nenhum processador cadastrado</div><div class="empty-sub" data-i18n="proc-empty-sub">Adicione processadores ao sistema.</div></div><div class="table-scroll" id="proc-table-inner" style="display:none"><table><thead><tr><th data-i18n="nav-processadores">Processador</th><th>Responsável exclusivo</th><th style="width:70px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="proc-tbody"></tbody></table></div></div>
     </div>
 
     <!-- CADASTRO > ACESSOS -->
@@ -1830,20 +1841,22 @@ const i18n = {
     'status-ativa':'Ativa','status-encerrada':'Encerrada',
     'filter-all-status':'Todos os status',
     'acc-empty-title':'Nenhuma conta cadastrada','acc-empty-sub':'Clique em "Adicionar conta" para começar.',
-    'cad-pais-title':'Países','cad-agente-title':'Agentes','cad-banco-title':'Bancos',
-    'btn-add-pais':'Adicionar país','btn-add-agente':'Adicionar agente','btn-add-banco':'Adicionar banco',
+    'cad-pais-title':'Países','cad-agente-title':'Agentes','cad-banco-title':'Bancos','cad-proc-title':'Processadores',
+    'btn-add-pais':'Adicionar país','btn-add-agente':'Adicionar agente','btn-add-banco':'Adicionar banco','btn-add-processador':'Adicionar processador',
     'pais-empty-title':'Nenhum país cadastrado','pais-empty-sub':'Adicione países para alimentar os dropdowns do sistema.',
     'agente-empty-title':'Nenhum agente cadastrado','agente-empty-sub':'Adicione agentes vinculados a um país.',
     'banco-empty-title':'Nenhum banco cadastrado','banco-empty-sub':'Adicione bancos vinculados a um país.',
+    'proc-empty-title':'Nenhum processador cadastrado','proc-empty-sub':'Adicione processadores ao sistema.',
     'ph-ger-cus-desc':'Gestão de liquidações operacionais por agente, banco e período.',
     'ph-ger-con-desc':'Painel de conciliação entre extratos bancários e transações do sistema.',
     'ph-crono-acc-desc':'Acompanhamento das datas de extrato e janelas de atualização por conta bancária.',
     'ph-crono-cus-desc':'Agendamento e revisão de lançamentos de liquidações por período.',
     'ph-crono-con-desc':'Calendário de conciliações e prazos por processador.',
     'lbl-nome':'Nome','lbl-pais-vinculo':'País vinculado',
-    'cad-pais-modal':'Adicionar país','cad-agente-modal':'Adicionar agente','cad-banco-modal':'Adicionar banco',
-    'edit-cad-pais-modal':'Editar país','edit-cad-agente-modal':'Editar agente','edit-cad-banco-modal':'Editar banco',
-    'cad-banco-resp-excl':'Responsável exclusivo por banco?',
+    'cad-pais-modal':'Adicionar país','cad-agente-modal':'Adicionar agente','cad-banco-modal':'Adicionar banco','cad-proc-modal':'Adicionar processador',
+    'edit-cad-pais-modal':'Editar país','edit-cad-agente-modal':'Editar agente','edit-cad-banco-modal':'Editar banco','edit-cad-proc-modal':'Editar processador',
+    'cad-banco-resp-excl':'Responsável exclusivo por banco?','cad-proc-resp-excl':'Responsável exclusivo por processador?',
+    'nav-processadores':'Processadores',
     'confirm-encerrar-title':'Encerrar conta','confirm-encerrar-sub':'Esta ação é irreversível. Confirme antes de continuar.',
     'confirm-check-1':'Todos os extratos do período foram conferidos e estão fechados.',
     'confirm-check-2':'Todas as conciliações foram finalizadas e não há divergências pendentes.',
@@ -1858,6 +1871,7 @@ const i18n = {
     'login-forgot':'Esqueci a senha',
     'login-enter':'Entrar',
     'count-banco':'banco','count-bancos':'bancos',
+    'count-processador':'processador','count-processadores':'processadores',
     'crono-resp':'Responsable','crono-d1-lbl':'Seguimiento','crono-bulk-apply':'Aplicar en masa',
     'crono-clear-filters':'Limpiar filtros','crono-download-csv':'Descargar CSV',
     'crono-search-ph':'Buscar cuentas... ej: país:Perú | banco:BCP | agente:PE.Onlinepro | estado:activa | tipo:Diario',
@@ -1913,20 +1927,22 @@ const i18n = {
     'status-ativa':'Active','status-encerrada':'Closed',
     'filter-all-status':'All statuses',
     'acc-empty-title':'No accounts registered','acc-empty-sub':'Click "Add account" to get started.',
-    'cad-pais-title':'Countries','cad-agente-title':'Agents','cad-banco-title':'Banks',
-    'btn-add-pais':'Add country','btn-add-agente':'Add agent','btn-add-banco':'Add bank',
+    'cad-pais-title':'Countries','cad-agente-title':'Agents','cad-banco-title':'Banks','cad-proc-title':'Processors',
+    'btn-add-pais':'Add country','btn-add-agente':'Add agent','btn-add-banco':'Add bank','btn-add-processador':'Add processor',
     'pais-empty-title':'No countries registered','pais-empty-sub':'Add countries to populate system dropdowns.',
     'agente-empty-title':'No agents registered','agente-empty-sub':'Add agents linked to a country.',
     'banco-empty-title':'No banks registered','banco-empty-sub':'Add banks linked to a country.',
+    'proc-empty-title':'No processors registered','proc-empty-sub':'Add processors to the system.',
     'ph-ger-cus-desc':'Operational cost management by agent, bank, and period.',
     'ph-ger-con-desc':'Reconciliation panel between bank statements and system transactions.',
     'ph-crono-acc-desc':'Statement date and update window tracking by bank account.',
     'ph-crono-cus-desc':'Cost entry scheduling and review by period.',
     'ph-crono-con-desc':'Reconciliation calendar and deadlines by processor.',
     'lbl-nome':'Name','lbl-pais-vinculo':'Linked country',
-    'cad-pais-modal':'Add country','cad-agente-modal':'Add agent','cad-banco-modal':'Add bank',
-    'edit-cad-pais-modal':'Edit country','edit-cad-agente-modal':'Edit agent','edit-cad-banco-modal':'Edit bank',
-    'cad-banco-resp-excl':'Exclusive bank manager?',
+    'cad-pais-modal':'Add country','cad-agente-modal':'Add agent','cad-banco-modal':'Add bank','cad-proc-modal':'Add processor',
+    'edit-cad-pais-modal':'Edit country','edit-cad-agente-modal':'Edit agent','edit-cad-banco-modal':'Edit bank','edit-cad-proc-modal':'Edit processor',
+    'cad-banco-resp-excl':'Exclusive bank manager?','cad-proc-resp-excl':'Exclusive processor manager?',
+    'nav-processadores':'Processors',
     'confirm-encerrar-title':'Close account','confirm-encerrar-sub':'This action is irreversible. Please confirm before proceeding.',
     'confirm-check-1':'All statements for the period have been reviewed and closed.',
     'confirm-check-2':'All reconciliations are finalized with no pending discrepancies.',
@@ -1941,6 +1957,7 @@ const i18n = {
     'login-forgot':'Forgot password',
     'login-enter':'Sign in',
     'count-banco':'bank','count-bancos':'banks',
+    'count-processador':'processor','count-processadores':'processors',
     'preset-prev-month':'Previous month','preset-curr-month':'Current month','preset-last-7':'Last 7 days','preset-custom':'Custom',
     'crono-resp':'Responsible','crono-d1-lbl':'Follow-up','crono-bulk-apply':'Bulk apply',
     'crono-clear-filters':'Clear filters','crono-download-csv':'Download CSV',
@@ -1989,20 +2006,22 @@ const i18n = {
     'status-ativa':'Activa','status-encerrada':'Cerrada',
     'filter-all-status':'Todos los estados',
     'acc-empty-title':'No hay cuentas registradas','acc-empty-sub':'Haz clic en "Agregar cuenta" para comenzar.',
-    'cad-pais-title':'Países','cad-agente-title':'Agentes','cad-banco-title':'Bancos',
-    'btn-add-pais':'Agregar país','btn-add-agente':'Agregar agente','btn-add-banco':'Agregar banco',
+    'cad-pais-title':'Países','cad-agente-title':'Agentes','cad-banco-title':'Bancos','cad-proc-title':'Procesadores',
+    'btn-add-pais':'Agregar país','btn-add-agente':'Agregar agente','btn-add-banco':'Agregar banco','btn-add-processador':'Agregar procesador',
     'pais-empty-title':'No hay países registrados','pais-empty-sub':'Agrega países para alimentar los desplegables del sistema.',
     'agente-empty-title':'No hay agentes registrados','agente-empty-sub':'Agrega agentes vinculados a un país.',
     'banco-empty-title':'No hay bancos registrados','banco-empty-sub':'Agrega bancos vinculados a un país.',
+    'proc-empty-title':'No hay procesadores registrados','proc-empty-sub':'Agrega procesadores al sistema.',
     'ph-ger-cus-desc':'Gestión de costos operativos por agente, banco y período.',
     'ph-ger-con-desc':'Panel de conciliación entre extractos bancarios y transacciones del sistema.',
     'ph-crono-acc-desc':'Seguimiento de fechas de extracto y ventanas de actualización por cuenta bancaria.',
     'ph-crono-cus-desc':'Programación y revisión de asientos de costos por período.',
     'ph-crono-con-desc':'Calendario de conciliaciones y plazos por procesador.',
     'lbl-nome':'Nombre','lbl-pais-vinculo':'País vinculado',
-    'cad-pais-modal':'Agregar país','cad-agente-modal':'Agregar agente','cad-banco-modal':'Agregar banco',
-    'edit-cad-pais-modal':'Editar país','edit-cad-agente-modal':'Editar agente','edit-cad-banco-modal':'Editar banco',
-    'cad-banco-resp-excl':'¿Responsable exclusivo por banco?',
+    'cad-pais-modal':'Agregar país','cad-agente-modal':'Agregar agente','cad-banco-modal':'Agregar banco','cad-proc-modal':'Agregar procesador',
+    'edit-cad-pais-modal':'Editar país','edit-cad-agente-modal':'Editar agente','edit-cad-banco-modal':'Editar banco','edit-cad-proc-modal':'Editar procesador',
+    'cad-banco-resp-excl':'¿Responsable exclusivo por banco?','cad-proc-resp-excl':'¿Responsable exclusivo por procesador?',
+    'nav-processadores':'Procesadores',
     'confirm-encerrar-title':'Cerrar cuenta','confirm-encerrar-sub':'Esta acción es irreversible. Confirma antes de continuar.',
     'confirm-check-1':'Todos los extractos del período fueron revisados y están cerrados.',
     'confirm-check-2':'Todas las conciliaciones están finalizadas sin divergencias pendientes.',
@@ -2017,6 +2036,7 @@ const i18n = {
     'login-forgot':'Olvidé la contraseña',
     'login-enter':'Entrar',
     'count-banco':'banco','count-bancos':'bancos',
+    'count-processador':'procesador','count-processadores':'procesadores',
     'preset-prev-month':'Mes anterior','preset-curr-month':'Mes actual','preset-last-7':'Últimos 7 días','preset-custom':'Personalizado',
     'crono-resp':'Responsable','crono-d1-lbl':'Seguimiento','crono-bulk-apply':'Aplicar en masa',
     'crono-clear-filters':'Limpiar filtros','crono-download-csv':'Descargar CSV',
@@ -2104,7 +2124,8 @@ const store = {
   cierreData:{},
   conciliacoes:[],
   cronogramaConciliacoes:{},
-  paisesResp:{},bancosResp:{},
+  processadores:[],
+  paisesResp:{},bancosResp:{},processadoresResp:{},
   conciliacoesPrioridade:{},
   volumeRankings:{cashin:{},cashout:{},refunds:{},chargebacks:{},combined:{}},
   concilVolumeMap:{},
@@ -2129,6 +2150,7 @@ const pagesMeta = {
   'cadastro-pais':{parentKey:'nav-cadastro',labelKey:'nav-pais'},
   'cadastro-agente':{parentKey:'nav-cadastro',labelKey:'nav-agente'},
   'cadastro-banco':{parentKey:'nav-cadastro',labelKey:'nav-banco'},
+  'cadastro-processadores':{parentKey:'nav-cadastro',labelKey:'nav-processadores'},
   'cadastro-acessos':{parentKey:'nav-cadastro',labelKey:'nav-acessos'},
 };
 function navigate(pageId){
@@ -2498,16 +2520,29 @@ function openCadastroModal(type, editIdx=-1){
   cadastroType=type;
   _editCadIdx=editIdx;
   const isEdit=editIdx>=0;
-  const titles={pais:t('cad-pais-modal'),agente:t('cad-agente-modal'),banco:t('cad-banco-modal')};
-  const editTitles={pais:t('edit-cad-pais-modal'),agente:t('edit-cad-agente-modal'),banco:t('edit-cad-banco-modal')};
-  const phs={pais:'Ex: Bolivia',agente:'Ex: BO.Cowgromo',banco:'Ex: Banco do Brasil'};
+  const titles={pais:t('cad-pais-modal'),agente:t('cad-agente-modal'),banco:t('cad-banco-modal'),processadores:t('cad-proc-modal')};
+  const editTitles={pais:t('edit-cad-pais-modal'),agente:t('edit-cad-agente-modal'),banco:t('edit-cad-banco-modal'),processadores:t('edit-cad-proc-modal')};
+  const phs={pais:'Ex: Bolivia',agente:'Ex: BO.Cowgromo',banco:'Ex: Banco do Brasil',processadores:'Ex: CO.Colprocesa'};
   document.getElementById('cad-modal-title').textContent=isEdit?editTitles[type]:titles[type];
   const body=document.getElementById('cad-modal-body');
   const paisOpts=store.paises.map(p=>`<option value="${p}">${countryFlag(p)} ${p}</option>`).join('');
   const respOpts=store.responsaveis.map(r=>`<option value="${r.email}">${r.nome} [${r.sigla||'?'}]</option>`).join('');
-  if(type==='pais'||type==='banco'){
-    const currentVal=isEdit?(type==='pais'?store.paises[editIdx]:store.bancos[editIdx]):'';
-    if(type==='banco'){
+  if(type==='pais'||type==='banco'||type==='processadores'){
+    const currentVal=isEdit?(type==='pais'?store.paises[editIdx]:type==='banco'?store.bancos[editIdx]:store.processadores[editIdx]):'';
+    if(type==='processadores'){
+      const currentProcResp=isEdit?(store.processadoresResp[currentVal]||''):'';
+      const hasResp=!!currentProcResp;
+      body.innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="cad-nome" placeholder="${phs[type]}" value="${currentVal}"></div>
+        <div class="form-field" style="display:flex;flex-direction:row;align-items:center;justify-content:space-between;margin-bottom:4px;gap:0">
+          <label class="form-label" style="margin-bottom:0">${t('cad-proc-resp-excl')}</label>
+          <input type="checkbox" id="cad-proc-has-resp" ${hasResp?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:var(--e-purple);flex-shrink:0" onchange="document.getElementById('cad-proc-resp-wrap').style.display=this.checked?'':'none'">
+        </div>
+        <div class="form-field" id="cad-proc-resp-wrap" style="display:${hasResp?'':'none'}">
+          <label class="form-label">Responsável</label>
+          <select class="form-select" id="cad-proc-resp"><option value="">Nenhum</option>${respOpts}</select>
+        </div>`;
+      if(currentProcResp) setTimeout(()=>{const s=document.getElementById('cad-proc-resp');if(s)s.value=currentProcResp;},0);
+    } else if(type==='banco'){
       const currentBancoResp=isEdit?(store.bancosResp[currentVal]||''):'';
       const hasResp=!!currentBancoResp;
       body.innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="cad-nome" placeholder="${phs[type]}" value="${currentVal}"></div>
@@ -2540,7 +2575,7 @@ function openCadastroModal(type, editIdx=-1){
   openModal('modal-cadastro');
 }
 function submitCadastro(){
-  const req=(cadastroType==='pais'||cadastroType==='banco')?['cad-nome']:['cad-nome','cad-pais-vinculo'];
+  const req=(cadastroType==='pais'||cadastroType==='banco'||cadastroType==='processadores')?['cad-nome']:['cad-nome','cad-pais-vinculo'];
   if(!validate(req)) return;
   const nome=document.getElementById('cad-nome').value.trim();
   const isEdit=_editCadIdx>=0;
@@ -2561,6 +2596,15 @@ function submitCadastro(){
     const bancoRespEmail=hasBancoResp?(document.getElementById('cad-banco-resp')?.value||''):'';
     if(hasBancoResp&&bancoRespEmail) store.bancosResp[nome]=bancoRespEmail;
     else delete store.bancosResp[nome];
+  } else if(cadastroType==='processadores'){
+    const prevNomeProc=isEdit?store.processadores[_editCadIdx]:'';
+    if(isEdit) store.processadores[_editCadIdx]=nome;
+    else if(!store.processadores.includes(nome)) store.processadores.push(nome);
+    if(isEdit&&prevNomeProc&&prevNomeProc!==nome) delete store.processadoresResp[prevNomeProc];
+    const hasProcResp=document.getElementById('cad-proc-has-resp')?.checked;
+    const procRespEmail=hasProcResp?(document.getElementById('cad-proc-resp')?.value||''):'';
+    if(hasProcResp&&procRespEmail) store.processadoresResp[nome]=procRespEmail;
+    else delete store.processadoresResp[nome];
   } else {
     const pais=document.getElementById('cad-pais-vinculo').value;
     const responsavel=document.getElementById('cad-responsavel')?.value||'';
@@ -2570,9 +2614,10 @@ function submitCadastro(){
   // _fbSync antes de logAudit: logAudit escreve em store/auditLog e dispara o listener raiz
   // sincronamente; sem _pendingWrites=1 ativo, _applyFbData sobrescrevia store.agentes com dados antigos.
   saveStore();
-  _fbSync(cadastroType==='pais'?'paises':cadastroType==='banco'?'bancos':'agentes');
+  _fbSync(cadastroType==='pais'?'paises':cadastroType==='banco'?'bancos':cadastroType==='processadores'?'processadores':'agentes');
   if(cadastroType==='pais') _fbSync('paisesResp');
   if(cadastroType==='banco') _fbSync('bancosResp');
+  if(cadastroType==='processadores') _fbSync('processadoresResp');
   if(_logArgs) logAudit(..._logArgs);
   closeModal('modal-cadastro');
   renderCadastro(cadastroType);
@@ -2592,15 +2637,16 @@ function submitCadastro(){
   }
 }
 function deleteCadastro(type,idx){
-  const labels={'pais':'país','agente':'agente','banco':'banco'};
-  const names={'pais':store.paises[idx],'agente':store.agentes[idx]?.nome,'banco':store.bancos[idx]};
+  const labels={'pais':'país','agente':'agente','banco':'banco','processadores':'processador'};
+  const names={'pais':store.paises[idx],'agente':store.agentes[idx]?.nome,'banco':store.bancos[idx],'processadores':store.processadores[idx]};
   const name=names[type]||'este item';
   showDeleteConfirm(`Excluir ${labels[type]||type} "${name}"`,`Esta ação não pode ser desfeita.`,()=>{
     if(type==='pais') store.paises.splice(idx,1);
     else if(type==='agente') store.agentes.splice(idx,1);
+    else if(type==='processadores'){ const pNome=store.processadores[idx]; store.processadores.splice(idx,1); delete store.processadoresResp[pNome]; _fbSync('processadoresResp'); }
     else{ const bkNome=store.bancos[idx]; store.bancos.splice(idx,1); delete store.bancosResp[bkNome]; _fbSync('bancosResp'); }
     logAudit('cadastro','delete-'+type,{idx});
-    saveStore(); _fbSync(type==='pais'?'paises':type==='banco'?'bancos':'agentes');
+    saveStore(); _fbSync(type==='pais'?'paises':type==='banco'?'bancos':type==='processadores'?'processadores':'agentes');
     renderCadastro(type); updateCounts();
   });
 }
@@ -2628,6 +2674,18 @@ function renderCadastro(type){
       const resp=store.responsaveis.find(r=>r.email===a.responsavel);
       const respCell=resp?`<span style="font-size:12px;color:var(--e-text)">${resp.nome} <span style="font-family:monospace;background:var(--e-ghost);padding:1px 5px;border-radius:3px;font-weight:700;color:var(--e-mid)">${resp.sigla||''}</span></span>`:`<span style="color:var(--e-muted);font-size:12px">—</span>`;
       return `<tr><td>${a.nome}</td><td><span class="pais-tag">${countryFlag(a.pais)} ${a.pais}</span></td><td>${respCell}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openCadastroModal('agente',${ai})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteCadastro('agente',${ai})">${trashIcon}</button></div>`:''}</td></tr>`;
+    }).join('');
+  } else if(type==='processadores'){
+    const q=_q('cad-proc-search');
+    const e=document.getElementById('proc-empty'),i=document.getElementById('proc-table-inner'),b=document.getElementById('proc-tbody');
+    if(!e||!i||!b) return;
+    if(!store.processadores.length){e.style.display='';i.style.display='none';return;} e.style.display='none';i.style.display='';
+    b.innerHTML=store.processadores.map((pk,pi)=>{
+      if(q&&!pk.toLowerCase().includes(q)) return '';
+      const rEmail=store.processadoresResp[pk]||'';
+      const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;
+      const rCell=rUser?`<span style="font-size:12px;color:var(--e-text)">${rUser.nome} <span style="font-family:monospace;background:var(--e-ghost);padding:1px 5px;border-radius:3px;font-weight:700;color:var(--e-mid)">${rUser.sigla||''}</span></span>`:`<span style="color:var(--e-muted);font-size:12px">—</span>`;
+      return `<tr><td>${pk}</td><td>${rCell}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openCadastroModal('processadores',${pi})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteCadastro('processadores',${pi})">${trashIcon}</button></div>`:''}</td></tr>`;
     }).join('');
   } else {
     const q=_q('cad-banco-search');
@@ -3527,7 +3585,7 @@ function renderAcessos(){
 const MENU_PERMS_TREE=[
   {id:'gerencial',label:'Gerencial',children:[{id:'gerencial-accounts',label:'Accounts'},{id:'gerencial-custos',label:'Liquidações'},{id:'gerencial-conciliacoes',label:'Conciliações'}]},
   {id:'cronograma',label:'Cronograma',children:[{id:'cronograma-accounts',label:'Accounts'},{id:'cronograma-custos',label:'Liquidações'},{id:'cronograma-conciliacoes',label:'Conciliações'}]},
-  {id:'cadastro',label:'Cadastro',children:[{id:'cadastro-pais',label:'País'},{id:'cadastro-agente',label:'Agente'},{id:'cadastro-banco',label:'Banco'},{id:'cadastro-acessos',label:'Acessos'}]},
+  {id:'cadastro',label:'Cadastro',children:[{id:'cadastro-pais',label:'País'},{id:'cadastro-agente',label:'Agente'},{id:'cadastro-banco',label:'Banco'},{id:'cadastro-processadores',label:'Processadores'},{id:'cadastro-acessos',label:'Acessos'}]},
 ];
 let _permEditEmail='';
 function openPermissoes(idx){
@@ -4054,11 +4112,11 @@ function updateCierreField(ck,field,value,el){
 // ─── PERSISTÊNCIA localStorage ────────────────────────────────────
 let STORE_KEY='eron-foc-v1'; // atualizado após bloco Firebase para refletir o ambiente persistido
 function saveStore(){
-  const _ls={paises:store.paises,agentes:store.agentes,bancos:store.bancos,
+  const _ls={paises:store.paises,agentes:store.agentes,bancos:store.bancos,processadores:store.processadores,
     responsaveis:store.responsaveis,contas:store.contas,
     cronogramaData:store.cronogramaData,cierreData:store.cierreData,
     conciliacoes:store.conciliacoes,cronogramaConciliacoes:store.cronogramaConciliacoes,
-    paisesResp:store.paisesResp,bancosResp:store.bancosResp,conciliacoesPrioridade:store.conciliacoesPrioridade,
+    paisesResp:store.paisesResp,bancosResp:store.bancosResp,processadoresResp:store.processadoresResp,conciliacoesPrioridade:store.conciliacoesPrioridade,
     volumeRankings:store.volumeRankings,concilVolumeMap:store.concilVolumeMap,
     liquidacoesConfig:store.liquidacoesConfig,liquidacoesStatus:store.liquidacoesStatus,liquidacoesManual:store.liquidacoesManual,
     auditLog:store.auditLog,
@@ -4073,6 +4131,7 @@ function loadStore(){
     if(saved.paises) store.paises=(Array.isArray(saved.paises)?saved.paises:Object.values(saved.paises)).filter(Boolean);
     if(saved.agentes) store.agentes=(Array.isArray(saved.agentes)?saved.agentes:Object.values(saved.agentes)).filter(Boolean);
     if(saved.bancos) store.bancos=(Array.isArray(saved.bancos)?saved.bancos:Object.values(saved.bancos)).filter(Boolean);
+    if(saved.processadores) store.processadores=(Array.isArray(saved.processadores)?saved.processadores:Object.values(saved.processadores)).filter(Boolean);
     if(saved.responsaveis){
       store.responsaveis=saved.responsaveis;
       store.responsaveis.forEach(r=>{
@@ -4086,6 +4145,7 @@ function loadStore(){
     if(saved.cronogramaConciliacoes) store.cronogramaConciliacoes=saved.cronogramaConciliacoes;
     if(saved.paisesResp) store.paisesResp=saved.paisesResp;
     if(saved.bancosResp) store.bancosResp=saved.bancosResp;
+    if(saved.processadoresResp) store.processadoresResp=saved.processadoresResp;
     if(saved.conciliacoesPrioridade) store.conciliacoesPrioridade=saved.conciliacoesPrioridade;
     if(saved.volumeRankings) store.volumeRankings=saved.volumeRankings;
     if(saved.concilVolumeMap) store.concilVolumeMap=saved.concilVolumeMap;
@@ -4201,6 +4261,7 @@ function _applyFbData(saved){
   if(saved.paises&&!_ownWrites.paises)store.paises=_fbArr(saved.paises);
   if(saved.agentes&&!_ownWrites.agentes)store.agentes=_fbArr(saved.agentes);
   if(saved.bancos&&!_ownWrites.bancos)store.bancos=_fbArr(saved.bancos);
+  if(saved.processadores&&!_ownWrites.processadores)store.processadores=_fbArr(saved.processadores);
   if(saved.responsaveis&&!_ownWrites.responsaveis){
     store.responsaveis=_fbArr(saved.responsaveis);
     store.responsaveis.forEach(r=>{if(!r.role)r.role=r.email===ADMIN_EMAIL?'super_admin':'visualizacao';});
@@ -4210,6 +4271,7 @@ function _applyFbData(saved){
   if(saved.cronogramaConciliacoes&&!_ownWrites.cronogramaConciliacoes)store.cronogramaConciliacoes=saved.cronogramaConciliacoes;
   if(saved.paisesResp&&!_ownWrites.paisesResp)store.paisesResp=saved.paisesResp;
   if(saved.bancosResp&&!_ownWrites.bancosResp)store.bancosResp=saved.bancosResp;
+  if(saved.processadoresResp&&!_ownWrites.processadoresResp)store.processadoresResp=saved.processadoresResp;
   if(saved.conciliacoesPrioridade&&!_ownWrites.conciliacoesPrioridade)store.conciliacoesPrioridade=saved.conciliacoesPrioridade;
   if(saved.volumeRankings&&!_ownWrites.volumeRankings)store.volumeRankings=saved.volumeRankings;
   if(saved.concilVolumeMap&&!_ownWrites.concilVolumeMap)store.concilVolumeMap=saved.concilVolumeMap;
@@ -4351,7 +4413,7 @@ async function switchEnvironment(envKey){
   _acessosTabEnv=null; _acessosOtherStore=null;
   if(_acessosOtherApp){try{_acessosOtherApp.delete();}catch(e){} _acessosOtherApp=null;}
   // Reset store to defaults for the new environment
-  Object.assign(store,{paises:[],agentes:[],bancos:[],responsaveis:[],contas:[],cronogramaData:{},cierreData:{},conciliacoes:[],cronogramaConciliacoes:{},paisesResp:{},bancosResp:{},conciliacoesPrioridade:{},volumeRankings:{cashin:{},cashout:{},refunds:{},chargebacks:{},combined:{}},concilVolumeMap:{},auditLog:[],permissions:{},credentials:{}});
+  Object.assign(store,{paises:[],agentes:[],bancos:[],processadores:[],responsaveis:[],contas:[],cronogramaData:{},cierreData:{},conciliacoes:[],cronogramaConciliacoes:{},paisesResp:{},bancosResp:{},processadoresResp:{},conciliacoesPrioridade:{},volumeRankings:{cashin:{},cashout:{},refunds:{},chargebacks:{},combined:{}},concilVolumeMap:{},auditLog:[],permissions:{},credentials:{}});
   loadStore();
   _updateEnvSwitcher();
   document.getElementById('env-dd').style.display='none';
@@ -5754,7 +5816,7 @@ function submitConcBulkApply(){
   _toast(`✓ ${changed} célula${changed!==1?'s':''} atualizadas`);
 }
 
-function renderAll(){ renderAccountsTable(); initCronoDates(); renderCronogramaAccounts(); renderCadastro('pais'); renderCadastro('agente'); renderCadastro('banco'); renderAcessos(); renderGerencialConciliacoes(); renderCronogramaConciliacoes(); }
+function renderAll(){ renderAccountsTable(); initCronoDates(); renderCronogramaAccounts(); renderCadastro('pais'); renderCadastro('agente'); renderCadastro('banco'); renderCadastro('processadores'); renderAcessos(); renderGerencialConciliacoes(); renderCronogramaConciliacoes(); }
 
 // ─── COUNTS ───────────────────────────────────────────────────────
 function updateCounts(){
@@ -5764,6 +5826,7 @@ function updateCounts(){
   el('pais-count',n(store.paises.length,t('count-pais'),t('count-paises')));
   el('agente-count',n(store.agentes.length,t('count-agente'),t('count-agentes')));
   el('banco-count',n(store.bancos.length,t('count-banco'),t('count-bancos')));
+  el('proc-count',n(store.processadores.length,t('count-processador'),t('count-processadores')));
   el('conciliacoes-count',n(store.conciliacoes.length,'conciliação','conciliações'));
 }
 
