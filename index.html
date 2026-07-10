@@ -719,6 +719,7 @@
         <th data-i18n="liq-col-concil">Conciliação</th><th data-i18n="liq-col-pais">País</th><th data-i18n="liq-col-agente">Agente</th>
         <th style="min-width:185px" data-i18n="liq-col-tipo">Tipo Liquidação</th>
         <th style="min-width:110px" data-i18n="liq-col-freq">Frequência</th>
+        <th style="width:48px"></th>
       </tr></thead>
       <tbody id="liq-ger-tbody"></tbody></table>
     </div>
@@ -2136,6 +2137,7 @@ const store = {
   liquidacoesConfig:{},
   liquidacoesStatus:{},
   liquidacoesManual:[],
+  liquidacoesExcluidos:{},
 };
 
 // ─── NAVIGATION ───────────────────────────────────────────────────
@@ -4118,7 +4120,7 @@ function saveStore(){
     conciliacoes:store.conciliacoes,cronogramaConciliacoes:store.cronogramaConciliacoes,
     paisesResp:store.paisesResp,bancosResp:store.bancosResp,processadoresResp:store.processadoresResp,conciliacoesPrioridade:store.conciliacoesPrioridade,
     volumeRankings:store.volumeRankings,concilVolumeMap:store.concilVolumeMap,
-    liquidacoesConfig:store.liquidacoesConfig,liquidacoesStatus:store.liquidacoesStatus,liquidacoesManual:store.liquidacoesManual,
+    liquidacoesConfig:store.liquidacoesConfig,liquidacoesStatus:store.liquidacoesStatus,liquidacoesManual:store.liquidacoesManual,liquidacoesExcluidos:store.liquidacoesExcluidos,
     auditLog:store.auditLog,
     permissions:store.permissions,credentials:store.credentials};
   try{localStorage.setItem(STORE_KEY,JSON.stringify(_ls));}catch(e){}
@@ -4152,6 +4154,7 @@ function loadStore(){
     if(saved.liquidacoesConfig) store.liquidacoesConfig=saved.liquidacoesConfig||{};
     if(saved.liquidacoesStatus) store.liquidacoesStatus=saved.liquidacoesStatus||{};
     if(saved.liquidacoesManual) store.liquidacoesManual=Array.isArray(saved.liquidacoesManual)?saved.liquidacoesManual:Object.values(saved.liquidacoesManual||{}).filter(Boolean);
+    if(saved.liquidacoesExcluidos) store.liquidacoesExcluidos=saved.liquidacoesExcluidos||{};
     if(saved.auditLog) store.auditLog=(Array.isArray(saved.auditLog)?saved.auditLog:Object.values(saved.auditLog)).filter(Boolean);
     if(saved.permissions) store.permissions=saved.permissions;
     if(saved.credentials) store.credentials=saved.credentials;
@@ -4278,6 +4281,7 @@ function _applyFbData(saved){
   if(saved.liquidacoesConfig&&!_ownWrites.liquidacoesConfig)store.liquidacoesConfig=saved.liquidacoesConfig;
   if(saved.liquidacoesStatus&&!_ownWrites.liquidacoesStatus)store.liquidacoesStatus=saved.liquidacoesStatus;
   if(saved.liquidacoesManual&&!_ownWrites.liquidacoesManual)store.liquidacoesManual=_fbArr(saved.liquidacoesManual);
+  if(saved.liquidacoesExcluidos&&!_ownWrites.liquidacoesExcluidos)store.liquidacoesExcluidos=saved.liquidacoesExcluidos;
   if(store.volumeRankings&&store.concilVolumeMap) _rebuildCombinedRanking();
   // cronogramaData gerenciado pelo listener específico em _fbRef.child('cronogramaData')
   if(saved.cierreData&&!_ownWrites.cierreData){
@@ -5859,10 +5863,12 @@ const LIQ_FREQ=['Diária','Semanal','Mensal'];
 let _liqMonth=(new Date().getMonth()===0?11:new Date().getMonth()-1), _liqYear=(new Date().getMonth()===0?new Date().getFullYear()-1:new Date().getFullYear());
 
 function _liqConcilList(){
+  const excl=store.liquidacoesExcluidos||{};
   const auto=store.conciliacoes.filter(c=>{
     if(c.status==='encerrada') return false;
     if(c.tipo!=='processadores'&&c.tipo!=='mista') return false;
     const concId=_liqConcId(c);
+    if(excl[concId]) return false;
     const vm=store.concilVolumeMap?.[concId];
     if(!vm) return true;
     return (vm.cashinIds?.length>0)||(vm.cashoutIds?.length>0);
@@ -5871,6 +5877,21 @@ function _liqConcilList(){
     id:m.id, nome:m.nome, pais:m.pais, agente:m.agente, tipo:m.tipo||'processadores', _manual:true, _manualId:m.id
   }));
   return [...auto,...manual];
+}
+function deleteLiqGerencial(id, isManual, manualId){
+  showDeleteConfirm('Excluir liquidação',isManual?'Esta liquidação manual será removida permanentemente.':'Esta conciliação será ocultada da lista de liquidações. Para reaparecer, remova a exclusão editando a conciliação.',()=>{
+    if(isManual){
+      store.liquidacoesManual=(store.liquidacoesManual||[]).filter(m=>m.id!==manualId);
+      _fbSync('liquidacoesManual');
+    } else {
+      if(!store.liquidacoesExcluidos) store.liquidacoesExcluidos={};
+      store.liquidacoesExcluidos[id]=true;
+      _fbSync('liquidacoesExcluidos');
+    }
+    saveStore();
+    renderGerencialLiquidacoes();
+    renderCronogramaLiquidacoes();
+  });
 }
 function _liqLastElab(c){
   const prefix=(c.id||c.nome)+'_';
@@ -6206,12 +6227,15 @@ function renderGerencialLiquidacoes(){
     const pOpts=['','...'].concat(LIQ_PEGAR_EM).slice(0,-1);
     const peOpts=['<option value="">— não configurado —</option>',...LIQ_PEGAR_EM.map(p=>`<option${cfg.pegar_em===p?' selected':''}>${p}</option>`)].join('');
     const frOpts=['<option value="">— não configurado —</option>',...LIQ_FREQ.map(f=>`<option${cfg.freq===f?' selected':''}>${f}</option>`)].join('');
+    const sid=id.replace(/'/g,"\\'");
+    const delBtn=canEdit()?`<button onclick="deleteLiqGerencial('${sid}',${c._manual?'true':'false'},'${(c._manualId||'').replace(/'/g,"\\'")}')" style="background:none;border:none;cursor:pointer;color:var(--e-muted);padding:4px;line-height:1;border-radius:4px" title="Excluir" onmouseover="this.style.color='#dc2626'" onmouseout="this.style.color='var(--e-muted)'">${trashIcon}</button>`:'';
     return `<tr>
       <td><span style="font-weight:600">${c.nome}</span> <span class="chip ${tcCls}" style="font-size:9px">${tcLbl}</span></td>
       <td>${c.pais?`${countryFlag(c.pais)} ${c.pais}`:'—'}</td>
       <td style="font-size:12px;color:var(--e-muted)">${c.agente||'—'}</td>
-      <td><select style="${selStyle}" onchange="_liqSaveConfig('${id}',{tipo_liq:this.value});renderCronogramaLiquidacoes()">${tOpts}</select></td>
-      <td><select style="${selStyle}" onchange="_liqSaveConfig('${id}',{freq:this.value})">${frOpts}</select></td>
+      <td><select style="${selStyle}" onchange="_liqSaveConfig('${sid}',{tipo_liq:this.value});renderCronogramaLiquidacoes()">${tOpts}</select></td>
+      <td><select style="${selStyle}" onchange="_liqSaveConfig('${sid}',{freq:this.value})">${frOpts}</select></td>
+      <td style="text-align:center">${delBtn}</td>
     </tr>`;
   }).join('');
 }
