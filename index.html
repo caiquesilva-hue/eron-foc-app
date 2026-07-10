@@ -4792,6 +4792,7 @@ async function submitResetPwd(){
 // ─── GERENCIAL CONCILIAÇÕES ──────────────────────────────────────
 let _editConcIdx=-1;
 let _selectedContas=[];
+let _selectedProcessadores=[];
 let _selectedCashinIds=[];
 let _selectedCashoutIds=[];
 let _selectedRefundIds=[];
@@ -4832,6 +4833,7 @@ function openConciliacaoModal(editIdx=-1){
   const isEdit=editIdx>=0;
   const conc=isEdit?store.conciliacoes[editIdx]:{};
   _selectedContas=isEdit&&conc.contas?[...conc.contas]:[];
+  _selectedProcessadores=isEdit&&conc.processadores?[...conc.processadores]:[];
   const concId=isEdit?(conc.id||conc.nome).replace(/['"]/g,''):'';
   const concMap=(store.concilVolumeMap||{})[concId]||{};
   _selectedCashinIds=concMap.cashinIds?[...concMap.cashinIds]:(concMap.cashinId?[concMap.cashinId]:[]);
@@ -4868,6 +4870,9 @@ function openConciliacaoModal(editIdx=-1){
         <div class="contas-ms-list" id="contas-ms-list"></div>
         <div class="contas-ms-tags" id="contas-ms-tags"></div>
       </div>
+    </div>
+    <div id="conc-procs-wrap" class="form-field" style="display:none"><label class="form-label" id="conc-procs-label">Processadores vinculados</label>
+      <div id="procs-toggles" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
     </div>
     <div class="form-field" style="border-top:1px solid var(--e-pale);padding-top:12px;margin-top:4px">
       <label class="form-label" style="color:var(--e-muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em">Prioridade por Volume</label>
@@ -4932,6 +4937,7 @@ function openConciliacaoModal(editIdx=-1){
     onConcTipoChange();
     renderContasMSList();
     renderContasMSTags();
+    renderProcsMSList();
     _selectedOpTypes.forEach(t=>{
       const btn=document.querySelector(`.op-type-toggle[data-type="${t}"]`);
       if(btn) btn.classList.add('active');
@@ -4980,10 +4986,37 @@ function renderContasMSTags(){
   tags.innerHTML=_selectedContas.map(s=>`<span class="contas-tag">${s}<button type="button" onclick="toggleContaMS('${s.replace(/'/g,"\\'")}',false);renderContasMSList();renderContasMSTags()">×</button></span>`).join('');
 }
 
+function renderProcsMSList(){
+  const container=document.getElementById('procs-toggles');
+  if(!container) return;
+  const tipo=document.getElementById('conc-tipo')?.value||'bancos';
+  let items=[];
+  if(tipo==='processadores') items=[...store.processadores];
+  else if(tipo==='mista') items=[...store.processadores,...store.bancos];
+  const lbl=document.getElementById('conc-procs-label');
+  if(lbl) lbl.textContent=tipo==='mista'?'Processadores e bancos vinculados':tipo==='bancos'?'Bancos vinculados':'Processadores vinculados';
+  if(!items.length){ container.innerHTML=`<span style="font-size:12px;color:var(--e-muted)">Nenhum item cadastrado em Cadastro</span>`; return; }
+  container.innerHTML=items.map(p=>{
+    const active=_selectedProcessadores.includes(p)?'active':'';
+    const safe=p.replace(/'/g,"\\'");
+    return `<button type="button" class="freq-toggle ${active}" onclick="toggleProcMS('${safe}',this)">${p}</button>`;
+  }).join('');
+}
+function toggleProcMS(nome,btn){
+  if(_selectedProcessadores.includes(nome)){
+    _selectedProcessadores=_selectedProcessadores.filter(s=>s!==nome);
+    if(btn) btn.classList.remove('active');
+  } else {
+    _selectedProcessadores.push(nome);
+    if(btn) btn.classList.add('active');
+  }
+}
 function onConcTipoChange(){
   const tipo=document.getElementById('conc-tipo')?.value||'bancos';
-  const wrap=document.getElementById('conc-contas-wrap');
-  if(wrap) wrap.style.display=tipo==='processadores'?'none':'';
+  const contasWrap=document.getElementById('conc-contas-wrap');
+  const procsWrap=document.getElementById('conc-procs-wrap');
+  if(contasWrap) contasWrap.style.display=tipo==='processadores'?'none':'';
+  if(procsWrap){ procsWrap.style.display=tipo==='bancos'?'none':''; if(tipo!=='bancos') renderProcsMSList(); }
 }
 
 function submitConciliacao(){
@@ -4993,6 +5026,7 @@ function submitConciliacao(){
   const agente=document.getElementById('conc-agente')?.value||'';
   const tipo=document.getElementById('conc-tipo')?.value||'bancos';
   const contas=tipo==='processadores'?[]:[..._selectedContas];
+  const processadores=(tipo==='bancos')?[]:[..._selectedProcessadores];
   const cashinIds=[..._selectedCashinIds];
   const cashoutIds=[..._selectedCashoutIds];
   const refundIds=[..._selectedRefundIds];
@@ -5002,11 +5036,11 @@ function submitConciliacao(){
   const encerrado=isEdit&&(document.getElementById('conc-encerrar')?.checked||false);
   let concId;
   if(isEdit){
-    store.conciliacoes[_editConcIdx]={...store.conciliacoes[_editConcIdx],nome,pais,agente,tipo,contas,status:encerrado?'encerrada':'ativa'};
+    store.conciliacoes[_editConcIdx]={...store.conciliacoes[_editConcIdx],nome,pais,agente,tipo,contas,processadores,status:encerrado?'encerrada':'ativa'};
     concId=(store.conciliacoes[_editConcIdx].id||nome).replace(/['"]/g,'');
   } else {
     concId=nome.toLowerCase().replace(/[^a-z0-9]/g,'_')+'_'+Date.now();
-    store.conciliacoes.push({id:concId,nome,pais,agente,tipo,contas});
+    store.conciliacoes.push({id:concId,nome,pais,agente,tipo,contas,processadores});
   }
   if(tiposOperacao.length){
     if(!store.concilVolumeMap) store.concilVolumeMap={};
