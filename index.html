@@ -4417,7 +4417,7 @@ async function switchEnvironment(envKey){
   _acessosTabEnv=null; _acessosOtherStore=null;
   if(_acessosOtherApp){try{_acessosOtherApp.delete();}catch(e){} _acessosOtherApp=null;}
   // Reset store to defaults for the new environment
-  Object.assign(store,{paises:[],agentes:[],bancos:[],processadores:[],responsaveis:[],contas:[],cronogramaData:{},cierreData:{},conciliacoes:[],cronogramaConciliacoes:{},paisesResp:{},bancosResp:{},processadoresResp:{},conciliacoesPrioridade:{},volumeRankings:{cashin:{},cashout:{},refunds:{},chargebacks:{},combined:{}},concilVolumeMap:{},auditLog:[],permissions:{},credentials:{}});
+  Object.assign(store,{paises:[],agentes:[],bancos:[],processadores:[],responsaveis:[],contas:[],cronogramaData:{},cierreData:{},conciliacoes:[],cronogramaConciliacoes:{},paisesResp:{},bancosResp:{},processadoresResp:{},conciliacoesPrioridade:{},volumeRankings:{cashin:{},cashout:{},refunds:{},chargebacks:{},combined:{}},concilVolumeMap:{},liquidacoesConfig:{},liquidacoesStatus:{},liquidacoesManual:[],liquidacoesExcluidos:{},auditLog:[],permissions:{},credentials:{}});
   loadStore();
   _updateEnvSwitcher();
   document.getElementById('env-dd').style.display='none';
