@@ -177,34 +177,45 @@ async function main() {
   // ─── Upload para Slack ─────────────────────────────────────────────────────
   if (!SLACK_TOKEN) throw new Error('SLACK_TOKEN não configurado');
 
+  // Verificar token
+  const authRes = await fetch('https://slack.com/api/auth.test', {
+    headers: { Authorization: `Bearer ${SLACK_TOKEN}` },
+  });
+  const authData = await authRes.json();
+  if (!authData.ok) throw new Error(`auth.test falhou: ${authData.error}`);
+  console.log(`Slack autenticado como: ${authData.bot_id || authData.user} (${authData.team})`);
+
   const csvBuffer = Buffer.from(csvContent, 'utf-8');
 
-  // 1) Obter URL de upload (API v2)
+  // 1) Obter URL de upload (form-encoded, mais compatível)
+  const uploadParams = new URLSearchParams({ filename, length: String(csvBuffer.length) });
   const urlRes = await fetch('https://slack.com/api/files.getUploadURLExternal', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${SLACK_TOKEN}`,
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: JSON.stringify({
-      filename,
-      length: csvBuffer.length,
-    }),
+    body: uploadParams.toString(),
   });
   const urlData = await urlRes.json();
-  if (!urlData.ok) throw new Error(`files.getUploadURLExternal: ${urlData.error}`);
+  if (!urlData.ok) throw new Error(`files.getUploadURLExternal: ${urlData.error} | ${JSON.stringify(urlData)}`);
 
   const { upload_url, file_id } = urlData;
+  console.log(`URL de upload obtida, file_id: ${file_id}`);
 
-  // 2) Fazer upload do conteúdo
+  // 2) Fazer upload do conteúdo (octet-stream)
   const uploadRes = await fetch(upload_url, {
     method: 'POST',
-    headers: { 'Content-Type': 'text/csv' },
+    headers: {
+      'Content-Type': 'application/octet-stream',
+      'Content-Length': String(csvBuffer.length),
+    },
     body: csvBuffer,
   });
   if (!uploadRes.ok) {
     throw new Error(`Upload falhou: ${uploadRes.status} ${await uploadRes.text()}`);
   }
+  console.log('Conteúdo do arquivo enviado');
 
   // 3) Completar upload e publicar no canal
   const completeRes = await fetch('https://slack.com/api/files.completeUploadExternal', {
