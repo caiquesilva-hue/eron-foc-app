@@ -87,20 +87,21 @@ async function fetchStore() {
 
 // ─── Main ───────────────────────────────────────────────────────────────────────
 async function main() {
-  const runDay = nowBRT();                   // dia em que o workflow roda (hoje)
-  const d1 = addDays(runDay, -1);            // D-1 = ontem — referência do relatório
+  const today = nowBRT();                    // hoje em BRT — define o schedule e a label
+  const d1 = addDays(today, -1);             // D-1 = ontem — data dos status no relatório
   const d1Str = fmtDate(d1);
-  const d1DowRaw = d1.getUTCDay();           // 0=dom
+  const todayStr = fmtDate(today);
+  const todayDowRaw = today.getUTCDay();     // 0=dom
 
-  const d1Dow = OVERRIDE_DAY ?? (d1DowRaw === 0 || d1DowRaw === 6 ? null : d1DowRaw);
+  const todayDow = OVERRIDE_DAY ?? (todayDowRaw === 0 || todayDowRaw === 6 ? null : todayDowRaw);
 
-  if (!d1Dow || !SCHEDULE[d1Dow]) {
-    console.log(`D-1 é fim de semana ou não previsto (${DAY_NAMES_PT[d1DowRaw]}). Nada enviado.`);
+  if (!todayDow || !SCHEDULE[todayDow]) {
+    console.log(`Hoje é fim de semana ou não previsto (${DAY_NAMES_PT[todayDowRaw]}). Nada enviado.`);
     return;
   }
 
-  const { freqs, label } = SCHEDULE[d1Dow];
-  console.log(`Referência: ${label} ${d1Str} | Frequências: ${freqs.join(', ')}`);
+  const { freqs, label } = SCHEDULE[todayDow];
+  console.log(`Hoje: ${label} ${todayStr} | Frequências: ${freqs.join(', ')} | Status de D-1: ${d1Str}`);
 
   // Firebase
   console.log('Buscando dados do Firebase...');
@@ -155,7 +156,7 @@ async function main() {
   });
 
   const csvContent = buildCSV(csvRows);
-  const filename = `cronograma-${d1Str}-${label.toLowerCase()}.csv`;
+  const filename = `cronograma-${todayStr}-${label.toLowerCase()}.csv`;
   const csvBuffer = Buffer.from(csvContent, 'utf-8');
   console.log(`CSV gerado: ${csvRows.length - 1} linhas | ${filename}`);
 
@@ -166,7 +167,7 @@ async function main() {
     .join('\n');
 
   const message =
-    `:bar_chart: *Resumo Cronograma Accounts — ${label} ${d1Str}*\n` +
+    `:bar_chart: *Resumo Cronograma Accounts — ${label} ${todayStr}*\n` +
     `Frequências: ${freqs.join(' + ')} | ${filtered.length} contas\n\n` +
     statusLines;
 
@@ -206,7 +207,7 @@ async function main() {
     method: 'POST',
     headers: { Authorization: `Bearer ${SLACK_TOKEN}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      files: [{ id: file_id, title: `Cronograma Accounts — ${label} ${d1Str}` }],
+      files: [{ id: file_id, title: `Cronograma Accounts — ${label} ${todayStr}` }],
       channel_id: SLACK_CHANNEL,
       initial_comment: message,
     }),
