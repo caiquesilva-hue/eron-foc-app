@@ -3879,7 +3879,9 @@ function showNoteTooltip(event,el){
     tip.addEventListener('mouseleave',()=>scheduleHideNoteTooltip());
   }
   const safeLink=/^https?:\/\//i.test(link)?link:'';
-  tip.innerHTML=safeLink?`<div style="font-weight:700;color:#92400e;font-size:10px;margin-bottom:2px">🔗 Link</div><a href="${safeLink.replace(/"/g,'&quot;')}" target="_blank" rel="noopener noreferrer">${_esc(safeLink)}</a>`:`<div style="color:#dc2626;font-size:11px">Link inválido</div>`;
+  tip.innerHTML=safeLink
+    ?`<div style="font-weight:700;color:#92400e;font-size:10px;margin-bottom:2px">🔗 Link</div><a href="${safeLink.replace(/"/g,'&quot;')}" target="_blank" rel="noopener noreferrer">${_esc(safeLink)}</a>`
+    :`<div style="font-size:11px;color:var(--e-text);word-break:break-word">${_esc(link)}</div>`;
   tip.style.display='block';
   const rect=el.getBoundingClientRect();
   const tipW=300;
