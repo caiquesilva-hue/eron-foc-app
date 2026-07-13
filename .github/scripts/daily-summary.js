@@ -133,7 +133,7 @@ async function main() {
   // ─── CSV (formato idêntico ao app: Acompanhamento + coluna data) ─────────────
   const headers = [
     'Sigla', 'País', 'Agente', 'Banco', 'Nº Conta',
-    'Frequência', 'Tipo', 'Status', 'Acompanhamento', d1Str,
+    'Frequência', 'Tipo', 'Status', 'Acompanhamento',
   ];
   const csvRows = [headers];
 
@@ -144,7 +144,7 @@ async function main() {
     csvRows.push([
       c.sigla ?? '', c.pais ?? '', c.agente ?? '', c.banco ?? '',
       c.numeroConta ?? '', c.tipo ?? '', c.tipoConta ?? '', c.status ?? '',
-      d1Status, d1Status, // Acompanhamento e coluna data = mesmo valor (D-1)
+      d1Status,
     ]);
   });
 
