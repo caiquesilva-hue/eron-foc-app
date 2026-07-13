@@ -1,0 +1,35 @@
+name: Daily Cronograma Summary → Slack
+
+on:
+  schedule:
+    # 20h UTC = 17h BRT, segunda a sexta
+    - cron: '0 20 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      override_day:
+        description: 'Forçar dia da semana (1=seg, 2=ter, 3=qua, 4=qui, 5=sex) — deixe vazio para usar o dia atual'
+        required: false
+        default: ''
+
+jobs:
+  send-summary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependências
+        run: npm install node-fetch@3 form-data@4
+        working-directory: .github/scripts
+
+      - name: Gerar e enviar CSV
+        env:
+          FIREBASE_DB_URL: ${{ secrets.FIREBASE_DB_URL }}
+          FIREBASE_SECRET: ${{ secrets.FIREBASE_SECRET }}
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          SLACK_CHANNEL: C0BH1SG3EUS
+          OVERRIDE_DAY: ${{ inputs.override_day }}
+        run: node .github/scripts/daily-summary.js
