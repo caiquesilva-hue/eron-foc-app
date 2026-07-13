@@ -21,11 +21,12 @@ const SCHEDULE = {
 
 const DAY_NAMES_PT = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
+// Deve espelhar os labels do app (t('d1-concluida') etc.)
 const STATUS_LBL = {
   concluido:          'Concluída',
   sem_movimento:      'Sem Movimento',
   sem_acesso:         'Sem Acesso',
-  aguardando_extrato: 'Aguardando Extrato',
+  aguardando_extrato: 'Ag. Extrato',
   pendente:           'Pendente',
 };
 
@@ -65,7 +66,8 @@ function csvEscape(v) {
 }
 
 function buildCSV(rows) {
-  return rows.map(row => row.map(csvEscape).join(',')).join('\r\n');
+  // BOM UTF-8 para Excel abrir corretamente (igual ao app)
+  return '﻿' + rows.map(row => row.map(csvEscape).join(',')).join('\r\n');
 }
 
 // ─── Firebase ───────────────────────────────────────────────────────────────────
@@ -104,11 +106,15 @@ async function main() {
     ? store.contas.filter(Boolean)
     : Object.values(store.contas || {}).filter(Boolean);
 
-  const cronogramaData = store.cronogramaData || {};
+  // Firebase proíbe '.' em chaves — o app substitui por ','. Decodificar ao buscar.
+  const cronogramaData = {};
+  Object.entries(store.cronogramaData || {}).forEach(([k, v]) => {
+    cronogramaData[k.replace(/,/g, '.')] = v;
+  });
 
-  // Filtrar contas pelo schedule de D-1
+  // Filtrar contas pelo schedule de D-1 (inclui encerradas, igual ao app)
   const filtered = contas.filter(c =>
-    c && c.tipo && c.status !== 'encerrada' && freqs.includes(c.tipo)
+    c && c.tipo && freqs.includes(c.tipo)
   );
 
   console.log(`Contas filtradas: ${filtered.length}`);
@@ -124,10 +130,10 @@ async function main() {
     statusCount[key]++;
   });
 
-  // ─── CSV (somente D-1) ───────────────────────────────────────────────────────
+  // ─── CSV (formato idêntico ao app: Acompanhamento + coluna data) ─────────────
   const headers = [
     'Sigla', 'País', 'Agente', 'Banco', 'Nº Conta',
-    'Frequência', 'Tipo', 'Status', d1Str,
+    'Frequência', 'Tipo', 'Status', 'Acompanhamento', d1Str,
   ];
   const csvRows = [headers];
 
@@ -138,7 +144,7 @@ async function main() {
     csvRows.push([
       c.sigla ?? '', c.pais ?? '', c.agente ?? '', c.banco ?? '',
       c.numeroConta ?? '', c.tipo ?? '', c.tipoConta ?? '', c.status ?? '',
-      d1Status,
+      d1Status, d1Status, // Acompanhamento e coluna data = mesmo valor (D-1)
     ]);
   });
 
