@@ -56,13 +56,6 @@ function fmtDate(d) {
   return `${y}-${m}-${day}`;
 }
 
-// Dias úteis da semana (seg–sex) da semana que contém referenceDate
-function weekDays(referenceDate) {
-  const dow = referenceDate.getUTCDay();
-  const mon = new Date(referenceDate);
-  mon.setUTCDate(referenceDate.getUTCDate() - ((dow + 6) % 7));
-  return Array.from({ length: 5 }, (_, i) => addDays(mon, i));
-}
 
 function csvEscape(v) {
   const s = String(v ?? '');
@@ -131,12 +124,10 @@ async function main() {
     statusCount[key]++;
   });
 
-  // ─── CSV (semana de D-1) ──────────────────────────────────────────────────────
-  const days = weekDays(d1);
+  // ─── CSV (somente D-1) ───────────────────────────────────────────────────────
   const headers = [
     'Sigla', 'País', 'Agente', 'Banco', 'Nº Conta',
-    'Frequência', 'Tipo', 'Status', `Acompanhamento D-1 (${d1Str})`,
-    ...days.map(fmtDate),
+    'Frequência', 'Tipo', 'Status', d1Str,
   ];
   const csvRows = [headers];
 
@@ -144,14 +135,10 @@ async function main() {
     const ck = `${c.sigla}_${c.numeroConta}`.replace(/['"]/g, '');
     const d1Entry = cronogramaData[`${ck}_${d1Str}`];
     const d1Status = d1Entry ? (STATUS_LBL[d1Entry.status] || d1Entry.status) : 'Pendente';
-    const dayCells = days.map(d => {
-      const e = cronogramaData[`${ck}_${fmtDate(d)}`];
-      return e ? (STATUS_LBL[e.status] || e.status) : 'Pendente';
-    });
     csvRows.push([
       c.sigla ?? '', c.pais ?? '', c.agente ?? '', c.banco ?? '',
       c.numeroConta ?? '', c.tipo ?? '', c.tipoConta ?? '', c.status ?? '',
-      d1Status, ...dayCells,
+      d1Status,
     ]);
   });
 
