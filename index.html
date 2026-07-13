@@ -749,6 +749,7 @@
       <span id="vol-last-import-lbl" style="font-size:10px;color:var(--e-muted);white-space:nowrap"></span>
     </div>
   </div>
+  <div id="conc-unlinked-gw-wrap"></div>
   <div style="padding:0 0 10px"><input type="search" id="conc-ger-search" placeholder="Buscar nome, país, agente..." style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderGerencialConciliacoes()"></div>
   <div class="table-wrap">
     <div id="conciliacoes-empty" class="empty-state"><div class="empty-icon">🔗</div><div class="empty-title" data-i18n="conc-empty-title">Nenhuma conciliação cadastrada</div><div class="empty-sub" data-i18n="conc-empty-sub">Adicione conciliações vinculando contas de Gerencial > Accounts.</div></div>
@@ -4971,6 +4972,52 @@ let _selectedRefundIds=[];
 let _selectedChargebackIds=[];
 let _selectedOpTypes=[];
 
+function _renderUnlinkedGateways(){
+  const wrap=document.getElementById('conc-unlinked-gw-wrap');
+  if(!wrap) return;
+  const vr=store.volumeRankings||{};
+  const allCashinIds=Object.keys(vr.cashin||{});
+  const allCashoutIds=Object.keys(vr.cashout||{});
+  const allRefundNames=Object.keys(vr.refunds||{});
+  const allCbkNames=Object.keys(vr.chargebacks||{});
+  if(!allCashinIds.length&&!allCashoutIds.length&&!allRefundNames.length&&!allCbkNames.length){wrap.innerHTML='';return;}
+  // IDs vinculados a conciliações ATIVAS
+  const actCI=new Set(),actCO=new Set(),actRF=new Set(),actCB=new Set();
+  (store.conciliacoes||[]).forEach(c=>{
+    if(c.status==='encerrada') return;
+    const cvm=(store.concilVolumeMap||{})[(c.id||c.nome||'').replace(/['"]/g,'')]||{};
+    (cvm.cashinIds||[]).forEach(id=>actCI.add(id));
+    (cvm.cashoutIds||[]).forEach(id=>actCO.add(id));
+    (cvm.refundIds||[]).forEach(id=>actRF.add(id));
+    (cvm.chargebackIds||[]).forEach(id=>actCB.add(id));
+  });
+  const uCI=allCashinIds.filter(id=>!actCI.has(id));
+  const uCO=allCashoutIds.filter(id=>!actCO.has(id));
+  const uRF=allRefundNames.filter(n=>!actRF.has(n));
+  const uCB=allCbkNames.filter(n=>!actCB.has(n));
+  const total=uCI.length+uCO.length+uRF.length+uCB.length;
+  if(!total){wrap.innerHTML='';return;}
+  const fmtUsd=v=>v>=1e6?`$${(v/1e6).toFixed(1)}M`:v>=1e3?`$${(v/1e3).toFixed(0)}k`:`$${v}`;
+  const mkTag=(id,entry={})=>{
+    const name=entry.name||'';const country=entry.country||'';const usd=entry.usd?fmtUsd(entry.usd):'';
+    const tip=[name,country,usd].filter(Boolean).join(' · ');
+    return `<span title="${_esc(tip)}" style="display:inline-flex;align-items:center;gap:3px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:4px;padding:1px 8px;font-size:11px;margin:2px 3px 2px 0;font-family:monospace;white-space:nowrap">${_esc(id)}${name&&name!==id?`<span style="font-family:inherit;font-weight:400;color:#b45309;font-size:10px"> ${_esc(name)}</span>`:''}</span>`;
+  };
+  const mkSection=(lbl,ids,data)=>ids.length?`<div style="margin-bottom:5px"><span style="font-size:10px;font-weight:700;color:#b45309;text-transform:uppercase;letter-spacing:.5px;margin-right:6px">${lbl}</span>${ids.map(id=>mkTag(id,(data||{})[id]||{})).join('')}</div>`:'';
+  const sections=[
+    mkSection('Cash-in',uCI,vr.cashin),
+    mkSection('Cash-out',uCO,vr.cashout),
+    mkSection('Refunds',uRF,vr.refunds),
+    mkSection('Chargebacks',uCB,vr.chargebacks),
+  ].filter(Boolean).join('');
+  wrap.innerHTML=`<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span style="font-size:12px;font-weight:700;color:#92400e">${total} gateway${total!==1?'s':''} sem conciliação ativa</span>
+    </div>
+    ${sections}
+  </div>`;
+}
 function renderGerencialConciliacoes(){
   const e=document.getElementById('conciliacoes-empty');
   const ti=document.getElementById('conciliacoes-table-inner');
@@ -4981,7 +5028,7 @@ function renderGerencialConciliacoes(){
   const searchQ=(document.getElementById('conc-ger-search')?.value||'').toLowerCase().trim();
   const list=store.conciliacoes.filter(c=>!searchQ||`${c.nome} ${c.pais} ${c.agente}`.toLowerCase().includes(searchQ));
   if(!list.length){e.style.display='';ti.style.display='';if(cnt)cnt.textContent='';
-    if(!store.conciliacoes.length) ti.style.display='none'; return;}
+    if(!store.conciliacoes.length) ti.style.display='none'; _renderUnlinkedGateways(); return;}
   e.style.display='none';ti.style.display='';
   if(cnt) cnt.textContent=list.length+' conciliação'+(list.length!==1?'s':'');
   tb.innerHTML=list.map((c,ci)=>{
@@ -4998,6 +5045,7 @@ function renderGerencialConciliacoes(){
     const gwTags=allGwIds.length?allGwIds.map(gid=>`<span style="font-family:monospace;font-size:10px;background:var(--e-ghost);padding:1px 5px;border-radius:3px;margin-right:3px;display:inline-block;margin-bottom:2px">${gid}</span>`).join(''):`<span style="color:var(--e-muted);font-size:11px">—</span>`;
     return `<tr class="${isEncerrada?'row-encerrada':''}"><td style="font-weight:600">${c.nome}${statusChip}</td><td>${c.pais?`${countryFlag(c.pais)} ${c.pais}`:'—'}</td><td style="font-size:12px;color:var(--e-muted)">${c.agente||'—'}</td><td>${tipoChipHtml}</td><td style="white-space:normal">${tags}</td><td style="white-space:normal">${gwTags}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openConciliacaoModal(${origIdx})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteConciliacao(${origIdx})">${trashIcon}</button></div>`:''}</td></tr>`;
   }).join('');
+  _renderUnlinkedGateways();
 }
 
 function openConciliacaoModal(editIdx=-1){
