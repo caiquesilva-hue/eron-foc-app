@@ -3464,7 +3464,7 @@ async function switchAcessosTab(envKey){
 }
 function _envChips(envs){
   const list=envs&&envs.length?envs:[_currentEnv];
-  const colors={eron:'color:#c4b5fd;background:rgba(151,111,244,.15);border:1px solid rgba(151,111,244,.3)',astropay:'color:#6ee7b7;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.25)',limepay:'color:#fde68a;background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.25)'};
+  const colors={eron:'color:#c4b5fd;background:rgba(151,111,244,.15);border:1px solid rgba(151,111,244,.3)',astropay:'color:#00c8a8;background:rgba(0,200,168,.1);border:1px solid rgba(0,200,168,.28)',limepay:'color:#65b82c;background:rgba(101,184,44,.1);border:1px solid rgba(101,184,44,.28)'};
   return list.map(k=>'<span style="font-size:10px;padding:1px 7px;border-radius:10px;font-weight:600;white-space:nowrap;display:inline-block;'+(colors[k]||'')+'">'+(ENVIRONMENTS[k]?.label||k)+'</span>').join(' ');
 }
 function renderAcessosTabs(){}
