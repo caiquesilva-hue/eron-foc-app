@@ -617,6 +617,9 @@
             <div class="env-dd-item" id="env-item-astropay" onclick="switchEnvironment('astropay')">
               <span class="env-check" id="env-check-astropay" style="visibility:hidden">✓</span>AstroPay
             </div>
+            <div class="env-dd-item" id="env-item-limepay" onclick="switchEnvironment('limepay')">
+              <span class="env-check" id="env-check-limepay" style="visibility:hidden">✓</span>LimePay
+            </div>
           </div>
         </div>
         <button class="btn-hist" onclick="openHistorico()" title="Ver log de alterações">
@@ -3461,7 +3464,7 @@ async function switchAcessosTab(envKey){
 }
 function _envChips(envs){
   const list=envs&&envs.length?envs:[_currentEnv];
-  const colors={eron:'color:#c4b5fd;background:rgba(151,111,244,.15);border:1px solid rgba(151,111,244,.3)',astropay:'color:#6ee7b7;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.25)'};
+  const colors={eron:'color:#c4b5fd;background:rgba(151,111,244,.15);border:1px solid rgba(151,111,244,.3)',astropay:'color:#6ee7b7;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.25)',limepay:'color:#fde68a;background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.25)'};
   return list.map(k=>'<span style="font-size:10px;padding:1px 7px;border-radius:10px;font-weight:600;white-space:nowrap;display:inline-block;'+(colors[k]||'')+'">'+(ENVIRONMENTS[k]?.label||k)+'</span>').join(' ');
 }
 function renderAcessosTabs(){}
@@ -4187,6 +4190,19 @@ const ENVIRONMENTS={
       storageBucket:"astropay-foc-app.firebasestorage.app",
       messagingSenderId:"850881331781",
       appId:"1:850881331781:web:ce260d3172296ea01cd92c"
+    }
+  },
+  limepay:{
+    label:'LimePay',
+    storeKey:'limepay-foc-v1',
+    cfg:{
+      apiKey:"AIzaSyBSeVzOLVLhGCw-el7nwfhLUNC3MwJbs2E",
+      authDomain:"limepay-foc-app.firebaseapp.com",
+      databaseURL:"https://limepay-foc-app-default-rtdb.firebaseio.com",
+      projectId:"limepay-foc-app",
+      storageBucket:"limepay-foc-app.firebasestorage.app",
+      messagingSenderId:"221317942866",
+      appId:"1:221317942866:web:19ad5c47fd478ccfc9998b"
     }
   }
 };
