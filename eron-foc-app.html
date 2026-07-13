@@ -1914,6 +1914,7 @@ const i18n = {
     'liq-search-ph':'Buscar nome, país, agente...','liq-empty-ger-title':'Nenhuma conciliação de Processadores ou Mista','liq-empty-crono-title':'Nenhuma conciliação encontrada',
     'conc-col-tipo':'Tipo','conc-col-contas':'Contas vinculadas','conc-col-gateways':'Gateways vinculados',
     'conc-empty-title':'Nenhuma conciliação cadastrada','conc-empty-sub':'Adicione conciliações vinculando contas de Gerencial > Accounts.',
+    'conc-unlinked-sem':'sem conciliação ativa','conc-unlinked-refunds':'Reembolsos','conc-unlinked-cbk':'Contestações',
   },
   'en': {
     'ops-platform':'FOC App','login-welcome':'Welcome back',
@@ -1993,6 +1994,7 @@ const i18n = {
     'liq-search-ph':'Search name, country, agent...','liq-empty-ger-title':'No Processor or Mixed reconciliations','liq-empty-crono-title':'No reconciliation found',
     'conc-col-tipo':'Type','conc-col-contas':'Linked accounts','conc-col-gateways':'Linked gateways',
     'conc-empty-title':'No reconciliations registered','conc-empty-sub':'Add reconciliations linking accounts from Management > Accounts.',
+    'conc-unlinked-sem':'with no active reconciliation','conc-unlinked-refunds':'Refunds','conc-unlinked-cbk':'Chargebacks',
   },
   'es': {
     'ops-platform':'FOC App','login-welcome':'Bienvenido de nuevo',
@@ -2072,6 +2074,7 @@ const i18n = {
     'liq-search-ph':'Buscar nombre, país, agente...','liq-empty-ger-title':'Sin conciliaciones de Procesadores o Mixtas','liq-empty-crono-title':'No se encontraron conciliaciones',
     'conc-col-tipo':'Tipo','conc-col-contas':'Cuentas vinculadas','conc-col-gateways':'Gateways vinculados',
     'conc-empty-title':'Sin conciliaciones registradas','conc-empty-sub':'Agrega conciliaciones vinculando cuentas desde Gerencial > Accounts.',
+    'conc-unlinked-sem':'sin conciliación activa','conc-unlinked-refunds':'Devoluciones','conc-unlinked-cbk':'Contracargos',
   }
 };
 
@@ -5007,13 +5010,13 @@ function _renderUnlinkedGateways(){
   const sections=[
     mkSection('Cash-in',uCI,vr.cashin),
     mkSection('Cash-out',uCO,vr.cashout),
-    mkSection('Refunds',uRF,vr.refunds),
-    mkSection('Chargebacks',uCB,vr.chargebacks),
+    mkSection(t('conc-unlinked-refunds')||'Refunds',uRF,vr.refunds),
+    mkSection(t('conc-unlinked-cbk')||'Chargebacks',uCB,vr.chargebacks),
   ].filter(Boolean).join('');
   wrap.innerHTML=`<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;margin-bottom:10px">
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      <span style="font-size:12px;font-weight:700;color:#92400e">${total} gateway${total!==1?'s':''} sem conciliação ativa</span>
+      <span style="font-size:12px;font-weight:700;color:#92400e">${total} gateway${total!==1?'s':''} ${t('conc-unlinked-sem')||'sem conciliação ativa'}</span>
     </div>
     ${sections}
   </div>`;
