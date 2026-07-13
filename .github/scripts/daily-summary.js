@@ -1,31 +1,52 @@
 import fetch from 'node-fetch';
-import FormData from 'form-data';
 
 // ─── Config ────────────────────────────────────────────────────────────────────
-const FIREBASE_DB_URL = process.env.FIREBASE_DB_URL; // ex: https://eron-foc-app-da755-default-rtdb.firebaseio.com
-const FIREBASE_SECRET = process.env.FIREBASE_SECRET; // Database Secret (Legacy) do Firebase Console
-const SLACK_TOKEN = process.env.SLACK_TOKEN;          // xoxb-... com escopo files:write + files:read
+const FIREBASE_DB_URL = process.env.FIREBASE_DB_URL;
+const FIREBASE_SECRET = process.env.FIREBASE_SECRET;
+const SLACK_TOKEN = process.env.SLACK_TOKEN;
 const SLACK_CHANNEL = process.env.SLACK_CHANNEL || 'C0BH1SG3EUS';
 
-// Dia da semana em BRT: 1=seg, 2=ter, 3=qua, 4=qui, 5=sex
+// Override para testes manuais: força o dia de referência (D-1) como dia da semana
+// 1=seg, 2=ter, 3=qua, 4=qui, 5=sex
 const OVERRIDE_DAY = process.env.OVERRIDE_DAY ? parseInt(process.env.OVERRIDE_DAY, 10) : null;
 
-// ─── Regra de filtro por dia ────────────────────────────────────────────────────
-// Seg/Qui → T1 + Diário | Ter/Sex → T2 + Diário | Qua → TOP 10 + TOP 20
+// ─── Schedule: baseado no dia de D-1 (ontem) ──────────────────────────────────
 const SCHEDULE = {
-  1: { freqs: ['T1', 'Diário'], label: 'Segunda' },
-  2: { freqs: ['T2', 'Diário'], label: 'Terça' },
-  3: { freqs: ['TOP 10', 'TOP 20'], label: 'Quarta' },
-  4: { freqs: ['T1', 'Diário'], label: 'Quinta' },
-  5: { freqs: ['T2', 'Diário'], label: 'Sexta' },
+  1: { freqs: ['T1', 'Diário'],      label: 'Segunda' },
+  2: { freqs: ['T2', 'Diário'],      label: 'Terça'   },
+  3: { freqs: ['TOP 10', 'TOP 20'],  label: 'Quarta'  },
+  4: { freqs: ['T1', 'Diário'],      label: 'Quinta'  },
+  5: { freqs: ['T2', 'Diário'],      label: 'Sexta'   },
+};
+
+const DAY_NAMES_PT = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+const STATUS_LBL = {
+  concluido:          'Concluída',
+  sem_movimento:      'Sem Movimento',
+  sem_acesso:         'Sem Acesso',
+  aguardando_extrato: 'Aguardando Extrato',
+  pendente:           'Pendente',
+};
+
+const STATUS_EMOJI = {
+  concluido:          ':white_check_mark:',
+  sem_movimento:      ':large_yellow_circle:',
+  sem_acesso:         ':no_entry:',
+  aguardando_extrato: ':hourglass_flowing_sand:',
+  pendente:           ':white_circle:',
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
-function todayBRT() {
-  // GitHub Actions corre em UTC; BRT = UTC-3
+function nowBRT() {
   const now = new Date();
-  const brt = new Date(now.getTime() - 3 * 60 * 60 * 1000);
-  return brt;
+  return new Date(now.getTime() - 3 * 60 * 60 * 1000);
+}
+
+function addDays(d, n) {
+  const r = new Date(d);
+  r.setUTCDate(r.getUTCDate() + n);
+  return r;
 }
 
 function fmtDate(d) {
@@ -35,73 +56,53 @@ function fmtDate(d) {
   return `${y}-${m}-${day}`;
 }
 
-// Gera os dias úteis da semana atual (seg a sex) em BRT
+// Dias úteis da semana (seg–sex) da semana que contém referenceDate
 function weekDays(referenceDate) {
-  // referenceDate é o "hoje" em BRT (UTC-3), representado como Date UTC
-  const dow = referenceDate.getUTCDay(); // 0=dom, 1=seg, ..., 6=sab
+  const dow = referenceDate.getUTCDay();
   const mon = new Date(referenceDate);
-  mon.setUTCDate(referenceDate.getUTCDate() - ((dow + 6) % 7)); // recua até segunda
-  const days = [];
-  for (let i = 0; i < 5; i++) {
-    const d = new Date(mon);
-    d.setUTCDate(mon.getUTCDate() + i);
-    days.push(d);
-  }
-  return days;
+  mon.setUTCDate(referenceDate.getUTCDate() - ((dow + 6) % 7));
+  return Array.from({ length: 5 }, (_, i) => addDays(mon, i));
 }
 
 function csvEscape(v) {
   const s = String(v ?? '');
-  if (s.includes(',') || s.includes('"') || s.includes('\n')) {
-    return `"${s.replace(/"/g, '""')}"`;
-  }
-  return s;
+  return s.includes(',') || s.includes('"') || s.includes('\n')
+    ? `"${s.replace(/"/g, '""')}"`
+    : s;
 }
 
 function buildCSV(rows) {
   return rows.map(row => row.map(csvEscape).join(',')).join('\r\n');
 }
 
-// ─── Firebase REST ──────────────────────────────────────────────────────────────
+// ─── Firebase ───────────────────────────────────────────────────────────────────
 async function fetchStore() {
   if (!FIREBASE_DB_URL) throw new Error('FIREBASE_DB_URL não configurado');
-
   let url = `${FIREBASE_DB_URL}/store.json`;
   if (FIREBASE_SECRET) url += `?auth=${FIREBASE_SECRET}`;
-
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Firebase ${res.status}: ${await res.text()}`);
   return res.json();
 }
 
-// ─── Status label ───────────────────────────────────────────────────────────────
-const STATUS_LBL = {
-  concluido: 'Concluída',
-  sem_movimento: 'Sem movimento',
-  sem_acesso: 'Sem acesso',
-  aguardando_extrato: 'Aguardando extrato',
-  pendente: 'Pendente',
-};
-
-function statusLabel(key) {
-  return STATUS_LBL[key] || key || 'Pendente';
-}
-
 // ─── Main ───────────────────────────────────────────────────────────────────────
 async function main() {
-  const today = todayBRT();
-  const rawDow = today.getUTCDay(); // 0=dom
-  const dow = OVERRIDE_DAY ?? (rawDow === 0 || rawDow === 6 ? null : rawDow);
+  const runDay = nowBRT();                   // dia em que o workflow roda (hoje)
+  const d1 = addDays(runDay, -1);            // D-1 = ontem — referência do relatório
+  const d1Str = fmtDate(d1);
+  const d1DowRaw = d1.getUTCDay();           // 0=dom
 
-  if (!dow || !SCHEDULE[dow]) {
-    console.log(`Hoje é fim de semana ou dia não previsto (dow=${rawDow}). Nada enviado.`);
+  const d1Dow = OVERRIDE_DAY ?? (d1DowRaw === 0 || d1DowRaw === 6 ? null : d1DowRaw);
+
+  if (!d1Dow || !SCHEDULE[d1Dow]) {
+    console.log(`D-1 é fim de semana ou não previsto (${DAY_NAMES_PT[d1DowRaw]}). Nada enviado.`);
     return;
   }
 
-  const { freqs, label } = SCHEDULE[dow];
-  console.log(`Dia: ${label} | Frequências: ${freqs.join(', ')}`);
+  const { freqs, label } = SCHEDULE[d1Dow];
+  console.log(`Referência: ${label} ${d1Str} | Frequências: ${freqs.join(', ')}`);
 
-  // Fetch Firebase
+  // Firebase
   console.log('Buscando dados do Firebase...');
   const store = await fetchStore();
 
@@ -111,129 +112,109 @@ async function main() {
 
   const cronogramaData = store.cronogramaData || {};
 
-  // Filtrar contas pelo schedule do dia
-  const filtered = contas.filter(c => {
-    if (!c || !c.tipo) return false;
-    if (c.status === 'encerrada') return false;
-    return freqs.includes(c.tipo);
-  });
+  // Filtrar contas pelo schedule de D-1
+  const filtered = contas.filter(c =>
+    c && c.tipo && c.status !== 'encerrada' && freqs.includes(c.tipo)
+  );
 
   console.log(`Contas filtradas: ${filtered.length}`);
+  if (!filtered.length) { console.log('Nenhuma conta. Nada enviado.'); return; }
 
-  if (!filtered.length) {
-    console.log('Nenhuma conta para exportar. Nada enviado.');
-    return;
-  }
-
-  // Dias da semana para colunas
-  const days = weekDays(today);
-  const dateHeaders = days.map(fmtDate);
-
-  // Montar CSV
-  const headers = [
-    'Sigla', 'País', 'Agente', 'Banco', 'Nº Conta',
-    'Frequência', 'Tipo', 'Status', 'Acompanhamento',
-    ...dateHeaders,
-  ];
-  const rows = [headers];
-
-  // D-1 para coluna Acompanhamento
-  const d1 = new Date(today);
-  d1.setUTCDate(today.getUTCDate() - 1);
-  const d1Str = fmtDate(d1);
+  // ─── Contagem de status para D-1 ─────────────────────────────────────────────
+  const statusCount = { concluido: 0, sem_acesso: 0, sem_movimento: 0, aguardando_extrato: 0, pendente: 0 };
 
   filtered.forEach(c => {
     const ck = `${c.sigla}_${c.numeroConta}`.replace(/['"]/g, '');
+    const entry = cronogramaData[`${ck}_${d1Str}`];
+    const key = entry?.status && statusCount[entry.status] !== undefined ? entry.status : 'pendente';
+    statusCount[key]++;
+  });
 
+  // ─── CSV (semana de D-1) ──────────────────────────────────────────────────────
+  const days = weekDays(d1);
+  const headers = [
+    'Sigla', 'País', 'Agente', 'Banco', 'Nº Conta',
+    'Frequência', 'Tipo', 'Status', `Acompanhamento D-1 (${d1Str})`,
+    ...days.map(fmtDate),
+  ];
+  const csvRows = [headers];
+
+  filtered.forEach(c => {
+    const ck = `${c.sigla}_${c.numeroConta}`.replace(/['"]/g, '');
     const d1Entry = cronogramaData[`${ck}_${d1Str}`];
-    const d1Status = d1Entry ? statusLabel(d1Entry.status) : 'Pendente';
-
+    const d1Status = d1Entry ? (STATUS_LBL[d1Entry.status] || d1Entry.status) : 'Pendente';
     const dayCells = days.map(d => {
-      const ds = fmtDate(d);
-      const e = cronogramaData[`${ck}_${ds}`];
-      return e ? statusLabel(e.status) : 'Pendente';
+      const e = cronogramaData[`${ck}_${fmtDate(d)}`];
+      return e ? (STATUS_LBL[e.status] || e.status) : 'Pendente';
     });
-
-    rows.push([
-      c.sigla ?? '',
-      c.pais ?? '',
-      c.agente ?? '',
-      c.banco ?? '',
-      c.numeroConta ?? '',
-      c.tipo ?? '',
-      c.tipoConta ?? '',
-      c.status ?? '',
-      d1Status,
-      ...dayCells,
+    csvRows.push([
+      c.sigla ?? '', c.pais ?? '', c.agente ?? '', c.banco ?? '',
+      c.numeroConta ?? '', c.tipo ?? '', c.tipoConta ?? '', c.status ?? '',
+      d1Status, ...dayCells,
     ]);
   });
 
-  const csvContent = buildCSV(rows);
-  const dateLabel = fmtDate(today);
-  const filename = `cronograma-${dateLabel}-${label.toLowerCase()}.csv`;
+  const csvContent = buildCSV(csvRows);
+  const filename = `cronograma-${d1Str}-${label.toLowerCase()}.csv`;
+  const csvBuffer = Buffer.from(csvContent, 'utf-8');
+  console.log(`CSV gerado: ${csvRows.length - 1} linhas | ${filename}`);
 
-  console.log(`CSV gerado: ${rows.length - 1} linhas | arquivo: ${filename}`);
+  // ─── Mensagem Slack ───────────────────────────────────────────────────────────
+  const statusLines = Object.entries(statusCount)
+    .filter(([, n]) => n > 0)
+    .map(([k, n]) => `${STATUS_EMOJI[k]} *${STATUS_LBL[k]}:* ${n} conta${n !== 1 ? 's' : ''}`)
+    .join('\n');
 
-  // ─── Upload para Slack ─────────────────────────────────────────────────────
+  const message =
+    `:bar_chart: *Resumo Cronograma Accounts — ${label} ${d1Str}*\n` +
+    `Frequências: ${freqs.join(' + ')} | ${filtered.length} contas\n\n` +
+    statusLines;
+
+  // ─── Upload Slack ─────────────────────────────────────────────────────────────
   if (!SLACK_TOKEN) throw new Error('SLACK_TOKEN não configurado');
 
-  // Verificar token
   const authRes = await fetch('https://slack.com/api/auth.test', {
     headers: { Authorization: `Bearer ${SLACK_TOKEN}` },
   });
   const authData = await authRes.json();
-  if (!authData.ok) throw new Error(`auth.test falhou: ${authData.error}`);
-  console.log(`Slack autenticado como: ${authData.bot_id || authData.user} (${authData.team})`);
+  if (!authData.ok) throw new Error(`auth.test: ${authData.error}`);
+  console.log(`Slack: ${authData.bot_id || authData.user} (${authData.team})`);
 
-  const csvBuffer = Buffer.from(csvContent, 'utf-8');
-
-  // 1) Obter URL de upload (form-encoded, mais compatível)
-  const uploadParams = new URLSearchParams({ filename, length: String(csvBuffer.length) });
+  // 1) URL de upload
   const urlRes = await fetch('https://slack.com/api/files.getUploadURLExternal', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${SLACK_TOKEN}`,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: uploadParams.toString(),
+    body: new URLSearchParams({ filename, length: String(csvBuffer.length) }).toString(),
   });
   const urlData = await urlRes.json();
-  if (!urlData.ok) throw new Error(`files.getUploadURLExternal: ${urlData.error} | ${JSON.stringify(urlData)}`);
-
+  if (!urlData.ok) throw new Error(`getUploadURLExternal: ${urlData.error}`);
   const { upload_url, file_id } = urlData;
-  console.log(`URL de upload obtida, file_id: ${file_id}`);
 
-  // 2) Fazer upload do conteúdo (octet-stream)
+  // 2) Upload do conteúdo
   const uploadRes = await fetch(upload_url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/octet-stream',
-      'Content-Length': String(csvBuffer.length),
-    },
+    headers: { 'Content-Type': 'application/octet-stream' },
     body: csvBuffer,
   });
-  if (!uploadRes.ok) {
-    throw new Error(`Upload falhou: ${uploadRes.status} ${await uploadRes.text()}`);
-  }
-  console.log('Conteúdo do arquivo enviado');
+  if (!uploadRes.ok) throw new Error(`Upload: ${uploadRes.status} ${await uploadRes.text()}`);
 
-  // 3) Completar upload e publicar no canal
+  // 3) Completar e publicar
   const completeRes = await fetch('https://slack.com/api/files.completeUploadExternal', {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${SLACK_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
+    headers: { Authorization: `Bearer ${SLACK_TOKEN}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      files: [{ id: file_id, title: `Cronograma FOC — ${label} ${dateLabel}` }],
+      files: [{ id: file_id, title: `Cronograma Accounts — ${label} ${d1Str}` }],
       channel_id: SLACK_CHANNEL,
-      initial_comment: `📊 *Resumo Cronograma FOC — ${label} ${dateLabel}*\nFrequências: ${freqs.join(' + ')} | ${filtered.length} conta${filtered.length !== 1 ? 's' : ''}`,
+      initial_comment: message,
     }),
   });
   const completeData = await completeRes.json();
-  if (!completeData.ok) throw new Error(`files.completeUploadExternal: ${completeData.error}`);
+  if (!completeData.ok) throw new Error(`completeUpload: ${completeData.error}`);
 
-  console.log(`✅ CSV enviado ao Slack com sucesso (file_id: ${file_id})`);
+  console.log(`✅ Enviado ao Slack (file_id: ${file_id})`);
 }
 
 main().catch(err => {
