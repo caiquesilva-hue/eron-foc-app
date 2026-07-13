@@ -5000,25 +5000,29 @@ function _renderUnlinkedGateways(){
   const uCB=allCbkNames.filter(n=>!actCB.has(n));
   const total=uCI.length+uCO.length+uRF.length+uCB.length;
   if(!total){wrap.innerHTML='';return;}
-  const fmtUsd=v=>v>=1e6?`$${(v/1e6).toFixed(1)}M`:v>=1e3?`$${(v/1e3).toFixed(0)}k`:`$${v}`;
-  const mkTag=(id,entry={})=>{
-    const name=entry.name||'';const country=entry.country||'';const usd=entry.usd?fmtUsd(entry.usd):'';
-    const tip=[name,country,usd].filter(Boolean).join(' · ');
-    return `<span title="${_esc(tip)}" style="display:inline-flex;align-items:center;gap:3px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:4px;padding:1px 8px;font-size:11px;margin:2px 3px 2px 0;font-family:monospace;white-space:nowrap">${_esc(id)}${name&&name!==id?`<span style="font-family:inherit;font-weight:400;color:#b45309;font-size:10px"> ${_esc(name)}</span>`:''}</span>`;
-  };
-  const mkSection=(lbl,ids,data)=>ids.length?`<div style="margin-bottom:5px"><span style="font-size:10px;font-weight:700;color:#b45309;text-transform:uppercase;letter-spacing:.5px;margin-right:6px">${lbl}</span>${ids.map(id=>mkTag(id,(data||{})[id]||{})).join('')}</div>`:'';
-  const sections=[
-    mkSection('Cash-in',uCI,vr.cashin),
-    mkSection('Cash-out',uCO,vr.cashout),
-    mkSection(t('conc-unlinked-refunds')||'Refunds',uRF,vr.refunds),
-    mkSection(t('conc-unlinked-cbk')||'Chargebacks',uCB,vr.chargebacks),
+  const mkRows=(ids,dataMap,useKey)=>ids.map(id=>{
+    const e=(dataMap||{})[id]||{};
+    const name=e.name||'';
+    const label=useKey?id:(name&&name!==id?`${id} ${name}`:id);
+    return `<div style="padding:3px 12px;font-size:12px;color:var(--e-text);border-bottom:1px solid #fef3c7;line-height:1.5">${_esc(label)}</div>`;
+  }).join('');
+  const mkBlock=(title,ids,dataMap,useKey)=>ids.length?`
+    <div style="border-bottom:1px solid #fde68a">
+      <div style="padding:5px 12px;font-size:10px;font-weight:700;color:#b45309;text-transform:uppercase;letter-spacing:.8px;background:#fef3c7;position:sticky;top:0">${_esc(title)}</div>
+      ${mkRows(ids,dataMap,useKey)}
+    </div>`:'';
+  const body=[
+    mkBlock('Cash-in',uCI,vr.cashin,false),
+    mkBlock('Cash-out',uCO,vr.cashout,false),
+    mkBlock('Refunds',uRF,vr.refunds,true),
+    mkBlock('Chargebacks',uCB,vr.chargebacks,true),
   ].filter(Boolean).join('');
-  wrap.innerHTML=`<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;margin-bottom:10px">
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+  wrap.innerHTML=`<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;margin-bottom:10px;overflow:hidden">
+    <div style="display:flex;align-items:center;gap:6px;padding:7px 12px;border-bottom:1px solid #fde68a">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
       <span style="font-size:12px;font-weight:700;color:#92400e">${total} gateway${total!==1?'s':''} ${t('conc-unlinked-sem')||'sem conciliação ativa'}</span>
     </div>
-    ${sections}
+    <div style="max-height:220px;overflow-y:auto">${body}</div>
   </div>`;
 }
 function renderGerencialConciliacoes(){
