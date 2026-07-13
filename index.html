@@ -363,6 +363,10 @@
   th.sort-active{color:var(--e-purple);}
   .cal-sticky{position:sticky;left:0;background:#fff;z-index:2;border-right:1px solid var(--e-pale);}
   .cal-table thead th.cal-sticky{background:var(--e-ghost);z-index:5;}
+  .col-pin-btn{position:absolute;right:3px;top:50%;transform:translateY(-50%);background:none;border:none;padding:2px 3px;border-radius:3px;cursor:pointer;color:var(--e-muted);opacity:0;transition:opacity .12s,color .12s;line-height:1;display:flex;align-items:center;}
+  th:hover .col-pin-btn,.col-pin-btn.pinned{opacity:1;}
+  .col-pin-btn.pinned{color:var(--e-purple);}
+  .col-pin-btn:hover{color:var(--e-purple);background:rgba(151,111,244,.12);}
   .chip-operacional{background:#ede9fe;color:#5b21b6;}
   .chip-administrativa{background:#fce7f3;color:#9d174d;}
   .chip-bbpix{background:#e0f2fe;color:#0369a1;}
@@ -2793,6 +2797,41 @@ function initCronoFilters(){
     rt.innerHTML=store.responsaveis.map(r=>`<button class="freq-toggle${activeResps.includes(r.sigla)?' active':''}" data-resp="${r.sigla}" onclick="toggleRespFilter(this)" title="${r.nome}">${r.sigla}</button>`).join('');
   }
 }
+// ─── COLUMN PINNING ──────────────────────────────────────────────
+const _PINNED_KEY='eron-foc-pinned-v1';
+const _pinnedCols={crono:new Set(),'crono-conc':new Set()};
+(()=>{try{const s=JSON.parse(localStorage.getItem(_PINNED_KEY)||'{}');if(s.crono)s.crono.forEach(i=>_pinnedCols.crono.add(+i));if(s['crono-conc'])s['crono-conc'].forEach(i=>_pinnedCols['crono-conc'].add(+i));}catch(e){}})();
+function _savePinnedCols(){try{localStorage.setItem(_PINNED_KEY,JSON.stringify({crono:[..._pinnedCols.crono],'crono-conc':[..._pinnedCols['crono-conc']]}));}catch(e){}}
+const _pinSvg=`<svg width="9" height="9" viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="3" r="2.2"/><rect x="4.3" y="5" width="1.4" height="4" rx="0.7"/></svg>`;
+function _pinBtn(key,idx){if(idx===0)return '';const pinned=(_pinnedCols[key]||new Set()).has(idx);return `<button class="col-pin-btn${pinned?' pinned':''}" onclick="event.stopPropagation();toggleColPin('${key}',${idx})" title="${pinned?'Desafixar coluna':'Fixar coluna'}">${_pinSvg}</button>`;}
+function toggleColPin(key,idx){if(!_pinnedCols[key])_pinnedCols[key]=new Set();if(_pinnedCols[key].has(idx))_pinnedCols[key].delete(idx);else _pinnedCols[key].add(idx);_savePinnedCols();if(key==='crono')renderCronogramaAccounts();else renderCronogramaConciliacoes();}
+function _applyPinnedCols(key,tblId,infoN){
+  const tbl=document.getElementById(tblId);
+  if(!tbl) return;
+  const pinned=_pinnedCols[key]||new Set();
+  const allPinned=new Set([0,...pinned]);
+  const sortedPins=[...allPinned].sort((a,b)=>a-b);
+  const headerRows=[...tbl.querySelectorAll('thead tr')];
+  if(!headerRows.length) return;
+  const infoThs=[...headerRows[0].querySelectorAll('th.col-info')];
+  const infoThs2=headerRows[1]?[...headerRows[1].querySelectorAll('th')].slice(0,infoN):[];
+  // Reset extra sticky (cols > 0)
+  infoThs.slice(1).forEach(th=>{th.style.position='';th.style.left='';th.style.zIndex='';th.style.background='';th.style.borderRight='';});
+  infoThs2.slice(1).forEach(th=>{th.style.position='';th.style.left='';th.style.zIndex='';th.style.background='';});
+  tbl.querySelectorAll('tbody tr').forEach(row=>[...row.querySelectorAll('td')].slice(1,infoN).forEach(td=>{td.style.position='';td.style.left='';td.style.zIndex='';td.style.background='';td.style.borderRight='';}));
+  if(sortedPins.length<=1) return;
+  const widths=infoThs.map(th=>th.offsetWidth);
+  let cum=widths[0]||0;
+  const leftMap={};
+  sortedPins.slice(1).forEach(idx=>{leftMap[idx]=cum;cum+=widths[idx]||80;});
+  const lastPin=Math.max(...sortedPins);
+  sortedPins.slice(1).forEach(idx=>{
+    const left=leftMap[idx];const isLast=idx===lastPin;
+    if(infoThs[idx]){infoThs[idx].style.position='sticky';infoThs[idx].style.left=left+'px';infoThs[idx].style.zIndex='5';infoThs[idx].style.background='var(--e-ghost)';if(isLast)infoThs[idx].style.borderRight='1px solid var(--e-pale)';}
+    if(infoThs2[idx]){infoThs2[idx].style.position='sticky';infoThs2[idx].style.left=left+'px';infoThs2[idx].style.zIndex='5';infoThs2[idx].style.background='var(--e-ghost)';}
+    tbl.querySelectorAll('tbody tr').forEach(row=>{const tds=[...row.querySelectorAll('td')];const td=tds[idx];if(!td)return;td.style.position='sticky';td.style.left=left+'px';td.style.zIndex='2';td.style.background=row.classList.contains('row-encerrada')?'#f8f7ff':'#fff';if(isLast)td.style.borderRight='1px solid var(--e-pale)';});
+  });
+}
 function renderCronogramaAccounts(){
   const countEl=document.getElementById('crono-accounts-count');
   const emptyEl=document.getElementById('crono-accounts-empty');
@@ -2881,8 +2920,8 @@ function renderCronogramaAccounts(){
     const isWk=d.getDay()===0||d.getDay()===6;
     return `<th class="col-day${isWk?' weekend':''}" style="font-size:9px;color:var(--e-muted);background:${isWk?'#faf5ff':'var(--e-ghost)'}">${wd[d.getDay()]}</th>`;
   }).join('');
-  const _sth=(col,lbl,extra='')=>`<th class="${_sortThCls('crono',col)} col-info${extra?' cal-sticky':''}" ${extra} onclick="toggleSort('crono','${col}')" style="cursor:pointer">${lbl}${_sortArrow('crono',col)}</th>`;
-  const colInfos=`${_sth('sigla',t('col-sigla'),'cal-sticky')}${_sth('pais',t('col-pais'))}${_sth('agente',t('col-agente'))}<th class="col-info">Resp.</th>${_sth('banco',t('col-banco'))}${_sth('numeroConta',t('col-num-conta'))}${_sth('tipo',t('col-tipo'))}${_sth('tipoConta',t('col-tipo-conta'))}<th class="col-info" style="cursor:default">TOP</th><th class="col-info" style="white-space:nowrap">Acompanhamento</th>`;
+  const _sth=(col,lbl,idx,extra='')=>`<th class="${_sortThCls('crono',col)} col-info${extra?' cal-sticky':''}" ${extra} onclick="toggleSort('crono','${col}')" style="cursor:pointer">${lbl}${_sortArrow('crono',col)}${_pinBtn('crono',idx)}</th>`;
+  const colInfos=`${_sth('sigla',t('col-sigla'),0,'cal-sticky')}${_sth('pais',t('col-pais'),1)}${_sth('agente',t('col-agente'),2)}<th class="col-info">Resp.${_pinBtn('crono',3)}</th>${_sth('banco',t('col-banco'),4)}${_sth('numeroConta',t('col-num-conta'),5)}${_sth('tipo',t('col-tipo'),6)}${_sth('tipoConta',t('col-tipo-conta'),7)}<th class="col-info" style="cursor:default">TOP${_pinBtn('crono',8)}</th><th class="col-info" style="white-space:nowrap">Acompanhamento${_pinBtn('crono',9)}</th>`;
   const emptyInfoCols='<th class="col-info cal-sticky" style="background:var(--e-ghost)"></th>'+'<th class="col-info" style="background:var(--e-ghost)"></th>'.repeat(INFO_COLS-1);
   const fmtDate=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   tbl.innerHTML=`<thead><tr>${colInfos}${dayHeaders}</tr><tr>${emptyInfoCols}${wdHeaders}</tr></thead><tbody>${
@@ -2937,6 +2976,7 @@ function renderCronogramaAccounts(){
       onDayCellClick(e,td.dataset.ck,td.dataset.dt,td.dataset.act==='true',td);
     });
   }
+  setTimeout(()=>_applyPinnedCols('crono','crono-cal-table',10),0);
 }
 const _sortState={accounts:{col:null,dir:1},crono:{col:null,dir:1},cierre:{col:null,dir:1},'crono-conc':{col:null,dir:1}};
 function _applySortBy(list,col,dir){
@@ -5659,8 +5699,8 @@ function renderCronogramaConciliacoes(){
   const wdHdrs=days.map(d=>{const wk=d.getDay()===0||d.getDay()===6;return `<th class="col-day${wk?' weekend':''}" style="font-size:9px;color:var(--e-muted);background:${wk?'#faf5ff':'var(--e-ghost)'}">${wd[d.getDay()]}</th>`;}).join('');
 
   const INFO_COLS=6;
-  const _sth=(col,lbl,extra='')=>`<th class="${_sortThCls('crono-conc',col)} col-info${extra?' cal-sticky':''}" ${extra} onclick="toggleSort('crono-conc','${col}')" style="cursor:pointer">${lbl}${_sortArrow('crono-conc',col)}</th>`;
-  const colInfos=`${_sth('nome','Nome','cal-sticky')}${_sth('pais','País')}${_sth('agente','Agente')}<th class="col-info">Resp.</th><th class="col-info">Prioridade</th><th class="col-info" style="white-space:nowrap">Acompanhamento</th>`;
+  const _sth=(col,lbl,idx,extra='')=>`<th class="${_sortThCls('crono-conc',col)} col-info${extra?' cal-sticky':''}" ${extra} onclick="toggleSort('crono-conc','${col}')" style="cursor:pointer">${lbl}${_sortArrow('crono-conc',col)}${_pinBtn('crono-conc',idx)}</th>`;
+  const colInfos=`${_sth('nome','Nome',0,'cal-sticky')}${_sth('pais','País',1)}${_sth('agente','Agente',2)}<th class="col-info">Resp.${_pinBtn('crono-conc',3)}</th><th class="col-info">Prioridade${_pinBtn('crono-conc',4)}</th><th class="col-info" style="white-space:nowrap">Acompanhamento${_pinBtn('crono-conc',5)}</th>`;
   const emptyInfoCols='<th class="col-info cal-sticky" style="background:var(--e-ghost)"></th>'+'<th class="col-info" style="background:var(--e-ghost)"></th>'.repeat(INFO_COLS-1);
 
   const statusCfg={
@@ -5727,6 +5767,7 @@ function renderCronogramaConciliacoes(){
       onConcCellClick(ev,td.dataset.ck,td.dataset.dt);
     });
   }
+  setTimeout(()=>_applyPinnedCols('crono-conc','crono-conc-cal-table',6),0);
 }
 
 let _concPop=null;
