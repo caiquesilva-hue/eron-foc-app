@@ -5004,7 +5004,7 @@ function _renderUnlinkedGateways(){
   const mkRows=(ids,dataMap,useKey)=>ids.map(id=>{
     const e=(dataMap||{})[id]||{};
     const name=e.name||'';
-    const label=useKey?id:(name&&name!==id?`${id} ${name}`:id);
+    const label=useKey?(name||id):(name&&name!==id?`${id} ${name}`:id);
     return `<div style="padding:3px 12px;font-size:12px;color:var(--e-text);border-bottom:1px solid #fef3c7;line-height:1.5">${_esc(label)}</div>`;
   }).join('');
   const mkBlock=(title,ids,dataMap,useKey)=>ids.length?`
