@@ -881,7 +881,8 @@
             <svg class="crono-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
             <input type="text" id="crono-search" class="crono-search-input"
               data-i18n-placeholder="crono-search-ph" placeholder="Buscar contas... ex: pais:Peru | banco:BCP | agente:PE.Onlinepro | status:ativa | tipo:Diário"
-              oninput="renderCronogramaAccounts();updateCronoSearchClear()">
+              oninput="renderCronogramaAccounts();updateCronoSearchClear()"
+              onpaste="_handleSearchPaste(event,'crono-search')">
             <button class="crono-search-clear" id="crono-search-clear" onclick="clearCronoSearch()" style="display:none" title="Limpar busca">×</button>
             <button class="crono-search-help-btn" onclick="toggleSearchHelp(event)" title="Sintaxe de busca">?</button>
           </div>
@@ -1131,7 +1132,8 @@
       <div class="crono-search-inner">
         <svg class="crono-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
         <input type="text" id="crono-conc-search" class="crono-search-input" placeholder="Buscar por nome, país ou agente..."
-          oninput="renderCronogramaConciliacoes();_updConcSearchClear()">
+          oninput="renderCronogramaConciliacoes();_updConcSearchClear()"
+          onpaste="_handleSearchPaste(event,'crono-conc-search')">
         <button class="crono-search-clear" id="crono-conc-search-clear" onclick="clearConcSearch()" style="display:none" title="Limpar">×</button>
       </div>
     </div>
@@ -3511,6 +3513,16 @@ function matchesCronoSearch(conta,filters){
     if(!words.every(w=>haystack.includes(norm(w)))) return false;
   }
   return true;
+}
+function _handleSearchPaste(e,inputId){
+  const raw=(e.clipboardData||window.clipboardData).getData('text');
+  if(!raw.includes('\n')) return;
+  e.preventDefault();
+  const items=raw.split('\n').map(l=>l.replace(/\t/g,' ').trim()).filter(Boolean);
+  const inp=document.getElementById(inputId);
+  if(!inp) return;
+  inp.value=items.length>1?'in:'+items.join(';'):items[0]||'';
+  inp.dispatchEvent(new Event('input'));
 }
 function updateCronoSearchClear(){
   const val=document.getElementById('crono-search')?.value||'';
@@ -6070,7 +6082,7 @@ function renderCronogramaConciliacoes(){
       else if(activePriors.includes('__none__')){if(vol&&!activePriors.includes(vol)) return;}
       else{if(!vol||!activePriors.includes(vol)) return;}
     }
-    if(searchQ&&!`${c.nome} ${c.pais} ${c.agente}`.toLowerCase().includes(searchQ)) return;
+    if(searchQ){const _hay=`${c.nome} ${c.pais} ${c.agente}`.toLowerCase();if(searchQ.startsWith('in:')){const _vs=searchQ.slice(3).split(';').map(v=>v.trim()).filter(Boolean);if(!_vs.some(v=>_hay.includes(v))) return;}else if(!_hay.includes(searchQ)) return;}
     if(Object.prototype.hasOwnProperty.call(d1C,d1Status)) d1C[d1Status]++;
     else d1C.pendente++;
   });
@@ -6100,7 +6112,7 @@ function renderCronogramaConciliacoes(){
       else{if(!vol||!activePriors.includes(vol)) return false;}
     }
     if(activeD1.length&&!activeD1.includes(d1Status)) return false;
-    if(searchQ&&!`${c.nome} ${c.pais} ${c.agente}`.toLowerCase().includes(searchQ)) return false;
+    if(searchQ){const _hay=`${c.nome} ${c.pais} ${c.agente}`.toLowerCase();if(searchQ.startsWith('in:')){const _vs=searchQ.slice(3).split(';').map(v=>v.trim()).filter(Boolean);if(!_vs.some(v=>_hay.includes(v))) return false;}else if(!_hay.includes(searchQ)) return false;}
     return true;
   }).map(({c})=>c);
 
