@@ -3752,21 +3752,41 @@ function submitBulkApply(){
     const groupsArr=[...groupMap.values()];
     const dialogBanco=groupsArr.length===1?groupsArr[0].banco:`${groupsArr.length} bancos`;
     const dialogAgente=groupsArr.length===1?groupsArr[0].agente:`${list.length} contas`;
-    // prevLink: dia anterior ao início do período, primeiro grupo
+    // prevLink: any group with a prev link bypasses manual-input dialog
     let bulkPrevLink=null;
+    let bulkPrevDate=null;
     if(days.length>0){
-      const prevDate=_prevDay(fmtDate(days[0]));
-      const fg=groupsArr[0];
-      for(const c of list){
-        if((c.agente||'—')!==fg.agente||(c.banco||c.sigla||'—')!==fg.banco) continue;
-        const pe=store.cronogramaData[`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'')+'_'+prevDate];
-        if(pe?.status==='sem_acesso'&&pe?.reportLink){bulkPrevLink=pe.reportLink;break;}
+      bulkPrevDate=_prevDay(fmtDate(days[0]));
+      outer: for(const g of groupsArr){
+        for(const c of list){
+          if((c.agente||'—')!==g.agente||(c.banco||c.sigla||'—')!==g.banco) continue;
+          const pe=store.cronogramaData[`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'')+'_'+bulkPrevDate];
+          if(pe?.status==='sem_acesso'&&pe?.reportLink){bulkPrevLink=pe.reportLink;break outer;}
+        }
       }
     }
     closeModal('modal-bulk-apply');
     _showSlackConfirm(dialogBanco,dialogAgente,'accounts',bulkPrevLink,
       ()=>{_applyBulk(null);},
-      inheritedLink=>{_applyBulk(inheritedLink);},
+      ()=>{
+        _applyBulk(null);
+        if(bulkPrevDate){
+          let anyPatched=false;
+          groupsArr.forEach(g=>{
+            let gLink=null;
+            for(const c of list){
+              if((c.agente||'—')!==g.agente||(c.banco||c.sigla||'—')!==g.banco) continue;
+              const pe=store.cronogramaData[`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'')+'_'+bulkPrevDate];
+              if(pe?.status==='sem_acesso'&&pe?.reportLink){gLink=pe.reportLink;break;}
+            }
+            if(gLink){
+              g.keys.forEach(sk=>{const e=store.cronogramaData[sk];if(e&&e.status==='sem_acesso') e.reportLink=gLink;});
+              anyPatched=true;
+            }
+          });
+          if(anyPatched){saveStore();_fbSync('cronogramaData');renderCronogramaAccounts();}
+        }
+      },
       null,
       ()=>{
         _toast(t('slack-sending'),5000);
@@ -6505,21 +6525,41 @@ function submitConcBulkApply(){
     const concGroupsArr=[...concGroupMap.values()];
     const dialogBanco=concGroupsArr.length===1?concGroupsArr[0].banco:`${concGroupsArr.length} processadores`;
     const dialogAgente=concGroupsArr.length===1?concGroupsArr[0].agente:'—';
-    // prevLink: dia anterior ao início do período
+    // prevLink: any group with a prev link bypasses manual-input dialog
     let concPrevLink=null;
+    let concPrevDate=null;
     if(days.length>0){
-      const prevDate=_prevDay(days[0]);
-      const fg=concGroupsArr[0];
-      for(const c of list){
-        if((c.agente||'—')!==fg.agente||(c.nome||'—')!==fg.banco) continue;
-        const pe=store.cronogramaConciliacoes[`${(c.id||c.nome).replace(/['"]/g,'')}_${prevDate}`];
-        if(pe?.status==='sem_acesso'&&pe?.reportLink){concPrevLink=pe.reportLink;break;}
+      concPrevDate=_prevDay(days[0]);
+      outer: for(const g of concGroupsArr){
+        for(const c of list){
+          if((c.agente||'—')!==g.agente||(c.nome||'—')!==g.banco) continue;
+          const pe=store.cronogramaConciliacoes[`${(c.id||c.nome).replace(/['"]/g,'')}_${concPrevDate}`];
+          if(pe?.status==='sem_acesso'&&pe?.reportLink){concPrevLink=pe.reportLink;break outer;}
+        }
       }
     }
     closeModal('modal-conc-bulk-apply');
     _showSlackConfirm(dialogBanco,dialogAgente,'conciliacoes',concPrevLink,
       ()=>{_doConcBulk(null);},
-      inheritedLink=>{_doConcBulk(inheritedLink);},
+      ()=>{
+        _doConcBulk(null);
+        if(concPrevDate){
+          let anyPatched=false;
+          concGroupsArr.forEach(g=>{
+            let gLink=null;
+            for(const c of list){
+              if((c.agente||'—')!==g.agente||(c.nome||'—')!==g.banco) continue;
+              const pe=store.cronogramaConciliacoes[`${(c.id||c.nome).replace(/['"]/g,'')}_${concPrevDate}`];
+              if(pe?.status==='sem_acesso'&&pe?.reportLink){gLink=pe.reportLink;break;}
+            }
+            if(gLink){
+              g.keys.forEach(k=>{const e=store.cronogramaConciliacoes[k];if(e&&e.status==='sem_acesso') e.reportLink=gLink;});
+              anyPatched=true;
+            }
+          });
+          if(anyPatched){saveStore();_fbSync('cronogramaConciliacoes');renderCronogramaConciliacoes();}
+        }
+      },
       null,
       ()=>{
         _toast(t('slack-sending'),5000);
