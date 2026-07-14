@@ -3003,7 +3003,7 @@ async function _triggerSlackNotif(module,banco,agente,onResult){
   }
   setTimeout(poll,8000); // GH Actions take ~10-15s to start
 }
-function _showSlackConfirm(banco,agente,module,prevLink,onSim,onNao,onLink){
+function _showSlackConfirm(banco,agente,module,prevLink,onSim,onNao,onLink,customTrigger){
   const ov=document.createElement('div');
   ov.id='_slack-ov';
   ov.style.cssText='position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.18)';
@@ -3023,11 +3023,14 @@ function _showSlackConfirm(banco,agente,module,prevLink,onSim,onNao,onLink){
   document.getElementById('_slk-yes').onclick=()=>{
     ov.remove();
     onSim();
-    _toast(t('slack-sending'),5000);
-    _triggerSlackNotif(module,banco,agente,link=>{
-      if(link&&onLink) onLink(link);
-      else if(!link) _toast('Slack: sem link obtido',3000);
-    });
+    if(customTrigger){customTrigger();}
+    else{
+      _toast(t('slack-sending'),5000);
+      _triggerSlackNotif(module,banco,agente,link=>{
+        if(link&&onLink) onLink(link);
+        else if(!link) _toast('Slack: sem link obtido',3000);
+      });
+    }
   };
   document.getElementById('_slk-no').onclick=()=>{
     if(prevLink){ov.remove();onNao(prevLink);return;}
@@ -3619,6 +3622,7 @@ function _getFilteredCronoContext(){
   const activeFreqs=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')].map(b=>b.dataset.freq);
   const activeResps=[...document.querySelectorAll('#crono-resp-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
   const activeAnltsCtx=[...document.querySelectorAll('#crono-anl-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
+  const activeD1=[...document.querySelectorAll('#crono-d1-filter .d1-toggle.active')].map(b=>b.dataset.d1);
   const searchQ=(document.getElementById('crono-search')?.value||'').trim();
   const searchFilters=searchQ?parseCronoSearch(searchQ):null;
   const days=buildCronoDates();
@@ -3634,6 +3638,11 @@ function _getFilteredCronoContext(){
     if(activeAnltsCtx.length){
       const ck=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
       const hit=days&&days.some(d=>{const e=store.cronogramaData[`${ck}_${fmtDateCtx(d)}`];return e&&activeAnltsCtx.includes(e.sigla);});
+      if(!hit) return false;
+    }
+    if(activeD1.length){
+      const ck=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
+      const hit=days&&days.some(d=>{const e=store.cronogramaData[`${ck}_${fmtDateCtx(d)}`];return e&&activeD1.includes(e.status);});
       if(!hit) return false;
     }
     return true;
@@ -3725,24 +3734,50 @@ function submitBulkApply(){
     return appliedKeys;
   };
   if(status==='sem_acesso'){
-    const activeAgentes=_fddVals('crono-f-agente-panel');
-    const _agentesUniq=[...new Set(list.map(c=>c.agente).filter(Boolean))];
-    const agente=activeAgentes.length===1?activeAgentes[0]:(_agentesUniq.length===1?_agentesUniq[0]:'—');
-    const _bancosUniq=[...new Set(list.map(c=>c.banco).filter(Boolean))];
-    const banco=_bancosUniq.length===1?_bancosUniq[0]:`${list.length} contas`;
+    // Agrupar por (agente+banco) — cada grupo gera um report Slack separado
+    const groupMap=new Map();
+    list.forEach(c=>{
+      const contaKey=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
+      const ag=c.agente||'—', ba=c.banco||c.sigla||'—';
+      const gk=`${ag}|${ba}`;
+      if(!groupMap.has(gk)) groupMap.set(gk,{agente:ag,banco:ba,keys:[]});
+      days.forEach(d=>{
+        if(!isActiveDay(d,c.tipo)) return;
+        const sk=`${contaKey}_${fmtDate(d)}`;
+        const ex=store.cronogramaData[sk];
+        if(ex&&LOCKED_STATUSES.includes(ex.status)&&!isAdmin()) return;
+        groupMap.get(gk).keys.push(sk);
+      });
+    });
+    const groupsArr=[...groupMap.values()];
+    const dialogBanco=groupsArr.length===1?groupsArr[0].banco:`${groupsArr.length} bancos`;
+    const dialogAgente=groupsArr.length===1?groupsArr[0].agente:`${list.length} contas`;
+    // prevLink: dia anterior ao início do período, primeiro grupo
+    let bulkPrevLink=null;
+    if(days.length>0){
+      const prevDate=_prevDay(fmtDate(days[0]));
+      const fg=groupsArr[0];
+      for(const c of list){
+        if((c.agente||'—')!==fg.agente||(c.banco||c.sigla||'—')!==fg.banco) continue;
+        const pe=store.cronogramaData[`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'')+'_'+prevDate];
+        if(pe?.status==='sem_acesso'&&pe?.reportLink){bulkPrevLink=pe.reportLink;break;}
+      }
+    }
     closeModal('modal-bulk-apply');
-    let _appliedKeys=null;
-    _showSlackConfirm(banco,agente,'accounts',null,
-      ()=>{_appliedKeys=_applyBulk(null);},
+    _showSlackConfirm(dialogBanco,dialogAgente,'accounts',bulkPrevLink,
+      ()=>{_applyBulk(null);},
       inheritedLink=>{_applyBulk(inheritedLink);},
-      link=>{
-        if(!_appliedKeys) return;
-        _appliedKeys.forEach(sk=>{
-          const e=store.cronogramaData[sk];
-          if(e&&e.status==='sem_acesso') e.reportLink=link;
+      null,
+      ()=>{
+        _toast(t('slack-sending'),5000);
+        groupsArr.forEach(g=>{
+          _triggerSlackNotif('accounts',g.banco,g.agente,link=>{
+            if(!link) return;
+            g.keys.forEach(sk=>{const e=store.cronogramaData[sk];if(e&&e.status==='sem_acesso') e.reportLink=link;});
+            saveStore();_fbSync('cronogramaData');renderCronogramaAccounts();
+            _toast('Link do Slack recebido ✓',3000);
+          });
         });
-        saveStore();_fbSync('cronogramaData');renderCronogramaAccounts();
-        _toast('Link do Slack recebido ✓',3000);
       }
     );
   } else if(status==='aguardando_extrato'){
@@ -6458,23 +6493,44 @@ function submitConcBulkApply(){
     return appliedKeys;
   };
   if(status==='sem_acesso'){
-    const _concAgentesUniq=[...new Set(list.map(c=>c.agente).filter(Boolean))];
-    const agente=_concAgentesUniq.length===1?_concAgentesUniq[0]:'—';
-    const _concNomesUniq=[...new Set(list.map(c=>c.nome).filter(Boolean))];
-    const banco=_concNomesUniq.length===1?_concNomesUniq[0]:`${list.length} processadores`;
+    // Agrupar por (agente+nome) — cada grupo gera um report Slack separado
+    const concGroupMap=new Map();
+    list.forEach(c=>{
+      const concId=(c.id||c.nome).replace(/['"]/g,'');
+      const ag=c.agente||'—', nm=c.nome||concId;
+      const gk=`${ag}|${nm}`;
+      if(!concGroupMap.has(gk)) concGroupMap.set(gk,{agente:ag,banco:nm,keys:[]});
+      days.forEach(dateStr=>{concGroupMap.get(gk).keys.push(`${concId}_${dateStr}`);});
+    });
+    const concGroupsArr=[...concGroupMap.values()];
+    const dialogBanco=concGroupsArr.length===1?concGroupsArr[0].banco:`${concGroupsArr.length} processadores`;
+    const dialogAgente=concGroupsArr.length===1?concGroupsArr[0].agente:'—';
+    // prevLink: dia anterior ao início do período
+    let concPrevLink=null;
+    if(days.length>0){
+      const prevDate=_prevDay(days[0]);
+      const fg=concGroupsArr[0];
+      for(const c of list){
+        if((c.agente||'—')!==fg.agente||(c.nome||'—')!==fg.banco) continue;
+        const pe=store.cronogramaConciliacoes[`${(c.id||c.nome).replace(/['"]/g,'')}_${prevDate}`];
+        if(pe?.status==='sem_acesso'&&pe?.reportLink){concPrevLink=pe.reportLink;break;}
+      }
+    }
     closeModal('modal-conc-bulk-apply');
-    let _appliedKeys=null;
-    _showSlackConfirm(banco,agente,'conciliacoes',null,
-      ()=>{_appliedKeys=_doConcBulk(null);},
+    _showSlackConfirm(dialogBanco,dialogAgente,'conciliacoes',concPrevLink,
+      ()=>{_doConcBulk(null);},
       inheritedLink=>{_doConcBulk(inheritedLink);},
-      link=>{
-        if(!_appliedKeys) return;
-        _appliedKeys.forEach(k=>{
-          const e=store.cronogramaConciliacoes[k];
-          if(e&&e.status==='sem_acesso') e.reportLink=link;
+      null,
+      ()=>{
+        _toast(t('slack-sending'),5000);
+        concGroupsArr.forEach(g=>{
+          _triggerSlackNotif('conciliacoes',g.banco,g.agente,link=>{
+            if(!link) return;
+            g.keys.forEach(k=>{const e=store.cronogramaConciliacoes[k];if(e&&e.status==='sem_acesso') e.reportLink=link;});
+            saveStore();_fbSync('cronogramaConciliacoes');renderCronogramaConciliacoes();
+            _toast('Link do Slack recebido ✓',3000);
+          });
         });
-        saveStore();_fbSync('cronogramaConciliacoes');renderCronogramaConciliacoes();
-        _toast('Link do Slack recebido ✓',3000);
       }
     );
   } else {
