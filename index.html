@@ -2821,33 +2821,25 @@ function _applyHiddenCols(key,tblId,infoN){
   const tbl=document.getElementById(tblId);
   if(!tbl) return;
   const hidden=_hiddenCols[key]||new Set();
-  // ── CSS nth-child: esconde TDs sem remover do fluxo da tabela ───────────────
+  // CSS: colapsa coluna inteira (TH + TD) via nth-child — afeta ambas as linhas do cabeçalho e corpo
   const styleId=`${tblId}-colhide`;
   let styleEl=document.getElementById(styleId);
   if(!styleEl){styleEl=document.createElement('style');styleEl.id=styleId;document.head.appendChild(styleEl);}
-  styleEl.textContent=[...hidden].filter(i=>i>0).map(i=>
-    `#${tblId} tr td:nth-child(${i+1}){width:16px!important;min-width:16px!important;max-width:16px!important;padding:0!important;overflow:hidden;font-size:0;line-height:0;}`
-  ).join('');
-  // ── TH: converte ocultos em stubs com botão de restaurar ───────────────────
+  styleEl.textContent=[...hidden].filter(i=>i>0&&i<infoN).map(i=>{
+    const n=i+1;
+    return `#${tblId} thead th:nth-child(${n}){width:16px!important;min-width:16px!important;max-width:16px!important;padding:0!important;overflow:hidden!important;}`+
+           `#${tblId} tbody td:nth-child(${n}){width:16px!important;min-width:16px!important;max-width:16px!important;padding:0!important;overflow:hidden!important;color:transparent!important;}`+
+           `#${tblId} tbody td:nth-child(${n})>*{display:none!important;}`;
+  }).join('');
+  // TH stub: só atualiza os ocultos; os visíveis já têm conteúdo correto do render
   const headerRows=[...tbl.querySelectorAll('thead tr')];
   if(!headerRows.length) return;
   const infoThs=[...headerRows[0].querySelectorAll('th.col-info')];
-  const infoThs2=headerRows[1]?[...headerRows[1].querySelectorAll('th')].slice(0,infoN):[];
-  const colNames=infoThs.map(th=>{const t=th.cloneNode(true);t.querySelectorAll('button').forEach(b=>b.remove());return t.textContent.trim();});
   infoThs.forEach((th,idx)=>{
-    if(idx===0) return;
-    if(hidden.has(idx)){
-      th.style.cssText='width:16px!important;min-width:16px!important;max-width:16px!important;padding:0!important;overflow:hidden;cursor:pointer;';
-      th.className=(th.className||'').replace('th-col-stub','')+' th-col-stub';
-      th.title='Mostrar: '+colNames[idx];
-      th.innerHTML=`<span onclick="event.stopPropagation();toggleColHide('${key}',${idx})" style="display:flex;align-items:center;justify-content:center;width:16px;height:100%;color:var(--e-muted);font-size:9px;writing-mode:vertical-rl">›</span>`;
-      th.onclick=e=>{e.stopPropagation();toggleColHide(key,idx);};
-      if(infoThs2[idx]){infoThs2[idx].style.cssText='width:16px!important;min-width:16px!important;max-width:16px!important;padding:0!important;overflow:hidden;';infoThs2[idx].innerHTML='';}
-    } else {
-      th.style.cssText='';
-      th.onclick=null;
-      if(infoThs2[idx]) infoThs2[idx].style.cssText='';
-    }
+    if(idx===0||!hidden.has(idx)) return;
+    th.classList.add('th-col-stub');
+    th.innerHTML=`<span onclick="event.stopPropagation();toggleColHide('${key}',${idx})" style="display:flex;align-items:center;justify-content:center;width:16px;height:100%;color:var(--e-muted);font-size:9px;writing-mode:vertical-rl;cursor:pointer" title="Mostrar coluna">›</span>`;
+    th.onclick=e=>{e.stopPropagation();toggleColHide(key,idx);};
   });
 }
 function renderCronogramaAccounts(){
@@ -3155,6 +3147,7 @@ function clearCronoFilters(){
   _updateRespLabel();
   if(sel('crono-search')){sel('crono-search').value='';updateCronoSearchClear();}
   _sortState.crono={col:null,dir:1};
+  _hiddenCols.crono.clear();_saveHiddenCols();
   renderCronogramaAccounts();
 }
 function _closeAllDropdowns(){
@@ -5407,6 +5400,7 @@ function clearCronconcFilters(){
   if(inp) inp.value='';
   _updConcSearchClear();
   _sortState['crono-conc']={col:null,dir:1};
+  _hiddenCols['crono-conc'].clear();_saveHiddenCols();
   const dp=document.getElementById('crono-conc-date-preset');
   if(dp){dp.value='curr-month';initCronconcDates();}
   renderCronogramaConciliacoes();
