@@ -1031,6 +1031,7 @@
       Limpar filtros
     </button>
   </div>
+  <div id="crono-conc-unlinked-banner"></div>
   <div class="crono-filters">
     <div class="freq-dd" id="crono-conc-f-pais-dd">
       <button class="freq-dd-btn" id="crono-conc-f-pais-btn" onclick="_fddToggle(event,'crono-conc-f-pais-panel')">Todos os países</button>
@@ -5747,6 +5748,37 @@ function _getConcilProblems(conc,dateStr){
   return {semAcesso,aguardandoExtrato};
 }
 
+function _renderCronconcUnlinkedBanner(){
+  const wrap=document.getElementById('crono-conc-unlinked-banner');
+  if(!wrap) return;
+  const vr=store.volumeRankings||{};
+  const allIds=[
+    ...Object.keys(vr.cashin||{}),
+    ...Object.keys(vr.cashout||{}),
+    ...Object.keys(vr.refunds||{}),
+    ...Object.keys(vr.chargebacks||{}),
+  ];
+  if(!allIds.length){wrap.innerHTML='';return;}
+  const actCI=new Set(),actCO=new Set(),actRF=new Set(),actCB=new Set();
+  (store.conciliacoes||[]).forEach(c=>{
+    if(c.status==='encerrada') return;
+    const cvm=(store.concilVolumeMap||{})[(c.id||c.nome||'').replace(/['"]/g,'')]||{};
+    (cvm.cashinIds||[]).forEach(id=>actCI.add(id));
+    (cvm.cashoutIds||[]).forEach(id=>actCO.add(id));
+    (cvm.refundIds||[]).forEach(id=>actRF.add(id));
+    (cvm.chargebackIds||[]).forEach(id=>actCB.add(id));
+  });
+  const total=
+    Object.keys(vr.cashin||{}).filter(id=>!actCI.has(id)).length+
+    Object.keys(vr.cashout||{}).filter(id=>!actCO.has(id)).length+
+    Object.keys(vr.refunds||{}).filter(n=>!actRF.has(n)).length+
+    Object.keys(vr.chargebacks||{}).filter(n=>!actCB.has(n)).length;
+  if(!total){wrap.innerHTML='';return;}
+  wrap.innerHTML=`<div style="display:flex;align-items:center;gap:8px;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin:0 0 10px">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <span style="font-size:12px;color:#92400e"><strong>${total} gateway${total!==1?'s':''}</strong> pendente${total!==1?'s':''} de cadastro — favor verificar em <strong>Gerencial › Conciliações</strong></span>
+  </div>`;
+}
 function renderCronogramaConciliacoes(){
   const emptyEl=document.getElementById('crono-conc-empty');
   const calWrap=document.getElementById('crono-conc-cal-wrap');
@@ -5754,6 +5786,7 @@ function renderCronogramaConciliacoes(){
   const countEl=document.getElementById('crono-conc-count');
   if(!tbl||!emptyEl||!calWrap) return;
 
+  _renderCronconcUnlinkedBanner();
   _initConcFilters();
 
   const activePaises=_fddVals('crono-conc-f-pais-panel');
