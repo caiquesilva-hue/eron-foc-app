@@ -1949,6 +1949,12 @@ const i18n = {
     'conc-unlinked-sem':'sem conciliação ativa','conc-unlinked-refunds':'Reembolsos','conc-unlinked-cbk':'Contestações',
     'slack-report-q':'Reportar no Slack?','slack-yes':'Sim, reportar','slack-no':'Não',
     'slack-sending':'Aguardando Slack...','slack-link-prev':'Link replicado do dia anterior',
+    'conc-modal-new':'Nova Conciliação','conc-modal-edit-prefix':'Editar: ',
+    'ph-buscar':'Buscar...','ph-buscar-gateway':'Buscar por ID, nome ou país...',
+    'lbl-prioridade-volume':'Prioridade por Volume','lbl-tipos-operacao':'Tipos de operação',
+    'lbl-encerrar-concil':'Encerrar conciliação','encerrar-concil-desc':'Marca a conciliação como inativa permanentemente.',
+    'lbl-proc-e-contas':'Processadores e contas vinculadas','lbl-proc-vinc':'Processadores vinculados',
+    'empty-nenhum-resultado':'Nenhum resultado','empty-nenhum-item':'Nenhum item cadastrado',
   },
   'en': {
     'ops-platform':'FOC App','login-welcome':'Welcome back',
@@ -2031,6 +2037,12 @@ const i18n = {
     'conc-unlinked-sem':'with no active reconciliation','conc-unlinked-refunds':'Refunds','conc-unlinked-cbk':'Chargebacks',
     'slack-report-q':'Report on Slack?','slack-yes':'Yes, report','slack-no':'No',
     'slack-sending':'Waiting for Slack...','slack-link-prev':'Link copied from previous day',
+    'conc-modal-new':'New Reconciliation','conc-modal-edit-prefix':'Edit: ',
+    'ph-buscar':'Search...','ph-buscar-gateway':'Search by ID, name or country...',
+    'lbl-prioridade-volume':'Volume Priority','lbl-tipos-operacao':'Operation Types',
+    'lbl-encerrar-concil':'Close reconciliation','encerrar-concil-desc':'Permanently marks this reconciliation as inactive.',
+    'lbl-proc-e-contas':'Linked processors and accounts','lbl-proc-vinc':'Linked processors',
+    'empty-nenhum-resultado':'No results','empty-nenhum-item':'No items registered',
   },
   'es': {
     'ops-platform':'FOC App','login-welcome':'Bienvenido de nuevo',
@@ -2113,6 +2125,13 @@ const i18n = {
     'conc-unlinked-sem':'sin conciliación activa','conc-unlinked-refunds':'Devoluciones','conc-unlinked-cbk':'Contracargos',
     'slack-report-q':'¿Reportar en Slack?','slack-yes':'Sí, reportar','slack-no':'No',
     'slack-sending':'Esperando Slack...','slack-link-prev':'Enlace replicado del día anterior',
+    'cierre-verificando':'Verificando',
+    'conc-modal-new':'Nueva Conciliación','conc-modal-edit-prefix':'Editar: ',
+    'ph-buscar':'Buscar...','ph-buscar-gateway':'Buscar por ID, nombre o país...',
+    'lbl-prioridade-volume':'Prioridad por Volumen','lbl-tipos-operacao':'Tipos de operación',
+    'lbl-encerrar-concil':'Cerrar conciliación','encerrar-concil-desc':'Marca la conciliación como inactiva permanentemente.',
+    'lbl-proc-e-contas':'Procesadores y cuentas vinculadas','lbl-proc-vinc':'Procesadores vinculados',
+    'empty-nenhum-resultado':'Sin resultados','empty-nenhum-item':'No hay ítems registrados',
   }
 };
 
@@ -3666,6 +3685,7 @@ function submitBulkApply(){
   if(!confirmed) return;
   const _applyBulk=(reportLink)=>{
     let changed=0,skipped=0;
+    const appliedKeys=[];
     list.forEach(c=>{
       const contaKey=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
       days.forEach(d=>{
@@ -3681,6 +3701,7 @@ function submitBulkApply(){
           if(reportLink) entry.reportLink=reportLink;
           store.cronogramaData[storeKey]=entry;
           changed++;
+          if(status==='sem_acesso') appliedKeys.push(storeKey);
         }
       });
     });
@@ -3701,8 +3722,28 @@ function submitBulkApply(){
     logAudit('cronograma','bulk-apply',{status,changed,skipped,filtros:_filtros});
     closeModal('modal-bulk-apply');
     renderCronogramaAccounts();
+    return appliedKeys;
   };
-  if(status==='sem_acesso'||status==='aguardando_extrato'){
+  if(status==='sem_acesso'){
+    const activeAgentes=_fddVals('crono-f-agente-panel');
+    const agente=activeAgentes.length===1?activeAgentes[0]:(list[0]?.agente||'—');
+    const banco=list.length===1?(list[0].banco||list[0].sigla||'—'):`${list.length} contas`;
+    closeModal('modal-bulk-apply');
+    let _appliedKeys=null;
+    _showSlackConfirm(banco,agente,'accounts',null,
+      ()=>{_appliedKeys=_applyBulk(null);},
+      inheritedLink=>{_applyBulk(inheritedLink);},
+      link=>{
+        if(!_appliedKeys) return;
+        _appliedKeys.forEach(sk=>{
+          const e=store.cronogramaData[sk];
+          if(e&&e.status==='sem_acesso') e.reportLink=link;
+        });
+        saveStore();_fbSync('cronogramaData');renderCronogramaAccounts();
+        _toast('Link do Slack recebido ✓',3000);
+      }
+    );
+  } else if(status==='aguardando_extrato'){
     _showReportLinkModal(status,null,_applyBulk);
   } else {
     _applyBulk(null);
@@ -5332,30 +5373,30 @@ function openConciliacaoModal(editIdx=-1){
   const paisOpts=store.paises.map(p=>`<option value="${p}">${countryFlag(p)} ${p}</option>`).join('');
   const agenteOpts=[...new Set([...store.agentes.map(a=>a.nome),...store.contas.map(c=>c.agente)].filter(Boolean))].sort().map(a=>`<option value="${a}">${a}</option>`).join('');
   const m=document.getElementById('modal-cadastro');
-  document.getElementById('cad-modal-title').textContent=isEdit?('Editar: '+conc.nome):'Nova Conciliação';
+  document.getElementById('cad-modal-title').textContent=isEdit?(t('conc-modal-edit-prefix')+conc.nome):t('conc-modal-new');
   const body=document.getElementById('cad-modal-body');
   const tipoAtual=conc.tipo||'bancos';
   body.innerHTML=`
-    <div class="form-field"><label class="form-label">Nome<span class="req">*</span></label><input class="form-input" id="conc-nome" placeholder="Ex: Payout Mono Colprocesa" value="${conc.nome||''}"></div>
-    <div class="form-field"><label class="form-label">País</label><select class="form-select" id="conc-pais" onchange="onConcPaisChange()"><option value="">Selecione</option>${paisOpts}</select></div>
-    <div class="form-field"><label class="form-label">Agente</label><select class="form-select" id="conc-agente" onchange="renderContasMSList()"><option value="">Selecione</option>${agenteOpts}</select></div>
-    <div class="form-field"><label class="form-label">Tipo<span class="req">*</span></label>
+    <div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="conc-nome" placeholder="Ex: Payout Mono Colprocesa" value="${conc.nome||''}"></div>
+    <div class="form-field"><label class="form-label">${t('lbl-pais')}</label><select class="form-select" id="conc-pais" onchange="onConcPaisChange()"><option value="">${t('sel-select')}</option>${paisOpts}</select></div>
+    <div class="form-field"><label class="form-label">${t('lbl-agente')}</label><select class="form-select" id="conc-agente" onchange="renderContasMSList()"><option value="">${t('sel-select')}</option>${agenteOpts}</select></div>
+    <div class="form-field"><label class="form-label">${t('lbl-tipo')}<span class="req">*</span></label>
       <div style="display:flex;gap:6px">
-        <button type="button" id="tipo-proc-btn" class="op-type-toggle" onclick="toggleConcTipo('processadores')">Processadores</button>
-        <button type="button" id="tipo-bancos-btn" class="op-type-toggle" onclick="toggleConcTipo('bancos')">Bancos</button>
+        <button type="button" id="tipo-proc-btn" class="op-type-toggle" onclick="toggleConcTipo('processadores')">${t('cad-proc-title')}</button>
+        <button type="button" id="tipo-bancos-btn" class="op-type-toggle" onclick="toggleConcTipo('bancos')">${t('cad-banco-title')}</button>
       </div>
     </div>
     <div id="conc-vinc-wrap" class="form-field">
-      <label class="form-label" id="conc-vinc-label">Vínculos</label>
+      <label class="form-label" id="conc-vinc-label">${t('conc-col-contas')}</label>
       <div class="contas-ms-wrap">
-        <div class="contas-ms-search"><input type="text" placeholder="Buscar..." id="conc-vinc-search" oninput="renderConcVincList()"></div>
+        <div class="contas-ms-search"><input type="text" placeholder="${t('ph-buscar')}" id="conc-vinc-search" oninput="renderConcVincList()"></div>
         <div class="contas-ms-list" id="conc-vinc-list"></div>
         <div class="contas-ms-tags" id="conc-vinc-tags"></div>
       </div>
     </div>
     <div class="form-field" style="border-top:1px solid var(--e-pale);padding-top:12px;margin-top:4px">
-      <label class="form-label" style="color:var(--e-muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em">Prioridade por Volume</label>
-      <div style="font-size:11px;font-weight:600;color:var(--e-mid);margin-bottom:6px">Tipos de operação</div>
+      <label class="form-label" style="color:var(--e-muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em">${t('lbl-prioridade-volume')}</label>
+      <div style="font-size:11px;font-weight:600;color:var(--e-mid);margin-bottom:6px">${t('lbl-tipos-operacao')}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
         <button type="button" class="op-type-toggle" data-type="cashin" onclick="toggleOpType('cashin')">Cashin</button>
         <button type="button" class="op-type-toggle" data-type="cashout" onclick="toggleOpType('cashout')">Cashout</button>
@@ -5363,9 +5404,9 @@ function openConciliacaoModal(editIdx=-1){
         <button type="button" class="op-type-toggle" data-type="chargebacks" onclick="toggleOpType('chargebacks')">Chargebacks</button>
       </div>
       <div id="vol-combined-wrap" style="display:none" class="form-field" style="margin-bottom:0">
-        <label class="form-label" style="font-size:11px">Gateways vinculados</label>
+        <label class="form-label" style="font-size:11px">${t('conc-col-gateways')}</label>
         <div class="contas-ms-wrap">
-          <div class="contas-ms-search"><input type="text" placeholder="Buscar por ID, nome ou país..." id="vol-combined-ms-input" oninput="renderVolCombinedList()"></div>
+          <div class="contas-ms-search"><input type="text" placeholder="${t('ph-buscar-gateway')}" id="vol-combined-ms-input" oninput="renderVolCombinedList()"></div>
           <div class="contas-ms-list" id="vol-combined-ms-list"></div>
           <div class="contas-ms-tags" id="vol-combined-ms-tags"></div>
         </div>
@@ -5374,8 +5415,8 @@ function openConciliacaoModal(editIdx=-1){
     ${isEdit?`<div id="conc-encerrar-section" style="border-top:1px solid var(--e-pale);padding-top:12px;margin-top:4px">
       <div class="toggle-row">
         <div class="toggle-info">
-          <div class="toggle-title" style="color:#ef4444">Encerrar conciliação</div>
-          <div class="toggle-desc">Marca a conciliação como inativa permanentemente.</div>
+          <div class="toggle-title" style="color:#ef4444">${t('lbl-encerrar-concil')}</div>
+          <div class="toggle-desc">${t('encerrar-concil-desc')}</div>
         </div>
         <label class="toggle-switch">
           <input type="checkbox" id="conc-encerrar" onchange="onToggleConcEncerrar(this)">
@@ -5411,7 +5452,7 @@ function renderConcVincList(){
   const showProc=_tipoAtivosConc.includes('processadores');
   const showBancos=_tipoAtivosConc.includes('bancos');
   const lbl=document.getElementById('conc-vinc-label');
-  if(lbl) lbl.textContent=showProc&&showBancos?'Processadores e contas vinculadas':showProc?'Processadores vinculados':'Contas vinculadas';
+  if(lbl) lbl.textContent=showProc&&showBancos?t('lbl-proc-e-contas'):showProc?t('lbl-proc-vinc'):t('conc-col-contas');
   let items=[];
   if(showProc) items.push(...store.processadores.map(p=>({type:'proc',key:p,label:p,sub:'Processador'})));
   if(showBancos){
@@ -5421,7 +5462,7 @@ function renderConcVincList(){
     items.push(...contas.map(c=>({type:'conta',key:c.sigla,label:c.sigla,sub:`${c.banco} · ${c.agente}`})));
   }
   const filtered=q?items.filter(i=>`${i.label} ${i.sub}`.toLowerCase().includes(q)):items;
-  if(!filtered.length){list.innerHTML=`<div style="padding:8px 12px;font-size:12px;color:var(--e-muted)">${items.length?'Nenhum resultado':'Nenhum item cadastrado'}</div>`;return;}
+  if(!filtered.length){list.innerHTML=`<div style="padding:8px 12px;font-size:12px;color:var(--e-muted)">${items.length?t('empty-nenhum-resultado'):t('empty-nenhum-item')}</div>`;return;}
   list.innerHTML=filtered.map(i=>{
     const checked=i.type==='proc'?_selectedProcessadores.includes(i.key):_selectedContas.includes(i.key);
     const safe=i.key.replace(/'/g,"\\'");
@@ -6391,20 +6432,50 @@ function submitConcBulkApply(){
   if(!confirm(`Aplicar em ${list.length} conciliação${list.length!==1?'s':''} × ${days.length} dia${days.length!==1?'s':''} (${total} célula${total!==1?'s':''})?`)) return;
   const user=store.responsaveis.find(r=>r.email===window._loggedEmail);
   const sigla=user?.sigla||'?';
-  let changed=0;
-  list.forEach(c=>{
-    const concId=(c.id||c.nome).replace(/['"]/g,'');
-    days.forEach(dateStr=>{
-      const k=`${concId}_${dateStr}`;
-      if(status==='clear'){if(store.cronogramaConciliacoes[k]){delete store.cronogramaConciliacoes[k];changed++;}}
-      else{store.cronogramaConciliacoes[k]={status,sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')};changed++;}
+  const _doConcBulk=(reportLink)=>{
+    let changed=0;
+    const appliedKeys=[];
+    list.forEach(c=>{
+      const concId=(c.id||c.nome).replace(/['"]/g,'');
+      days.forEach(dateStr=>{
+        const k=`${concId}_${dateStr}`;
+        if(status==='clear'){if(store.cronogramaConciliacoes[k]){delete store.cronogramaConciliacoes[k];changed++;}}
+        else{
+          const entry={status,sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')};
+          if(reportLink) entry.reportLink=reportLink;
+          store.cronogramaConciliacoes[k]=entry;changed++;
+          if(status==='sem_acesso') appliedKeys.push(k);
+        }
+      });
     });
-  });
-  saveStore(); if(changed) _fbSync('cronogramaConciliacoes');
-  logAudit('cronograma-conciliacoes','bulk-apply',{status,changed,conciliacoes:list.length,dias:days.length});
-  closeModal('modal-conc-bulk-apply');
-  renderCronogramaConciliacoes();
-  _toast(`✓ ${changed} célula${changed!==1?'s':''} atualizadas`);
+    saveStore(); if(changed) _fbSync('cronogramaConciliacoes');
+    logAudit('cronograma-conciliacoes','bulk-apply',{status,changed,conciliacoes:list.length,dias:days.length});
+    closeModal('modal-conc-bulk-apply');
+    renderCronogramaConciliacoes();
+    _toast(`✓ ${changed} célula${changed!==1?'s':''} atualizadas`);
+    return appliedKeys;
+  };
+  if(status==='sem_acesso'){
+    const agente=list.length===1?(list[0].agente||'—'):'—';
+    const banco=list.length===1?list[0].nome:`${list.length} processadores`;
+    closeModal('modal-conc-bulk-apply');
+    let _appliedKeys=null;
+    _showSlackConfirm(banco,agente,'conciliacoes',null,
+      ()=>{_appliedKeys=_doConcBulk(null);},
+      inheritedLink=>{_doConcBulk(inheritedLink);},
+      link=>{
+        if(!_appliedKeys) return;
+        _appliedKeys.forEach(k=>{
+          const e=store.cronogramaConciliacoes[k];
+          if(e&&e.status==='sem_acesso') e.reportLink=link;
+        });
+        saveStore();_fbSync('cronogramaConciliacoes');renderCronogramaConciliacoes();
+        _toast('Link do Slack recebido ✓',3000);
+      }
+    );
+  } else {
+    _doConcBulk(null);
+  }
 }
 
 function renderAll(){ renderAccountsTable(); initCronoDates(); renderCronogramaAccounts(); renderCadastro('pais'); renderCadastro('agente'); renderCadastro('banco'); renderCadastro('processadores'); renderAcessos(); renderGerencialConciliacoes(); renderCronogramaConciliacoes(); }
