@@ -821,6 +821,12 @@
             <div id="crono-resp-toggles"></div>
           </div>
         </div>
+        <div class="freq-dd" id="crono-anl-dd">
+          <button class="freq-dd-btn" id="crono-anl-btn" onclick="toggleAnlDropdown(event)">Analista</button>
+          <div class="freq-dd-panel" id="crono-anl-panel">
+            <div id="crono-anl-toggles"></div>
+          </div>
+        </div>
         <div class="freq-dd" id="crono-f-freq-dd">
           <button class="freq-dd-btn" id="crono-freq-btn" onclick="toggleFreqDropdown(event)" data-i18n-default="crono-all-freq">Todas as freq.</button>
           <div class="freq-dd-panel" id="crono-f-freq-wrap">
@@ -1073,6 +1079,12 @@
       <button class="freq-dd-btn" id="crono-conc-resp-btn" onclick="toggleConcRespDropdown(event)">Responsável</button>
       <div class="freq-dd-panel" id="crono-conc-resp-panel">
         <div id="crono-conc-resp-toggles"></div>
+      </div>
+    </div>
+    <div class="freq-dd" id="crono-conc-anl-dd">
+      <button class="freq-dd-btn" id="crono-conc-anl-btn" onclick="toggleConcAnlDropdown(event)">Analista</button>
+      <div class="freq-dd-panel" id="crono-conc-anl-panel">
+        <div id="crono-conc-anl-toggles"></div>
       </div>
     </div>
     <div class="freq-dd" id="crono-conc-d1-dd">
@@ -2824,6 +2836,12 @@ function initCronoFilters(){
     rt.innerHTML=store.responsaveis.map(r=>`<button class="freq-toggle${activeResps.includes(r.sigla)?' active':''}" data-resp="${r.sigla}" onclick="toggleRespFilter(this)" title="${r.nome}">${r.sigla}</button>`).join('');
     if(_sf?.resp?.length) setTimeout(_updateRespLabel,0);
   }
+  const at=document.getElementById('crono-anl-toggles');
+  if(at){
+    const activeAnlts=_sf?.anl?.length?_sf.anl:[...document.querySelectorAll('#crono-anl-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
+    at.innerHTML=store.responsaveis.map(r=>`<button class="freq-toggle${activeAnlts.includes(r.sigla)?' active':''}" data-resp="${r.sigla}" onclick="toggleAnlFilter(this)" title="${r.nome}">${r.sigla}</button>`).join('');
+    if(_sf?.anl?.length) setTimeout(_updateAnlLabel,0);
+  }
 }
 // ─── COLUMN PINNING ──────────────────────────────────────────────
 // ─── COLUMN HIDE ──────────────────────────────────────────────────
@@ -2912,6 +2930,7 @@ function renderCronogramaAccounts(){
   const activeFreqs=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')].map(b=>b.dataset.freq);
   const activeD1=[...document.querySelectorAll('#crono-d1-filter .d1-toggle.active')].map(b=>b.dataset.d1);
   const activeResps=[...document.querySelectorAll('#crono-resp-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
+  const activeAnlts=[...document.querySelectorAll('#crono-anl-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
   const days=buildCronoDates();
   const searchQ=document.getElementById('crono-search')?.value||'';
   const searchFilters=parseCronoSearch(searchQ);
@@ -2944,9 +2963,10 @@ function renderCronogramaAccounts(){
     if(activeFreqs.length&&!activeFreqs.includes(c.tipo)) return false;
     if(activeTops.length){const tier=_contaTopTier(c.sigla);if(activeTops.includes('__none__')&&activeTops.length===1){if(tier) return false;}else if(activeTops.includes('__none__')){if(tier&&!activeTops.includes(tier)) return false;}else if(!tier||!activeTops.includes(tier)) return false;}
     if(searchFilters&&!matchesCronoSearch(c,searchFilters)) return false;
-    if(activeResps.length){
+    if(activeResps.length){const r=_contaResp(c);if(!r||!activeResps.includes(r.sigla)) return false;}
+    if(activeAnlts.length){
       const ck=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
-      const hit=days&&days.some(d=>{const e=store.cronogramaData[`${ck}_${_fmtD(d)}`];return e&&activeResps.includes(e.sigla);});
+      const hit=days&&days.some(d=>{const e=store.cronogramaData[`${ck}_${_fmtD(d)}`];return e&&activeAnlts.includes(e.sigla);});
       if(!hit) return false;
     }
     return true;
@@ -3131,6 +3151,7 @@ function _saveFilters(key){
         freq:[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')].map(b=>b.dataset.freq),
         d1:[...document.querySelectorAll('#crono-d1-filter .d1-toggle.active')].map(b=>b.dataset.d1),
         resp:[...document.querySelectorAll('#crono-resp-toggles .freq-toggle.active')].map(b=>b.dataset.resp),
+        anl:[...document.querySelectorAll('#crono-anl-toggles .freq-toggle.active')].map(b=>b.dataset.resp),
         sort:_sortState.crono?.col?{col:_sortState.crono.col,dir:_sortState.crono.dir}:null
       };
     } else if(key==='crono-conc'){
@@ -3142,6 +3163,7 @@ function _saveFilters(key){
         agente:_fddVals('crono-conc-f-agente-panel'),
         prior:_fddVals('crono-conc-f-prior-panel'),
         resp:[...document.querySelectorAll('#crono-conc-resp-toggles .freq-toggle.active')].map(b=>b.dataset.resp),
+        anl:[...document.querySelectorAll('#crono-conc-anl-toggles .freq-toggle.active')].map(b=>b.dataset.resp),
         d1:[...document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active')].map(b=>b.dataset.d1),
         sort:_sortState['crono-conc']?.col?{col:_sortState['crono-conc'].col,dir:_sortState['crono-conc'].dir}:null
       };
@@ -3195,8 +3217,9 @@ function _hasCronoFilters(){
   const hasFreq=document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active').length>0;
   const hasD1=document.querySelectorAll('#crono-d1-filter .d1-toggle.active').length>0;
   const hasResp=document.querySelectorAll('#crono-resp-toggles .freq-toggle.active').length>0;
+  const hasAnl=document.querySelectorAll('#crono-anl-toggles .freq-toggle.active').length>0;
   const hasSearch=(document.getElementById('crono-search')?.value||'').trim()!=='';
-  return !!(fp||fa||fb||ftc||ftop||hasFreq||hasD1||hasResp||hasSearch||_sortState.crono.col||_hiddenCols.crono.size>0);
+  return !!(fp||fa||fb||ftc||ftop||hasFreq||hasD1||hasResp||hasAnl||hasSearch||_sortState.crono.col||_hiddenCols.crono.size>0);
 }
 function _updateClearBtn(){
   const btn=document.getElementById('btn-clear-filters');
@@ -3217,6 +3240,8 @@ function clearCronoFilters(){
   _updateD1Label();
   document.querySelectorAll('#crono-resp-toggles .freq-toggle.active').forEach(b=>b.classList.remove('active'));
   _updateRespLabel();
+  document.querySelectorAll('#crono-anl-toggles .freq-toggle.active').forEach(b=>b.classList.remove('active'));
+  _updateAnlLabel();
   if(sel('crono-search')){sel('crono-search').value='';updateCronoSearchClear();}
   _sortState.crono={col:null,dir:1};
   _hiddenCols.crono.clear();_saveHiddenCols();
@@ -3286,6 +3311,15 @@ function _updateRespLabel(){
   else{btn.textContent=active.map(b=>b.dataset.resp).join(', ');btn.classList.add('has-active');}
 }
 function toggleRespFilter(btn){btn.classList.toggle('active');_updateRespLabel();renderCronogramaAccounts();}
+function toggleAnlDropdown(e){e.stopPropagation();const p=document.getElementById('crono-anl-panel');if(!p)return;const open=p.classList.contains('open');_closeAllDropdowns();if(!open)p.classList.add('open');}
+function _updateAnlLabel(){
+  const active=[...document.querySelectorAll('#crono-anl-toggles .freq-toggle.active')];
+  const btn=document.getElementById('crono-anl-btn');
+  if(!btn) return;
+  if(!active.length){btn.textContent='Analista';btn.classList.remove('has-active');}
+  else{btn.textContent=active.map(b=>b.dataset.resp).join(', ');btn.classList.add('has-active');}
+}
+function toggleAnlFilter(btn){btn.classList.toggle('active');_updateAnlLabel();renderCronogramaAccounts();}
 function initCronoDates(){
   const preset=document.getElementById('crono-date-preset');
   if(!preset) return;
@@ -3433,6 +3467,7 @@ function _getFilteredCronoContext(){
   const ftc=document.getElementById('crono-f-tipo-conta')?.value||'';
   const activeFreqs=[...document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active')].map(b=>b.dataset.freq);
   const activeResps=[...document.querySelectorAll('#crono-resp-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
+  const activeAnltsCtx=[...document.querySelectorAll('#crono-anl-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
   const searchQ=(document.getElementById('crono-search')?.value||'').trim();
   const searchFilters=searchQ?parseCronoSearch(searchQ):null;
   const days=buildCronoDates();
@@ -3444,9 +3479,10 @@ function _getFilteredCronoContext(){
     if(ftc&&c.tipoConta!==ftc) return false;
     if(activeFreqs.length&&!activeFreqs.includes(c.tipo)) return false;
     if(searchFilters&&!matchesCronoSearch(c,searchFilters)) return false;
-    if(activeResps.length){
+    if(activeResps.length){const r=_contaResp(c);if(!r||!activeResps.includes(r.sigla)) return false;}
+    if(activeAnltsCtx.length){
       const ck=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
-      const hit=days&&days.some(d=>{const e=store.cronogramaData[`${ck}_${fmtDateCtx(d)}`];return e&&activeResps.includes(e.sigla);});
+      const hit=days&&days.some(d=>{const e=store.cronogramaData[`${ck}_${fmtDateCtx(d)}`];return e&&activeAnltsCtx.includes(e.sigla);});
       if(!hit) return false;
     }
     return true;
@@ -5435,15 +5471,24 @@ function toggleConcD1Dropdown(e){
   _closeAllDropdowns();
   if(!open) p.classList.add('open');
 }
+function toggleConcAnlDropdown(e){e.stopPropagation();const p=document.getElementById('crono-conc-anl-panel');if(!p)return;const open=p.classList.contains('open');_closeAllDropdowns();if(!open)p.classList.add('open');}
+function _updateConcAnlLabel(){
+  const active=[...document.querySelectorAll('#crono-conc-anl-toggles .freq-toggle.active')];
+  const btn=document.getElementById('crono-conc-anl-btn');
+  if(!btn) return;
+  if(!active.length){btn.textContent='Analista';btn.classList.remove('has-active');}
+  else{btn.textContent=active.map(b=>b.dataset.resp).join(', ');btn.classList.add('has-active');}
+}
 
 function _hasConcFilters(){
   const hasPais=_fddVals('crono-conc-f-pais-panel').length>0;
   const hasAgente=_fddVals('crono-conc-f-agente-panel').length>0;
   const hasPrior=_fddVals('crono-conc-f-prior-panel').length>0;
   const hasResp=document.querySelectorAll('#crono-conc-resp-toggles .freq-toggle.active').length>0;
+  const hasAnl=document.querySelectorAll('#crono-conc-anl-toggles .freq-toggle.active').length>0;
   const hasD1=document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active').length>0;
   const hasSearch=(document.getElementById('crono-conc-search')?.value||'').trim()!=='';
-  return !!(hasPais||hasAgente||hasPrior||hasResp||hasD1||hasSearch||_sortState['crono-conc'].col);
+  return !!(hasPais||hasAgente||hasPrior||hasResp||hasAnl||hasD1||hasSearch||_sortState['crono-conc'].col);
 }
 
 function _updConcSearchClear(){
@@ -5466,8 +5511,9 @@ function clearCronconcFilters(){
   document.querySelectorAll('#crono-conc-f-prior-panel .freq-toggle.active').forEach(b=>b.classList.remove('active'));
   _fddLabel('crono-conc-f-prior-btn',[],'Todas as prioridades');
   document.querySelectorAll('#crono-conc-resp-toggles .freq-toggle.active').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#crono-conc-anl-toggles .freq-toggle.active').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active').forEach(b=>b.classList.remove('active'));
-  _updateConcRespLabel(); _updateConcD1Label();
+  _updateConcRespLabel(); _updateConcAnlLabel(); _updateConcD1Label();
   const inp=document.getElementById('crono-conc-search');
   if(inp) inp.value='';
   _updConcSearchClear();
@@ -5495,6 +5541,13 @@ function _initConcFilters(){
     const savedResp=_sf?.resp||[];
     rt.innerHTML=store.responsaveis.map(r=>`<button class="freq-toggle${savedResp.includes(r.sigla)?' active':''}" data-resp="${r.sigla}" title="${r.nome}" onclick="this.classList.toggle('active');_updateConcRespLabel();renderCronogramaConciliacoes()">${r.sigla}</button>`).join('');
     if(savedResp.length) setTimeout(_updateConcRespLabel,0);
+  }
+  const at=document.getElementById('crono-conc-anl-toggles');
+  if(at&&!at.dataset.init){
+    at.dataset.init='1';
+    const savedAnl=_sf?.anl||[];
+    at.innerHTML=store.responsaveis.map(r=>`<button class="freq-toggle${savedAnl.includes(r.sigla)?' active':''}" data-resp="${r.sigla}" title="${r.nome}" onclick="this.classList.toggle('active');_updateConcAnlLabel();renderCronogramaConciliacoes()">${r.sigla}</button>`).join('');
+    if(savedAnl.length) setTimeout(_updateConcAnlLabel,0);
   }
 }
 
@@ -5860,6 +5913,7 @@ function renderCronogramaConciliacoes(){
   const activeAgentes=_fddVals('crono-conc-f-agente-panel');
   const activePriors=_fddVals('crono-conc-f-prior-panel');
   const activeResps=[...document.querySelectorAll('#crono-conc-resp-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
+  const activeAnlts=[...document.querySelectorAll('#crono-conc-anl-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
   const activeD1=[...document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active')].map(b=>b.dataset.d1);
   const searchQ=(document.getElementById('crono-conc-search')?.value||'').toLowerCase().trim();
 
@@ -5894,9 +5948,10 @@ function renderCronogramaConciliacoes(){
   listWithD1.forEach(({c,d1Status})=>{
     if(activePaises.length&&!activePaises.includes(c.pais)) return;
     if(activeAgentes.length&&!activeAgentes.includes(c.agente)) return;
-    if(activeResps.length){
+    if(activeResps.length){const rEmail=_getConcilResp(c);const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;if(!rUser||!activeResps.includes(rUser.sigla)) return;}
+    if(activeAnlts.length){
       const concId=(c.id||c.nome).replace(/['"]/g,'');
-      const hit=days.some(d=>{const e=store.cronogramaConciliacoes[`${concId}_${fmtD(d)}`];return e&&activeResps.includes(e.sigla);});
+      const hit=days.some(d=>{const e=store.cronogramaConciliacoes[`${concId}_${fmtD(d)}`];return e&&activeAnlts.includes(e.sigla);});
       if(!hit) return;
     }
     if(activePriors.length){
@@ -5922,9 +5977,10 @@ function renderCronogramaConciliacoes(){
   let list=listWithD1.filter(({c,d1Status})=>{
     if(activePaises.length&&!activePaises.includes(c.pais)) return false;
     if(activeAgentes.length&&!activeAgentes.includes(c.agente)) return false;
-    if(activeResps.length){
+    if(activeResps.length){const rEmail=_getConcilResp(c);const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;if(!rUser||!activeResps.includes(rUser.sigla)) return false;}
+    if(activeAnlts.length){
       const concId=(c.id||c.nome).replace(/['"]/g,'');
-      const hit=days.some(d=>{const e=store.cronogramaConciliacoes[`${concId}_${fmtD(d)}`];return e&&activeResps.includes(e.sigla);});
+      const hit=days.some(d=>{const e=store.cronogramaConciliacoes[`${concId}_${fmtD(d)}`];return e&&activeAnlts.includes(e.sigla);});
       if(!hit) return false;
     }
     if(activePriors.length){
