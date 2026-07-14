@@ -2951,6 +2951,7 @@ function _prevDay(dateStr){
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 function _getEronFb(){
+  if(typeof _fbApp!=='undefined'&&_currentEnv==='eron') return _fbApp;
   try{return firebase.app('eron_slack');}catch(e){}
   return firebase.initializeApp(ENVIRONMENTS.eron.cfg,'eron_slack');
 }
@@ -2988,13 +2989,13 @@ function _showSlackConfirm(banco,agente,module,prevLink,onSim,onNao){
   ov.id='_slack-ov';
   ov.style.cssText='position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.18);backdrop-filter:blur(2px)';
   function setContent(html){
-    ov.innerHTML=`<div style="background:var(--e-card);border:1px solid var(--e-pale);border-radius:14px;box-shadow:0 8px 36px rgba(0,0,0,.2);padding:22px 26px;min-width:300px;max-width:400px">${html}</div>`;
+    ov.innerHTML=`<div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 36px rgba(0,0,0,.18);padding:22px 26px;min-width:300px;max-width:400px">${html}</div>`;
   }
   setContent(`
     <div style="font-size:11px;font-weight:700;color:#dc2626;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">Sem Acesso</div>
-    <div style="font-size:13px;color:var(--e-text);margin-bottom:18px">${t('slack-report-q')}</div>
+    <div style="font-size:13px;color:#1c1640;margin-bottom:18px">${t('slack-report-q')}</div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button id="_slk-no"  style="font-size:12px;padding:7px 18px;border:1.5px solid var(--e-pale);border-radius:8px;cursor:pointer;background:var(--e-card);font-family:inherit;color:var(--e-text)">${t('slack-no')}</button>
+      <button id="_slk-no"  style="font-size:12px;padding:7px 18px;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer;background:#fff;font-family:inherit;color:#374151">${t('slack-no')}</button>
       <button id="_slk-yes" style="font-size:12px;padding:7px 18px;border:none;border-radius:8px;cursor:pointer;background:#976ff4;color:#fff;font-family:inherit;font-weight:600">${t('slack-yes')}</button>
     </div>
   `);
@@ -3012,7 +3013,7 @@ function _showSlackConfirm(banco,agente,module,prevLink,onSim,onNao){
         style="width:100%;border:1.5px solid #d1d5db;border-radius:7px;padding:7px 10px;font-size:12px;font-family:inherit;box-sizing:border-box;outline:none"
         onfocus="this.style.borderColor='#976ff4'" onblur="this.style.borderColor='#d1d5db'">
       <div style="display:flex;gap:6px;margin-top:10px;justify-content:flex-end">
-        <button id="_slk-skip" style="font-size:12px;padding:6px 16px;border:1.5px solid var(--e-pale);border-radius:7px;cursor:pointer;background:var(--e-card);font-family:inherit;color:var(--e-text)">Pular</button>
+        <button id="_slk-skip" style="font-size:12px;padding:6px 16px;border:1.5px solid #e5e7eb;border-radius:7px;cursor:pointer;background:#fff;font-family:inherit;color:#374151">Pular</button>
         <button id="_slk-ok"   style="font-size:12px;padding:6px 16px;border:none;border-radius:7px;cursor:pointer;background:#976ff4;color:#fff;font-family:inherit;font-weight:600">Confirmar</button>
       </div>
     `);
