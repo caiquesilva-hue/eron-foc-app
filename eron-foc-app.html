@@ -684,6 +684,10 @@
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/></svg>
             Alterar frequência
           </button>
+          <button class="btn-secondary" onclick="openRepairContaModal()" data-requires-edit style="font-size:12px;padding:5px 12px;gap:5px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            Reparar renomeação
+          </button>
           <button class="btn-primary" onclick="openAddAccount()" data-requires-edit>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
             <span data-i18n="btn-add-account">Adicionar conta</span>
@@ -1846,6 +1850,41 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-repair-conta" onclick="if(event.target===this)closeModal('modal-repair-conta')">
+  <div class="modal-card" style="width:440px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Reparar Conta Renomeada</div>
+        <div style="font-size:12px;color:var(--e-muted);margin-top:2px">Migra dados históricos do nome antigo para a conta atual</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-repair-conta')">×</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:14px">
+      <p style="font-size:13px;color:var(--e-muted);margin:0">Informe o nome <strong>antigo</strong> da conta. Entradas no Cronograma, Cierre e vínculos em Conciliações serão migrados para a conta selecionada abaixo.</p>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1">
+          <label class="form-label">Sigla antiga</label>
+          <input id="repair-old-sigla" class="form-control" type="text" placeholder="ex: BRAZ" style="text-transform:uppercase">
+        </div>
+        <div style="flex:1">
+          <label class="form-label">Nº conta antigo</label>
+          <input id="repair-old-num" class="form-control" type="text" placeholder="ex: 123456">
+        </div>
+      </div>
+      <div>
+        <label class="form-label">Conta atual (destino)</label>
+        <select id="repair-new-conta" class="form-control"></select>
+      </div>
+      <div id="repair-preview" style="font-size:12px;color:var(--e-muted);padding:10px 12px;background:var(--e-ghost);border-radius:6px;display:none;line-height:1.7"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-repair-conta')">Cancelar</button>
+      <button class="btn-secondary" id="repair-btn-preview" onclick="_previewRepairConta()">Verificar</button>
+      <button class="btn-primary" id="repair-btn-execute" onclick="_executeRepairConta()" style="display:none">Reparar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Firebase SDK (compat) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -2403,13 +2442,83 @@ function submitAccountForm(){
     tipoConta:document.getElementById('acc-tipo-conta').value,
     status:encerrado?'encerrada':'ativa',
   };
-  if(editingIdx>=0){ logAudit('gerencial','edit-conta',{sigla:data.sigla}); store.contas[editingIdx]=data; }
-  else{ logAudit('gerencial','add-conta',{sigla:data.sigla,pais:data.pais}); store.contas.push(data); }
-  closeModal('modal-account');
-  saveStore(); _fbSync('contas');
+  if(editingIdx>=0){
+    const oldConta=store.contas[editingIdx];
+    const oldKey=`${oldConta.sigla}_${oldConta.numeroConta}`.replace(/['"]/g,'');
+    const newKey=`${data.sigla}_${data.numeroConta}`.replace(/['"]/g,'');
+    const keyChanged=oldKey!==newKey;
+    const siglaChanged=oldConta.sigla!==data.sigla;
+    if(keyChanged){
+      const oldPfx=oldKey+'_';
+      Object.keys(store.cronogramaData).forEach(k=>{if(k.startsWith(oldPfx)){store.cronogramaData[newKey+k.slice(oldKey.length)]=store.cronogramaData[k];delete store.cronogramaData[k];}});
+      Object.keys(store.cierreData||{}).forEach(k=>{if(k.startsWith(oldPfx)){store.cierreData[newKey+k.slice(oldKey.length)]=store.cierreData[k];delete store.cierreData[k];}});
+    }
+    if(siglaChanged)(store.conciliacoes||[]).forEach(conc=>{if(conc.contas?.includes(oldConta.sigla))conc.contas=conc.contas.map(s=>s===oldConta.sigla?data.sigla:s);});
+    logAudit('gerencial','edit-conta',{sigla:data.sigla,oldSigla:oldConta.sigla});
+    store.contas[editingIdx]=data;
+    closeModal('modal-account');
+    saveStore();
+    _fbSync('contas');
+    if(keyChanged){_fbSync('cronogramaData');_fbSync('cierreData');}
+    if(siglaChanged) _fbSync('conciliacoes');
+  } else {
+    logAudit('gerencial','add-conta',{sigla:data.sigla,pais:data.pais});
+    store.contas.push(data);
+    closeModal('modal-account');
+    saveStore(); _fbSync('contas');
+  }
   renderAccountsTable();
   renderCronogramaAccounts();
   updateCounts();
+}
+function openRepairContaModal(){
+  if(!isAdmin()){alert('Acesso restrito a administradores.');return;}
+  const sel=document.getElementById('repair-new-conta');
+  if(sel) sel.innerHTML=store.contas.map((c,i)=>`<option value="${i}">${c.sigla} — ${c.banco} / ${c.numeroConta} (${c.pais})</option>`).join('');
+  ['repair-old-sigla','repair-old-num'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const prev=document.getElementById('repair-preview');if(prev)prev.style.display='none';
+  const execBtn=document.getElementById('repair-btn-execute');if(execBtn)execBtn.style.display='none';
+  openModal('modal-repair-conta');
+}
+function _previewRepairConta(){
+  const oldSigla=(document.getElementById('repair-old-sigla').value||'').trim().toUpperCase();
+  const oldNum=(document.getElementById('repair-old-num').value||'').trim();
+  if(!oldSigla||!oldNum){alert('Preencha a sigla antiga e o número de conta antigo.');return;}
+  const oldKey=`${oldSigla}_${oldNum}`.replace(/['"]/g,'');
+  const oldPfx=oldKey+'_';
+  const cronCount=Object.keys(store.cronogramaData).filter(k=>k.startsWith(oldPfx)).length;
+  const cierreCount=Object.keys(store.cierreData||{}).filter(k=>k.startsWith(oldPfx)).length;
+  const concCount=(store.conciliacoes||[]).filter(c=>c.contas?.includes(oldSigla)).length;
+  const prev=document.getElementById('repair-preview');
+  prev.style.display='';
+  if(!cronCount&&!cierreCount&&!concCount){
+    prev.innerHTML='<span style="color:#dc2626">Nenhuma entrada encontrada para essa combinação. Verifique se a sigla e o número estão corretos.</span>';
+    document.getElementById('repair-btn-execute').style.display='none';
+    return;
+  }
+  prev.innerHTML=`<strong>Encontrado:</strong><br>• ${cronCount} entrada${cronCount!==1?'s':''} no Cronograma<br>• ${cierreCount} entrada${cierreCount!==1?'s':''} no Cierre<br>• ${concCount} vínculo${concCount!==1?'s':''} em Conciliações`;
+  document.getElementById('repair-btn-execute').style.display='';
+}
+function _executeRepairConta(){
+  const oldSigla=(document.getElementById('repair-old-sigla').value||'').trim().toUpperCase();
+  const oldNum=(document.getElementById('repair-old-num').value||'').trim();
+  const idx=+(document.getElementById('repair-new-conta').value||0);
+  const newConta=store.contas[idx];
+  if(!oldSigla||!oldNum||!newConta) return;
+  const oldKey=`${oldSigla}_${oldNum}`.replace(/['"]/g,'');
+  const newKey=`${newConta.sigla}_${newConta.numeroConta}`.replace(/['"]/g,'');
+  const oldPfx=oldKey+'_';
+  let cronCount=0,cierreCount=0,concCount=0;
+  Object.keys(store.cronogramaData).forEach(k=>{if(k.startsWith(oldPfx)){store.cronogramaData[newKey+k.slice(oldKey.length)]=store.cronogramaData[k];delete store.cronogramaData[k];cronCount++;}});
+  Object.keys(store.cierreData||{}).forEach(k=>{if(k.startsWith(oldPfx)){store.cierreData[newKey+k.slice(oldKey.length)]=store.cierreData[k];delete store.cierreData[k];cierreCount++;}});
+  if(oldSigla!==newConta.sigla)(store.conciliacoes||[]).forEach(conc=>{if(conc.contas?.includes(oldSigla)){conc.contas=conc.contas.map(s=>s===oldSigla?newConta.sigla:s);concCount++;}});
+  saveStore();
+  _fbSync('cronogramaData');_fbSync('cierreData');
+  if(concCount) _fbSync('conciliacoes');
+  logAudit('gerencial','repair-conta',{oldSigla,oldNum,newSigla:newConta.sigla,cronCount,cierreCount,concCount});
+  closeModal('modal-repair-conta');
+  renderAccountsTable();renderCronogramaAccounts();updateCounts();
+  alert(`Reparação concluída!\n• ${cronCount} entrada(s) migrada(s) no Cronograma\n• ${cierreCount} entrada(s) migrada(s) no Cierre\n• ${concCount} vínculo(s) atualizado(s) em Conciliações`);
 }
 let _deleteCallback=null;
 function showDeleteConfirm(title,subtitle,onConfirm){
