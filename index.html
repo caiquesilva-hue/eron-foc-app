@@ -2845,7 +2845,14 @@ function _applyHiddenCols(key,tblId,infoN){
     const tds=[...row.querySelectorAll('td')];
     for(let i=1;i<infoN;i++){
       if(!tds[i]) continue;
-      tds[i].style.display=hidden.has(i)?'none':'';
+      if(hidden.has(i)){
+        tds[i].style.cssText='width:16px!important;min-width:16px!important;max-width:16px!important;padding:0!important;overflow:hidden;';
+        tds[i].dataset.origHtml=tds[i].dataset.origHtml||tds[i].innerHTML;
+        tds[i].innerHTML='';
+      } else {
+        if(tds[i].dataset.origHtml){tds[i].innerHTML=tds[i].dataset.origHtml;delete tds[i].dataset.origHtml;}
+        tds[i].style.cssText='';
+      }
     }
   });
 }
