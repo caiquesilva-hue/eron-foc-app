@@ -2812,7 +2812,7 @@ function initCronoFilters(){
 // ─── COLUMN HIDE ──────────────────────────────────────────────────
 const _HIDDEN_KEY='eron-foc-hidden-v1';
 const _hiddenCols={crono:new Set(),'crono-conc':new Set()};
-(()=>{try{const s=JSON.parse(localStorage.getItem(_HIDDEN_KEY)||'{}');if(s.crono)s.crono.forEach(i=>_hiddenCols.crono.add(+i));if(s['crono-conc'])s['crono-conc'].forEach(i=>_hiddenCols['crono-conc'].add(+i));}catch(e){}})();
+(()=>{try{const s=JSON.parse(localStorage.getItem(_HIDDEN_KEY)||'{}');if(s.crono)s.crono.forEach(i=>{const n=+i;if(n>0&&n<10)_hiddenCols.crono.add(n);});if(s['crono-conc'])s['crono-conc'].forEach(i=>{const n=+i;if(n>0&&n<6)_hiddenCols['crono-conc'].add(n);});}catch(e){}})();
 function _saveHiddenCols(){try{localStorage.setItem(_HIDDEN_KEY,JSON.stringify({crono:[..._hiddenCols.crono],'crono-conc':[..._hiddenCols['crono-conc']]}));}catch(e){}}
 const _eyeSvg=`<svg width="11" height="8" viewBox="0 0 22 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="11" cy="8" r="3"/></svg>`;
 function _hideBtn(key,idx){if(idx===0)return '';return `<button class="col-hide-btn" onclick="event.stopPropagation();toggleColHide('${key}',${idx})" title="Ocultar coluna">${_eyeSvg}</button>`;}
@@ -2821,17 +2821,24 @@ function _applyHiddenCols(key,tblId,infoN){
   const tbl=document.getElementById(tblId);
   if(!tbl) return;
   const hidden=_hiddenCols[key]||new Set();
+  // ── CSS nth-child: esconde TDs sem remover do fluxo da tabela ───────────────
+  const styleId=`${tblId}-colhide`;
+  let styleEl=document.getElementById(styleId);
+  if(!styleEl){styleEl=document.createElement('style');styleEl.id=styleId;document.head.appendChild(styleEl);}
+  styleEl.textContent=[...hidden].filter(i=>i>0).map(i=>
+    `#${tblId} tr td:nth-child(${i+1}){width:16px!important;min-width:16px!important;max-width:16px!important;padding:0!important;overflow:hidden;font-size:0;line-height:0;}`
+  ).join('');
+  // ── TH: converte ocultos em stubs com botão de restaurar ───────────────────
   const headerRows=[...tbl.querySelectorAll('thead tr')];
   if(!headerRows.length) return;
   const infoThs=[...headerRows[0].querySelectorAll('th.col-info')];
   const infoThs2=headerRows[1]?[...headerRows[1].querySelectorAll('th')].slice(0,infoN):[];
-  // Determine column names from current th text (before mutating)
   const colNames=infoThs.map(th=>{const t=th.cloneNode(true);t.querySelectorAll('button').forEach(b=>b.remove());return t.textContent.trim();});
   infoThs.forEach((th,idx)=>{
     if(idx===0) return;
     if(hidden.has(idx)){
       th.style.cssText='width:16px!important;min-width:16px!important;max-width:16px!important;padding:0!important;overflow:hidden;cursor:pointer;';
-      th.className=(th.className||'')+' th-col-stub';
+      th.className=(th.className||'').replace('th-col-stub','')+' th-col-stub';
       th.title='Mostrar: '+colNames[idx];
       th.innerHTML=`<span onclick="event.stopPropagation();toggleColHide('${key}',${idx})" style="display:flex;align-items:center;justify-content:center;width:16px;height:100%;color:var(--e-muted);font-size:9px;writing-mode:vertical-rl">›</span>`;
       th.onclick=e=>{e.stopPropagation();toggleColHide(key,idx);};
@@ -2839,20 +2846,7 @@ function _applyHiddenCols(key,tblId,infoN){
     } else {
       th.style.cssText='';
       th.onclick=null;
-    }
-  });
-  tbl.querySelectorAll('tbody tr').forEach(row=>{
-    const tds=[...row.querySelectorAll('td')];
-    for(let i=1;i<infoN;i++){
-      if(!tds[i]) continue;
-      if(hidden.has(i)){
-        tds[i].style.cssText='width:16px!important;min-width:16px!important;max-width:16px!important;padding:0!important;overflow:hidden;';
-        tds[i].dataset.origHtml=tds[i].dataset.origHtml||tds[i].innerHTML;
-        tds[i].innerHTML='';
-      } else {
-        if(tds[i].dataset.origHtml){tds[i].innerHTML=tds[i].dataset.origHtml;delete tds[i].dataset.origHtml;}
-        tds[i].style.cssText='';
-      }
+      if(infoThs2[idx]) infoThs2[idx].style.cssText='';
     }
   });
 }
