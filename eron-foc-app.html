@@ -372,6 +372,21 @@
   .col-hide-btn:hover{color:var(--e-purple);background:rgba(151,111,244,.12);}
   .th-col-stub{width:16px!important;min-width:16px!important;max-width:16px!important;padding:0!important;overflow:hidden;cursor:pointer;background:rgba(151,111,244,.04);border-right:1px dashed var(--e-pale);}
   .th-col-stub:hover{background:rgba(151,111,244,.1);}
+  /* === ocultar colunas: esconde TH + TD juntos para evitar desalinhamento === */
+  #page-cronograma-accounts.hide-col-1 #crono-cal-table thead th:nth-child(2),#page-cronograma-accounts.hide-col-1 #crono-cal-table tbody td:nth-child(2){display:none!important;}
+  #page-cronograma-accounts.hide-col-2 #crono-cal-table thead th:nth-child(3),#page-cronograma-accounts.hide-col-2 #crono-cal-table tbody td:nth-child(3){display:none!important;}
+  #page-cronograma-accounts.hide-col-3 #crono-cal-table thead th:nth-child(4),#page-cronograma-accounts.hide-col-3 #crono-cal-table tbody td:nth-child(4){display:none!important;}
+  #page-cronograma-accounts.hide-col-4 #crono-cal-table thead th:nth-child(5),#page-cronograma-accounts.hide-col-4 #crono-cal-table tbody td:nth-child(5){display:none!important;}
+  #page-cronograma-accounts.hide-col-5 #crono-cal-table thead th:nth-child(6),#page-cronograma-accounts.hide-col-5 #crono-cal-table tbody td:nth-child(6){display:none!important;}
+  #page-cronograma-accounts.hide-col-6 #crono-cal-table thead th:nth-child(7),#page-cronograma-accounts.hide-col-6 #crono-cal-table tbody td:nth-child(7){display:none!important;}
+  #page-cronograma-accounts.hide-col-7 #crono-cal-table thead th:nth-child(8),#page-cronograma-accounts.hide-col-7 #crono-cal-table tbody td:nth-child(8){display:none!important;}
+  #page-cronograma-accounts.hide-col-8 #crono-cal-table thead th:nth-child(9),#page-cronograma-accounts.hide-col-8 #crono-cal-table tbody td:nth-child(9){display:none!important;}
+  #page-cronograma-accounts.hide-col-9 #crono-cal-table thead th:nth-child(10),#page-cronograma-accounts.hide-col-9 #crono-cal-table tbody td:nth-child(10){display:none!important;}
+  #page-cronograma-conciliacoes.hide-col-1 #crono-conc-cal-table thead th:nth-child(2),#page-cronograma-conciliacoes.hide-col-1 #crono-conc-cal-table tbody td:nth-child(2){display:none!important;}
+  #page-cronograma-conciliacoes.hide-col-2 #crono-conc-cal-table thead th:nth-child(3),#page-cronograma-conciliacoes.hide-col-2 #crono-conc-cal-table tbody td:nth-child(3){display:none!important;}
+  #page-cronograma-conciliacoes.hide-col-3 #crono-conc-cal-table thead th:nth-child(4),#page-cronograma-conciliacoes.hide-col-3 #crono-conc-cal-table tbody td:nth-child(4){display:none!important;}
+  #page-cronograma-conciliacoes.hide-col-4 #crono-conc-cal-table thead th:nth-child(5),#page-cronograma-conciliacoes.hide-col-4 #crono-conc-cal-table tbody td:nth-child(5){display:none!important;}
+  #page-cronograma-conciliacoes.hide-col-5 #crono-conc-cal-table thead th:nth-child(6),#page-cronograma-conciliacoes.hide-col-5 #crono-conc-cal-table tbody td:nth-child(6){display:none!important;}
   .chip-operacional{background:#ede9fe;color:#5b21b6;}
   .chip-administrativa{background:#fce7f3;color:#9d174d;}
   .chip-bbpix{background:#e0f2fe;color:#0369a1;}
@@ -2818,29 +2833,16 @@ const _eyeSvg=`<svg width="11" height="8" viewBox="0 0 22 16" fill="none" stroke
 function _hideBtn(key,idx){if(idx===0)return '';return `<button class="col-hide-btn" onclick="event.stopPropagation();toggleColHide('${key}',${idx})" title="Ocultar coluna">${_eyeSvg}</button>`;}
 function toggleColHide(key,idx){if(!_hiddenCols[key])_hiddenCols[key]=new Set();if(_hiddenCols[key].has(idx))_hiddenCols[key].delete(idx);else _hiddenCols[key].add(idx);_saveHiddenCols();if(key==='crono')renderCronogramaAccounts();else renderCronogramaConciliacoes();}
 function _applyHiddenCols(key,tblId,infoN){
-  const tbl=document.getElementById(tblId);
-  if(!tbl) return;
+  // Abordagem: CSS estático no bloco <style> + classe no elemento pai da página.
+  // Esconde TH e TD juntos via nth-child — sem manipulação de DOM na tabela.
+  const pageId=key==='crono'?'page-cronograma-accounts':'page-cronograma-conciliacoes';
+  const page=document.getElementById(pageId);
+  if(!page) return;
   const hidden=_hiddenCols[key]||new Set();
-  // CSS: colapsa coluna inteira (TH + TD) via nth-child — afeta ambas as linhas do cabeçalho e corpo
-  const styleId=`${tblId}-colhide`;
-  let styleEl=document.getElementById(styleId);
-  if(!styleEl){styleEl=document.createElement('style');styleEl.id=styleId;document.head.appendChild(styleEl);}
-  styleEl.textContent=[...hidden].filter(i=>i>0&&i<infoN).map(i=>{
-    const n=i+1;
-    return `#${tblId} thead th:nth-child(${n}){width:16px!important;min-width:16px!important;max-width:16px!important;padding:0!important;overflow:hidden!important;}`+
-           `#${tblId} tbody td:nth-child(${n}){width:16px!important;min-width:16px!important;max-width:16px!important;padding:0!important;overflow:hidden!important;color:transparent!important;}`+
-           `#${tblId} tbody td:nth-child(${n})>*{display:none!important;}`;
-  }).join('');
-  // TH stub: só atualiza os ocultos; os visíveis já têm conteúdo correto do render
-  const headerRows=[...tbl.querySelectorAll('thead tr')];
-  if(!headerRows.length) return;
-  const infoThs=[...headerRows[0].querySelectorAll('th.col-info')];
-  infoThs.forEach((th,idx)=>{
-    if(idx===0||!hidden.has(idx)) return;
-    th.classList.add('th-col-stub');
-    th.innerHTML=`<span onclick="event.stopPropagation();toggleColHide('${key}',${idx})" style="display:flex;align-items:center;justify-content:center;width:16px;height:100%;color:var(--e-muted);font-size:9px;writing-mode:vertical-rl;cursor:pointer" title="Mostrar coluna">›</span>`;
-    th.onclick=e=>{e.stopPropagation();toggleColHide(key,idx);};
-  });
+  for(let i=1;i<infoN;i++) page.classList.toggle(`hide-col-${i}`,hidden.has(i));
+  // Remove estilo dinâmico residual de versões anteriores
+  const old=document.getElementById(`${tblId}-colhide`);
+  if(old) old.textContent='';
 }
 function renderCronogramaAccounts(){
   const countEl=document.getElementById('crono-accounts-count');
@@ -3124,7 +3126,7 @@ function _hasCronoFilters(){
   const hasD1=document.querySelectorAll('#crono-d1-filter .d1-toggle.active').length>0;
   const hasResp=document.querySelectorAll('#crono-resp-toggles .freq-toggle.active').length>0;
   const hasSearch=(document.getElementById('crono-search')?.value||'').trim()!=='';
-  return !!(fp||fa||fb||ftc||ftop||hasFreq||hasD1||hasResp||hasSearch||_sortState.crono.col);
+  return !!(fp||fa||fb||ftc||ftop||hasFreq||hasD1||hasResp||hasSearch||_sortState.crono.col||_hiddenCols.crono.size>0);
 }
 function _updateClearBtn(){
   const btn=document.getElementById('btn-clear-filters');
