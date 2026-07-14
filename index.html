@@ -1947,6 +1947,8 @@ const i18n = {
     'conc-col-tipo':'Tipo','conc-col-contas':'Contas vinculadas','conc-col-gateways':'Gateways vinculados',
     'conc-empty-title':'Nenhuma conciliação cadastrada','conc-empty-sub':'Adicione conciliações vinculando contas de Gerencial > Accounts.',
     'conc-unlinked-sem':'sem conciliação ativa','conc-unlinked-refunds':'Reembolsos','conc-unlinked-cbk':'Contestações',
+    'slack-report-q':'Reportar no Slack?','slack-yes':'Sim, reportar','slack-no':'Não',
+    'slack-sending':'Aguardando Slack...','slack-link-prev':'Link replicado do dia anterior',
   },
   'en': {
     'ops-platform':'FOC App','login-welcome':'Welcome back',
@@ -2027,6 +2029,8 @@ const i18n = {
     'conc-col-tipo':'Type','conc-col-contas':'Linked accounts','conc-col-gateways':'Linked gateways',
     'conc-empty-title':'No reconciliations registered','conc-empty-sub':'Add reconciliations linking accounts from Management > Accounts.',
     'conc-unlinked-sem':'with no active reconciliation','conc-unlinked-refunds':'Refunds','conc-unlinked-cbk':'Chargebacks',
+    'slack-report-q':'Report on Slack?','slack-yes':'Yes, report','slack-no':'No',
+    'slack-sending':'Waiting for Slack...','slack-link-prev':'Link copied from previous day',
   },
   'es': {
     'ops-platform':'FOC App','login-welcome':'Bienvenido de nuevo',
@@ -2107,6 +2111,8 @@ const i18n = {
     'conc-col-tipo':'Tipo','conc-col-contas':'Cuentas vinculadas','conc-col-gateways':'Gateways vinculados',
     'conc-empty-title':'Sin conciliaciones registradas','conc-empty-sub':'Agrega conciliaciones vinculando cuentas desde Gerencial > Accounts.',
     'conc-unlinked-sem':'sin conciliación activa','conc-unlinked-refunds':'Devoluciones','conc-unlinked-cbk':'Contracargos',
+    'slack-report-q':'¿Reportar en Slack?','slack-yes':'Sí, reportar','slack-no':'No',
+    'slack-sending':'Esperando Slack...','slack-link-prev':'Enlace replicado del día anterior',
   }
 };
 
@@ -2937,6 +2943,84 @@ if(!window._cronoSelGlobal){
   document.addEventListener('click',e=>{
     if(_selTbl&&!e.target.closest('#'+_selTbl.id)) _clearSel(_selTbl);
   });
+}
+// ─── SLACK SEM ACESSO ────────────────────────────────────────────────────────
+function _prevDay(dateStr){
+  const d=new Date(dateStr+'T12:00:00');
+  d.setDate(d.getDate()-1);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function _getEronFb(){
+  try{return firebase.app('eron_slack');}catch(e){}
+  return firebase.initializeApp(ENVIRONMENTS.eron.cfg,'eron_slack');
+}
+async function _triggerSlackNotif(module,banco,agente,onResult){
+  let pat=null;
+  try{
+    const snap=await _getEronFb().database().ref('config/githubPat').once('value');
+    pat=snap.val();
+  }catch(e){console.error('_triggerSlackNotif: cannot read PAT',e);}
+  if(!pat){onResult(null);return;}
+  const notifId='sa_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  const envLabel=ENVIRONMENTS[_currentEnv]?.label||_currentEnv;
+  try{
+    const resp=await fetch('https://api.github.com/repos/caiquesilva-hue/eron-foc-app/actions/workflows/slack-sem-acesso.yml/dispatches',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+pat,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json'},
+      body:JSON.stringify({ref:'main',inputs:{notification_id:notifId,lang:currentLang,module,banco,agente,env_label:envLabel}})
+    });
+    if(!resp.ok){console.error('workflow_dispatch failed',resp.status);onResult(null);return;}
+  }catch(e){console.error('workflow_dispatch error',e);onResult(null);return;}
+  let attempts=0;
+  function poll(){
+    attempts++;
+    _getEronFb().database().ref('slackLinks/'+notifId).once('value')
+      .then(snap=>{
+        const link=snap.val();
+        if(link){onResult(link);return;}
+        if(attempts<30) setTimeout(poll,4000); else onResult(null);
+      }).catch(()=>{if(attempts<30) setTimeout(poll,4000); else onResult(null);});
+  }
+  setTimeout(poll,8000); // GH Actions take ~10-15s to start
+}
+function _showSlackConfirm(banco,agente,module,prevLink,onSim,onNao){
+  const ov=document.createElement('div');
+  ov.id='_slack-ov';
+  ov.style.cssText='position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.18);backdrop-filter:blur(2px)';
+  function setContent(html){
+    ov.innerHTML=`<div style="background:var(--e-card);border:1px solid var(--e-pale);border-radius:14px;box-shadow:0 8px 36px rgba(0,0,0,.2);padding:22px 26px;min-width:300px;max-width:400px">${html}</div>`;
+  }
+  setContent(`
+    <div style="font-size:11px;font-weight:700;color:#dc2626;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">Sem Acesso</div>
+    <div style="font-size:13px;color:var(--e-text);margin-bottom:18px">${t('slack-report-q')}</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button id="_slk-no"  style="font-size:12px;padding:7px 18px;border:1.5px solid var(--e-pale);border-radius:8px;cursor:pointer;background:var(--e-card);font-family:inherit;color:var(--e-text)">${t('slack-no')}</button>
+      <button id="_slk-yes" style="font-size:12px;padding:7px 18px;border:none;border-radius:8px;cursor:pointer;background:#976ff4;color:#fff;font-family:inherit;font-weight:600">${t('slack-yes')}</button>
+    </div>
+  `);
+  document.body.appendChild(ov);
+  ov.addEventListener('mousedown',e=>{if(e.target===ov){ov.remove();onNao(prevLink);}});
+  document.getElementById('_slk-yes').onclick=()=>{
+    setContent(`<div style="text-align:center;padding:10px 0"><div style="font-size:30px;margin-bottom:10px">⏳</div><div style="font-size:13px;color:var(--e-muted)">${t('slack-sending')}</div></div>`);
+    _triggerSlackNotif(module,banco,agente,link=>{ov.remove();onSim(link);});
+  };
+  document.getElementById('_slk-no').onclick=()=>{
+    if(prevLink){ov.remove();onNao(prevLink);return;}
+    setContent(`
+      <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:10px">Sem Acesso – link do report</div>
+      <input id="_slk-link" type="text" placeholder="https://... (opcional)" autocomplete="off"
+        style="width:100%;border:1.5px solid #d1d5db;border-radius:7px;padding:7px 10px;font-size:12px;font-family:inherit;box-sizing:border-box;outline:none"
+        onfocus="this.style.borderColor='#976ff4'" onblur="this.style.borderColor='#d1d5db'">
+      <div style="display:flex;gap:6px;margin-top:10px;justify-content:flex-end">
+        <button id="_slk-skip" style="font-size:12px;padding:6px 16px;border:1.5px solid var(--e-pale);border-radius:7px;cursor:pointer;background:var(--e-card);font-family:inherit;color:var(--e-text)">Pular</button>
+        <button id="_slk-ok"   style="font-size:12px;padding:6px 16px;border:none;border-radius:7px;cursor:pointer;background:#976ff4;color:#fff;font-family:inherit;font-weight:600">Confirmar</button>
+      </div>
+    `);
+    setTimeout(()=>document.getElementById('_slk-link')?.focus(),30);
+    document.getElementById('_slk-skip').onclick=()=>{ov.remove();onNao(null);};
+    document.getElementById('_slk-ok').onclick=()=>{const lnk=(document.getElementById('_slk-link')?.value||'').trim();ov.remove();onNao(lnk||null);};
+    document.getElementById('_slk-link').onkeydown=e=>{if(e.key==='Enter')document.getElementById('_slk-ok')?.click();};
+  };
 }
 function renderCronogramaAccounts(){
   const countEl=document.getElementById('crono-accounts-count');
@@ -4157,14 +4241,24 @@ function setCronoDayStatus(contaKey, dateStr, status, event){
     saveStore();
     renderCronogramaAccounts();
   };
-  if((status==='sem_acesso'||status==='aguardando_extrato')&&status!=='clear'){
-    // Transform dropdown into inline link input (avoid modal z-index/timing issues)
+  if(status==='sem_acesso'){
+    event.stopPropagation();
+    const conta=store.contas.find(c=>`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'')===contaKey);
+    const banco=conta?.banco||contaKey;
+    const agente=conta?.agente||'—';
+    const prevDate=_prevDay(dateStr);
+    const prevEntry=store.cronogramaData[`${contaKey}_${prevDate}`];
+    const prevLink=(prevEntry?.status==='sem_acesso'&&prevEntry?.reportLink)?prevEntry.reportLink:null;
+    _showSlackConfirm(banco,agente,'accounts',prevLink,
+      link=>{closeCalDropdown();_doSave(link);if(!link)_toast('Slack: sem link obtido',2500);},
+      inheritedLink=>{closeCalDropdown();_doSave(inheritedLink);if(inheritedLink)_toast(t('slack-link-prev'),2500);}
+    );
+  } else if(status==='aguardando_extrato'){
     const dd=document.querySelector('.cal-dropdown');
     if(!dd){_doSave(null);return;}
-    const label={sem_acesso:'Sem Acesso – link do report',aguardando_extrato:'Ag. Extrato – link do extrato'}[status]||'Link';
     const cur=(existing?.reportLink||'').replace(/"/g,'&quot;');
     dd.innerHTML=`<div style="padding:10px 12px;min-width:270px">
-      <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:8px">${label}</div>
+      <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:8px">Ag. Extrato – link do extrato</div>
       <input id="_cal-link-inp" type="text" placeholder="https://... (opcional)" autocomplete="off"
         style="width:100%;border:1.5px solid #d1d5db;border-radius:6px;padding:6px 9px;font-size:12px;font-family:inherit;box-sizing:border-box;outline:none;transition:border-color .15s"
         value="${cur}"
@@ -6111,7 +6205,11 @@ function renderCronogramaConciliacoes(){
       }
       const _sig=r.entry?.sigla||'';
       const lbl=r.status==='sem_movimento'?(_sig?`${_sig} s/m`:'s/m'):r.status==='sem_acesso'?(_sig?`${_sig} s/a`:'s/a'):r.entry?_sig:(r.status==='pronto_conciliacao'?'✓':'?');
-      return `<td class="day-cell conc-cell" data-ck="${_ck}" data-dt="${dateStr}" style="cursor:pointer"><div class="day-filled" style="background:${cfg.bg};color:${cfg.color}">${lbl}</div></td>`;
+      const _hasLink=r.entry?.reportLink&&r.status==='sem_acesso';
+      const _noteClass=_hasLink?' has-note':'';
+      const _noteEvts=_hasLink?` onmouseenter="showNoteTooltip(event,this)" onmouseleave="scheduleHideNoteTooltip()"` :'';
+      const _noteData=_hasLink?` data-link="${r.entry.reportLink.replace(/"/g,'&quot;')}"` :'';
+      return `<td class="day-cell conc-cell" data-ck="${_ck}" data-dt="${dateStr}" style="cursor:pointer"><div class="day-filled${_noteClass}" style="background:${cfg.bg};color:${cfg.color}"${_noteEvts}${_noteData}>${lbl}</div></td>`;
     }).join('');
     return `<tr class="row-ativa"><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:600;white-space:nowrap">${conc.nome}</td><td class="sel-cell" data-sr="${ri}" data-sc="1" style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td><td class="sub sel-cell" data-sr="${ri}" data-sc="2" style="font-size:11px">${conc.agente||'—'}</td><td class="sel-cell" data-sr="${ri}" data-sc="3">${respCell}</td><td class="sel-cell" data-sr="${ri}" data-sc="4" style="padding:4px 8px">${priorCell}</td><td class="sel-cell" data-sr="${ri}" data-sc="5" style="white-space:nowrap;padding:4px 8px">${d1ChipHtml}</td>${cells}</tr>`;
   }).join('')}</tbody>`;
@@ -6206,14 +6304,33 @@ function onConcCellClick(evt,ck,dateStr){
 }
 function _concChooseSt(evt,ck,dateStr,v){
   evt.stopPropagation();
-  _closeConcPop();
   const conc=store.conciliacoes.find(c=>(c.id||c.nome).replace(/['"]/g,'')===ck);
-  if(!conc) return;
+  if(!conc){_closeConcPop();return;}
   const sigla=store.responsaveis.find(r=>r.email===window._loggedEmail)?.sigla||'?';
   const manualKey=`${conc.id||conc.nome}_${dateStr}`;
+  if(v==='sem_acesso'){
+    _closeConcPop();
+    const _doSave=reportLink=>{
+      const entry={status:'sem_acesso',sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')};
+      if(reportLink) entry.reportLink=reportLink;
+      store.cronogramaConciliacoes[manualKey]=entry;
+      saveStore();_fbSync('cronogramaConciliacoes');
+      renderCronogramaConciliacoes();
+    };
+    const prevDate=_prevDay(dateStr);
+    const prevKey=`${conc.id||conc.nome}_${prevDate}`;
+    const prevEntry=store.cronogramaConciliacoes[prevKey];
+    const prevLink=(prevEntry?.status==='sem_acesso'&&prevEntry?.reportLink)?prevEntry.reportLink:null;
+    _showSlackConfirm(conc.nome,conc.agente||'—','conciliacoes',prevLink,
+      link=>{_doSave(link);if(!link)_toast('Slack: sem link obtido',2500);},
+      inheritedLink=>{_doSave(inheritedLink);if(inheritedLink)_toast(t('slack-link-prev'),2500);}
+    );
+    return;
+  }
+  _closeConcPop();
   if(!v){ delete store.cronogramaConciliacoes[manualKey]; }
   else { store.cronogramaConciliacoes[manualKey]={status:v,sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')}; }
-  saveStore(); _fbSync('cronogramaConciliacoes');
+  saveStore();_fbSync('cronogramaConciliacoes');
   renderCronogramaConciliacoes();
 }
 
