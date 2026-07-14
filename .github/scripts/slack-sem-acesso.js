@@ -13,16 +13,16 @@ const ENV_LABEL = process.env.ENV_LABEL || 'Eron';
 
 const MSGS = {
   'pt-BR': {
-    accounts:      `Olá equipe, informo que *Accounts* não conseguiu acessar a conta *${BANCO}* do agente *${AGENTE}*, podem verificar por favor? [${ENV_LABEL}]`,
-    conciliacoes:  `Olá equipe, informo que *Conciliações* não conseguiu acessar a conta *${BANCO}* do agente *${AGENTE}*, podem verificar por favor? [${ENV_LABEL}]`,
+    accounts:      `Olá equipe, informo que *Accounts* não conseguiu acessar a conta *${BANCO}* do agente *${AGENTE}*, podem verificar por favor?`,
+    conciliacoes:  `Olá equipe, informo que *Conciliações* não conseguiu acessar a conta *${BANCO}* do agente *${AGENTE}*, podem verificar por favor?`,
   },
   'en': {
-    accounts:     `Hello team, Accounts couldn't access account *${BANCO}* from agent *${AGENTE}*, could you please check? [${ENV_LABEL}]`,
-    conciliacoes: `Hello team, Reconciliations couldn't access account *${BANCO}* from agent *${AGENTE}*, could you please check? [${ENV_LABEL}]`,
+    accounts:     `Hello team, Accounts couldn't access account *${BANCO}* from agent *${AGENTE}*, could you please check?`,
+    conciliacoes: `Hello team, Reconciliations couldn't access account *${BANCO}* from agent *${AGENTE}*, could you please check?`,
   },
   'es': {
-    accounts:     `Hola equipo, les informo que *Accounts* no pudo acceder a la cuenta *${BANCO}* del agente *${AGENTE}*, ¿pueden verificar por favor? [${ENV_LABEL}]`,
-    conciliacoes: `Hola equipo, les informo que *Conciliaciones* no pudo acceder a la cuenta *${BANCO}* del agente *${AGENTE}*, ¿pueden verificar por favor? [${ENV_LABEL}]`,
+    accounts:     `Hola equipo, les informo que *Accounts* no pudo acceder a la cuenta *${BANCO}* del agente *${AGENTE}*, ¿pueden verificar por favor?`,
+    conciliacoes: `Hola equipo, les informo que *Conciliaciones* no pudo acceder a la cuenta *${BANCO}* del agente *${AGENTE}*, ¿pueden verificar por favor?`,
   },
 };
 
