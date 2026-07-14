@@ -2984,10 +2984,10 @@ async function _triggerSlackNotif(module,banco,agente,onResult){
   }
   setTimeout(poll,8000); // GH Actions take ~10-15s to start
 }
-function _showSlackConfirm(banco,agente,module,prevLink,onSim,onNao){
+function _showSlackConfirm(banco,agente,module,prevLink,onSim,onNao,onLink){
   const ov=document.createElement('div');
   ov.id='_slack-ov';
-  ov.style.cssText='position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.18);backdrop-filter:blur(2px)';
+  ov.style.cssText='position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.18)';
   function setContent(html){
     ov.innerHTML=`<div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 36px rgba(0,0,0,.18);padding:22px 26px;min-width:300px;max-width:400px">${html}</div>`;
   }
@@ -3002,8 +3002,13 @@ function _showSlackConfirm(banco,agente,module,prevLink,onSim,onNao){
   document.body.appendChild(ov);
   ov.addEventListener('mousedown',e=>{if(e.target===ov){ov.remove();onNao(prevLink);}});
   document.getElementById('_slk-yes').onclick=()=>{
-    setContent(`<div style="text-align:center;padding:10px 0"><div style="font-size:30px;margin-bottom:10px">⏳</div><div style="font-size:13px;color:var(--e-muted)">${t('slack-sending')}</div></div>`);
-    _triggerSlackNotif(module,banco,agente,link=>{ov.remove();onSim(link);});
+    ov.remove();
+    onSim();
+    _toast(t('slack-sending'),5000);
+    _triggerSlackNotif(module,banco,agente,link=>{
+      if(link&&onLink) onLink(link);
+      else if(!link) _toast('Slack: sem link obtido',3000);
+    });
   };
   document.getElementById('_slk-no').onclick=()=>{
     if(prevLink){ov.remove();onNao(prevLink);return;}
@@ -4251,8 +4256,15 @@ function setCronoDayStatus(contaKey, dateStr, status, event){
     const prevEntry=store.cronogramaData[`${contaKey}_${prevDate}`];
     const prevLink=(prevEntry?.status==='sem_acesso'&&prevEntry?.reportLink)?prevEntry.reportLink:null;
     _showSlackConfirm(banco,agente,'accounts',prevLink,
-      link=>{closeCalDropdown();_doSave(link);if(!link)_toast('Slack: sem link obtido',2500);},
-      inheritedLink=>{closeCalDropdown();_doSave(inheritedLink);if(inheritedLink)_toast(t('slack-link-prev'),2500);}
+      ()=>{closeCalDropdown();_doSave(null);},
+      inheritedLink=>{closeCalDropdown();_doSave(inheritedLink);if(inheritedLink)_toast(t('slack-link-prev'),2500);},
+      link=>{
+        const entry=store.cronogramaData[storeKey];
+        if(entry&&entry.status==='sem_acesso'){
+          entry.reportLink=link;saveStore();_fbSetCronoEntry(storeKey,entry);renderCronogramaAccounts();
+          _toast('Link do Slack recebido ✓',3000);
+        }
+      }
     );
   } else if(status==='aguardando_extrato'){
     const dd=document.querySelector('.cal-dropdown');
@@ -6323,8 +6335,15 @@ function _concChooseSt(evt,ck,dateStr,v){
     const prevEntry=store.cronogramaConciliacoes[prevKey];
     const prevLink=(prevEntry?.status==='sem_acesso'&&prevEntry?.reportLink)?prevEntry.reportLink:null;
     _showSlackConfirm(conc.nome,conc.agente||'—','conciliacoes',prevLink,
-      link=>{_doSave(link);if(!link)_toast('Slack: sem link obtido',2500);},
-      inheritedLink=>{_doSave(inheritedLink);if(inheritedLink)_toast(t('slack-link-prev'),2500);}
+      ()=>{_doSave(null);},
+      inheritedLink=>{_doSave(inheritedLink);if(inheritedLink)_toast(t('slack-link-prev'),2500);},
+      link=>{
+        const entry=store.cronogramaConciliacoes[manualKey];
+        if(entry&&entry.status==='sem_acesso'){
+          entry.reportLink=link;saveStore();_fbSync('cronogramaConciliacoes');renderCronogramaConciliacoes();
+          _toast('Link do Slack recebido ✓',3000);
+        }
+      }
     );
     return;
   }
