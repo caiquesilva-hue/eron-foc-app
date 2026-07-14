@@ -334,10 +334,10 @@
   .cal-wrap{background:#fff;border:1px solid var(--e-pale);border-radius:12px;}
   .cal-scroll{overflow-x:scroll;}
   .cal-table{width:max-content;min-width:100%;border-collapse:collapse;}
-  .cal-table thead th{padding:8px 10px;text-align:center;font-size:11px;font-weight:600;color:var(--e-muted);text-transform:uppercase;letter-spacing:.06em;background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap;position:sticky;z-index:3;}
-  .cal-table thead tr:first-child th{top:0;}
-  .cal-table thead tr:last-child th{top:31px;border-top:none;}
-  .cal-table thead th.col-info{text-align:left;padding:8px 14px;}
+  .cal-table thead{position:sticky;top:0;z-index:4;}
+  .cal-table thead th{padding:8px 10px;text-align:center;font-size:11px;font-weight:600;color:var(--e-muted);text-transform:uppercase;letter-spacing:.06em;background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap;}
+  .cal-table thead tr:last-child th{border-top:none;}
+  .cal-table thead th.col-info{text-align:left;padding:8px 28px 8px 14px;}
   .cal-table thead th.col-day{min-width:50px;width:auto;padding:5px 3px;}
   .cal-table thead th.weekend{background:#faf5ff;}
   .cal-table tbody tr{border-bottom:1px solid var(--e-pale);border-left:3px solid transparent;}
@@ -346,7 +346,8 @@
   .cal-table tbody tr.row-encerrada{border-left-color:#d1d5db;opacity:.6;}
   .cal-table td{padding:7px 14px;font-size:12px;color:var(--e-text);white-space:nowrap;vertical-align:middle;}
   .cal-table td.day-cell{padding:4px 2px;text-align:center;width:auto;min-width:50px;}
-  .day-cell.c-sel{background:rgba(124,58,237,.1)!important;box-shadow:inset 0 0 0 1.5px rgba(124,58,237,.55);}
+  .sel-cell.c-sel{background:rgba(124,58,237,.1)!important;box-shadow:inset 0 0 0 1.5px rgba(124,58,237,.55);}
+  .sel-cell{cursor:default;}
   .day-dot{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin:0 auto;}
   .day-dot.active-t1{background:rgba(111,115,244,.2);color:var(--e-violet);}
   .day-dot.active-t2{background:rgba(151,111,244,.2);color:var(--e-mid);}
@@ -2846,13 +2847,13 @@ function _applyHiddenCols(key,tblId,infoN){
   if(old) old.textContent='';
 }
 // ─── Seleção de células por arrasto (estilo Excel) ───────────────────────────
-let _selOn=false,_selDrag=false,_selR0=0,_selC0=0,_selR1=0,_selC1=0;
-function _clearSel(tbl){if(tbl)tbl.querySelectorAll('td.day-cell.c-sel').forEach(t=>t.classList.remove('c-sel'));}
+let _selOn=false,_selDrag=false,_selR0=0,_selC0=0,_selR1=0,_selC1=0,_selTbl=null;
+function _clearSel(tbl){if(tbl)tbl.querySelectorAll('td.sel-cell.c-sel').forEach(t=>t.classList.remove('c-sel'));}
 function _applySel(tbl){
   if(!tbl) return;
   const r0=Math.min(_selR0,_selR1),r1=Math.max(_selR0,_selR1);
   const c0=Math.min(_selC0,_selC1),c1=Math.max(_selC0,_selC1);
-  tbl.querySelectorAll('td.day-cell').forEach(td=>{
+  tbl.querySelectorAll('td.sel-cell').forEach(td=>{
     const r=+td.dataset.sr,c=+td.dataset.sc;
     td.classList.toggle('c-sel',r>=r0&&r<=r1&&c>=c0&&c<=c1);
   });
@@ -2863,11 +2864,11 @@ function _copySelData(tbl){
   const c0=Math.min(_selC0,_selC1),c1=Math.max(_selC0,_selC1);
   const lines=[];
   for(let r=r0;r<=r1;r++){
-    const anch=tbl.querySelector(`td.day-cell[data-sr="${r}"]`);
+    const anch=tbl.querySelector(`td.sel-cell[data-sr="${r}"]`);
     if(!anch) continue;
-    const dcs=[...anch.closest('tr').querySelectorAll('td.day-cell')];
+    const cells=[...anch.closest('tr').querySelectorAll('td.sel-cell')];
     const cols=[];
-    for(let c=c0;c<=c1;c++) cols.push(dcs[c]?.querySelector('.day-filled')?.textContent.trim()||'');
+    for(let c=c0;c<=c1;c++) cols.push(cells[c]?.textContent.trim()||'');
     lines.push(cols.join('\t'));
   }
   if(!lines.length) return;
@@ -2884,16 +2885,13 @@ if(!window._cronoSelGlobal){
   document.addEventListener('mouseup',()=>{_selOn=false;});
   document.addEventListener('keydown',e=>{
     if((e.ctrlKey||e.metaKey)&&e.key==='c'){
-      const tbl=document.getElementById('crono-cal-table');
-      if(!tbl||!tbl.querySelector('td.day-cell.c-sel')) return;
+      if(!_selTbl||!_selTbl.querySelector('td.sel-cell.c-sel')) return;
       e.preventDefault();
-      _copySelData(tbl);
+      _copySelData(_selTbl);
     }
   });
   document.addEventListener('click',e=>{
-    if(!e.target.closest('#crono-cal-table')){
-      _clearSel(document.getElementById('crono-cal-table'));
-    }
+    if(_selTbl&&!e.target.closest('#'+_selTbl.id)) _clearSel(_selTbl);
   });
 }
 function renderCronogramaAccounts(){
@@ -2997,8 +2995,7 @@ function renderCronogramaAccounts(){
       const dotCls=dayDotClass(c.tipo);
       const _d1s=d1Map[contaKey];
       const _d1chipHtml={concluido:`<span class="chip chip-green" style="font-size:10px">${t('status-concluido')}</span>`,sem_movimento:`<span class="chip chip-purple" style="font-size:10px">${t('status-sem-mov')}</span>`,sem_acesso:`<span class="chip chip-red" style="font-size:10px">${t('status-sem-acesso')}</span>`,pendente:`<span class="chip chip-amber" style="font-size:10px">${t('status-pendente')}</span>`,aguardando_extrato:`<span class="chip chip-bbpix" style="font-size:10px">${t('status-ag-extrato')}</span>`}[_d1s]||'<span style="color:var(--e-muted);font-size:11px">—</span>';
-      const d1Cell=`<td style="white-space:nowrap;padding:4px 8px">${_d1chipHtml}</td>`;
-      const cells=days.map((d,ci)=>{
+      const cells=days.map(d=>{
         const dateStr=fmtDate(d);
         const active=isActiveDay(d,c.tipo);
         const storeKey=`${contaKey}_${dateStr}`;
@@ -3015,28 +3012,30 @@ function renderCronogramaAccounts(){
           const noteEvts=hasLink?` onmouseenter="showNoteTooltip(event,this)" onmouseleave="scheduleHideNoteTooltip()"`:'';
           const noteData=hasLink?` data-link="${entry.reportLink.replace(/"/g,'&quot;')}"`:'' ;
           const _ck=contaKey.replace(/&/g,'&amp;');
-          return `<td class="day-cell" data-ck="${_ck}" data-dt="${dateStr}" data-sr="${ri}" data-sc="${ci}" data-act="true" style="cursor:pointer;padding:2px 1px">
+          return `<td class="day-cell" data-ck="${_ck}" data-dt="${dateStr}" data-act="true" style="cursor:pointer;padding:2px 1px">
             <div class="day-filled${noteClass}"${noteData}${noteEvts} style="background:${cfg.bg};color:${cfg.color}">${cfg.lbl}</div></td>`;
         } else if(active){
           const _ck=contaKey.replace(/&/g,'&amp;');
-          return `<td class="day-cell" data-ck="${_ck}" data-dt="${dateStr}" data-sr="${ri}" data-sc="${ci}" data-act="true" style="cursor:pointer">
+          return `<td class="day-cell" data-ck="${_ck}" data-dt="${dateStr}" data-act="true" style="cursor:pointer">
             <div class="day-dot ${dotCls}" style="opacity:.55;font-size:8px">·</div></td>`;
         } else {
           const _ck=contaKey.replace(/&/g,'&amp;');
-          return `<td class="day-cell" data-ck="${_ck}" data-dt="${dateStr}" data-sr="${ri}" data-sc="${ci}" data-act="false" style="cursor:pointer">
+          return `<td class="day-cell" data-ck="${_ck}" data-dt="${dateStr}" data-act="false" style="cursor:pointer">
             <div class="day-dot inactive"></div></td>`;
         }
       }).join('');
-      return `<tr class="row-${c.status}"><td class="cal-sticky" style="font-family:ui-monospace,monospace;font-size:12px">${c.sigla}</td><td>${countryFlag(c.pais)} ${c.pais}</td><td class="sub">${c.agente}</td><td>${respCell}</td><td>${c.banco}</td><td class="mono">${c.numeroConta||'—'}</td><td>${tipoChip(c.tipo)}</td><td>${tipoContaChip(c.tipoConta)}</td><td>${topChip}</td>${d1Cell}${cells}</tr>`;
+      return `<tr class="row-${c.status}"><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-family:ui-monospace,monospace;font-size:12px">${c.sigla}</td><td class="sel-cell" data-sr="${ri}" data-sc="1">${countryFlag(c.pais)} ${c.pais}</td><td class="sub sel-cell" data-sr="${ri}" data-sc="2">${c.agente}</td><td class="sel-cell" data-sr="${ri}" data-sc="3">${respCell}</td><td class="sel-cell" data-sr="${ri}" data-sc="4">${c.banco}</td><td class="mono sel-cell" data-sr="${ri}" data-sc="5">${c.numeroConta||'—'}</td><td class="sel-cell" data-sr="${ri}" data-sc="6">${tipoChip(c.tipo)}</td><td class="sel-cell" data-sr="${ri}" data-sc="7">${tipoContaChip(c.tipoConta)}</td><td class="sel-cell" data-sr="${ri}" data-sc="8">${topChip}</td><td class="sel-cell" data-sr="${ri}" data-sc="9" style="white-space:nowrap;padding:4px 8px">${_d1chipHtml}</td>${cells}</tr>`;
     }).join('')
   }</tbody>`;
   if(calScrollEl){calScrollEl.scrollLeft=_savedSL;calScrollEl.scrollTop=_savedST;}
   if(!tbl._dayClickAttached){
     tbl._dayClickAttached=true;
     tbl.addEventListener('mousedown',e=>{
-      const td=e.target.closest('td.day-cell');
+      const td=e.target.closest('td.sel-cell');
       if(!td){_clearSel(tbl);return;}
       e.preventDefault();
+      if(_selTbl&&_selTbl!==tbl)_clearSel(_selTbl);
+      _selTbl=tbl;
       _selOn=true;_selDrag=false;
       _selR0=_selR1=+td.dataset.sr;
       _selC0=_selC1=+td.dataset.sc;
@@ -3045,7 +3044,7 @@ function renderCronogramaAccounts(){
     });
     tbl.addEventListener('mousemove',e=>{
       if(!_selOn) return;
-      const td=e.target.closest('td.day-cell');
+      const td=e.target.closest('td.sel-cell');
       if(!td) return;
       _selDrag=true;
       _selR1=+td.dataset.sr;_selC1=+td.dataset.sc;
@@ -5986,7 +5985,7 @@ function renderCronogramaConciliacoes(){
   tbl.innerHTML=`<thead>
     <tr>${colInfos}${dayHdrs}</tr>
     <tr>${emptyInfoCols}${wdHdrs}</tr>
-  </thead><tbody>${list.map(conc=>{
+  </thead><tbody>${list.map((conc,ri)=>{
     const rEmail=_getConcilResp(conc);
     const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;
     const respCell=rUser?`<span style="font-family:monospace;font-size:10px;font-weight:700;background:rgba(151,111,244,.1);color:var(--e-mid);padding:1px 5px;border-radius:3px">${rUser.sigla}</span>`:'<span style="color:var(--e-muted);font-size:11px">—</span>';
@@ -6016,16 +6015,37 @@ function renderCronogramaConciliacoes(){
       const lbl=r.status==='sem_movimento'?(_sig?`${_sig} s/m`:'s/m'):r.status==='sem_acesso'?(_sig?`${_sig} s/a`:'s/a'):r.entry?_sig:(r.status==='pronto_conciliacao'?'✓':'?');
       return `<td class="day-cell conc-cell" data-ck="${_ck}" data-dt="${dateStr}" style="cursor:pointer"><div class="day-filled" style="background:${cfg.bg};color:${cfg.color}">${lbl}</div></td>`;
     }).join('');
-    return `<tr class="row-ativa"><td class="cal-sticky" style="font-size:12px;font-weight:600;white-space:nowrap">${conc.nome}</td><td style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td><td class="sub" style="font-size:11px">${conc.agente||'—'}</td><td>${respCell}</td><td style="padding:4px 8px">${priorCell}</td><td style="white-space:nowrap;padding:4px 8px">${d1ChipHtml}</td>${cells}</tr>`;
+    return `<tr class="row-ativa"><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:600;white-space:nowrap">${conc.nome}</td><td class="sel-cell" data-sr="${ri}" data-sc="1" style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td><td class="sub sel-cell" data-sr="${ri}" data-sc="2" style="font-size:11px">${conc.agente||'—'}</td><td class="sel-cell" data-sr="${ri}" data-sc="3">${respCell}</td><td class="sel-cell" data-sr="${ri}" data-sc="4" style="padding:4px 8px">${priorCell}</td><td class="sel-cell" data-sr="${ri}" data-sc="5" style="white-space:nowrap;padding:4px 8px">${d1ChipHtml}</td>${cells}</tr>`;
   }).join('')}</tbody>`;
 
   if(calScrollEl){calScrollEl.scrollLeft=_savedSL;calScrollEl.scrollTop=_savedST;}
 
   if(!tbl._concClickAttached){
     tbl._concClickAttached=true;
+    tbl.addEventListener('mousedown',e=>{
+      const td=e.target.closest('td.sel-cell');
+      if(!td){_clearSel(tbl);return;}
+      e.preventDefault();
+      if(_selTbl&&_selTbl!==tbl)_clearSel(_selTbl);
+      _selTbl=tbl;
+      _selOn=true;_selDrag=false;
+      _selR0=_selR1=+td.dataset.sr;
+      _selC0=_selC1=+td.dataset.sc;
+      _clearSel(tbl);
+      _applySel(tbl);
+    });
+    tbl.addEventListener('mousemove',e=>{
+      if(!_selOn) return;
+      const td=e.target.closest('td.sel-cell');
+      if(!td) return;
+      _selDrag=true;
+      _selR1=+td.dataset.sr;_selC1=+td.dataset.sc;
+      _applySel(tbl);
+    });
     tbl.addEventListener('click',function(ev){
       const td=ev.target.closest('td.conc-cell');
       if(!td) return;
+      if(_selDrag){_selDrag=false;return;}
       ev.stopPropagation();
       onConcCellClick(ev,td.dataset.ck,td.dataset.dt);
     });
