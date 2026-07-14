@@ -760,8 +760,8 @@
     <div class="page-header-left"><div class="page-title-text" data-i18n="nav-conciliacoes">Conciliações</div><div class="page-title-count" id="conciliacoes-count"></div></div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
       <div style="display:flex;gap:8px;align-items:stretch">
-        <button class="btn-secondary" onclick="openVolumeImportModal()" data-requires-edit title="Importar CSVs de volume para calcular prioridade automaticamente" style="font-size:12px;padding:5px 12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Importar Volume</button>
-        <button class="btn-primary" onclick="openConciliacaoModal()" data-requires-edit><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg> Adicionar conciliação</button>
+        <button class="btn-secondary" onclick="openVolumeImportModal()" data-requires-edit title="Importar CSVs de volume para calcular prioridade automaticamente" style="font-size:12px;padding:5px 12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> <span data-i18n="btn-importar-volume">Importar Volume</span></button>
+        <button class="btn-primary" onclick="openConciliacaoModal()" data-requires-edit><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg> <span data-i18n="btn-add-conciliacao">Adicionar conciliação</span></button>
       </div>
       <span id="vol-last-import-lbl" style="font-size:10px;color:var(--e-muted);white-space:nowrap"></span>
     </div>
@@ -1955,6 +1955,9 @@ const i18n = {
     'lbl-encerrar-concil':'Encerrar conciliação','encerrar-concil-desc':'Marca a conciliação como inativa permanentemente.',
     'lbl-proc-e-contas':'Processadores e contas vinculadas','lbl-proc-vinc':'Processadores vinculados',
     'empty-nenhum-resultado':'Nenhum resultado','empty-nenhum-item':'Nenhum item cadastrado',
+    'btn-importar-volume':'Importar Volume','btn-add-conciliacao':'Adicionar conciliação',
+    'lbl-ultima-ingestao':'Última ingestão',
+    'conciliacao-sg':'conciliação','conciliacao-pl':'conciliações',
   },
   'en': {
     'ops-platform':'FOC App','login-welcome':'Welcome back',
@@ -2043,6 +2046,9 @@ const i18n = {
     'lbl-encerrar-concil':'Close reconciliation','encerrar-concil-desc':'Permanently marks this reconciliation as inactive.',
     'lbl-proc-e-contas':'Linked processors and accounts','lbl-proc-vinc':'Linked processors',
     'empty-nenhum-resultado':'No results','empty-nenhum-item':'No items registered',
+    'btn-importar-volume':'Import Volume','btn-add-conciliacao':'Add reconciliation',
+    'lbl-ultima-ingestao':'Last import',
+    'conciliacao-sg':'reconciliation','conciliacao-pl':'reconciliations',
   },
   'es': {
     'ops-platform':'FOC App','login-welcome':'Bienvenido de nuevo',
@@ -2132,6 +2138,9 @@ const i18n = {
     'lbl-encerrar-concil':'Cerrar conciliación','encerrar-concil-desc':'Marca la conciliación como inactiva permanentemente.',
     'lbl-proc-e-contas':'Procesadores y cuentas vinculadas','lbl-proc-vinc':'Procesadores vinculados',
     'empty-nenhum-resultado':'Sin resultados','empty-nenhum-item':'No hay ítems registrados',
+    'btn-importar-volume':'Importar Volumen','btn-add-conciliacao':'Agregar conciliación',
+    'lbl-ultima-ingestao':'Última importación',
+    'conciliacao-sg':'conciliación','conciliacao-pl':'conciliaciones',
   }
 };
 
@@ -5932,7 +5941,7 @@ function _renderVolLastImport(){
   if(!ts){lbl.textContent='';return;}
   const d=new Date(ts);
   const pad=n=>String(n).padStart(2,'0');
-  lbl.textContent=`Última ingestão: ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  lbl.textContent=`${t('lbl-ultima-ingestao')}: ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 function _toggleVolRanking(){
   const sec=document.getElementById('vol-ranking-section');
@@ -6589,7 +6598,7 @@ function updateCounts(){
   el('agente-count',n(store.agentes.length,t('count-agente'),t('count-agentes')));
   el('banco-count',n(store.bancos.length,t('count-banco'),t('count-bancos')));
   el('proc-count',n(store.processadores.length,t('count-processador'),t('count-processadores')));
-  el('conciliacoes-count',n(store.conciliacoes.length,'conciliação','conciliações'));
+  el('conciliacoes-count',n(store.conciliacoes.length,t('conciliacao-sg'),t('conciliacao-pl')));
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────
