@@ -3726,8 +3726,10 @@ function submitBulkApply(){
   };
   if(status==='sem_acesso'){
     const activeAgentes=_fddVals('crono-f-agente-panel');
-    const agente=activeAgentes.length===1?activeAgentes[0]:(list[0]?.agente||'—');
-    const banco=list.length===1?(list[0].banco||list[0].sigla||'—'):`${list.length} contas`;
+    const _agentesUniq=[...new Set(list.map(c=>c.agente).filter(Boolean))];
+    const agente=activeAgentes.length===1?activeAgentes[0]:(_agentesUniq.length===1?_agentesUniq[0]:'—');
+    const _bancosUniq=[...new Set(list.map(c=>c.banco).filter(Boolean))];
+    const banco=_bancosUniq.length===1?_bancosUniq[0]:`${list.length} contas`;
     closeModal('modal-bulk-apply');
     let _appliedKeys=null;
     _showSlackConfirm(banco,agente,'accounts',null,
@@ -6456,8 +6458,10 @@ function submitConcBulkApply(){
     return appliedKeys;
   };
   if(status==='sem_acesso'){
-    const agente=list.length===1?(list[0].agente||'—'):'—';
-    const banco=list.length===1?list[0].nome:`${list.length} processadores`;
+    const _concAgentesUniq=[...new Set(list.map(c=>c.agente).filter(Boolean))];
+    const agente=_concAgentesUniq.length===1?_concAgentesUniq[0]:'—';
+    const _concNomesUniq=[...new Set(list.map(c=>c.nome).filter(Boolean))];
+    const banco=_concNomesUniq.length===1?_concNomesUniq[0]:`${list.length} processadores`;
     closeModal('modal-conc-bulk-apply');
     let _appliedKeys=null;
     _showSlackConfirm(banco,agente,'conciliacoes',null,
