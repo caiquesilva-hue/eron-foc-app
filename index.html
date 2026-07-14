@@ -346,6 +346,7 @@
   .cal-table tbody tr.row-encerrada{border-left-color:#d1d5db;opacity:.6;}
   .cal-table td{padding:7px 14px;font-size:12px;color:var(--e-text);white-space:nowrap;vertical-align:middle;}
   .cal-table td.day-cell{padding:4px 2px;text-align:center;width:auto;min-width:50px;}
+  .day-cell.c-sel{background:rgba(124,58,237,.1)!important;box-shadow:inset 0 0 0 1.5px rgba(124,58,237,.55);}
   .day-dot{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin:0 auto;}
   .day-dot.active-t1{background:rgba(111,115,244,.2);color:var(--e-violet);}
   .day-dot.active-t2{background:rgba(151,111,244,.2);color:var(--e-mid);}
@@ -2844,6 +2845,57 @@ function _applyHiddenCols(key,tblId,infoN){
   const old=document.getElementById(`${tblId}-colhide`);
   if(old) old.textContent='';
 }
+// ─── Seleção de células por arrasto (estilo Excel) ───────────────────────────
+let _selOn=false,_selDrag=false,_selR0=0,_selC0=0,_selR1=0,_selC1=0;
+function _clearSel(tbl){if(tbl)tbl.querySelectorAll('td.day-cell.c-sel').forEach(t=>t.classList.remove('c-sel'));}
+function _applySel(tbl){
+  if(!tbl) return;
+  const r0=Math.min(_selR0,_selR1),r1=Math.max(_selR0,_selR1);
+  const c0=Math.min(_selC0,_selC1),c1=Math.max(_selC0,_selC1);
+  tbl.querySelectorAll('td.day-cell').forEach(td=>{
+    const r=+td.dataset.sr,c=+td.dataset.sc;
+    td.classList.toggle('c-sel',r>=r0&&r<=r1&&c>=c0&&c<=c1);
+  });
+}
+function _copySelData(tbl){
+  if(!tbl) return;
+  const r0=Math.min(_selR0,_selR1),r1=Math.max(_selR0,_selR1);
+  const c0=Math.min(_selC0,_selC1),c1=Math.max(_selC0,_selC1);
+  const lines=[];
+  for(let r=r0;r<=r1;r++){
+    const anch=tbl.querySelector(`td.day-cell[data-sr="${r}"]`);
+    if(!anch) continue;
+    const dcs=[...anch.closest('tr').querySelectorAll('td.day-cell')];
+    const cols=[];
+    for(let c=c0;c<=c1;c++) cols.push(dcs[c]?.querySelector('.day-filled')?.textContent.trim()||'');
+    lines.push(cols.join('\t'));
+  }
+  if(!lines.length) return;
+  navigator.clipboard.writeText(lines.join('\n')).catch(()=>{});
+  const fb=document.createElement('div');
+  fb.textContent='✓ Copiado!';
+  fb.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1e1b4b;color:#fff;padding:8px 20px;border-radius:8px;font-size:13px;font-family:inherit;z-index:9999;pointer-events:none;transition:opacity .35s';
+  document.body.appendChild(fb);
+  setTimeout(()=>{fb.style.opacity='0';setTimeout(()=>fb.remove(),400);},1400);
+}
+// Global handlers (registrados uma única vez)
+if(!window._cronoSelGlobal){
+  window._cronoSelGlobal=true;
+  document.addEventListener('mouseup',()=>{_selOn=false;});
+  document.addEventListener('keydown',e=>{
+    if((e.ctrlKey||e.metaKey)&&e.key==='c'){
+      const tbl=document.getElementById('crono-cal-table');
+      if(!tbl||!tbl.querySelector('td.day-cell.c-sel')) return;
+      e.preventDefault();
+      _copySelData(tbl);
+    }
+  });
+  document.addEventListener('click',e=>{
+    if(!e.target.closest('#crono-cal-table')){
+      _clearSel(document.getElementById('crono-cal-table'));
+    }
+  });
+}
 function renderCronogramaAccounts(){
   const countEl=document.getElementById('crono-accounts-count');
   const emptyEl=document.getElementById('crono-accounts-empty');
@@ -2937,7 +2989,7 @@ function renderCronogramaAccounts(){
   const emptyInfoCols='<th class="col-info cal-sticky" style="background:var(--e-ghost)"></th>'+'<th class="col-info" style="background:var(--e-ghost)"></th>'.repeat(INFO_COLS-1);
   const fmtDate=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   tbl.innerHTML=`<thead><tr>${colInfos}${dayHeaders}</tr><tr>${emptyInfoCols}${wdHeaders}</tr></thead><tbody>${
-    listSorted.map(c=>{
+    listSorted.map((c,ri)=>{
       const contaKey=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
       const resp=_contaResp(c);
       const respCell=resp?`<span style="font-family:monospace;font-size:10px;font-weight:700;background:rgba(151,111,244,.1);color:var(--e-mid);padding:1px 5px;border-radius:3px">${resp.sigla}</span>`:'<span style="color:var(--e-muted);font-size:11px">—</span>';
@@ -2946,7 +2998,7 @@ function renderCronogramaAccounts(){
       const _d1s=d1Map[contaKey];
       const _d1chipHtml={concluido:`<span class="chip chip-green" style="font-size:10px">${t('status-concluido')}</span>`,sem_movimento:`<span class="chip chip-purple" style="font-size:10px">${t('status-sem-mov')}</span>`,sem_acesso:`<span class="chip chip-red" style="font-size:10px">${t('status-sem-acesso')}</span>`,pendente:`<span class="chip chip-amber" style="font-size:10px">${t('status-pendente')}</span>`,aguardando_extrato:`<span class="chip chip-bbpix" style="font-size:10px">${t('status-ag-extrato')}</span>`}[_d1s]||'<span style="color:var(--e-muted);font-size:11px">—</span>';
       const d1Cell=`<td style="white-space:nowrap;padding:4px 8px">${_d1chipHtml}</td>`;
-      const cells=days.map(d=>{
+      const cells=days.map((d,ci)=>{
         const dateStr=fmtDate(d);
         const active=isActiveDay(d,c.tipo);
         const storeKey=`${contaKey}_${dateStr}`;
@@ -2963,15 +3015,15 @@ function renderCronogramaAccounts(){
           const noteEvts=hasLink?` onmouseenter="showNoteTooltip(event,this)" onmouseleave="scheduleHideNoteTooltip()"`:'';
           const noteData=hasLink?` data-link="${entry.reportLink.replace(/"/g,'&quot;')}"`:'' ;
           const _ck=contaKey.replace(/&/g,'&amp;');
-          return `<td class="day-cell" data-ck="${_ck}" data-dt="${dateStr}" data-act="true" style="cursor:pointer;padding:2px 1px">
+          return `<td class="day-cell" data-ck="${_ck}" data-dt="${dateStr}" data-sr="${ri}" data-sc="${ci}" data-act="true" style="cursor:pointer;padding:2px 1px">
             <div class="day-filled${noteClass}"${noteData}${noteEvts} style="background:${cfg.bg};color:${cfg.color}">${cfg.lbl}</div></td>`;
         } else if(active){
           const _ck=contaKey.replace(/&/g,'&amp;');
-          return `<td class="day-cell" data-ck="${_ck}" data-dt="${dateStr}" data-act="true" style="cursor:pointer">
+          return `<td class="day-cell" data-ck="${_ck}" data-dt="${dateStr}" data-sr="${ri}" data-sc="${ci}" data-act="true" style="cursor:pointer">
             <div class="day-dot ${dotCls}" style="opacity:.55;font-size:8px">·</div></td>`;
         } else {
           const _ck=contaKey.replace(/&/g,'&amp;');
-          return `<td class="day-cell" data-ck="${_ck}" data-dt="${dateStr}" data-act="false" style="cursor:pointer">
+          return `<td class="day-cell" data-ck="${_ck}" data-dt="${dateStr}" data-sr="${ri}" data-sc="${ci}" data-act="false" style="cursor:pointer">
             <div class="day-dot inactive"></div></td>`;
         }
       }).join('');
@@ -2981,9 +3033,28 @@ function renderCronogramaAccounts(){
   if(calScrollEl){calScrollEl.scrollLeft=_savedSL;calScrollEl.scrollTop=_savedST;}
   if(!tbl._dayClickAttached){
     tbl._dayClickAttached=true;
+    tbl.addEventListener('mousedown',e=>{
+      const td=e.target.closest('td.day-cell');
+      if(!td){_clearSel(tbl);return;}
+      e.preventDefault();
+      _selOn=true;_selDrag=false;
+      _selR0=_selR1=+td.dataset.sr;
+      _selC0=_selC1=+td.dataset.sc;
+      _clearSel(tbl);
+      _applySel(tbl);
+    });
+    tbl.addEventListener('mousemove',e=>{
+      if(!_selOn) return;
+      const td=e.target.closest('td.day-cell');
+      if(!td) return;
+      _selDrag=true;
+      _selR1=+td.dataset.sr;_selC1=+td.dataset.sc;
+      _applySel(tbl);
+    });
     tbl.addEventListener('click',function(e){
       const td=e.target.closest('td.day-cell');
-      if(!td)return;
+      if(!td) return;
+      if(_selDrag){_selDrag=false;return;}
       e.stopPropagation();
       onDayCellClick(e,td.dataset.ck,td.dataset.dt,td.dataset.act==='true',td);
     });
