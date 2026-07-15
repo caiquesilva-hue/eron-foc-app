@@ -740,7 +740,7 @@
     <span style="flex-shrink:0;margin-top:1px">ℹ️</span>
     <span>Conciliações do tipo <strong>Processadores</strong> e <strong>Mista</strong> são incluídas automaticamente a partir de <strong>Gerencial › Conciliações</strong>. Conciliações do tipo <strong>Chargeback</strong> e <strong>Refunds</strong> não estão contempladas aqui. Configure o tipo de liquidação para cada uma.</span>
   </div>
-  <div style="padding:0 0 10px"><input type="search" id="liq-ger-search" placeholder="Buscar nome, país, agente..." style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderGerencialLiquidacoes()"></div>
+  <div style="padding:0 0 10px"><div class="crono-search-inner"><input type="search" id="liq-ger-search" class="crono-search-input" data-i18n-placeholder="liq-search-ph" placeholder="Buscar nome, país, agente..." oninput="renderGerencialLiquidacoes()"></div></div>
   <div class="table-wrap">
     <div id="liq-ger-empty" class="empty-state" style="display:none"><div class="empty-icon">💳</div><div class="empty-title">Nenhuma conciliação de Processadores ou Mista</div><div class="empty-sub">Adicione conciliações em Gerencial › Conciliações com tipo Processadores ou Mista para que apareçam aqui.</div></div>
     <div class="table-scroll" id="liq-ger-table-inner" style="display:none">
@@ -767,7 +767,7 @@
     </div>
   </div>
   <div id="conc-unlinked-gw-wrap"></div>
-  <div style="padding:0 0 10px"><input type="search" id="conc-ger-search" placeholder="Buscar nome, país, agente..." style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderGerencialConciliacoes()"></div>
+  <div style="padding:0 0 10px"><div class="crono-search-inner"><input type="search" id="conc-ger-search" class="crono-search-input" data-i18n-placeholder="conc-search-ph" placeholder="Buscar nome, país, agente..." oninput="renderGerencialConciliacoes()"></div></div>
   <div class="table-wrap">
     <div id="conciliacoes-empty" class="empty-state"><div class="empty-icon">🔗</div><div class="empty-title" data-i18n="conc-empty-title">Nenhuma conciliação cadastrada</div><div class="empty-sub" data-i18n="conc-empty-sub">Adicione conciliações vinculando contas de Gerencial > Accounts.</div></div>
     <div class="table-scroll" id="conciliacoes-table-inner" style="display:none"><table><thead><tr><th data-i18n="lbl-nome">Nome</th><th data-i18n="col-pais">País</th><th data-i18n="col-agente">Agente</th><th data-i18n="conc-col-tipo">Tipo</th><th data-i18n="conc-col-contas">Contas vinculadas</th><th data-i18n="conc-col-gateways">Gateways vinculados</th><th style="width:80px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="conciliacoes-tbody"></tbody></table></div>
@@ -1022,7 +1022,7 @@
       </div>
     </div>
   </div>
-  <div style="padding:4px 0 8px"><input type="search" id="liq-crono-search" placeholder="Buscar nome, país, agente..." style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderCronogramaLiquidacoes()"></div>
+  <div style="padding:4px 0 8px"><div class="crono-search-inner"><input type="search" id="liq-crono-search" class="crono-search-input" data-i18n-placeholder="liq-search-ph" placeholder="Buscar nome, país, agente..." oninput="renderCronogramaLiquidacoes()"></div></div>
   <div class="liq-stat-row" id="liq-stats-row"></div>
   <div class="table-wrap">
     <div id="liq-crono-empty" class="empty-state" style="display:none"><div class="empty-icon">💳</div><div class="empty-title">Nenhuma conciliação encontrada</div><div class="empty-sub">Adicione conciliações em Gerencial › Conciliações com tipo Processadores ou Mista.</div></div>
@@ -1127,7 +1127,7 @@
     <div class="crono-search-col">
       <div class="crono-search-inner">
         <svg class="crono-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
-        <input type="text" id="crono-conc-search" class="crono-search-input" placeholder="Buscar por nome, país ou agente..."
+        <input type="text" id="crono-conc-search" class="crono-search-input" data-i18n-placeholder="conc-search-ph" placeholder="Buscar por nome, país ou agente..."
           oninput="renderCronogramaConciliacoes();_updConcSearchClear()"
           onpaste="_handleSearchPaste(event,'crono-conc-search')">
         <button class="crono-search-clear" id="crono-conc-search-clear" onclick="clearConcSearch()" style="display:none" title="Limpar">×</button>
@@ -1943,7 +1943,7 @@ const i18n = {
     'liq-col-estado-concil':'Estado Concil.','liq-col-ult-elab':'Última Elab.','liq-col-data-ult':'Data Última','liq-col-obs':'Observações','liq-col-custo-info':'Informações de custo','liq-col-status':'Status',
     'liq-all-paises':'Todos os países','liq-all-agentes':'Todos os agentes','liq-all-tipos':'Todos os tipos','liq-all-status':'Todos os status',
     'liq-st-nao-iniciado':'Não iniciado','liq-st-em-elab':'Em Elaboração','liq-st-concluida':'Concluída','liq-st-sem-mov':'Sem Movimento','liq-st-pendente':'Pendente',
-    'liq-search-ph':'Buscar nome, país, agente...','liq-empty-ger-title':'Nenhuma conciliação de Processadores ou Mista','liq-empty-crono-title':'Nenhuma conciliação encontrada',
+    'liq-search-ph':'Buscar nome, país, agente...','conc-search-ph':'Buscar nome, país, agente...','liq-empty-ger-title':'Nenhuma conciliação de Processadores ou Mista','liq-empty-crono-title':'Nenhuma conciliação encontrada',
     'conc-col-tipo':'Tipo','conc-col-contas':'Contas vinculadas','conc-col-gateways':'Gateways vinculados',
     'conc-empty-title':'Nenhuma conciliação cadastrada','conc-empty-sub':'Adicione conciliações vinculando contas de Gerencial > Accounts.',
     'conc-unlinked-sem':'sem conciliação ativa','conc-unlinked-refunds':'Reembolsos','conc-unlinked-cbk':'Contestações',
@@ -2034,7 +2034,7 @@ const i18n = {
     'liq-col-estado-concil':'Reconcil. Status','liq-col-ult-elab':'Last Elab.','liq-col-data-ult':'Last Date','liq-col-obs':'Notes','liq-col-custo-info':'Cost information','liq-col-status':'Status',
     'liq-all-paises':'All countries','liq-all-agentes':'All agents','liq-all-tipos':'All types','liq-all-status':'All statuses',
     'liq-st-nao-iniciado':'Not started','liq-st-em-elab':'In Progress','liq-st-concluida':'Completed','liq-st-sem-mov':'No Movement','liq-st-pendente':'Pending',
-    'liq-search-ph':'Search name, country, agent...','liq-empty-ger-title':'No Processor or Mixed reconciliations','liq-empty-crono-title':'No reconciliation found',
+    'liq-search-ph':'Search name, country, agent...','conc-search-ph':'Search name, country, agent...','liq-empty-ger-title':'No Processor or Mixed reconciliations','liq-empty-crono-title':'No reconciliation found',
     'conc-col-tipo':'Type','conc-col-contas':'Linked accounts','conc-col-gateways':'Linked gateways',
     'conc-empty-title':'No reconciliations registered','conc-empty-sub':'Add reconciliations linking accounts from Management > Accounts.',
     'conc-unlinked-sem':'with no active reconciliation','conc-unlinked-refunds':'Refunds','conc-unlinked-cbk':'Chargebacks',
@@ -2125,7 +2125,7 @@ const i18n = {
     'liq-col-estado-concil':'Estado Concil.','liq-col-ult-elab':'Última Elab.','liq-col-data-ult':'Última Fecha','liq-col-obs':'Observaciones','liq-col-custo-info':'Información de costos','liq-col-status':'Estado',
     'liq-all-paises':'Todos los países','liq-all-agentes':'Todos los agentes','liq-all-tipos':'Todos los tipos','liq-all-status':'Todos los estados',
     'liq-st-nao-iniciado':'No iniciado','liq-st-em-elab':'En Elaboración','liq-st-concluida':'Concluida','liq-st-sem-mov':'Sin Movimiento','liq-st-pendente':'Pendiente',
-    'liq-search-ph':'Buscar nombre, país, agente...','liq-empty-ger-title':'Sin conciliaciones de Procesadores o Mixtas','liq-empty-crono-title':'No se encontraron conciliaciones',
+    'liq-search-ph':'Buscar nombre, país, agente...','conc-search-ph':'Buscar nombre, país, agente...','liq-empty-ger-title':'Sin conciliaciones de Procesadores o Mixtas','liq-empty-crono-title':'No se encontraron conciliaciones',
     'conc-col-tipo':'Tipo','conc-col-contas':'Cuentas vinculadas','conc-col-gateways':'Gateways vinculados',
     'conc-empty-title':'Sin conciliaciones registradas','conc-empty-sub':'Agrega conciliaciones vinculando cuentas desde Gerencial > Accounts.',
     'conc-unlinked-sem':'sin conciliación activa','conc-unlinked-refunds':'Devoluciones','conc-unlinked-cbk':'Contracargos',
@@ -4743,7 +4743,7 @@ function _fbSetCronoEntry(storeKey,entry){
   if(typeof _fbRef==='undefined')return;
   _pendingWrites++;
   clearTimeout(_ownWriteTimer);
-  _ownWriteTimer=setTimeout(()=>{_pendingWrites=0;},30000);
+  _ownWriteTimer=setTimeout(()=>{_pendingWrites=0;_syncBadge('synced');},30000);
   _syncBadge('syncing');
   const _done=(ok)=>{
     _syncBadge(ok?'synced':'offline');
@@ -4771,7 +4771,7 @@ function _fbSync(field){
   _ownWrites['_t_'+field]=setTimeout(()=>{ delete _ownWrites[field]; delete _ownWrites['_t_'+field]; },10000);
   _pendingWrites++;
   clearTimeout(_ownWriteTimer);
-  _ownWriteTimer=setTimeout(()=>{_pendingWrites=0;},30000);
+  _ownWriteTimer=setTimeout(()=>{_pendingWrites=0;_syncBadge('synced');},30000);
   _syncBadge('syncing');
   const _done=(ok)=>{
     _syncBadge(ok?'synced':'offline');
