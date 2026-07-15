@@ -150,7 +150,7 @@
   .chip-amber{background:#fef3c7;color:#92400e;border:1px solid #fcd34d;}
   .chip-rose{background:#fce7f3;color:#9d174d;border:1px solid #f9a8d4;}
   .chip-red{background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;}
-  .chip-pronto{background:#ccfbf1;color:#0f766e;border:1px solid #5eead4;}
+  .chip-pronto{background:#ecfccb;color:#4d7c0f;border:1px solid #bef264;}
   .contas-ms-wrap{border:1px solid var(--e-border);border-radius:8px;overflow:hidden;background:var(--e-surface);}
   .contas-ms-search{padding:6px 10px;border-bottom:1px solid var(--e-border);}
   .contas-ms-search input{width:100%;border:none;background:transparent;font-size:12px;outline:none;color:var(--e-text);}
@@ -269,7 +269,7 @@
   .d1-toggle.active.dt-sem-acesso{border-color:#dc2626;background:#fef2f2;color:#dc2626;}
   .d1-toggle.active.dt-pendente{border-color:#d97706;background:#fef9c3;color:#d97706;}
   .d1-toggle.active.dt-ag-extrato{border-color:#0369a1;background:#e0f2fe;color:#0369a1;}
-  .d1-toggle.active.dt-pronto-conc{border-color:#0f766e;background:#e0fdf4;color:#0f766e;}
+  .d1-toggle.active.dt-pronto-conc{border-color:#4d7c0f;background:#ecfccb;color:#4d7c0f;}
   .crono-d1-panel{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
   .d1-stat-card{background:#fff;border:1px solid var(--e-pale);border-radius:10px;padding:8px 14px;display:flex;align-items:center;gap:8px;}
   .d1-stat-num{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;}
@@ -279,7 +279,7 @@
   .d1-stat-sem-acesso .d1-stat-num{color:#dc2626;}
   .d1-stat-pendente .d1-stat-num{color:#d97706;}
   .d1-stat-ag-extrato .d1-stat-num{color:#0369a1;}
-  .d1-stat-pronto-conc .d1-stat-num{color:#0f766e;}
+  .d1-stat-pronto-conc .d1-stat-num{color:#4d7c0f;}
   #page-cronograma-conciliacoes.active{display:flex;flex-direction:column;overflow-y:hidden;}
   .prior-chip{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:.02em;}
   .prior-alta{background:#fef2f2;color:#dc2626;}
@@ -6310,7 +6310,7 @@ function renderCronogramaConciliacoes(){
 
   const statusCfg={
     concluido:{bg:'#dcfce7',color:'#15803d'},
-    pronto_conciliacao:{bg:'#ccfbf1',color:'#0f766e'},
+    pronto_conciliacao:{bg:'#ecfccb',color:'#4d7c0f'},
     sem_movimento:{bg:'#ede9fe',color:'#5b21b6'},
     sem_acesso:{bg:'#fef2f2',color:'#dc2626'},
     conta_encerrada:{bg:'#f1f5f9',color:'#475569'},
@@ -6318,7 +6318,7 @@ function renderCronogramaConciliacoes(){
   };
   const chipHtml={
     concluido:`<span class="chip chip-green" style="font-size:10px">Concluída</span>`,
-    pronto_conciliacao:`<span class="chip chip-teal" style="font-size:10px">Pronto p/ Conc.</span>`,
+    pronto_conciliacao:`<span class="chip chip-pronto" style="font-size:10px">Pronto p/ Conc.</span>`,
     sem_movimento:`<span class="chip chip-purple" style="font-size:10px">Sem Movimento</span>`,
     sem_acesso:`<span class="chip chip-red" style="font-size:10px">Sem Acesso</span>`,
     conta_encerrada:`<span class="chip" style="font-size:10px;background:#f1f5f9;color:#475569">Conta Encerrada</span>`,
