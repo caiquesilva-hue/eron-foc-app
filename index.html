@@ -389,6 +389,7 @@
   #page-cronograma-conciliacoes.hide-col-3 #crono-conc-cal-table thead th:nth-child(4),#page-cronograma-conciliacoes.hide-col-3 #crono-conc-cal-table tbody td:nth-child(4){display:none!important;}
   #page-cronograma-conciliacoes.hide-col-4 #crono-conc-cal-table thead th:nth-child(5),#page-cronograma-conciliacoes.hide-col-4 #crono-conc-cal-table tbody td:nth-child(5){display:none!important;}
   #page-cronograma-conciliacoes.hide-col-5 #crono-conc-cal-table thead th:nth-child(6),#page-cronograma-conciliacoes.hide-col-5 #crono-conc-cal-table tbody td:nth-child(6){display:none!important;}
+  #page-cronograma-conciliacoes.hide-col-6 #crono-conc-cal-table thead th:nth-child(7),#page-cronograma-conciliacoes.hide-col-6 #crono-conc-cal-table tbody td:nth-child(7){display:none!important;}
   .chip-operacional{background:#ede9fe;color:#5b21b6;}
   .chip-administrativa{background:#fce7f3;color:#9d174d;}
   .chip-bbpix{background:#e0f2fe;color:#0369a1;}
@@ -1096,6 +1097,14 @@
         <button class="d1-toggle dt-sem-mov" data-d1="sem_movimento" onclick="event.stopPropagation();toggleConcD1Filter(this)">Sem Movimento</button>
         <button class="d1-toggle dt-sem-acesso" data-d1="sem_acesso" onclick="event.stopPropagation();toggleConcD1Filter(this)">Sem Acesso</button>
         <button class="d1-toggle dt-pendente" data-d1="pendente" onclick="event.stopPropagation();toggleConcD1Filter(this)">Pendente</button>
+      </div>
+    </div>
+    <div class="freq-dd" id="crono-conc-f-tipo-dd">
+      <button class="freq-dd-btn" id="crono-conc-f-tipo-btn" onclick="_fddToggle(event,'crono-conc-f-tipo-panel')">Todos os tipos</button>
+      <div class="freq-dd-panel" id="crono-conc-f-tipo-panel">
+        <button class="freq-toggle" data-val="bancos" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-tipo-btn',_fddVals('crono-conc-f-tipo-panel'),'Todos os tipos');renderCronogramaConciliacoes()">Bancos</button>
+        <button class="freq-toggle" data-val="processadores" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-tipo-btn',_fddVals('crono-conc-f-tipo-panel'),'Todos os tipos');renderCronogramaConciliacoes()">Processadores</button>
+        <button class="freq-toggle" data-val="mista" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-tipo-btn',_fddVals('crono-conc-f-tipo-panel'),'Todos os tipos');renderCronogramaConciliacoes()">Mista</button>
       </div>
     </div>
     <select id="crono-conc-date-preset" onchange="onCronconcDatePreset()">
@@ -2904,7 +2913,7 @@ function initCronoFilters(){
 // ─── COLUMN HIDE ──────────────────────────────────────────────────
 const _HIDDEN_KEY='eron-foc-hidden-v1';
 const _hiddenCols={crono:new Set(),'crono-conc':new Set()};
-(()=>{try{const s=JSON.parse(localStorage.getItem(_HIDDEN_KEY)||'{}');if(s.crono)s.crono.forEach(i=>{const n=+i;if(n>0&&n<10)_hiddenCols.crono.add(n);});if(s['crono-conc'])s['crono-conc'].forEach(i=>{const n=+i;if(n>0&&n<6)_hiddenCols['crono-conc'].add(n);});}catch(e){}})();
+(()=>{try{const s=JSON.parse(localStorage.getItem(_HIDDEN_KEY)||'{}');if(s.crono)s.crono.forEach(i=>{const n=+i;if(n>0&&n<10)_hiddenCols.crono.add(n);});if(s['crono-conc'])s['crono-conc'].forEach(i=>{const n=+i;if(n>0&&n<7)_hiddenCols['crono-conc'].add(n);});}catch(e){}})();
 function _saveHiddenCols(){try{localStorage.setItem(_HIDDEN_KEY,JSON.stringify({crono:[..._hiddenCols.crono],'crono-conc':[..._hiddenCols['crono-conc']]}));}catch(e){}}
 const _eyeSvg=`<svg width="11" height="8" viewBox="0 0 22 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="11" cy="8" r="3"/></svg>`;
 function _hideBtn(key,idx){if(idx===0)return '';return `<button class="col-hide-btn" onclick="event.stopPropagation();toggleColHide('${key}',${idx})" title="Ocultar coluna">${_eyeSvg}</button>`;}
@@ -5758,8 +5767,9 @@ function _hasConcFilters(){
   const hasResp=document.querySelectorAll('#crono-conc-resp-toggles .freq-toggle.active').length>0;
   const hasAnl=document.querySelectorAll('#crono-conc-anl-toggles .freq-toggle.active').length>0;
   const hasD1=document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active').length>0;
+  const hasTipo=_fddVals('crono-conc-f-tipo-panel').length>0;
   const hasSearch=(document.getElementById('crono-conc-search')?.value||'').trim()!=='';
-  return !!(hasPais||hasAgente||hasPrior||hasResp||hasAnl||hasD1||hasSearch||_sortState['crono-conc'].col);
+  return !!(hasPais||hasAgente||hasPrior||hasResp||hasAnl||hasD1||hasTipo||hasSearch||_sortState['crono-conc'].col);
 }
 
 function _updConcSearchClear(){
@@ -5784,6 +5794,8 @@ function clearCronconcFilters(){
   document.querySelectorAll('#crono-conc-resp-toggles .freq-toggle.active').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('#crono-conc-anl-toggles .freq-toggle.active').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#crono-conc-f-tipo-panel .freq-toggle.active').forEach(b=>b.classList.remove('active'));
+  _fddLabel('crono-conc-f-tipo-btn',[],'Todos os tipos');
   _updateConcRespLabel(); _updateConcAnlLabel(); _updateConcD1Label();
   const inp=document.getElementById('crono-conc-search');
   if(inp) inp.value='';
@@ -6183,6 +6195,7 @@ function renderCronogramaConciliacoes(){
   const activePaises=_fddVals('crono-conc-f-pais-panel');
   const activeAgentes=_fddVals('crono-conc-f-agente-panel');
   const activePriors=_fddVals('crono-conc-f-prior-panel');
+  const activeTipos=_fddVals('crono-conc-f-tipo-panel');
   const activeResps=[...document.querySelectorAll('#crono-conc-resp-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
   const activeAnlts=[...document.querySelectorAll('#crono-conc-anl-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
   const activeD1=[...document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active')].map(b=>b.dataset.d1);
@@ -6219,6 +6232,7 @@ function renderCronogramaConciliacoes(){
   listWithD1.forEach(({c,d1Status})=>{
     if(activePaises.length&&!activePaises.includes(c.pais)) return;
     if(activeAgentes.length&&!activeAgentes.includes(c.agente)) return;
+    if(activeTipos.length&&!activeTipos.includes(c.tipo||'')) return;
     if(activeResps.length){const rEmail=_getConcilResp(c);const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;if(!rUser||!activeResps.includes(rUser.sigla)) return;}
     if(activeAnlts.length){
       const concId=(c.id||c.nome).replace(/['"]/g,'');
@@ -6248,6 +6262,7 @@ function renderCronogramaConciliacoes(){
   let list=listWithD1.filter(({c,d1Status})=>{
     if(activePaises.length&&!activePaises.includes(c.pais)) return false;
     if(activeAgentes.length&&!activeAgentes.includes(c.agente)) return false;
+    if(activeTipos.length&&!activeTipos.includes(c.tipo||'')) return false;
     if(activeResps.length){const rEmail=_getConcilResp(c);const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;if(!rUser||!activeResps.includes(rUser.sigla)) return false;}
     if(activeAnlts.length){
       const concId=(c.id||c.nome).replace(/['"]/g,'');
@@ -6287,9 +6302,9 @@ function renderCronogramaConciliacoes(){
   const dayHdrs=days.map(d=>{const wk=d.getDay()===0||d.getDay()===6;return `<th class="col-day${wk?' weekend':''}">${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}</th>`;}).join('');
   const wdHdrs=days.map(d=>{const wk=d.getDay()===0||d.getDay()===6;return `<th class="col-day${wk?' weekend':''}" style="font-size:9px;color:var(--e-muted);background:${wk?'#faf5ff':'var(--e-ghost)'}">${wd[d.getDay()]}</th>`;}).join('');
 
-  const INFO_COLS=6;
+  const INFO_COLS=7;
   const _sth=(col,lbl,idx,extra='')=>`<th class="${_sortThCls('crono-conc',col)} col-info${extra?' cal-sticky':''}" ${extra} onclick="toggleSort('crono-conc','${col}')" style="cursor:pointer;position:relative">${lbl}${_sortArrow('crono-conc',col)}${_hideBtn('crono-conc',idx)}</th>`;
-  const colInfos=`${_sth('nome','Nome',0,'cal-sticky')}${_sth('pais','País',1)}${_sth('agente','Agente',2)}<th class="col-info" style="position:relative">Resp.${_hideBtn('crono-conc',3)}</th><th class="col-info" style="position:relative">Prioridade${_hideBtn('crono-conc',4)}</th><th class="col-info" style="white-space:nowrap;position:relative">Acompanhamento${_hideBtn('crono-conc',5)}</th>`;
+  const colInfos=`${_sth('nome','Nome',0,'cal-sticky')}${_sth('pais','País',1)}${_sth('agente','Agente',2)}<th class="col-info" style="position:relative">Resp.${_hideBtn('crono-conc',3)}</th><th class="col-info" style="position:relative">Prioridade${_hideBtn('crono-conc',4)}</th><th class="col-info" style="position:relative">Tipo${_hideBtn('crono-conc',5)}</th><th class="col-info" style="white-space:nowrap;position:relative">Acompanhamento${_hideBtn('crono-conc',6)}</th>`;
   const emptyInfoCols='<th class="col-info cal-sticky" style="background:var(--e-ghost)"></th>'+'<th class="col-info" style="background:var(--e-ghost)"></th>'.repeat(INFO_COLS-1);
 
   const statusCfg={
@@ -6346,7 +6361,10 @@ function renderCronogramaConciliacoes(){
       const _noteData=_hasLink?` data-link="${r.entry.reportLink.replace(/"/g,'&quot;')}"` :'';
       return `<td class="day-cell conc-cell" data-ck="${_ck}" data-dt="${dateStr}" style="cursor:pointer"><div class="day-filled${_noteClass}" style="background:${cfg.bg};color:${cfg.color}"${_noteEvts}${_noteData}>${lbl}</div></td>`;
     }).join('');
-    return `<tr class="row-ativa"><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:600;white-space:nowrap">${conc.nome}</td><td class="sel-cell" data-sr="${ri}" data-sc="1" style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td><td class="sub sel-cell" data-sr="${ri}" data-sc="2" style="font-size:11px">${conc.agente||'—'}</td><td class="sel-cell" data-sr="${ri}" data-sc="3">${respCell}</td><td class="sel-cell" data-sr="${ri}" data-sc="4" style="padding:4px 8px">${priorCell}</td><td class="sel-cell" data-sr="${ri}" data-sc="5" style="white-space:nowrap;padding:4px 8px">${d1ChipHtml}</td>${cells}</tr>`;
+    const _concTipoMap={bancos:['chip-tipo-bancos','Bancos'],processadores:['chip-tipo-proc','Processadores'],mista:['chip-tipo-mista','Mista']};
+    const _ct=_concTipoMap[conc.tipo]||['chip-grey',conc.tipo||'—'];
+    const concTipoChipHtml=`<span class="chip ${_ct[0]}" style="font-size:10px">${_ct[1]}</span>`;
+    return `<tr class="row-ativa"><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:600;white-space:nowrap">${conc.nome}</td><td class="sel-cell" data-sr="${ri}" data-sc="1" style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td><td class="sub sel-cell" data-sr="${ri}" data-sc="2" style="font-size:11px">${conc.agente||'—'}</td><td class="sel-cell" data-sr="${ri}" data-sc="3">${respCell}</td><td class="sel-cell" data-sr="${ri}" data-sc="4" style="padding:4px 8px">${priorCell}</td><td class="sel-cell" data-sr="${ri}" data-sc="5" style="padding:4px 8px">${concTipoChipHtml}</td><td class="sel-cell" data-sr="${ri}" data-sc="6" style="white-space:nowrap;padding:4px 8px">${d1ChipHtml}</td>${cells}</tr>`;
   }).join('')}</tbody>`;
 
   if(calScrollEl){calScrollEl.scrollLeft=_savedSL;calScrollEl.scrollTop=_savedST;}
@@ -6387,7 +6405,7 @@ function renderCronogramaConciliacoes(){
       onConcCellClick(ev,td.dataset.ck,td.dataset.dt);
     });
   }
-  setTimeout(()=>_applyHiddenCols('crono-conc','crono-conc-cal-table',6),0);
+  setTimeout(()=>_applyHiddenCols('crono-conc','crono-conc-cal-table',7),0);
   _saveFilters('crono-conc');
 }
 
