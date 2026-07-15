@@ -6284,11 +6284,17 @@ function renderCronogramaConciliacoes(){
   }).map(({c})=>c);
 
   // sort
+  const _priorOrd={'TOP 10':0,'TOP 20':1,'TOP 30':2,'TOP 50':3,'Acima TOP 50':4};
+  const _priorRank=c=>{const v=_computeVolumePrioridade((c.id||c.nome).replace(/['"]/g,''));return v!=null?(_priorOrd[v]??5):6;};
   const st=_sortState['crono-conc'];
-  if(st.col) list=[...list].sort((a,b)=>{
-    const va=String(a[st.col]||'').toLowerCase();
-    const vb=String(b[st.col]||'').toLowerCase();
-    return va<vb?-st.dir:va>vb?st.dir:0;
+  list=[...list].sort((a,b)=>{
+    if(st.col){
+      const va=String(a[st.col]||'').toLowerCase();
+      const vb=String(b[st.col]||'').toLowerCase();
+      const d=va<vb?-st.dir:va>vb?st.dir:0;
+      if(d!==0) return d;
+    }
+    return _priorRank(a)-_priorRank(b);
   });
 
   if(countEl) countEl.textContent=list.length+' conciliação'+(list.length!==1?'s':'');
