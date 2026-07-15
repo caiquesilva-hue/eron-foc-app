@@ -5769,7 +5769,7 @@ function _hasConcFilters(){
   const hasD1=document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active').length>0;
   const hasTipo=_fddVals('crono-conc-f-tipo-panel').length>0;
   const hasSearch=(document.getElementById('crono-conc-search')?.value||'').trim()!=='';
-  return !!(hasPais||hasAgente||hasPrior||hasResp||hasAnl||hasD1||hasTipo||hasSearch||_sortState['crono-conc'].col);
+  return !!(hasPais||hasAgente||hasPrior||hasResp||hasAnl||hasD1||hasTipo||hasSearch||_sortState['crono-conc'].col||_hiddenCols['crono-conc'].size>0);
 }
 
 function _updConcSearchClear(){
