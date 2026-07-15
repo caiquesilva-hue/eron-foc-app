@@ -129,11 +129,9 @@
   .no-row-border tbody tr{border-left:0;}
   tbody tr:last-child{border-bottom:none;}
   tbody tr:hover{background:var(--e-ghost);}
-  thead th:first-child{border-left:3px solid transparent;}
-  tbody td:first-child{border-left:3px solid transparent;}
-  tbody tr.row-ativa td:first-child{border-left-color:#22c55e;}
+  tbody tr.row-ativa td:first-child{background-image:linear-gradient(to right,#22c55e 3px,transparent 3px);}
   tbody tr.row-encerrada{opacity:.7;}
-  tbody tr.row-encerrada td:first-child{border-left-color:#d1d5db;}
+  tbody tr.row-encerrada td:first-child{background-image:linear-gradient(to right,#d1d5db 3px,transparent 3px);}
   td{padding:10px 14px;font-size:13px;color:var(--e-text);white-space:nowrap;}
   td.sub{color:var(--e-sub);}
   td.mono{font-family:ui-monospace,'Cascadia Code',monospace;font-size:12px;}
@@ -343,12 +341,10 @@
   .cal-table thead th.col-info{text-align:left;padding:8px 28px 8px 14px;}
   .cal-table thead th.col-day{min-width:50px;width:auto;padding:5px 3px;}
   .cal-table thead th.weekend{background:#faf5ff;}
-  .cal-table thead th:first-child{border-left:0;}
   .cal-table tbody tr{border-bottom:1px solid var(--e-pale);}
   .cal-table tbody tr:last-child{border-bottom:none;}
-  .cal-table tbody td:first-child{border-left:0;}
   .cal-table tbody tr.row-ativa td:first-child{background-image:linear-gradient(to right,#22c55e 3px,transparent 3px);}
-  .cal-table tbody tr.row-encerrada td:first-child{background-image:linear-gradient(to right,#d1d5db 3px,transparent 3px);border-left-color:transparent;}
+  .cal-table tbody tr.row-encerrada td:first-child{background-image:linear-gradient(to right,#d1d5db 3px,transparent 3px);}
   .cal-table tbody tr.row-encerrada{opacity:.6;}
   .cal-table td{padding:7px 14px;font-size:12px;color:var(--e-text);white-space:nowrap;vertical-align:middle;}
   .cal-table td.day-cell{padding:4px 2px;text-align:center;width:auto;min-width:50px;}
