@@ -5397,8 +5397,19 @@ function renderGerencialConciliacoes(){
   const edit=canEdit();
   const searchQ=(document.getElementById('conc-ger-search')?.value||'').toLowerCase().trim();
   const list=store.conciliacoes.filter(c=>!searchQ||`${c.nome} ${c.pais} ${c.agente}`.toLowerCase().includes(searchQ));
-  if(!list.length){e.style.display='';ti.style.display='';if(cnt)cnt.textContent='';
-    if(!store.conciliacoes.length) ti.style.display='none'; _renderUnlinkedGateways(); return;}
+  if(!list.length){
+    e.style.display='';ti.style.display='none';if(cnt)cnt.textContent='';
+    const emptyTitle=e.querySelector('[data-i18n="conc-empty-title"]');
+    const emptySub=e.querySelector('[data-i18n="conc-empty-sub"]');
+    if(searchQ){
+      if(emptyTitle) emptyTitle.textContent=t('empty-nenhum-resultado');
+      if(emptySub) emptySub.textContent='';
+    } else {
+      if(emptyTitle) emptyTitle.textContent=t('conc-empty-title');
+      if(emptySub) emptySub.textContent=t('conc-empty-sub');
+    }
+    _renderUnlinkedGateways(); return;
+  }
   e.style.display='none';ti.style.display='';
   if(cnt) cnt.textContent=list.length+' conciliação'+(list.length!==1?'s':'');
   tb.innerHTML=list.map((c,ci)=>{
