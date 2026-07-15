@@ -4734,9 +4734,9 @@ const _ownWrites={}; // field→true while a granular write is in-flight; _apply
 const _encK=e=>btoa(unescape(encodeURIComponent(e))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
 const _decK=k=>{try{return decodeURIComponent(escape(atob(k.replace(/-/g,'+').replace(/_/g,'/'))));}catch(e){return k;}};
 const _fbArr=v=>{if(!v)return[];if(Array.isArray(v))return v.filter(Boolean);return Object.values(v).filter(Boolean);};
-// Firebase proíbe . # $ / [ ] em chaves — codifica com vírgula (permitida)
-const _encFbKey=k=>k.replace(/\./g,',');
-const _decFbKey=k=>k.replace(/,/g,'.');
+// Firebase proíbe . # $ / [ ] em chaves — codifica com vírgula e pipe (ambos permitidos)
+const _encFbKey=k=>k.replace(/\./g,',').replace(/\//g,'|');
+const _decFbKey=k=>k.replace(/\|/g,'/').replace(/,/g,'.');
 
 // Escrita granular de uma entrada de cronograma — evita race condition com update do store todo
 function _fbSetCronoEntry(storeKey,entry){
@@ -4749,9 +4749,11 @@ function _fbSetCronoEntry(storeKey,entry){
     _syncBadge(ok?'synced':'offline');
     setTimeout(()=>{if(--_pendingWrites<=0){_pendingWrites=0;clearTimeout(_ownWriteTimer);}},300);
   };
-  const node=_fbRef.child('cronogramaData/'+_encFbKey(storeKey));
-  if(entry===null) node.remove().then(()=>_done(true)).catch(e=>{console.warn('[FB crono rm]',e);_done(false);});
-  else node.set(entry).then(()=>_done(true)).catch(e=>{console.warn('[FB crono set]',e);_done(false);});
+  try{
+    const node=_fbRef.child('cronogramaData/'+_encFbKey(storeKey));
+    if(entry===null) node.remove().then(()=>_done(true)).catch(e=>{console.warn('[FB crono rm]',e);_done(false);});
+    else node.set(entry).then(()=>_done(true)).catch(e=>{console.warn('[FB crono set]',e);_done(false);});
+  }catch(e){console.warn('[FB crono sync]',e);_done(false);}
 }
 
 function _fbSync(field){
@@ -4777,15 +4779,17 @@ function _fbSync(field){
     _syncBadge(ok?'synced':'offline');
     setTimeout(()=>{if(--_pendingWrites<=0){_pendingWrites=0;clearTimeout(_ownWriteTimer);}},300);
   };
-  _fbRef.child(field).set(val)
-    .then(()=>_done(true))
-    .catch(e=>{
-      console.warn('[FB sync]',field,e);
-      if(['responsaveis','credentials'].includes(field)){
-        _toast('⚠️ Erro ao salvar no Firebase ('+field+'): '+(e.code||e.message||e)+'. Verifique as regras do banco de dados.', 10000);
-      }
-      _done(false);
-    });
+  try{
+    _fbRef.child(field).set(val)
+      .then(()=>_done(true))
+      .catch(e=>{
+        console.warn('[FB sync]',field,e);
+        if(['responsaveis','credentials'].includes(field)){
+          _toast('⚠️ Erro ao salvar no Firebase ('+field+'): '+(e.code||e.message||e)+'. Verifique as regras do banco de dados.', 10000);
+        }
+        _done(false);
+      });
+  }catch(e){console.warn('[FB sync err]',field,e);_done(false);}
 }
 
 function _applyFbData(saved){
