@@ -2879,7 +2879,7 @@ function _fddLabel(btnId,active,def){
   else{b.textContent=active.length+' selecionados';b.classList.add('has-active');}
 }
 function initCronoFilters(){
-  let _sf=null;try{_sf=(JSON.parse(localStorage.getItem(_FILTER_KEY)||'{}')||{}).crono||null;}catch(e){}
+  const _sf=_pendingFilters.crono;if(_sf)_pendingFilters.crono=null;
   const activePaises=_sf?.pais?.length?_sf.pais:_fddVals('crono-f-pais-panel');
   const activeAgentes=_sf?.agente?.length?_sf.agente:_fddVals('crono-f-agente-panel');
   const activeBancos=_sf?.banco?.length?_sf.banco:_fddVals('crono-f-banco-panel');
@@ -3288,7 +3288,7 @@ function _applyPendingFilters(key){
   let f=null;
   try{f=(JSON.parse(localStorage.getItem(_FILTER_KEY)||'{}')||{})[key]||null;}catch(e){}
   if(!f) return;
-  if(key==='crono'){
+  if(key==='crono'){_pendingFilters.crono=f;
     const preEl=document.getElementById('crono-date-preset');
     if(preEl&&f.preset){preEl.value=f.preset;preEl.dataset.initialized='1';}
     if(f.preset==='custom'){
@@ -3674,8 +3674,20 @@ function _getFilteredCronoContext(){
     }
     if(activeD1.length){
       const ck=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
-      const hit=days&&days.some(d=>{const e=store.cronogramaData[`${ck}_${fmtDateCtx(d)}`];return e&&activeD1.includes(e.status);});
-      if(!hit) return false;
+      const _d1=new Date();_d1.setDate(_d1.getDate()-1);
+      const _d1s=`${_d1.getFullYear()}-${String(_d1.getMonth()+1).padStart(2,'0')}-${String(_d1.getDate()).padStart(2,'0')}`;
+      let d1Status;
+      if(c.tipo==='1 vez ao mês'){
+        const prev=new Date(_d1.getFullYear(),_d1.getMonth()-1,1);
+        const yr=prev.getFullYear(),mo=String(prev.getMonth()+1).padStart(2,'0');
+        const dim=new Date(yr,prev.getMonth()+1,0).getDate();
+        d1Status='pendente';
+        for(let di=1;di<=dim;di++){const entry=store.cronogramaData[`${ck}_${yr}-${mo}-${String(di).padStart(2,'0')}`];if(entry){d1Status=entry.status;break;}}
+      } else {
+        const e=store.cronogramaData[`${ck}_${_d1s}`];
+        d1Status=e?e.status:(isActiveDay(_d1,c.tipo)?'pendente':null);
+      }
+      if(!activeD1.includes(d1Status)) return false;
     }
     return true;
   });
