@@ -2,8 +2,8 @@ name: Daily Cronograma Summary → Slack
 
 on:
   schedule:
-    # 20h UTC = 17h BRT, segunda a sexta
-    - cron: '0 20 * * 1-5'
+    # 19h UTC = 16h BRT agendado; GitHub Actions atrasa ~1h → chega ~17h BRT
+    - cron: '0 19 * * 1-5'
   workflow_dispatch:
     inputs:
       override_day:

@@ -121,7 +121,7 @@ async function main() {
   if (!filtered.length) { console.log('Nenhuma conta. Nada enviado.'); return; }
 
   // ─── Contagem de status para D-1 ─────────────────────────────────────────────
-  const statusCount = { concluido: 0, sem_acesso: 0, sem_movimento: 0, aguardando_extrato: 0, pendente: 0 };
+  const statusCount = { pendente: 0, sem_acesso: 0, sem_movimento: 0, aguardando_extrato: 0, concluido: 0 };
 
   filtered.forEach(c => {
     const ck = `${c.sigla}_${c.numeroConta}`.replace(/['"]/g, '');
