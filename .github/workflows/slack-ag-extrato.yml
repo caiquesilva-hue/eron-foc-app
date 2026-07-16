@@ -45,7 +45,7 @@ jobs:
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           FIREBASE_DB_URL: ${{ secrets.FIREBASE_DB_URL }}
           FIREBASE_SECRET: ${{ secrets.FIREBASE_SECRET }}
-          SLACK_CHANNEL: ${{ inputs.env_label == 'Eron' && 'C01JS1GSR24' || 'C0AQFCE263E' }}
+          SLACK_CHANNEL: C0AQFCE263E
           NOTIFICATION_ID: ${{ inputs.notification_id }}
           BANCO: ${{ inputs.banco }}
           AGENTE: ${{ inputs.agente }}
