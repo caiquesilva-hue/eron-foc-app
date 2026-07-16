@@ -10,7 +10,9 @@ const AGENTE          = process.env.AGENTE     || '';
 const DIA_INICIAL     = process.env.DIA_INICIAL || '';
 const DIA_FINAL       = process.env.DIA_FINAL   || '';
 
-const text = `Olá equipe, Accounts solicita os extratos de *${BANCO}* do agente *${AGENTE}* dos dias *${DIA_INICIAL}* até *${DIA_FINAL}*, podem nos enviar assim que possível por favor?`;
+const text = DIA_INICIAL === DIA_FINAL
+  ? `Olá equipe, Accounts solicita os extratos de *${BANCO}* do agente *${AGENTE}* do dia *${DIA_INICIAL}*, podem nos enviar assim que possível por favor?`
+  : `Olá equipe, Accounts solicita os extratos de *${BANCO}* do agente *${AGENTE}* dos dias *${DIA_INICIAL}* até *${DIA_FINAL}*, podem nos enviar assim que possível por favor?`;
 
 async function run() {
   if (!SLACK_TOKEN)                             throw new Error('SLACK_TOKEN not set');
