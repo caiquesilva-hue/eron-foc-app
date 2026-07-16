@@ -4394,24 +4394,32 @@ function setCronoDayStatus(contaKey, dateStr, status, event){
       }
     );
   } else if(status==='aguardando_extrato'){
+    event.stopPropagation();
+    const conta=store.contas.find(c=>`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'')===contaKey);
+    const banco=conta?.banco||contaKey;
+    const agente=conta?.agente||'—';
+    const cur=(existing?.reportLink||'').replace(/"/g,'&quot;');
     const dd=document.querySelector('.cal-dropdown');
     if(!dd){_doSave(null);return;}
-    const cur=(existing?.reportLink||'').replace(/"/g,'&quot;');
-    dd.innerHTML=`<div style="padding:10px 12px;min-width:270px">
-      <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:8px">Ag. Extrato – link do extrato</div>
-      <input id="_cal-link-inp" type="text" placeholder="https://... (opcional)" autocomplete="off"
-        style="width:100%;border:1.5px solid #d1d5db;border-radius:6px;padding:6px 9px;font-size:12px;font-family:inherit;box-sizing:border-box;outline:none;transition:border-color .15s"
-        value="${cur}"
-        onfocus="this.style.borderColor='#976ff4'"
-        onblur="this.style.borderColor='#d1d5db'">
-      <div style="display:flex;gap:6px;margin-top:8px;justify-content:flex-end">
-        <button onclick="_calLinkSkip()" style="font-size:12px;padding:5px 12px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;background:#fff;font-family:inherit">Pular</button>
-        <button onclick="_calLinkSave()" style="font-size:12px;padding:5px 12px;border:none;border-radius:6px;cursor:pointer;background:#976ff4;color:#fff;font-family:inherit;font-weight:600">Confirmar</button>
+    const inp='width:100%;border:1.5px solid #d1d5db;border-radius:6px;padding:5px 8px;font-size:12px;font-family:inherit;box-sizing:border-box;outline:none;transition:border-color .15s';
+    dd.innerHTML=`<div style="padding:12px 14px;min-width:310px">
+      <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:10px">Ag. Extrato — ${_esc(banco)} / ${_esc(agente)}</div>
+      <div style="font-size:10px;font-weight:600;color:#6b7280;margin-bottom:4px">Período do extrato</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+        <input id="_ag-date-ini" type="date" value="${dateStr}" style="${inp};flex:1" onfocus="this.style.borderColor='#976ff4'" onblur="this.style.borderColor='#d1d5db'">
+        <span style="color:#9ca3af;font-size:11px">→</span>
+        <input id="_ag-date-fim" type="date" value="${dateStr}" style="${inp};flex:1" onfocus="this.style.borderColor='#976ff4'" onblur="this.style.borderColor='#d1d5db'">
+      </div>
+      <div style="font-size:10px;font-weight:600;color:#6b7280;margin-bottom:4px">Link do extrato (opcional)</div>
+      <input id="_cal-link-inp" type="text" placeholder="https://..." autocomplete="off" style="${inp}" value="${cur}" onfocus="this.style.borderColor='#976ff4'" onblur="this.style.borderColor='#d1d5db'">
+      <div style="display:flex;gap:6px;margin-top:10px;justify-content:flex-end">
+        <button onclick="_agExtratoSkip()" style="font-size:12px;padding:5px 12px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;background:#fff;font-family:inherit">Pular Slack</button>
+        <button onclick="_agExtratoSave()" style="font-size:12px;padding:5px 14px;border:none;border-radius:6px;cursor:pointer;background:#976ff4;color:#fff;font-family:inherit;font-weight:600">📨 Solicitar no Slack</button>
       </div>
     </div>`;
     window._calLinkCb=_doSave;
-    event.stopPropagation();
-    document.getElementById('_cal-link-inp').focus();
+    window._agExtratoMeta={banco,agente,storeKey};
+    document.getElementById('_ag-date-ini').focus();
   } else {
     closeCalDropdown();
     _doSave(null);
@@ -4427,6 +4435,60 @@ function _calLinkSkip(){
   const cb=window._calLinkCb; window._calLinkCb=null;
   closeCalDropdown();
   if(cb) cb(null);
+}
+function _agExtratoSkip(){
+  const link=(document.getElementById('_cal-link-inp')?.value||'').trim();
+  const cb=window._calLinkCb; window._calLinkCb=null;
+  closeCalDropdown();
+  if(cb) cb(link||null);
+}
+function _agExtratoSave(){
+  const link=(document.getElementById('_cal-link-inp')?.value||'').trim();
+  const diaI=document.getElementById('_ag-date-ini')?.value||'';
+  const diaF=document.getElementById('_ag-date-fim')?.value||'';
+  const {banco,agente,storeKey}=window._agExtratoMeta||{};
+  const cb=window._calLinkCb; window._calLinkCb=null;
+  closeCalDropdown();
+  if(cb) cb(link||null);
+  _toast(t('slack-sending'),5000);
+  _triggerAgExtratoNotif(banco,agente,_fmtDateBR(diaI),_fmtDateBR(diaF),permalink=>{
+    if(permalink){
+      const entry=store.cronogramaData[storeKey];
+      if(entry&&entry.status==='aguardando_extrato'){
+        entry.slackLink=permalink;
+        saveStore();_fbSetCronoEntry(storeKey,entry);renderCronogramaAccounts();
+        _toast('Link do Slack recebido ✓',3000);
+      }
+    } else _toast('Slack: sem link obtido',3000);
+  });
+}
+function _fmtDateBR(s){
+  if(!s||!s.match(/^\d{4}-\d{2}-\d{2}$/))return s||'';
+  const [y,m,d]=s.split('-');return `${d}/${m}/${y}`;
+}
+async function _triggerAgExtratoNotif(banco,agente,diaInicial,diaFinal,onResult){
+  let pat=null;
+  try{const snap=await _getEronFb().database().ref('config/githubPat').once('value');pat=snap.val();}
+  catch(e){console.error('_triggerAgExtratoNotif: cannot read PAT',e);}
+  if(!pat){onResult(null);return;}
+  const notifId='ag_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  const envLabel=ENVIRONMENTS[_currentEnv]?.label||_currentEnv;
+  try{
+    const resp=await fetch('https://api.github.com/repos/caiquesilva-hue/eron-foc-app/actions/workflows/slack-ag-extrato.yml/dispatches',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+pat,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json'},
+      body:JSON.stringify({ref:'main',inputs:{notification_id:notifId,lang:currentLang,banco,agente,dia_inicial:diaInicial,dia_final:diaFinal,env_label:envLabel}})
+    });
+    if(!resp.ok){console.error('ag-extrato dispatch failed',resp.status);onResult(null);return;}
+  }catch(e){console.error('ag-extrato dispatch error',e);onResult(null);return;}
+  let attempts=0;
+  function poll(){
+    attempts++;
+    _getEronFb().database().ref('slackLinks/'+notifId).once('value')
+      .then(snap=>{const l=snap.val();if(l){onResult(l);return;}if(attempts<30)setTimeout(poll,4000);else onResult(null);})
+      .catch(()=>{if(attempts<30)setTimeout(poll,4000);else onResult(null);});
+  }
+  setTimeout(poll,8000);
 }
 
 // ─── CRONOGRAMA > ACCOUNTS – CIERRE ─────────────────────────────
