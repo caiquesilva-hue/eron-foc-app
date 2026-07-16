@@ -3192,10 +3192,11 @@ function renderCronogramaAccounts(){
             sem_acesso:{bg:'#fef2f2',color:'#dc2626',lbl:entry.sigla+' s/a'},
             aguardando_extrato:{bg:'#e0f2fe',color:'#0369a1',lbl:entry.sigla+' ag.'},
           }[entry.status]||{bg:'#f3f4f6',color:'#6b7280',lbl:entry.sigla};
-          const hasLink=entry.reportLink&&(entry.status==='sem_acesso'||entry.status==='aguardando_extrato');
+          const _cellLink=entry.status==='sem_acesso'?entry.reportLink:entry.status==='aguardando_extrato'?(entry.slackLink||entry.reportLink):null;
+          const hasLink=!!_cellLink;
           const noteClass=hasLink?' has-note':'';
           const noteEvts=hasLink?` onmouseenter="showNoteTooltip(event,this)" onmouseleave="scheduleHideNoteTooltip()"`:'';
-          const noteData=hasLink?` data-link="${entry.reportLink.replace(/"/g,'&quot;')}"`:'' ;
+          const noteData=hasLink?` data-link="${_cellLink.replace(/"/g,'&quot;')}"`:'' ;
           const _ck=contaKey.replace(/&/g,'&amp;');
           return `<td class="day-cell" data-ck="${_ck}" data-dt="${dateStr}" data-act="true" style="cursor:pointer;padding:2px 1px">
             <div class="day-filled${noteClass}"${noteData}${noteEvts} style="background:${cfg.bg};color:${cfg.color}">${cfg.lbl}</div></td>`;
