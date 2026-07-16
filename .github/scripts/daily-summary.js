@@ -137,6 +137,14 @@ async function main() {
   ];
   const csvRows = [headers];
 
+  const STATUS_RANK = { pendente: 0, sem_acesso: 1, sem_movimento: 2, aguardando_extrato: 3, concluido: 4 };
+  const getD1Status = c => {
+    const ck = `${c.sigla}_${c.numeroConta}`.replace(/['"]/g, '');
+    const entry = cronogramaData[`${ck}_${d1Str}`];
+    return entry?.status && STATUS_RANK[entry.status] !== undefined ? entry.status : 'pendente';
+  };
+  filtered.sort((a, b) => (STATUS_RANK[getD1Status(a)] ?? 99) - (STATUS_RANK[getD1Status(b)] ?? 99));
+
   filtered.forEach(c => {
     const ck = `${c.sigla}_${c.numeroConta}`.replace(/['"]/g, '');
     const d1Entry = cronogramaData[`${ck}_${d1Str}`];
