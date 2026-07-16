@@ -4247,9 +4247,14 @@ function showNoteTooltip(event,el){
   tip.style.display='block';
   const rect=el.getBoundingClientRect();
   const tipW=300;
-  let left=rect.right+6; if(left+tipW>window.innerWidth-8) left=rect.left-tipW-6;
-  tip.style.left=Math.max(4,left)+'px';
-  tip.style.top=Math.max(4,rect.top-4)+'px';
+  let left=rect.right+6,top=rect.top-4;
+  if(left+tipW>window.innerWidth-8){
+    const tryL=rect.left-tipW-6;
+    if(tryL>=4){left=tryL;}
+    else{left=Math.min(Math.max(4,rect.left),window.innerWidth-tipW-8);top=rect.bottom+4;}
+  }
+  tip.style.left=left+'px';
+  tip.style.top=Math.max(4,top)+'px';
 }
 function scheduleHideNoteTooltip(){
   _noteHideTimer=setTimeout(()=>{const tip=document.getElementById('crono-note-tip');if(tip)tip.style.display='none';},150);
@@ -4263,10 +4268,14 @@ function showConcWarnTooltip(ev,el){
   tip.style.display='block';
   const rect=el.getBoundingClientRect();
   const tipW=280;
-  let left=rect.right+8;
-  if(left+tipW>window.innerWidth-8) left=rect.left-tipW-8;
-  tip.style.left=Math.max(4,left)+'px';
-  tip.style.top=Math.max(4,rect.top-4)+'px';
+  let left=rect.right+8,top=rect.top-4;
+  if(left+tipW>window.innerWidth-8){
+    const tryL=rect.left-tipW-8;
+    if(tryL>=4){left=tryL;}
+    else{left=Math.min(Math.max(4,rect.left),window.innerWidth-tipW-8);top=rect.bottom+4;}
+  }
+  tip.style.left=left+'px';
+  tip.style.top=Math.max(4,top)+'px';
 }
 function scheduleHideConcWarn(){
   _concWarnTimer=setTimeout(()=>{const tip=document.getElementById('conc-warn-tip');if(tip)tip.style.display='none';},150);
