@@ -1,0 +1,55 @@
+name: Slack – Ag. Extrato Notification
+
+on:
+  workflow_dispatch:
+    inputs:
+      notification_id:
+        description: 'Unique ID written to Firebase slackLinks/{id} when done'
+        required: true
+      lang:
+        description: 'Language: pt-BR | en | es'
+        required: true
+        default: 'pt-BR'
+      banco:
+        description: 'Bank name'
+        required: true
+      agente:
+        description: 'Agent name'
+        required: true
+      dia_inicial:
+        description: 'Start date (DD/MM/YYYY)'
+        required: true
+      dia_final:
+        description: 'End date (DD/MM/YYYY)'
+        required: true
+      env_label:
+        description: 'Environment label: Eron | AstroPay | LimePay'
+        required: true
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: .github/scripts
+
+      - name: Send Slack message and write permalink to Firebase
+        env:
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          FIREBASE_DB_URL: ${{ secrets.FIREBASE_DB_URL }}
+          FIREBASE_SECRET: ${{ secrets.FIREBASE_SECRET }}
+          SLACK_CHANNEL: ${{ inputs.env_label == 'Eron' && 'C01JS1GSR24' || 'C0AQFCE263E' }}
+          NOTIFICATION_ID: ${{ inputs.notification_id }}
+          BANCO: ${{ inputs.banco }}
+          AGENTE: ${{ inputs.agente }}
+          DIA_INICIAL: ${{ inputs.dia_inicial }}
+          DIA_FINAL: ${{ inputs.dia_final }}
+          ENV_LABEL: ${{ inputs.env_label }}
+        run: node .github/scripts/slack-ag-extrato.js
