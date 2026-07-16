@@ -4738,7 +4738,7 @@ let _fbRef=firebase.database(_fbApp).ref('store');
 let _fbAuditRef=firebase.database(_fbApp).ref('store/auditLog');
 STORE_KEY=ENVIRONMENTS[_initEnvKey].storeKey; // sincroniza STORE_KEY com ambiente restaurado
 const _fbAuditSeen=new Set();
-let _fbListening=false,_fbAuditListening=false,_pendingWrites=0,_ownWriteTimer=null;
+let _fbListening=false,_fbAuditListening=false,_pendingWrites=0,_ownWriteTimer=null,_fbRetryTimer=null;
 const _ownWrites={}; // field→true while a granular write is in-flight; _applyFbData skips these fields
 
 // Email → chave Firebase-safe (Firebase proíbe '.' em chaves)
@@ -4846,15 +4846,17 @@ function _syncBadge(state){
   let b=document.getElementById('_fb-badge');
   if(!b){
     b=document.createElement('div');b.id='_fb-badge';
-    b.style.cssText='position:fixed;bottom:10px;right:14px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:10px;z-index:9998;pointer-events:none;transition:opacity .4s;';
+    b.style.cssText='position:fixed;bottom:10px;right:14px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:10px;z-index:9998;transition:opacity .4s;cursor:default;';
+    b.onclick=()=>{if(b._isOffline){clearTimeout(_fbRetryTimer);_fbRetryTimer=null;startFirebaseSync();}};
     document.body.appendChild(b);
   }
   const m={
     syncing:{bg:'rgba(251,191,36,.18)',c:'#92400e',l:'↑ Sincronizando…'},
     synced:{bg:'rgba(5,150,105,.14)',c:'#065f46',l:'✓ Sincronizado'},
-    offline:{bg:'rgba(220,38,38,.13)',c:'#991b1b',l:'● Offline'}
+    offline:{bg:'rgba(220,38,38,.13)',c:'#991b1b',l:'● Offline — clique para reconectar'}
   }[state]||{};
-  Object.assign(b.style,{background:m.bg,color:m.c,opacity:'1'});
+  Object.assign(b.style,{background:m.bg,color:m.c,opacity:'1',cursor:state==='offline'?'pointer':'default'});
+  b._isOffline=(state==='offline');
   b.textContent=m.l;
   if(state==='synced')setTimeout(()=>b.style.opacity='0',3000);
 }
@@ -4883,6 +4885,7 @@ async function startFirebaseSync(){
       }));}catch(e){}
     }
     _syncBadge('synced');
+    clearTimeout(_fbRetryTimer);_fbRetryTimer=null;
     if(!_fbListening){
       _fbListening=true;
       _fbRef.on('value',snap=>{
@@ -4922,6 +4925,7 @@ async function startFirebaseSync(){
   }catch(e){
     console.warn('[Firebase]',e);
     _syncBadge('offline');
+    if(!_fbRetryTimer)_fbRetryTimer=setTimeout(()=>{_fbRetryTimer=null;startFirebaseSync();},15000);
     return false;
   }
 }
