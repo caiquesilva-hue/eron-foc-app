@@ -3821,7 +3821,27 @@ function submitBulkApply(){
       }
     );
   } else if(status==='aguardando_extrato'){
-    _showReportLinkModal(status,null,_applyBulk);
+    const groupMap=new Map();
+    list.forEach(c=>{
+      const ag=c.agente||'—',ba=c.banco||c.sigla||'—';
+      const gk=`${ag}|${ba}`;
+      if(!groupMap.has(gk)) groupMap.set(gk,{agente:ag,banco:ba,keys:[]});
+      days.forEach(d=>{
+        if(!isActiveDay(d,c.tipo)) return;
+        const contaKey=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
+        const sk=`${contaKey}_${fmtDate(d)}`;
+        const ex=store.cronogramaData[sk];
+        if(ex&&LOCKED_STATUSES.includes(ex.status)&&!isAdmin()) return;
+        groupMap.get(gk).keys.push(sk);
+      });
+    });
+    const groupsArr=[...groupMap.values()];
+    const dialogBanco=groupsArr.length===1?groupsArr[0].banco:`${groupsArr.length} bancos`;
+    const dialogAgente=groupsArr.length===1?groupsArr[0].agente:`${list.length} contas`;
+    const diaIniRaw=document.getElementById('crono-date-start')?.value||'';
+    const diaFimRaw=document.getElementById('crono-date-end')?.value||'';
+    closeModal('modal-bulk-apply');
+    _showAgExtratoBulkConfirm(dialogBanco,dialogAgente,diaIniRaw,diaFimRaw,groupsArr,_applyBulk);
   } else {
     _applyBulk(null);
   }
@@ -4489,6 +4509,42 @@ async function _triggerAgExtratoNotif(banco,agente,diaInicial,diaFinal,onResult)
       .catch(()=>{if(attempts<30)setTimeout(poll,4000);else onResult(null);});
   }
   setTimeout(poll,8000);
+}
+
+function _showAgExtratoBulkConfirm(banco,agente,diaIniRaw,diaFimRaw,groupsArr,applyFn){
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.18)';
+  const inp='width:100%;border:1.5px solid #d1d5db;border-radius:6px;padding:5px 8px;font-size:12px;font-family:inherit;box-sizing:border-box';
+  ov.innerHTML=`<div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 36px rgba(0,0,0,.18);padding:22px 26px;min-width:320px;max-width:420px">
+    <div style="font-size:11px;font-weight:700;color:#92400e;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">Ag. Extrato</div>
+    <div style="font-size:13px;color:#1c1640;margin-bottom:16px">Solicitar extratos no Slack?<br><span style="font-size:11px;color:#6b7280">${_esc(banco)} / ${_esc(agente)}</span></div>
+    <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:14px">
+      <div style="flex:1"><div style="font-size:10px;font-weight:600;color:#6b7280;margin-bottom:3px">De</div><input id="_agb-ini" type="date" value="${diaIniRaw}" style="${inp}"></div>
+      <span style="color:#9ca3af;padding-bottom:7px">→</span>
+      <div style="flex:1"><div style="font-size:10px;font-weight:600;color:#6b7280;margin-bottom:3px">Até</div><input id="_agb-fim" type="date" value="${diaFimRaw}" style="${inp}"></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button id="_agb-no" style="font-size:12px;padding:7px 18px;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer;background:#fff;font-family:inherit;color:#374151">Não</button>
+      <button id="_agb-yes" style="font-size:12px;padding:7px 18px;border:none;border-radius:8px;cursor:pointer;background:#976ff4;color:#fff;font-family:inherit;font-weight:600">Sim, solicitar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('mousedown',e=>{if(e.target===ov){ov.remove();applyFn(null);}});
+  document.getElementById('_agb-no').onclick=()=>{ov.remove();applyFn(null);};
+  document.getElementById('_agb-yes').onclick=()=>{
+    const dI=_fmtDateBR(document.getElementById('_agb-ini')?.value||'');
+    const dF=_fmtDateBR(document.getElementById('_agb-fim')?.value||'');
+    ov.remove();applyFn(null);
+    _toast(t('slack-sending'),5000);
+    groupsArr.forEach(g=>{
+      _triggerAgExtratoNotif(g.banco,g.agente,dI,dF,link=>{
+        if(!link) return;
+        g.keys.forEach(sk=>{const e=store.cronogramaData[sk];if(e&&e.status==='aguardando_extrato') e.slackLink=link;});
+        saveStore();_fbSync('cronogramaData');renderCronogramaAccounts();
+        _toast('Link do Slack recebido ✓',3000);
+      });
+    });
+  };
 }
 
 // ─── CRONOGRAMA > ACCOUNTS – CIERRE ─────────────────────────────
