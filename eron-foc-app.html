@@ -3894,6 +3894,17 @@ function canManagePasswords(){ return isSuperAdmin(); }
 function getRoleLabel(role){ return ROLES[role]?.label||'Visualização'; }
 function getRoleBadge(role){ return ROLES[role]?.badge||'👁'; }
 function getRoleClass(role){ return ROLES[role]?.cssClass||'role-visualizacao'; }
+function _getGrantableRoles(){
+  if(isSuperAdmin()) return ['visualizacao','analista','admin','super_admin'];
+  if(isAdmin()) return ['visualizacao','analista'];
+  return [];
+}
+function _populateRoleSelect(currentValue){
+  const el=document.getElementById('acesso-role');
+  if(!el) return;
+  const labels={visualizacao:'👁 Visualização — somente leitura',analista:'📊 Analista — visualiza e edita (sem Acessos)',admin:'🔑 Admin — gerencia acessos e dados',super_admin:'👑 Super Admin — controle total'};
+  el.innerHTML=_getGrantableRoles().map(r=>`<option value="${r}"${r===(currentValue||'visualizacao')?' selected':''}>${labels[r]}</option>`).join('');
+}
 let _editAcessoIdx=-1;
 function openAcessoModal(){
   if(!isAdmin()){ alert(t('acessos-no-perm-sub')); return; }
@@ -3908,9 +3919,8 @@ function openAcessoModal(){
   document.getElementById('acesso-pwd-section').style.display='';
   document.getElementById('acesso-submit-btn').textContent='Adicionar';
   const roleSection=document.getElementById('acesso-role-section');
-  if(roleSection){ roleSection.style.display=isSuperAdmin()?'':'none'; }
-  const roleEl=document.getElementById('acesso-role');
-  if(roleEl) roleEl.value='visualizacao';
+  if(roleSection){ roleSection.style.display=isAdmin()?'':'none'; }
+  _populateRoleSelect('visualizacao');
   _populateAcessoEnvCheckboxes(null);
   openModal('modal-acesso');
 }
@@ -3926,10 +3936,11 @@ function editAcesso(idx){
   document.getElementById('acesso-sigla').value=r.sigla||'';
   document.getElementById('acesso-pwd-section').style.display='none';
   document.getElementById('acesso-submit-btn').textContent='Salvar alterações';
+  const targetRole=r.role||'visualizacao';
+  const canChangeTargetRole=isSuperAdmin()||_getGrantableRoles().includes(targetRole);
   const roleSection=document.getElementById('acesso-role-section');
-  if(roleSection){ roleSection.style.display=isSuperAdmin()?'':'none'; }
-  const roleEl=document.getElementById('acesso-role');
-  if(roleEl) roleEl.value=r.role||'visualizacao';
+  if(roleSection){ roleSection.style.display=(isAdmin()&&canChangeTargetRole)?'':'none'; }
+  _populateRoleSelect(targetRole);
   _populateAcessoEnvCheckboxes(r.envs||[_currentEnv]);
   openModal('modal-acesso');
 }
@@ -4026,10 +4037,13 @@ async function _submitAcessoInner(){
     const sigla=document.getElementById('acesso-sigla').value.trim().toUpperCase();
     const r=store.responsaveis[_editAcessoIdx];
     r.nome=nome; r.sigla=sigla;
-    if(isSuperAdmin()){
+    if(isAdmin()){
       const novoRole=document.getElementById('acesso-role')?.value||r.role||'visualizacao';
-      if(r.email===ADMIN_EMAIL&&novoRole!=='super_admin'){alert('Não é possível remover o Super Admin de si mesmo.');return;}
-      r.role=novoRole;
+      const grantable=_getGrantableRoles();
+      if(isSuperAdmin()||grantable.includes(novoRole)){
+        if(r.email===ADMIN_EMAIL&&novoRole!=='super_admin'){alert('Não é possível remover o Super Admin de si mesmo.');return;}
+        r.role=novoRole;
+      }
     }
     const selEnvs=_getSelectedEnvs();
     if(selEnvs!==null) r.envs=selEnvs;
@@ -4052,7 +4066,9 @@ async function _submitAcessoInner(){
     const email=document.getElementById('acesso-email').value.trim().toLowerCase();
     const sigla=document.getElementById('acesso-sigla').value.trim().toUpperCase();
     const pwd=document.getElementById('acesso-pwd').value;
-    const role=isSuperAdmin()?(document.getElementById('acesso-role')?.value||'visualizacao'):'visualizacao';
+    const _selectedRole=document.getElementById('acesso-role')?.value||'visualizacao';
+    const _grantable=_getGrantableRoles();
+    const role=_grantable.includes(_selectedRole)?_selectedRole:'visualizacao';
     if(!email.includes('@')||!email.includes('.')){alert('Email inválido.');return;}
     if(pwd.length<6){alert('A senha deve ter pelo menos 6 caracteres.');return;}
     const selEnvs=_getSelectedEnvs();
