@@ -5623,7 +5623,7 @@ function renderSlackConfig(section){
   const tipText=t('slack-ch-tip');
   const flds=fields.map(f=>`<div style="display:flex;align-items:center;gap:6px">
     <label style="font-size:11px;font-weight:600;color:var(--e-muted);white-space:nowrap">${f.label}</label>
-    <input type="text" id="slk-ch-${f.key}" value="${cfg[f.key]||''}" placeholder="C0ABC1234"
+    <input type="text" id="slk-ch-${f.key}" value="${cfg[f.key]||''}"
       style="width:120px;border:1px solid var(--e-pale);border-radius:6px;padding:4px 8px;font-size:12px;font-family:ui-monospace,monospace;outline:none;color:var(--e-text);background:#fff;transition:border-color .15s"
       onfocus="this.style.borderColor='var(--e-purple)'" onblur="this.style.borderColor='';saveSlackChannel('${f.key}',this.value)">
   </div>`).join('');
