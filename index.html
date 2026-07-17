@@ -1971,6 +1971,11 @@ const i18n = {
     'btn-importar-volume':'Importar Volume','btn-add-conciliacao':'Adicionar conciliação',
     'lbl-ultima-ingestao':'Última ingestão',
     'conciliacao-sg':'conciliação','conciliacao-pl':'conciliações',
+    'slack-channels':'Canais Slack','slack-ch-sem-acesso':'Sem Acesso','slack-ch-ag-extrato':'Ag. Extrato',
+    'slack-ch-tip':'No Slack, clique com botão direito no canal → <b>Ver detalhes do canal</b> → role até o final para encontrar a ID (ex: C0ABC1234).',
+    'slack-ch-saved':'✓ Canal salvo',
+    'role-visualizacao':'👁 Visualização — somente leitura','role-analista':'📊 Analista — visualiza e edita (sem Acessos)',
+    'role-admin':'🔑 Admin — gerencia acessos e dados','role-super-admin':'👑 Super Admin — controle total',
   },
   'en': {
     'ops-platform':'FOC App','login-welcome':'Welcome back',
@@ -2062,6 +2067,11 @@ const i18n = {
     'btn-importar-volume':'Import Volume','btn-add-conciliacao':'Add reconciliation',
     'lbl-ultima-ingestao':'Last import',
     'conciliacao-sg':'reconciliation','conciliacao-pl':'reconciliations',
+    'slack-channels':'Slack Channels','slack-ch-sem-acesso':'No Access','slack-ch-ag-extrato':'Aw. Statement',
+    'slack-ch-tip':'In Slack, right-click the channel → <b>View channel details</b> → scroll to the bottom to find the ID (e.g. C0ABC1234).',
+    'slack-ch-saved':'✓ Channel saved',
+    'role-visualizacao':'👁 View only — read only','role-analista':'📊 Analyst — view and edit (no Access tab)',
+    'role-admin':'🔑 Admin — manages access and data','role-super-admin':'👑 Super Admin — full control',
   },
   'es': {
     'ops-platform':'FOC App','login-welcome':'Bienvenido de nuevo',
@@ -2154,6 +2164,11 @@ const i18n = {
     'btn-importar-volume':'Importar Volumen','btn-add-conciliacao':'Agregar conciliación',
     'lbl-ultima-ingestao':'Última importación',
     'conciliacao-sg':'conciliación','conciliacao-pl':'conciliaciones',
+    'slack-channels':'Canales Slack','slack-ch-sem-acesso':'Sin Acceso','slack-ch-ag-extrato':'Ag. Extracto',
+    'slack-ch-tip':'En Slack, haz clic derecho en el canal → <b>Ver detalles del canal</b> → desplázate hasta el final para encontrar la ID (ej: C0ABC1234).',
+    'slack-ch-saved':'✓ Canal guardado',
+    'role-visualizacao':'👁 Visualización — solo lectura','role-analista':'📊 Analista — visualiza y edita (sin Accesos)',
+    'role-admin':'🔑 Admin — gestiona accesos y datos','role-super-admin':'👑 Super Admin — control total',
   }
 };
 
@@ -3215,6 +3230,7 @@ function renderCronogramaAccounts(){
     }).join('')
   }</tbody>`;
   if(calScrollEl){calScrollEl.scrollLeft=_savedSL;calScrollEl.scrollTop=_savedST;}
+  _initCalStickyCorner(tbl,calScrollEl,_savedSL);
   if(!tbl._dayClickAttached){
     tbl._dayClickAttached=true;
     tbl.addEventListener('mousedown',e=>{
@@ -3903,7 +3919,7 @@ function _getGrantableRoles(){
 function _populateRoleSelect(currentValue){
   const el=document.getElementById('acesso-role');
   if(!el) return;
-  const labels={visualizacao:'👁 Visualização — somente leitura',analista:'📊 Analista — visualiza e edita (sem Acessos)',admin:'🔑 Admin — gerencia acessos e dados',super_admin:'👑 Super Admin — controle total'};
+  const labels={visualizacao:t('role-visualizacao'),analista:t('role-analista'),admin:t('role-admin'),super_admin:t('role-super-admin')};
   el.innerHTML=_getGrantableRoles().map(r=>`<option value="${r}"${r===(currentValue||'visualizacao')?' selected':''}>${labels[r]}</option>`).join('');
 }
 let _editAcessoIdx=-1;
@@ -5586,15 +5602,24 @@ function _renderUnlinkedGateways(){
     <div style="max-height:220px;overflow-y:auto">${body}</div>
   </div>`;
 }
+function _initCalStickyCorner(tbl,scrollEl,savedSL){
+  if(!tbl||!scrollEl) return;
+  const applyX=x=>{tbl.querySelectorAll('thead th.cal-sticky').forEach(th=>{th.style.transform='translateX('+x+'px)';});};
+  if(savedSL) applyX(savedSL);
+  if(scrollEl._calStickyHandler) scrollEl.removeEventListener('scroll',scrollEl._calStickyHandler);
+  const handler=()=>applyX(scrollEl.scrollLeft);
+  scrollEl._calStickyHandler=handler;
+  scrollEl.addEventListener('scroll',handler,{passive:true});
+}
 function renderSlackConfig(section){
   const el=document.getElementById('slack-cfg-'+section);
   if(!el) return;
   if(!isAdmin()){el.innerHTML='';return;}
   const cfg=store.slackConfig||{};
   const fields=section==='accounts'
-    ?[{key:'accounts_sem_acesso',label:'Sem Acesso'},{key:'accounts_ag_extrato',label:'Ag. Extrato'}]
-    :[{key:'conciliacoes_sem_acesso',label:'Sem Acesso'}];
-  const tipText='No Slack, clique com botão direito no canal → <b>Ver detalhes do canal</b> → role até o final para encontrar a ID (ex: C0ABC1234).';
+    ?[{key:'accounts_sem_acesso',label:t('slack-ch-sem-acesso')},{key:'accounts_ag_extrato',label:t('slack-ch-ag-extrato')}]
+    :[{key:'conciliacoes_sem_acesso',label:t('slack-ch-sem-acesso')}];
+  const tipText=t('slack-ch-tip');
   const flds=fields.map(f=>`<div style="display:flex;align-items:center;gap:6px">
     <label style="font-size:11px;font-weight:600;color:var(--e-muted);white-space:nowrap">${f.label}</label>
     <input type="text" id="slk-ch-${f.key}" value="${cfg[f.key]||''}" placeholder="C0ABC1234"
@@ -5602,7 +5627,7 @@ function renderSlackConfig(section){
       onfocus="this.style.borderColor='var(--e-purple)'" onblur="this.style.borderColor='';saveSlackChannel('${f.key}',this.value)">
   </div>`).join('');
   el.innerHTML=`<div style="display:flex;align-items:center;gap:14px;padding:8px 14px;background:var(--e-ghost);border-radius:8px;margin-bottom:12px;border:1px solid var(--e-pale);flex-wrap:wrap">
-    <span style="font-size:11px;font-weight:700;color:var(--e-muted);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap">Canais Slack</span>
+    <span style="font-size:11px;font-weight:700;color:var(--e-muted);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap">${t('slack-channels')}</span>
     ${flds}
     <div style="position:relative;display:inline-flex;align-items:center;flex-shrink:0">
       <button id="slk-tip-btn-${section}" style="background:none;border:1.5px solid var(--e-pale);border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;color:var(--e-muted);cursor:help;display:flex;align-items:center;justify-content:center;padding:0;line-height:1"
@@ -5616,7 +5641,7 @@ function saveSlackChannel(key,value){
   if(!store.slackConfig) store.slackConfig={};
   store.slackConfig[key]=value.trim();
   saveStore(); _fbSync('slackConfig');
-  _toast('✓ Canal salvo',2000);
+  _toast(t('slack-ch-saved'),2000);
 }
 function renderGerencialConciliacoes(){
   const e=document.getElementById('conciliacoes-empty');
@@ -6590,7 +6615,7 @@ function renderCronogramaConciliacoes(){
   }).join('')}</tbody>`;
 
   if(calScrollEl){calScrollEl.scrollLeft=_savedSL;calScrollEl.scrollTop=_savedST;}
-
+  _initCalStickyCorner(tbl,calScrollEl,_savedSL);
   if(!tbl._concClickAttached){
     tbl._concClickAttached=true;
     tbl.addEventListener('mousedown',e=>{
