@@ -11,6 +11,22 @@ const BANCO  = process.env.BANCO       || '';
 const AGENTE = process.env.AGENTE      || '';
 const ENV_LABEL = process.env.ENV_LABEL || 'Eron';
 
+const DEFAULT_CHANNEL = 'C0AQFCE263E';
+const ERROR_CHANNEL   = 'C0A8PNUADDL';
+const CHANNEL_ERRORS  = new Set(['channel_not_found', 'invalid_channel', 'no_permission', 'channel_not_found_for_team_in_scope']);
+
+const MODULE_NAMES = {
+  'pt-BR': { accounts: 'accounts', conciliacoes: 'conciliações' },
+  'en':    { accounts: 'accounts', conciliacoes: 'reconciliations' },
+  'es':    { accounts: 'accounts', conciliacoes: 'conciliaciones' },
+};
+
+const ERROR_MSGS = {
+  'pt-BR': (mod) => `Não foi possível reportar -sem acesso- do cronograma -${(MODULE_NAMES['pt-BR'][mod] || mod)}- porque o ID do canal Slack preenchido é inválido.`,
+  'en':    (mod) => `Could not report -no access- from schedule -${(MODULE_NAMES['en'][mod] || mod)}- because the Slack channel ID is invalid.`,
+  'es':    (mod) => `No fue posible reportar -sin acceso- del cronograma -${(MODULE_NAMES['es'][mod] || mod)}- porque el ID del canal Slack ingresado es inválido.`,
+};
+
 const MSGS = {
   'pt-BR': {
     accounts:      `Olá equipe, informo que *Accounts* não conseguiu acessar a conta *${BANCO}* do agente *${AGENTE}*, podem verificar por favor?`,
@@ -28,6 +44,21 @@ const MSGS = {
 
 const text = (MSGS[LANG] || MSGS['pt-BR'])[MODULE] || MSGS['pt-BR']['accounts'];
 
+async function sendErrorNotification() {
+  const errFn = ERROR_MSGS[LANG] || ERROR_MSGS['pt-BR'];
+  const errText = errFn(MODULE);
+  console.error(`Channel error — reporting to ${ERROR_CHANNEL}: ${errText}`);
+  try {
+    await fetch('https://slack.com/api/chat.postMessage', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${SLACK_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ channel: ERROR_CHANNEL, text: errText }),
+    });
+  } catch (e) {
+    console.error('Failed to send error notification:', e.message);
+  }
+}
+
 async function run() {
   if (!SLACK_TOKEN)           throw new Error('SLACK_TOKEN not set');
   if (!FIREBASE_DB_URL || !FIREBASE_SECRET) throw new Error('Firebase credentials not set');
@@ -43,7 +74,12 @@ async function run() {
   });
   const postData = await postRes.json();
   console.log('postMessage:', JSON.stringify(postData));
-  if (!postData.ok) throw new Error(`Slack postMessage failed: ${postData.error}`);
+  if (!postData.ok) {
+    if (CHANNEL_ERRORS.has(postData.error) && SLACK_CHANNEL !== DEFAULT_CHANNEL) {
+      await sendErrorNotification();
+    }
+    throw new Error(`Slack postMessage failed: ${postData.error}`);
+  }
 
   // 2. Retrieve permalink
   const plUrl = `https://slack.com/api/chat.getPermalink?channel=${encodeURIComponent(postData.channel)}&message_ts=${encodeURIComponent(postData.ts)}`;

@@ -3030,8 +3030,8 @@ async function _triggerSlackNotif(module,banco,agente,onResult){
   if(!pat){onResult(null);return;}
   const notifId='sa_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
   const envLabel=ENVIRONMENTS[_currentEnv]?.label||_currentEnv;
-  const slackCh=(module==='accounts'?store.slackConfig?.accounts_sem_acesso:store.slackConfig?.conciliacoes_sem_acesso)||'';
-  const extraInputs=slackCh?{slack_channel:slackCh}:{};
+  const slackCh=(module==='accounts'?store.slackConfig?.accounts_sem_acesso:store.slackConfig?.conciliacoes_sem_acesso)||'C0AQFCE263E';
+  const extraInputs={slack_channel:slackCh};
   try{
     const resp=await fetch('https://api.github.com/repos/caiquesilva-hue/eron-foc-app/actions/workflows/slack-sem-acesso.yml/dispatches',{
       method:'POST',
@@ -4554,8 +4554,8 @@ async function _triggerAgExtratoNotif(banco,agente,diaInicial,diaFinal,onResult)
   if(!pat){_toast('❌ GitHub PAT não configurado',3000);onResult(null);return;}
   const notifId='ag_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
   const envLabel=ENVIRONMENTS[_currentEnv]?.label||_currentEnv;
-  const agExtrCh=store.slackConfig?.accounts_ag_extrato||'';
-  const agExtrExtra=agExtrCh?{slack_channel:agExtrCh}:{};
+  const agExtrCh=store.slackConfig?.accounts_ag_extrato||'C0AQFCE263E';
+  const agExtrExtra={slack_channel:agExtrCh};
   let dispatchOk=false;
   try{
     const resp=await fetch('https://api.github.com/repos/caiquesilva-hue/eron-foc-app/actions/workflows/slack-ag-extrato.yml/dispatches',{

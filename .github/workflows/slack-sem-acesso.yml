@@ -46,7 +46,7 @@ jobs:
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           FIREBASE_DB_URL: ${{ secrets.FIREBASE_DB_URL }}
           FIREBASE_SECRET: ${{ secrets.FIREBASE_SECRET }}
-          SLACK_CHANNEL: ${{ inputs.slack_channel != '' && inputs.slack_channel || (inputs.env_label == 'Eron' && 'C01JS1GSR24' || 'C0AQFCE263E') }}
+          SLACK_CHANNEL: ${{ inputs.slack_channel || 'C0AQFCE263E' }}
           NOTIFICATION_ID: ${{ inputs.notification_id }}
           LANG_INPUT: ${{ inputs.lang }}
           MODULE: ${{ inputs.module }}
