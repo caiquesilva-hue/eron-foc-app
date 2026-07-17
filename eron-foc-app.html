@@ -349,6 +349,7 @@
   .cal-table td{padding:7px 14px;font-size:12px;color:var(--e-text);white-space:nowrap;vertical-align:middle;}
   .cal-table td.day-cell{padding:4px 2px;text-align:center;width:auto;min-width:50px;}
   .sel-cell.c-sel{background:rgba(124,58,237,.1)!important;box-shadow:inset 0 0 0 1.5px rgba(124,58,237,.55);}
+  .cal-sticky.sel-cell.c-sel{background:#f2ebfd!important;}
   .sel-cell{cursor:default;}
   .day-dot{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin:0 auto;}
   .day-dot.active-t1{background:rgba(111,115,244,.2);color:var(--e-violet);}
@@ -3161,17 +3162,12 @@ function renderCronogramaAccounts(){
   const INFO_COLS=10;
   const dayHeaders=days.map(d=>{
     const isWk=d.getDay()===0||d.getDay()===6;
-    return `<th class="col-day${isWk?' weekend':''}">${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}</th>`;
-  }).join('');
-  const wdHeaders=days.map(d=>{
-    const isWk=d.getDay()===0||d.getDay()===6;
-    return `<th class="col-day${isWk?' weekend':''}" style="font-size:9px;color:var(--e-muted);background:${isWk?'#faf5ff':'var(--e-ghost)'}">${wd[d.getDay()]}</th>`;
+    return `<th class="col-day${isWk?' weekend':''}">${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}<br><span style="font-size:9px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--e-muted)">${wd[d.getDay()]}</span></th>`;
   }).join('');
   const _sth=(col,lbl,idx,extra='')=>`<th class="${_sortThCls('crono',col)} col-info${extra?' cal-sticky':''}" ${extra} onclick="toggleSort('crono','${col}')" style="cursor:pointer;position:relative">${lbl}${_sortArrow('crono',col)}${_hideBtn('crono',idx)}</th>`;
   const colInfos=`${_sth('sigla',t('col-sigla'),0,'cal-sticky')}${_sth('pais',t('col-pais'),1)}${_sth('agente',t('col-agente'),2)}<th class="col-info" style="position:relative">Resp.${_hideBtn('crono',3)}</th>${_sth('banco',t('col-banco'),4)}${_sth('numeroConta',t('col-num-conta'),5)}${_sth('tipo',t('col-tipo'),6)}${_sth('tipoConta',t('col-tipo-conta'),7)}<th class="col-info" style="cursor:default;position:relative">TOP${_hideBtn('crono',8)}</th><th class="col-info" style="white-space:nowrap;position:relative">Acompanhamento${_hideBtn('crono',9)}</th>`;
-  const emptyInfoCols='<th class="col-info cal-sticky" style="background:var(--e-ghost)"></th>'+'<th class="col-info" style="background:var(--e-ghost)"></th>'.repeat(INFO_COLS-1);
   const fmtDate=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  tbl.innerHTML=`<thead><tr>${colInfos}${dayHeaders}</tr><tr>${emptyInfoCols}${wdHeaders}</tr></thead><tbody>${
+  tbl.innerHTML=`<thead><tr>${colInfos}${dayHeaders}</tr></thead><tbody>${
     listSorted.map((c,ri)=>{
       const contaKey=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
       const resp=_contaResp(c);
@@ -6490,13 +6486,11 @@ function renderCronogramaConciliacoes(){
   const _savedST=calScrollEl?calScrollEl.scrollTop:0;
 
   const wd=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-  const dayHdrs=days.map(d=>{const wk=d.getDay()===0||d.getDay()===6;return `<th class="col-day${wk?' weekend':''}">${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}</th>`;}).join('');
-  const wdHdrs=days.map(d=>{const wk=d.getDay()===0||d.getDay()===6;return `<th class="col-day${wk?' weekend':''}" style="font-size:9px;color:var(--e-muted);background:${wk?'#faf5ff':'var(--e-ghost)'}">${wd[d.getDay()]}</th>`;}).join('');
+  const dayHdrs=days.map(d=>{const wk=d.getDay()===0||d.getDay()===6;return `<th class="col-day${wk?' weekend':''}">${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}<br><span style="font-size:9px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--e-muted)">${wd[d.getDay()]}</span></th>`;}).join('');
 
   const INFO_COLS=7;
   const _sth=(col,lbl,idx,extra='')=>`<th class="${_sortThCls('crono-conc',col)} col-info${extra?' cal-sticky':''}" ${extra} onclick="toggleSort('crono-conc','${col}')" style="cursor:pointer;position:relative">${lbl}${_sortArrow('crono-conc',col)}${_hideBtn('crono-conc',idx)}</th>`;
   const colInfos=`${_sth('nome','Nome',0,'cal-sticky')}${_sth('pais','País',1)}${_sth('agente','Agente',2)}<th class="col-info" style="position:relative">Resp.${_hideBtn('crono-conc',3)}</th><th class="col-info" style="position:relative">Prioridade${_hideBtn('crono-conc',4)}</th><th class="col-info" style="position:relative">Tipo${_hideBtn('crono-conc',5)}</th><th class="col-info" style="white-space:nowrap;position:relative">Acompanhamento${_hideBtn('crono-conc',6)}</th>`;
-  const emptyInfoCols='<th class="col-info cal-sticky" style="background:var(--e-ghost)"></th>'+'<th class="col-info" style="background:var(--e-ghost)"></th>'.repeat(INFO_COLS-1);
 
   const statusCfg={
     concluido:{bg:'#dcfce7',color:'#15803d'},
@@ -6515,10 +6509,7 @@ function renderCronogramaConciliacoes(){
     pendente:`<span class="chip chip-amber" style="font-size:10px">Pendente</span>`
   };
 
-  tbl.innerHTML=`<thead>
-    <tr>${colInfos}${dayHdrs}</tr>
-    <tr>${emptyInfoCols}${wdHdrs}</tr>
-  </thead><tbody>${list.map((conc,ri)=>{
+  tbl.innerHTML=`<thead><tr>${colInfos}${dayHdrs}</tr></thead><tbody>${list.map((conc,ri)=>{
     const rEmail=_getConcilResp(conc);
     const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;
     const respCell=rUser?`<span style="font-family:monospace;font-size:10px;font-weight:700;background:rgba(151,111,244,.1);color:var(--e-mid);padding:1px 5px;border-radius:3px">${rUser.sigla}</span>`:'<span style="color:var(--e-muted);font-size:11px">—</span>';
