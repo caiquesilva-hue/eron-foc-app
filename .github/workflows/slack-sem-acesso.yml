@@ -22,6 +22,10 @@ on:
       env_label:
         description: 'Environment label: Eron | AstroPay | LimePay'
         required: true
+      slack_channel:
+        description: 'Slack channel ID override (optional, configured in Gerencial)'
+        required: false
+        default: ''
 
 jobs:
   send:
@@ -42,7 +46,7 @@ jobs:
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           FIREBASE_DB_URL: ${{ secrets.FIREBASE_DB_URL }}
           FIREBASE_SECRET: ${{ secrets.FIREBASE_SECRET }}
-          SLACK_CHANNEL: ${{ inputs.env_label == 'Eron' && 'C01JS1GSR24' || 'C0AQFCE263E' }}
+          SLACK_CHANNEL: ${{ inputs.slack_channel != '' && inputs.slack_channel || (inputs.env_label == 'Eron' && 'C01JS1GSR24' || 'C0AQFCE263E') }}
           NOTIFICATION_ID: ${{ inputs.notification_id }}
           LANG_INPUT: ${{ inputs.lang }}
           MODULE: ${{ inputs.module }}

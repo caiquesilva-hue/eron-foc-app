@@ -335,8 +335,7 @@
   .cal-wrap{background:#fff;border:1px solid var(--e-pale);border-radius:12px;}
   .cal-scroll{overflow-x:scroll;}
   .cal-table{width:max-content;min-width:100%;border-collapse:collapse;}
-  .cal-table thead{position:sticky;top:0;z-index:4;}
-  .cal-table thead th{padding:8px 10px;text-align:center;font-size:11px;font-weight:600;color:var(--e-muted);text-transform:uppercase;letter-spacing:.06em;background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap;}
+  .cal-table thead th{padding:8px 10px;text-align:center;font-size:11px;font-weight:600;color:var(--e-muted);text-transform:uppercase;letter-spacing:.06em;background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap;position:sticky;top:0;z-index:4;}
   .cal-table thead tr:last-child th{border-top:none;}
   .cal-table thead th.col-info{text-align:left;padding:8px 28px 8px 14px;}
   .cal-table thead th.col-day{min-width:50px;width:auto;padding:5px 3px;}
@@ -702,6 +701,7 @@
           <option value="encerrada" data-i18n="status-encerrada">Encerrada</option>
         </select>
       </div>
+      <div id="slack-cfg-accounts"></div>
       <div class="table-wrap" id="accounts-table-wrap">
         <div id="accounts-empty" class="empty-state">
           <div class="empty-icon">🏦</div>
@@ -772,6 +772,7 @@
   </div>
   <div id="conc-unlinked-gw-wrap"></div>
   <div style="padding:0 0 10px"><div class="crono-search-inner"><input type="search" id="conc-ger-search" class="crono-search-input" data-i18n-placeholder="conc-search-ph" placeholder="Buscar nome, país, agente..." oninput="renderGerencialConciliacoes()"></div></div>
+  <div id="slack-cfg-conciliacoes"></div>
   <div class="table-wrap">
     <div id="conciliacoes-empty" class="empty-state"><div class="empty-icon">🔗</div><div class="empty-title" data-i18n="conc-empty-title">Nenhuma conciliação cadastrada</div><div class="empty-sub" data-i18n="conc-empty-sub">Adicione conciliações vinculando contas de Gerencial > Accounts.</div></div>
     <div class="table-scroll" id="conciliacoes-table-inner" style="display:none"><table><thead><tr><th data-i18n="lbl-nome">Nome</th><th data-i18n="col-pais">País</th><th data-i18n="col-agente">Agente</th><th data-i18n="conc-col-tipo">Tipo</th><th data-i18n="conc-col-contas">Contas vinculadas</th><th data-i18n="conc-col-gateways">Gateways vinculados</th><th style="width:80px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="conciliacoes-tbody"></tbody></table></div>
@@ -2232,6 +2233,7 @@ const store = {
   liquidacoesStatus:{},
   liquidacoesManual:[],
   liquidacoesExcluidos:{},
+  slackConfig:{},
 };
 
 // ─── NAVIGATION ───────────────────────────────────────────────────
@@ -2267,7 +2269,8 @@ function navigate(pageId){
     initCronconcDates();
     renderCronogramaConciliacoes();
   }
-  if(pageId==='gerencial-conciliacoes'){ renderGerencialConciliacoes(); _renderVolLastImport(); }
+  if(pageId==='gerencial-accounts'){ renderSlackConfig('accounts'); }
+  if(pageId==='gerencial-conciliacoes'){ renderGerencialConciliacoes(); _renderVolLastImport(); renderSlackConfig('conciliacoes'); }
   if(pageId==='gerencial-custos'){ renderGerencialLiquidacoes(); }
   if(pageId==='cronograma-custos'){ renderCronogramaLiquidacoes(); }
 }
@@ -3011,11 +3014,13 @@ async function _triggerSlackNotif(module,banco,agente,onResult){
   if(!pat){onResult(null);return;}
   const notifId='sa_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
   const envLabel=ENVIRONMENTS[_currentEnv]?.label||_currentEnv;
+  const slackCh=(module==='accounts'?store.slackConfig?.accounts_sem_acesso:store.slackConfig?.conciliacoes_sem_acesso)||'';
+  const extraInputs=slackCh?{slack_channel:slackCh}:{};
   try{
     const resp=await fetch('https://api.github.com/repos/caiquesilva-hue/eron-foc-app/actions/workflows/slack-sem-acesso.yml/dispatches',{
       method:'POST',
       headers:{'Authorization':'Bearer '+pat,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json'},
-      body:JSON.stringify({ref:'main',inputs:{notification_id:notifId,lang:currentLang,module,banco,agente,env_label:envLabel}})
+      body:JSON.stringify({ref:'main',inputs:{notification_id:notifId,lang:currentLang,module,banco,agente,env_label:envLabel,...extraInputs}})
     });
     if(!resp.ok){console.error('workflow_dispatch failed',resp.status);onResult(null);return;}
   }catch(e){console.error('workflow_dispatch error',e);onResult(null);return;}
@@ -4532,12 +4537,14 @@ async function _triggerAgExtratoNotif(banco,agente,diaInicial,diaFinal,onResult)
   if(!pat){_toast('❌ GitHub PAT não configurado',3000);onResult(null);return;}
   const notifId='ag_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
   const envLabel=ENVIRONMENTS[_currentEnv]?.label||_currentEnv;
+  const agExtrCh=store.slackConfig?.accounts_ag_extrato||'';
+  const agExtrExtra=agExtrCh?{slack_channel:agExtrCh}:{};
   let dispatchOk=false;
   try{
     const resp=await fetch('https://api.github.com/repos/caiquesilva-hue/eron-foc-app/actions/workflows/slack-ag-extrato.yml/dispatches',{
       method:'POST',
       headers:{'Authorization':'Bearer '+pat,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json'},
-      body:JSON.stringify({ref:'main',inputs:{notification_id:notifId,lang:currentLang,banco,agente,dia_inicial:diaInicial,dia_final:diaFinal,env_label:envLabel}})
+      body:JSON.stringify({ref:'main',inputs:{notification_id:notifId,lang:currentLang,banco,agente,dia_inicial:diaInicial,dia_final:diaFinal,env_label:envLabel,...agExtrExtra}})
     });
     if(!resp.ok){
       const txt=await resp.text().catch(()=>'');
@@ -5009,6 +5016,7 @@ function _applyFbData(saved){
     store.cierreData=cierre;
   }
   // auditLog carregado separadamente via _fbAuditRef.child_added
+  if(saved.slackConfig&&!_ownWrites.slackConfig)store.slackConfig=saved.slackConfig;
   if(saved.permissions&&!_ownWrites.permissions)store.permissions=saved.permissions;
   if(saved.credentials&&!_ownWrites.credentials){
     const creds={};
@@ -5577,6 +5585,38 @@ function _renderUnlinkedGateways(){
     </div>
     <div style="max-height:220px;overflow-y:auto">${body}</div>
   </div>`;
+}
+function renderSlackConfig(section){
+  const el=document.getElementById('slack-cfg-'+section);
+  if(!el) return;
+  if(!isAdmin()){el.innerHTML='';return;}
+  const cfg=store.slackConfig||{};
+  const fields=section==='accounts'
+    ?[{key:'accounts_sem_acesso',label:'Sem Acesso'},{key:'accounts_ag_extrato',label:'Ag. Extrato'}]
+    :[{key:'conciliacoes_sem_acesso',label:'Sem Acesso'}];
+  const tipText='No Slack, clique com botão direito no canal → <b>Ver detalhes do canal</b> → role até o final para encontrar a ID (ex: C0ABC1234).';
+  const flds=fields.map(f=>`<div style="display:flex;align-items:center;gap:6px">
+    <label style="font-size:11px;font-weight:600;color:var(--e-muted);white-space:nowrap">${f.label}</label>
+    <input type="text" id="slk-ch-${f.key}" value="${cfg[f.key]||''}" placeholder="C0ABC1234"
+      style="width:120px;border:1px solid var(--e-pale);border-radius:6px;padding:4px 8px;font-size:12px;font-family:ui-monospace,monospace;outline:none;color:var(--e-text);background:#fff;transition:border-color .15s"
+      onfocus="this.style.borderColor='var(--e-purple)'" onblur="this.style.borderColor='';saveSlackChannel('${f.key}',this.value)">
+  </div>`).join('');
+  el.innerHTML=`<div style="display:flex;align-items:center;gap:14px;padding:8px 14px;background:var(--e-ghost);border-radius:8px;margin-bottom:12px;border:1px solid var(--e-pale);flex-wrap:wrap">
+    <span style="font-size:11px;font-weight:700;color:var(--e-muted);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap">Canais Slack</span>
+    ${flds}
+    <div style="position:relative;display:inline-flex;align-items:center;flex-shrink:0">
+      <button id="slk-tip-btn-${section}" style="background:none;border:1.5px solid var(--e-pale);border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;color:var(--e-muted);cursor:help;display:flex;align-items:center;justify-content:center;padding:0;line-height:1"
+        onmouseenter="document.getElementById('slk-tip-${section}').style.display='block'"
+        onmouseleave="document.getElementById('slk-tip-${section}').style.display='none'">?</button>
+      <div id="slk-tip-${section}" style="display:none;position:absolute;left:0;top:calc(100% + 6px);background:#1e1b4b;color:#e9e7ff;border-radius:8px;padding:10px 13px;font-size:11px;line-height:1.6;z-index:9999;max-width:260px;box-shadow:0 4px 16px rgba(0,0,0,.2);white-space:normal;min-width:220px;pointer-events:none">${tipText}</div>
+    </div>
+  </div>`;
+}
+function saveSlackChannel(key,value){
+  if(!store.slackConfig) store.slackConfig={};
+  store.slackConfig[key]=value.trim();
+  saveStore(); _fbSync('slackConfig');
+  _toast('✓ Canal salvo',2000);
 }
 function renderGerencialConciliacoes(){
   const e=document.getElementById('conciliacoes-empty');
@@ -6802,7 +6842,7 @@ function submitConcBulkApply(){
   }
 }
 
-function renderAll(){ renderAccountsTable(); _applyPendingFilters('crono'); initCronoFilters(); initCronoDates(); renderCronogramaAccounts(); renderCadastro('pais'); renderCadastro('agente'); renderCadastro('banco'); renderCadastro('processadores'); renderAcessos(); renderGerencialConciliacoes(); renderCronogramaConciliacoes(); }
+function renderAll(){ renderAccountsTable(); _applyPendingFilters('crono'); initCronoFilters(); initCronoDates(); renderCronogramaAccounts(); renderCadastro('pais'); renderCadastro('agente'); renderCadastro('banco'); renderCadastro('processadores'); renderAcessos(); renderGerencialConciliacoes(); renderCronogramaConciliacoes(); renderSlackConfig('accounts'); renderSlackConfig('conciliacoes'); }
 
 // ─── COUNTS ───────────────────────────────────────────────────────
 function updateCounts(){
