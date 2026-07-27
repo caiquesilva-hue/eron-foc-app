@@ -1276,7 +1276,7 @@
       </div>
       <div class="form-field">
         <label class="form-label" data-i18n="lbl-obs">Observações</label>
-        <textarea class="form-input" id="acc-obs" rows="2" style="resize:vertical;min-height:54px;font-size:13px" placeholder=""></textarea>
+        <textarea class="form-input" id="acc-obs" rows="1" style="resize:none;overflow:hidden;font-size:13px;transition:height .1s" placeholder="" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
       </div>
       <!-- Encerrar conta — só aparece no modo edição -->
       <div id="acc-encerrar-section" style="display:none">
@@ -2410,7 +2410,10 @@ function openEditAccount(idx){
   document.getElementById('acc-agencia').value=c.agencia||'';
   document.getElementById('acc-tipo').value=c.tipo;
   document.getElementById('acc-tipo-conta').value=c.tipoConta||'';
-  document.getElementById('acc-obs').value=c.obs||'';
+  const _obsEl=document.getElementById('acc-obs');
+  _obsEl.value=c.obs||'';
+  _obsEl.style.height='auto';
+  _obsEl.style.height=_obsEl.scrollHeight+'px';
   document.getElementById('acc-encerrar').checked=c.status==='encerrada';
   openModal('modal-account');
 }
