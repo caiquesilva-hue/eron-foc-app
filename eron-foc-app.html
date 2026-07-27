@@ -1274,6 +1274,10 @@
           <input class="form-input mono-in" type="text" id="acc-agencia" placeholder="Ex: 7042-4">
         </div>
       </div>
+      <div class="form-field">
+        <label class="form-label" data-i18n="lbl-obs">Observações</label>
+        <textarea class="form-input" id="acc-obs" rows="2" style="resize:vertical;min-height:54px;font-size:13px" placeholder=""></textarea>
+      </div>
       <!-- Encerrar conta — só aparece no modo edição -->
       <div id="acc-encerrar-section" style="display:none">
         <div class="toggle-divider"></div>
@@ -1888,6 +1892,7 @@ const i18n = {
     'lbl-pais':'País','lbl-agente':'Agente','lbl-banco':'Banco',
     'lbl-sigla':'Sigla Clearyn','lbl-tipo':'Frequência','lbl-tipo-conta':'Tipo de conta','lbl-responsavel':'Responsável',
     'lbl-num-conta':'Número da conta','lbl-agencia':'Agência',
+    'lbl-obs':'Observações',
     'lbl-encerrar':'Encerrar conta','encerrar-desc':'Marca a conta como inativa permanentemente.',
     'sel-select':'Selecione...',
     'col-pais':'País','col-agente':'Agente','col-banco':'Banco','col-sigla':'Sigla',
@@ -1991,6 +1996,7 @@ const i18n = {
     'lbl-pais':'Country','lbl-agente':'Agent','lbl-banco':'Bank',
     'lbl-sigla':'Clearyn Code','lbl-tipo':'Frequency','lbl-tipo-conta':'Account type','lbl-responsavel':'Responsible',
     'lbl-num-conta':'Account number','lbl-agencia':'Branch',
+    'lbl-obs':'Observations',
     'lbl-encerrar':'Close account','encerrar-desc':'Permanently marks this account as inactive.',
     'sel-select':'Select...',
     'col-pais':'Country','col-agente':'Agent','col-banco':'Bank','col-sigla':'Code',
@@ -2087,6 +2093,7 @@ const i18n = {
     'lbl-pais':'País','lbl-agente':'Agente','lbl-banco':'Banco',
     'lbl-sigla':'Sigla Clearyn','lbl-tipo':'Frecuencia','lbl-tipo-conta':'Tipo de cuenta','lbl-responsavel':'Responsable',
     'lbl-num-conta':'Número de cuenta','lbl-agencia':'Agencia',
+    'lbl-obs':'Observaciones',
     'lbl-encerrar':'Cerrar cuenta','encerrar-desc':'Marca la cuenta como inactiva permanentemente.',
     'sel-select':'Seleccione...',
     'col-pais':'País','col-agente':'Agente','col-banco':'Banco','col-sigla':'Sigla',
@@ -2403,6 +2410,7 @@ function openEditAccount(idx){
   document.getElementById('acc-agencia').value=c.agencia||'';
   document.getElementById('acc-tipo').value=c.tipo;
   document.getElementById('acc-tipo-conta').value=c.tipoConta||'';
+  document.getElementById('acc-obs').value=c.obs||'';
   document.getElementById('acc-encerrar').checked=c.status==='encerrada';
   openModal('modal-account');
 }
@@ -2420,6 +2428,7 @@ function resetAccountForm(){
   document.getElementById('acc-agencia-field').style.display='none';
   document.getElementById('acc-tipo').value='';
   document.getElementById('acc-tipo-conta').value='';
+  document.getElementById('acc-obs').value='';
   const toggle=document.getElementById('acc-encerrar');
   if(toggle) toggle.checked=false;
 }
@@ -2469,6 +2478,7 @@ function submitAccountForm(){
     tipo:document.getElementById('acc-tipo').value,
     tipoConta:document.getElementById('acc-tipo-conta').value,
     status:encerrado?'encerrada':'ativa',
+    obs:document.getElementById('acc-obs').value.trim(),
   };
   if(editingIdx>=0){
     const oldConta=store.contas[editingIdx];
@@ -3228,7 +3238,8 @@ function renderCronogramaAccounts(){
             <div class="day-dot inactive"></div></td>`;
         }
       }).join('');
-      return `<tr class="row-${c.status}"><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-family:ui-monospace,monospace;font-size:12px">${c.sigla}</td><td class="sel-cell" data-sr="${ri}" data-sc="1">${countryFlag(c.pais)} ${c.pais}</td><td class="sub sel-cell" data-sr="${ri}" data-sc="2">${c.agente}</td><td class="sel-cell" data-sr="${ri}" data-sc="3">${respCell}</td><td class="sel-cell" data-sr="${ri}" data-sc="4">${c.banco}</td><td class="mono sel-cell" data-sr="${ri}" data-sc="5">${c.numeroConta||'—'}</td><td class="sel-cell" data-sr="${ri}" data-sc="6">${tipoChip(c.tipo)}</td><td class="sel-cell" data-sr="${ri}" data-sc="7">${tipoContaChip(c.tipoConta)}</td><td class="sel-cell" data-sr="${ri}" data-sc="8">${topChip}</td><td class="sel-cell" data-sr="${ri}" data-sc="9" style="white-space:nowrap;padding:4px 8px">${_d1chipHtml}</td>${cells}</tr>`;
+      const _siglaInner=c.obs?`<span data-link="${_esc(c.obs)}" onmouseenter="showNoteTooltip(event,this)" onmouseleave="scheduleHideNoteTooltip()" style="pointer-events:auto">${c.sigla}<sup style="color:var(--e-purple);font-size:7px;margin-left:1px">●</sup></span>`:c.sigla;
+      return `<tr class="row-${c.status}"><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-family:ui-monospace,monospace;font-size:12px">${_siglaInner}</td><td class="sel-cell" data-sr="${ri}" data-sc="1">${countryFlag(c.pais)} ${c.pais}</td><td class="sub sel-cell" data-sr="${ri}" data-sc="2">${c.agente}</td><td class="sel-cell" data-sr="${ri}" data-sc="3">${respCell}</td><td class="sel-cell" data-sr="${ri}" data-sc="4">${c.banco}</td><td class="mono sel-cell" data-sr="${ri}" data-sc="5">${c.numeroConta||'—'}</td><td class="sel-cell" data-sr="${ri}" data-sc="6">${tipoChip(c.tipo)}</td><td class="sel-cell" data-sr="${ri}" data-sc="7">${tipoContaChip(c.tipoConta)}</td><td class="sel-cell" data-sr="${ri}" data-sc="8">${topChip}</td><td class="sel-cell" data-sr="${ri}" data-sc="9" style="white-space:nowrap;padding:4px 8px">${_d1chipHtml}</td>${cells}</tr>`;
     }).join('')
   }</tbody>`;
   if(calScrollEl){calScrollEl.scrollLeft=_savedSL;calScrollEl.scrollTop=_savedST;}
