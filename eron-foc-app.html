@@ -776,7 +776,7 @@
   <div id="slack-cfg-conciliacoes"></div>
   <div class="table-wrap">
     <div id="conciliacoes-empty" class="empty-state"><div class="empty-icon">🔗</div><div class="empty-title" data-i18n="conc-empty-title">Nenhuma conciliação cadastrada</div><div class="empty-sub" data-i18n="conc-empty-sub">Adicione conciliações vinculando contas de Gerencial > Accounts.</div></div>
-    <div class="table-scroll" id="conciliacoes-table-inner" style="display:none"><table><thead><tr><th data-i18n="lbl-nome">Nome</th><th data-i18n="col-pais">País</th><th data-i18n="col-agente">Agente</th><th data-i18n="conc-col-tipo">Tipo</th><th data-i18n="conc-col-contas">Contas vinculadas</th><th data-i18n="conc-col-gateways">Gateways vinculados</th><th style="width:80px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="conciliacoes-tbody"></tbody></table></div>
+    <div class="table-scroll" id="conciliacoes-table-inner" style="display:none"><table><thead><tr><th data-i18n="lbl-nome">Nome</th><th data-i18n="col-pais">País</th><th data-i18n="col-agente">Agente</th><th data-i18n="lbl-freq">Frequência</th><th data-i18n="conc-col-tipo">Tipo</th><th data-i18n="conc-col-contas">Contas vinculadas</th><th data-i18n="conc-col-gateways">Gateways vinculados</th><th style="width:80px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="conciliacoes-tbody"></tbody></table></div>
   </div>
 </div>
     <!-- CRONOGRAMA > ACCOUNTS -->
@@ -1892,7 +1892,7 @@ const i18n = {
     'lbl-pais':'País','lbl-agente':'Agente','lbl-banco':'Banco',
     'lbl-sigla':'Sigla Clearyn','lbl-tipo':'Frequência','lbl-tipo-conta':'Tipo de conta','lbl-responsavel':'Responsável',
     'lbl-num-conta':'Número da conta','lbl-agencia':'Agência',
-    'lbl-obs':'Observações',
+    'lbl-obs':'Observações','lbl-freq':'Frequência',
     'lbl-encerrar':'Encerrar conta','encerrar-desc':'Marca a conta como inativa permanentemente.',
     'sel-select':'Selecione...',
     'col-pais':'País','col-agente':'Agente','col-banco':'Banco','col-sigla':'Sigla',
@@ -1996,7 +1996,7 @@ const i18n = {
     'lbl-pais':'Country','lbl-agente':'Agent','lbl-banco':'Bank',
     'lbl-sigla':'Clearyn Code','lbl-tipo':'Frequency','lbl-tipo-conta':'Account type','lbl-responsavel':'Responsible',
     'lbl-num-conta':'Account number','lbl-agencia':'Branch',
-    'lbl-obs':'Observations',
+    'lbl-obs':'Observations','lbl-freq':'Frequency',
     'lbl-encerrar':'Close account','encerrar-desc':'Permanently marks this account as inactive.',
     'sel-select':'Select...',
     'col-pais':'Country','col-agente':'Agent','col-banco':'Bank','col-sigla':'Code',
@@ -2093,7 +2093,7 @@ const i18n = {
     'lbl-pais':'País','lbl-agente':'Agente','lbl-banco':'Banco',
     'lbl-sigla':'Sigla Clearyn','lbl-tipo':'Frecuencia','lbl-tipo-conta':'Tipo de cuenta','lbl-responsavel':'Responsable',
     'lbl-num-conta':'Número de cuenta','lbl-agencia':'Agencia',
-    'lbl-obs':'Observaciones',
+    'lbl-obs':'Observaciones','lbl-freq':'Frecuencia',
     'lbl-encerrar':'Cerrar cuenta','encerrar-desc':'Marca la cuenta como inactiva permanentemente.',
     'sel-select':'Seleccione...',
     'col-pais':'País','col-agente':'Agente','col-banco':'Banco','col-sigla':'Sigla',
@@ -5695,7 +5695,8 @@ function renderGerencialConciliacoes(){
     const cvm=(store.concilVolumeMap||{})[concId2]||{};
     const allGwIds=[...new Set([...(cvm.cashinIds||[]),...(cvm.cashoutIds||[]),...(cvm.refundIds||[]),...(cvm.chargebackIds||[])])];
     const gwTags=allGwIds.length?allGwIds.map(gid=>`<span style="font-family:monospace;font-size:10px;background:var(--e-ghost);padding:1px 5px;border-radius:3px;margin-right:3px;display:inline-block;margin-bottom:2px">${gid}</span>`).join(''):`<span style="color:var(--e-muted);font-size:11px">—</span>`;
-    return `<tr class="${isEncerrada?'row-encerrada':''}"><td style="font-weight:600">${c.nome}${statusChip}</td><td>${c.pais?`${countryFlag(c.pais)} ${c.pais}`:'—'}</td><td style="font-size:12px;color:var(--e-muted)">${c.agente||'—'}</td><td>${tipoChipHtml}</td><td style="white-space:normal">${tags}</td><td style="white-space:normal">${gwTags}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openConciliacaoModal(${origIdx})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteConciliacao(${origIdx})">${trashIcon}</button></div>`:''}</td></tr>`;
+    const freqChip=c.frequencia?`<span class="chip" style="font-size:10px;background:var(--e-ghost);color:var(--e-mid);border:1px solid var(--e-pale)">${c.frequencia}</span>`:`<span style="color:var(--e-muted);font-size:11px">—</span>`;
+    return `<tr class="${isEncerrada?'row-encerrada':''}"><td style="font-weight:600">${c.nome}${statusChip}</td><td>${c.pais?`${countryFlag(c.pais)} ${c.pais}`:'—'}</td><td style="font-size:12px;color:var(--e-muted)">${c.agente||'—'}</td><td>${freqChip}</td><td>${tipoChipHtml}</td><td style="white-space:normal">${tags}</td><td style="white-space:normal">${gwTags}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openConciliacaoModal(${origIdx})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteConciliacao(${origIdx})">${trashIcon}</button></div>`:''}</td></tr>`;
   }).join('');
   _renderUnlinkedGateways();
 }
@@ -5732,6 +5733,15 @@ function openConciliacaoModal(editIdx=-1){
     <div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="conc-nome" placeholder="Ex: Payout Mono Colprocesa" value="${conc.nome||''}"></div>
     <div class="form-field"><label class="form-label">${t('lbl-pais')}</label><select class="form-select" id="conc-pais" onchange="onConcPaisChange()"><option value="">${t('sel-select')}</option>${paisOpts}</select></div>
     <div class="form-field"><label class="form-label">${t('lbl-agente')}</label><select class="form-select" id="conc-agente" onchange="renderContasMSList()"><option value="">${t('sel-select')}</option>${agenteOpts}</select></div>
+    <div class="form-field"><label class="form-label">${t('lbl-freq')}</label>
+      <select class="form-select" id="conc-freq">
+        <option value="">${t('sel-select')}</option>
+        <option value="T1" ${conc.frequencia==='T1'?'selected':''}>T1</option>
+        <option value="T2" ${conc.frequencia==='T2'?'selected':''}>T2</option>
+        <option value="T3" ${conc.frequencia==='T3'?'selected':''}>T3</option>
+        <option value="Diário" ${conc.frequencia==='Diário'?'selected':''}>Diário</option>
+      </select>
+    </div>
     <div class="form-field"><label class="form-label">${t('lbl-tipo')}<span class="req">*</span></label>
       <div style="display:flex;gap:6px">
         <button type="button" id="tipo-proc-btn" class="op-type-toggle" onclick="toggleConcTipo('processadores')">${t('cad-proc-title')}</button>
@@ -5882,15 +5892,16 @@ function submitConciliacao(){
   const chargebackIds=_selectedOpTypes.includes('chargebacks')?[..._selectedGatewayIds]:[];
   const tiposOperacao=[..._selectedOpTypes];
   const obs=(document.getElementById('conc-obs')?.value||'').trim();
+  const frequencia=document.getElementById('conc-freq')?.value||'';
   const isEdit=_editConcIdx>=0;
   const encerrado=isEdit&&(document.getElementById('conc-encerrar')?.checked||false);
   let concId;
   if(isEdit){
-    store.conciliacoes[_editConcIdx]={...store.conciliacoes[_editConcIdx],nome,pais,agente,tipo,contas,processadores,obs,status:encerrado?'encerrada':'ativa'};
+    store.conciliacoes[_editConcIdx]={...store.conciliacoes[_editConcIdx],nome,pais,agente,tipo,contas,processadores,obs,frequencia,status:encerrado?'encerrada':'ativa'};
     concId=(store.conciliacoes[_editConcIdx].id||nome).replace(/['"]/g,'');
   } else {
     concId=nome.toLowerCase().replace(/[^a-z0-9]/g,'_')+'_'+Date.now();
-    store.conciliacoes.push({id:concId,nome,pais,agente,tipo,contas,processadores,obs});
+    store.conciliacoes.push({id:concId,nome,pais,agente,tipo,contas,processadores,obs,frequencia});
   }
   if(tiposOperacao.length){
     if(!store.concilVolumeMap) store.concilVolumeMap={};
