@@ -5764,6 +5764,10 @@ function openConciliacaoModal(editIdx=-1){
         </div>
       </div>
     </div>
+    <div class="form-field" style="border-top:1px solid var(--e-pale);padding-top:12px;margin-top:4px">
+      <label class="form-label">${t('lbl-obs')}</label>
+      <textarea class="form-input" id="conc-obs" rows="1" style="resize:none;overflow:hidden;font-size:13px;transition:height .1s" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${_esc(conc.obs||'')}</textarea>
+    </div>
     ${isEdit?`<div id="conc-encerrar-section" style="border-top:1px solid var(--e-pale);padding-top:12px;margin-top:4px">
       <div class="toggle-row">
         <div class="toggle-info">
@@ -5783,6 +5787,8 @@ function openConciliacaoModal(editIdx=-1){
     // Tipo toggles
     document.getElementById('tipo-proc-btn')?.classList.toggle('active',_tipoAtivosConc.includes('processadores'));
     document.getElementById('tipo-bancos-btn')?.classList.toggle('active',_tipoAtivosConc.includes('bancos'));
+    const _concObsEl=document.getElementById('conc-obs');
+    if(_concObsEl){_concObsEl.style.height='auto';_concObsEl.style.height=_concObsEl.scrollHeight+'px';}
     renderConcVincList(); renderConcVincTags();
     // Gateway op-type toggles
     _selectedOpTypes.forEach(tp=>{
@@ -5875,15 +5881,16 @@ function submitConciliacao(){
   const refundIds=_selectedOpTypes.includes('refunds')?[..._selectedGatewayIds]:[];
   const chargebackIds=_selectedOpTypes.includes('chargebacks')?[..._selectedGatewayIds]:[];
   const tiposOperacao=[..._selectedOpTypes];
+  const obs=(document.getElementById('conc-obs')?.value||'').trim();
   const isEdit=_editConcIdx>=0;
   const encerrado=isEdit&&(document.getElementById('conc-encerrar')?.checked||false);
   let concId;
   if(isEdit){
-    store.conciliacoes[_editConcIdx]={...store.conciliacoes[_editConcIdx],nome,pais,agente,tipo,contas,processadores,status:encerrado?'encerrada':'ativa'};
+    store.conciliacoes[_editConcIdx]={...store.conciliacoes[_editConcIdx],nome,pais,agente,tipo,contas,processadores,obs,status:encerrado?'encerrada':'ativa'};
     concId=(store.conciliacoes[_editConcIdx].id||nome).replace(/['"]/g,'');
   } else {
     concId=nome.toLowerCase().replace(/[^a-z0-9]/g,'_')+'_'+Date.now();
-    store.conciliacoes.push({id:concId,nome,pais,agente,tipo,contas,processadores});
+    store.conciliacoes.push({id:concId,nome,pais,agente,tipo,contas,processadores,obs});
   }
   if(tiposOperacao.length){
     if(!store.concilVolumeMap) store.concilVolumeMap={};
@@ -6627,7 +6634,8 @@ function renderCronogramaConciliacoes(){
     const _concTipoMap={bancos:['chip-tipo-bancos','Bancos'],processadores:['chip-tipo-proc','Processadores'],mista:['chip-tipo-mista','Mista']};
     const _ct=_concTipoMap[conc.tipo]||['chip-grey',conc.tipo||'—'];
     const concTipoChipHtml=`<span class="chip ${_ct[0]}" style="font-size:10px">${_ct[1]}</span>`;
-    return `<tr class="row-ativa"><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:600;white-space:nowrap">${conc.nome}</td><td class="sel-cell" data-sr="${ri}" data-sc="1" style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td><td class="sub sel-cell" data-sr="${ri}" data-sc="2" style="font-size:11px">${conc.agente||'—'}</td><td class="sel-cell" data-sr="${ri}" data-sc="3">${respCell}</td><td class="sel-cell" data-sr="${ri}" data-sc="4" style="padding:4px 8px">${priorCell}</td><td class="sel-cell" data-sr="${ri}" data-sc="5" style="padding:4px 8px">${concTipoChipHtml}</td><td class="sel-cell" data-sr="${ri}" data-sc="6" style="white-space:nowrap;padding:4px 8px">${d1ChipHtml}</td>${cells}</tr>`;
+    const _concNomeInner=conc.obs?`<span data-link="${_esc(conc.obs)}" onmouseenter="showNoteTooltip(event,this)" onmouseleave="scheduleHideNoteTooltip()" style="pointer-events:auto">${_esc(conc.nome)}<sup style="color:var(--e-purple);font-size:7px;margin-left:1px">●</sup></span>`:_esc(conc.nome);
+    return `<tr class="row-ativa"><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:600;white-space:nowrap">${_concNomeInner}</td><td class="sel-cell" data-sr="${ri}" data-sc="1" style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td><td class="sub sel-cell" data-sr="${ri}" data-sc="2" style="font-size:11px">${conc.agente||'—'}</td><td class="sel-cell" data-sr="${ri}" data-sc="3">${respCell}</td><td class="sel-cell" data-sr="${ri}" data-sc="4" style="padding:4px 8px">${priorCell}</td><td class="sel-cell" data-sr="${ri}" data-sc="5" style="padding:4px 8px">${concTipoChipHtml}</td><td class="sel-cell" data-sr="${ri}" data-sc="6" style="white-space:nowrap;padding:4px 8px">${d1ChipHtml}</td>${cells}</tr>`;
   }).join('')}</tbody>`;
 
   if(calScrollEl){calScrollEl.scrollLeft=_savedSL;calScrollEl.scrollTop=_savedST;}
