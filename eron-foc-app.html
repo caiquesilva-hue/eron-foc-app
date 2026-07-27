@@ -2939,6 +2939,7 @@ const _hiddenCols={crono:new Set(),'crono-conc':new Set()};
 function _saveHiddenCols(){try{localStorage.setItem(_HIDDEN_KEY,JSON.stringify({crono:[..._hiddenCols.crono],'crono-conc':[..._hiddenCols['crono-conc']]}));}catch(e){}}
 const _eyeSvg=`<svg width="11" height="8" viewBox="0 0 22 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="11" cy="8" r="3"/></svg>`;
 function _hideBtn(key,idx){if(idx===0)return '';return `<button class="col-hide-btn" onclick="event.stopPropagation();toggleColHide('${key}',${idx})" title="Ocultar coluna">${_eyeSvg}</button>`;}
+function _wdLabels(){return({'pt-BR':['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'],'en':['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],'es':['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']}[currentLang])||['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];}
 function toggleColHide(key,idx){if(!_hiddenCols[key])_hiddenCols[key]=new Set();if(_hiddenCols[key].has(idx))_hiddenCols[key].delete(idx);else _hiddenCols[key].add(idx);_saveHiddenCols();if(key==='crono')renderCronogramaAccounts();else renderCronogramaConciliacoes();}
 function _applyHiddenCols(key,tblId,infoN){
   // Abordagem: CSS estático no bloco <style> + classe no elemento pai da página.
@@ -3179,7 +3180,7 @@ function renderCronogramaAccounts(){
   const calScrollEl=calWrap.querySelector('.cal-scroll');
   const _savedSL=calScrollEl?calScrollEl.scrollLeft:0;
   const _savedST=calScrollEl?calScrollEl.scrollTop:0;
-  const wd=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const wd=_wdLabels();
   const INFO_COLS=10;
   const dayHeaders=days.map(d=>{
     const isWk=d.getDay()===0||d.getDay()===6;
@@ -6551,7 +6552,7 @@ function renderCronogramaConciliacoes(){
   const _savedSL=calScrollEl?calScrollEl.scrollLeft:0;
   const _savedST=calScrollEl?calScrollEl.scrollTop:0;
 
-  const wd=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const wd=_wdLabels();
   const dayHdrs=days.map(d=>{const wk=d.getDay()===0||d.getDay()===6;return `<th class="col-day${wk?' weekend':''}">${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}<br><span style="font-size:9px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--e-muted)">${wd[d.getDay()]}</span></th>`;}).join('');
 
   const INFO_COLS=7;
