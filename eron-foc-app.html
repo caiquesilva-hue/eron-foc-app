@@ -1043,17 +1043,17 @@
   <div class="table-wrap">
     <div id="liq-crono-empty" class="empty-state" style="display:none"><div class="empty-icon">💳</div><div class="empty-title">Nenhuma conciliação encontrada</div><div class="empty-sub">Adicione conciliações em Gerencial › Conciliações com tipo Processadores ou Mista.</div></div>
     <div class="table-scroll" id="liq-crono-table-inner" style="display:none">
-      <table class="no-row-border" style="table-layout:fixed;width:100%;min-width:1050px"><thead><tr>
-        <th style="width:17%" data-i18n="liq-col-concil">Conciliação</th>
-        <th style="width:7%" data-i18n="liq-col-pais">País</th>
-        <th style="width:9%" data-i18n="liq-col-agente">Agente</th>
-        <th style="width:10%" data-i18n="liq-col-tipo">Tipo Liquidação</th>
-        <th style="width:10%" data-i18n="liq-col-estado-concil">Estado Concil.</th>
-        <th style="width:6%" data-i18n="liq-col-ult-elab">Últ. Elab.</th>
-        <th style="width:6%" data-i18n="liq-col-data-ult">Data</th>
-        <th style="width:12%" data-i18n="liq-col-obs">Observações</th>
-        <th style="width:12%" data-i18n="liq-col-custo-info">Inf. Custo</th>
-        <th style="width:11%" data-i18n="liq-col-status">Status</th>
+      <table class="no-row-border" style="min-width:1200px"><thead><tr>
+        <th style="min-width:190px" data-i18n="liq-col-concil">Conciliação</th>
+        <th style="min-width:85px" data-i18n="liq-col-pais">País</th>
+        <th style="min-width:110px" data-i18n="liq-col-agente">Agente</th>
+        <th style="min-width:160px" data-i18n="liq-col-tipo">Tipo Liquidação</th>
+        <th style="min-width:175px" data-i18n="liq-col-estado-concil">Estado Concil.</th>
+        <th style="min-width:75px" data-i18n="liq-col-ult-elab">Últ. Elab.</th>
+        <th style="min-width:90px" data-i18n="liq-col-data-ult">Data</th>
+        <th style="min-width:140px;width:160px" data-i18n="liq-col-obs">Observações</th>
+        <th style="min-width:140px;width:160px" data-i18n="liq-col-custo-info">Inf. Custo</th>
+        <th style="min-width:155px" data-i18n="liq-col-status">Status</th>
       </tr></thead>
       <tbody id="liq-crono-tbody"></tbody></table>
     </div>
@@ -7334,7 +7334,7 @@ function renderCronogramaLiquidacoes(){
       }
     }
     return `<tr>
-      <td><div style="font-weight:600">${c.nome}</div><div style="font-size:11px;color:var(--e-muted);display:flex;align-items:center;gap:4px;margin-top:2px"><span class="chip ${tcCls}" style="font-size:9px">${tcLbl}</span></div></td>
+      <td style="padding:8px 12px"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px">${c.nome}</div><div style="margin-top:3px"><span class="chip ${tcCls}" style="font-size:10px">${tcLbl}</span></div></td>
       <td>${c.pais?`${countryFlag(c.pais)} ${c.pais}`:'—'}</td>
       <td style="font-size:12px;color:var(--e-text)">${c.agente||'<span style="color:var(--e-muted)">—</span>'}</td>
       <td>${tlChip}</td>
