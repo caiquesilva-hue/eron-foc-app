@@ -372,9 +372,11 @@
   tbody tr.row-encerrada:hover{--e-row-bg:#ecebf8;}
   .cal-sticky{position:sticky;left:0;background:var(--e-row-bg);z-index:2;border-right:1px solid var(--e-pale);}
   .cal-table thead th.cal-sticky{background:var(--e-ghost);z-index:5;}
-  .col-hide-btn{position:absolute;right:3px;top:50%;transform:translateY(-50%);background:none;border:none;padding:2px 3px;border-radius:3px;cursor:pointer;color:var(--e-muted);opacity:0;transition:opacity .12s,color .12s;line-height:1;display:flex;align-items:center;}
-  th:hover .col-hide-btn{opacity:1;}
-  .col-hide-btn:hover{color:var(--e-purple);background:rgba(151,111,244,.12);}
+  .col-head-btns{position:absolute;right:3px;top:50%;transform:translateY(-50%);display:none;align-items:center;gap:1px;}
+  th:hover .col-head-btns,.col-head-btns.has-pin{display:flex;}
+  .col-hide-btn,.col-pin-btn{background:none;border:none;padding:2px 3px;border-radius:3px;cursor:pointer;color:var(--e-muted);line-height:1;display:flex;align-items:center;transition:color .12s;}
+  .col-hide-btn:hover,.col-pin-btn:hover{color:var(--e-purple);background:rgba(151,111,244,.12);}
+  .col-pin-btn.active{color:var(--e-purple);}
   .th-col-stub{width:16px!important;min-width:16px!important;max-width:16px!important;padding:0!important;overflow:hidden;cursor:pointer;background:rgba(151,111,244,.04);border-right:1px dashed var(--e-pale);}
   .th-col-stub:hover{background:rgba(151,111,244,.1);}
   /* === ocultar colunas: esconde TH + TD juntos para evitar desalinhamento === */
@@ -1902,7 +1904,7 @@ const i18n = {
     'lbl-pais':'País','lbl-agente':'Agente','lbl-banco':'Banco',
     'lbl-sigla':'Sigla Clearyn','lbl-tipo':'Frequência','lbl-tipo-conta':'Tipo de conta','lbl-responsavel':'Responsável',
     'lbl-num-conta':'Número da conta','lbl-agencia':'Agência',
-    'lbl-obs':'Observações','lbl-freq':'Frequência','crono-all-freqs':'Todas as frequências',
+    'lbl-obs':'Observações','lbl-freq':'Frequência','crono-all-freqs':'Todas as frequências','col-pin':'Fixar coluna','col-unpin':'Desafixar coluna',
     'lbl-encerrar':'Encerrar conta','encerrar-desc':'Marca a conta como inativa permanentemente.',
     'sel-select':'Selecione...',
     'col-pais':'País','col-agente':'Agente','col-banco':'Banco','col-sigla':'Sigla',
@@ -2006,7 +2008,7 @@ const i18n = {
     'lbl-pais':'Country','lbl-agente':'Agent','lbl-banco':'Bank',
     'lbl-sigla':'Clearyn Code','lbl-tipo':'Frequency','lbl-tipo-conta':'Account type','lbl-responsavel':'Responsible',
     'lbl-num-conta':'Account number','lbl-agencia':'Branch',
-    'lbl-obs':'Observations','lbl-freq':'Frequency','crono-all-freqs':'All frequencies',
+    'lbl-obs':'Observations','lbl-freq':'Frequency','crono-all-freqs':'All frequencies','col-pin':'Pin column','col-unpin':'Unpin column',
     'lbl-encerrar':'Close account','encerrar-desc':'Permanently marks this account as inactive.',
     'sel-select':'Select...',
     'col-pais':'Country','col-agente':'Agent','col-banco':'Bank','col-sigla':'Code',
@@ -2103,7 +2105,7 @@ const i18n = {
     'lbl-pais':'País','lbl-agente':'Agente','lbl-banco':'Banco',
     'lbl-sigla':'Sigla Clearyn','lbl-tipo':'Frecuencia','lbl-tipo-conta':'Tipo de cuenta','lbl-responsavel':'Responsable',
     'lbl-num-conta':'Número de cuenta','lbl-agencia':'Agencia',
-    'lbl-obs':'Observaciones','lbl-freq':'Frecuencia','crono-all-freqs':'Todas las frecuencias',
+    'lbl-obs':'Observaciones','lbl-freq':'Frecuencia','crono-all-freqs':'Todas las frecuencias','col-pin':'Fijar columna','col-unpin':'Desfijar columna',
     'lbl-encerrar':'Cerrar cuenta','encerrar-desc':'Marca la cuenta como inactiva permanentemente.',
     'sel-select':'Seleccione...',
     'col-pais':'País','col-agente':'Agente','col-banco':'Banco','col-sigla':'Sigla',
@@ -2954,7 +2956,17 @@ function initCronoFilters(){
     if(_sf?.anl?.length) setTimeout(_updateAnlLabel,0);
   }
 }
-// ─── COLUMN PINNING ──────────────────────────────────────────────
+// ─── COLUMN PIN ───────────────────────────────────────────────────
+const _PIN_KEY='eron-foc-pinned-v1';
+let _pinnedCols={crono:[],'crono-conc':[]};
+(()=>{try{const s=JSON.parse(localStorage.getItem(_PIN_KEY)||'{}');if(Array.isArray(s.crono))_pinnedCols.crono=s.crono;if(Array.isArray(s['crono-conc']))_pinnedCols['crono-conc']=s['crono-conc'];}catch(e){}})();
+function _savePinnedCols(){try{localStorage.setItem(_PIN_KEY,JSON.stringify(_pinnedCols));}catch(e){}}
+const _pinSvg=`<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5v6h2v-6h5v-2l-2-2z"/></svg>`;
+function _pinBtn(key,colKey){const active=(_pinnedCols[key]||[]).includes(colKey);return `<button class="col-pin-btn${active?' active':''}" onclick="event.stopPropagation();toggleColPin('${key}','${colKey}')" title="${active?'Desafixar coluna':'Fixar coluna'}">${_pinSvg}</button>`;}
+function _colBtns(key,colKey,logicalIdx){if(logicalIdx===0)return '';const pinned=(_pinnedCols[key]||[]).includes(colKey);return `<span class="col-head-btns${pinned?' has-pin':''}">${_hideBtn(key,logicalIdx)}${_pinBtn(key,colKey)}</span>`;}
+function toggleColPin(key,colKey){if(!_pinnedCols[key])_pinnedCols[key]=[];const arr=_pinnedCols[key];const i=arr.indexOf(colKey);if(i>=0)arr.splice(i,1);else arr.push(colKey);_savePinnedCols();if(key==='crono')renderCronogramaAccounts();else renderCronogramaConciliacoes();}
+function _applyHiddenColsByKey(tbl,key){if(!tbl)return;const km={crono:['','pais','agente','resp','banco','numeroConta','tipo','tipoConta','top','acompanhamento'],'crono-conc':['','pais','agente','resp','prioridade','tipo','frequencia','acompanhamento']};const ka=km[key]||[];(_hiddenCols[key]||new Set()).forEach(idx=>{const ck=ka[idx];if(ck)tbl.querySelectorAll(`[data-col-key="${ck}"]`).forEach(el=>el.style.display='none');});}
+function _applyPinnedSticky(tbl,key,scrollEl){const pinned=_pinnedCols[key]||[];if(!tbl||!pinned.length)return;requestAnimationFrame(()=>{const ths=[...tbl.querySelectorAll('thead tr:first-child th')];let left=0;ths.forEach((th,thIdx)=>{if(th.classList.contains('cal-sticky')){left+=th.offsetWidth;return;}const ck=th.dataset.colKey;if(ck&&pinned.includes(ck)){const pl=left;th.dataset.pinLeft=pl;left+=th.offsetWidth;tbl.querySelectorAll(`tbody tr td:nth-child(${thIdx+1})`).forEach(td=>{td.style.position='sticky';td.style.left=pl+'px';td.style.background='var(--e-bg)';td.style.zIndex='2';});}});if(scrollEl?._calStickyHandler)scrollEl._calStickyHandler();});}
 // ─── COLUMN HIDE ──────────────────────────────────────────────────
 const _HIDDEN_KEY='eron-foc-hidden-v1';
 const _hiddenCols={crono:new Set(),'crono-conc':new Set()};
@@ -3209,8 +3221,21 @@ function renderCronogramaAccounts(){
     const isWk=d.getDay()===0||d.getDay()===6;
     return `<th class="col-day${isWk?' weekend':''}">${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}<br><span style="font-size:9px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--e-muted)">${wd[d.getDay()]}</span></th>`;
   }).join('');
-  const _sth=(col,lbl,idx,extra='')=>`<th class="${_sortThCls('crono',col)} col-info${extra?' cal-sticky':''}" ${extra} onclick="toggleSort('crono','${col}')" style="cursor:pointer;position:relative">${lbl}${_sortArrow('crono',col)}${_hideBtn('crono',idx)}</th>`;
-  const colInfos=`${_sth('sigla',t('col-sigla'),0,'cal-sticky')}${_sth('pais',t('col-pais'),1)}${_sth('agente',t('col-agente'),2)}<th class="col-info" style="position:relative">Resp.${_hideBtn('crono',3)}</th>${_sth('banco',t('col-banco'),4)}${_sth('numeroConta',t('col-num-conta'),5)}${_sth('tipo',t('col-tipo'),6)}${_sth('tipoConta',t('col-tipo-conta'),7)}<th class="col-info" style="cursor:default;position:relative">TOP${_hideBtn('crono',8)}</th><th class="col-info" style="white-space:nowrap;position:relative">Acompanhamento${_hideBtn('crono',9)}</th>`;
+  const _sth=(col,lbl,idx,extra='')=>`<th class="${_sortThCls('crono',col)} col-info${extra?' cal-sticky':''}" ${extra} data-col-key="${col}" onclick="toggleSort('crono','${col}')" style="cursor:pointer;position:relative">${lbl}${_sortArrow('crono',col)}${extra?'':_colBtns('crono',col,idx)}</th>`;
+  const _cDefs=[
+    {k:'pais',  h:()=>_sth('pais',t('col-pais'),1),  c:(c,ri,sc)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="pais">${countryFlag(c.pais)} ${c.pais}</td>`},
+    {k:'agente',h:()=>_sth('agente',t('col-agente'),2),c:(c,ri,sc)=>`<td class="sub sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="agente">${c.agente}</td>`},
+    {k:'resp',  h:()=>`<th class="col-info" data-col-key="resp" style="position:relative">Resp.${_colBtns('crono','resp',3)}</th>`,c:(c,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="resp">${x.respCell}</td>`},
+    {k:'banco', h:()=>_sth('banco',t('col-banco'),4), c:(c,ri,sc)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="banco">${c.banco}</td>`},
+    {k:'numeroConta',h:()=>_sth('numeroConta',t('col-num-conta'),5),c:(c,ri,sc)=>`<td class="mono sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="numeroConta">${c.numeroConta||'—'}</td>`},
+    {k:'tipo',  h:()=>_sth('tipo',t('col-tipo'),6),   c:(c,ri,sc)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="tipo">${tipoChip(c.tipo)}</td>`},
+    {k:'tipoConta',h:()=>_sth('tipoConta',t('col-tipo-conta'),7),c:(c,ri,sc)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="tipoConta">${tipoContaChip(c.tipoConta)}</td>`},
+    {k:'top',   h:()=>`<th class="col-info" data-col-key="top" style="cursor:default;position:relative">TOP${_colBtns('crono','top',8)}</th>`,c:(c,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="top">${x.topChip}</td>`},
+    {k:'acompanhamento',h:()=>`<th class="col-info" data-col-key="acompanhamento" style="white-space:nowrap;position:relative">Acompanhamento${_colBtns('crono','acompanhamento',9)}</th>`,c:(c,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="acompanhamento" style="white-space:nowrap;padding:4px 8px">${x.d1ChipHtml}</td>`},
+  ];
+  const _crPins=(_pinnedCols.crono||[]).filter(k=>_cDefs.some(d=>d.k===k));
+  const _ord=[..._crPins.map(k=>_cDefs.find(d=>d.k===k)),..._cDefs.filter(d=>!_crPins.includes(d.k))];
+  const colInfos=`${_sth('sigla',t('col-sigla'),0,'cal-sticky')}${_ord.map(d=>d.h()).join('')}`;
   const fmtDate=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   tbl.innerHTML=`<thead><tr>${colInfos}${dayHeaders}</tr></thead><tbody>${
     listSorted.map((c,ri)=>{
@@ -3252,7 +3277,8 @@ function renderCronogramaAccounts(){
         }
       }).join('');
       const _siglaInner=c.obs?`<span data-link="${_esc(c.obs)}" onmouseenter="showNoteTooltip(event,this)" onmouseleave="scheduleHideNoteTooltip()" style="pointer-events:auto">${c.sigla}<sup style="color:var(--e-purple);font-size:7px;margin-left:1px">●</sup></span>`:c.sigla;
-      return `<tr class="row-${c.status}"><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-family:ui-monospace,monospace;font-size:12px">${_siglaInner}</td><td class="sel-cell" data-sr="${ri}" data-sc="1">${countryFlag(c.pais)} ${c.pais}</td><td class="sub sel-cell" data-sr="${ri}" data-sc="2">${c.agente}</td><td class="sel-cell" data-sr="${ri}" data-sc="3">${respCell}</td><td class="sel-cell" data-sr="${ri}" data-sc="4">${c.banco}</td><td class="mono sel-cell" data-sr="${ri}" data-sc="5">${c.numeroConta||'—'}</td><td class="sel-cell" data-sr="${ri}" data-sc="6">${tipoChip(c.tipo)}</td><td class="sel-cell" data-sr="${ri}" data-sc="7">${tipoContaChip(c.tipoConta)}</td><td class="sel-cell" data-sr="${ri}" data-sc="8">${topChip}</td><td class="sel-cell" data-sr="${ri}" data-sc="9" style="white-space:nowrap;padding:4px 8px">${_d1chipHtml}</td>${cells}</tr>`;
+      const _ctx={respCell,topChip,d1ChipHtml:_d1chipHtml};
+      return `<tr class="row-${c.status}"><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-family:ui-monospace,monospace;font-size:12px">${_siglaInner}</td>${_ord.map((d,i)=>d.c(c,ri,i+1,_ctx)).join('')}${cells}</tr>`;
     }).join('')
   }</tbody>`;
   if(calScrollEl){calScrollEl.scrollLeft=_savedSL;calScrollEl.scrollTop=_savedST;}
@@ -3293,7 +3319,7 @@ function renderCronogramaAccounts(){
       onDayCellClick(e,td.dataset.ck,td.dataset.dt,td.dataset.act==='true',td);
     });
   }
-  setTimeout(()=>_applyHiddenCols('crono','crono-cal-table',10),0);
+  setTimeout(()=>{const _t=document.getElementById('crono-cal-table');if(_crPins.length){const pg=document.getElementById('page-cronograma-accounts');if(pg)for(let i=1;i<=10;i++)pg.classList.remove('hide-col-'+i);_applyHiddenColsByKey(_t,'crono');_applyPinnedSticky(_t,'crono',calScrollEl);}else{_applyHiddenCols('crono','crono-cal-table',10);}},0);
   _saveFilters('crono');
 }
 const _sortState={accounts:{col:null,dir:1},crono:{col:null,dir:1},cierre:{col:null,dir:1},'crono-conc':{col:null,dir:1}};
@@ -3439,7 +3465,7 @@ function _hasCronoFilters(){
   const hasResp=document.querySelectorAll('#crono-resp-toggles .freq-toggle.active').length>0;
   const hasAnl=document.querySelectorAll('#crono-anl-toggles .freq-toggle.active').length>0;
   const hasSearch=(document.getElementById('crono-search')?.value||'').trim()!=='';
-  return !!(fp||fa||fb||ftc||ftop||hasFreq||hasD1||hasResp||hasAnl||hasSearch||_sortState.crono.col||_hiddenCols.crono.size>0);
+  return !!(fp||fa||fb||ftc||ftop||hasFreq||hasD1||hasResp||hasAnl||hasSearch||_sortState.crono.col||_hiddenCols.crono.size>0||(_pinnedCols.crono||[]).length>0);
 }
 function _updateClearBtn(){
   const btn=document.getElementById('btn-clear-filters');
@@ -3465,6 +3491,7 @@ function clearCronoFilters(){
   if(sel('crono-search')){sel('crono-search').value='';updateCronoSearchClear();}
   _sortState.crono={col:null,dir:1};
   _hiddenCols.crono.clear();_saveHiddenCols();
+  _pinnedCols.crono=[];_savePinnedCols();
   renderCronogramaAccounts();
 }
 function _closeAllDropdowns(){
@@ -5630,7 +5657,7 @@ function _renderUnlinkedGateways(){
 }
 function _initCalStickyCorner(tbl,scrollEl,savedSL){
   if(!tbl||!scrollEl) return;
-  const applyX=x=>{tbl.querySelectorAll('thead th.cal-sticky').forEach(th=>{th.style.transform='translateX('+x+'px)';});};
+  const applyX=x=>{tbl.querySelectorAll('thead th.cal-sticky').forEach(th=>{th.style.transform='translateX('+x+'px)';});tbl.querySelectorAll('thead th[data-pin-left]').forEach(th=>{th.style.transform='translateX('+(x+parseInt(th.dataset.pinLeft,10))+'px)';});};
   if(savedSL) applyX(savedSL);
   if(scrollEl._calStickyHandler) scrollEl.removeEventListener('scroll',scrollEl._calStickyHandler);
   const handler=()=>applyX(scrollEl.scrollLeft);
@@ -6060,7 +6087,7 @@ function _hasConcFilters(){
   const hasTipo=_fddVals('crono-conc-f-tipo-panel').length>0;
   const hasFreq=_fddVals('crono-conc-f-freq-panel').length>0;
   const hasSearch=(document.getElementById('crono-conc-search')?.value||'').trim()!=='';
-  return !!(hasPais||hasAgente||hasPrior||hasResp||hasAnl||hasD1||hasTipo||hasFreq||hasSearch||_sortState['crono-conc'].col||_hiddenCols['crono-conc'].size>0);
+  return !!(hasPais||hasAgente||hasPrior||hasResp||hasAnl||hasD1||hasTipo||hasFreq||hasSearch||_sortState['crono-conc'].col||_hiddenCols['crono-conc'].size>0||(_pinnedCols['crono-conc']||[]).length>0);
 }
 
 function _updConcSearchClear(){
@@ -6095,6 +6122,7 @@ function clearCronconcFilters(){
   _updConcSearchClear();
   _sortState['crono-conc']={col:null,dir:1};
   _hiddenCols['crono-conc'].clear();_saveHiddenCols();
+  _pinnedCols['crono-conc']=[];_savePinnedCols();
   const dp=document.getElementById('crono-conc-date-preset');
   if(dp){dp.value='curr-month';initCronconcDates();}
   renderCronogramaConciliacoes();
@@ -6604,8 +6632,19 @@ function renderCronogramaConciliacoes(){
   const dayHdrs=days.map(d=>{const wk=d.getDay()===0||d.getDay()===6;return `<th class="col-day${wk?' weekend':''}">${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}<br><span style="font-size:9px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--e-muted)">${wd[d.getDay()]}</span></th>`;}).join('');
 
   const INFO_COLS=8;
-  const _sth=(col,lbl,idx,extra='')=>`<th class="${_sortThCls('crono-conc',col)} col-info${extra?' cal-sticky':''}" ${extra} onclick="toggleSort('crono-conc','${col}')" style="cursor:pointer;position:relative">${lbl}${_sortArrow('crono-conc',col)}${_hideBtn('crono-conc',idx)}</th>`;
-  const colInfos=`${_sth('nome','Nome',0,'cal-sticky')}${_sth('pais','País',1)}${_sth('agente','Agente',2)}<th class="col-info" style="position:relative">Resp.${_hideBtn('crono-conc',3)}</th><th class="col-info" style="position:relative">Prioridade${_hideBtn('crono-conc',4)}</th><th class="col-info" style="position:relative">Tipo${_hideBtn('crono-conc',5)}</th><th class="col-info" style="position:relative">${t('lbl-freq')}${_hideBtn('crono-conc',6)}</th><th class="col-info" style="white-space:nowrap;position:relative">Acompanhamento${_hideBtn('crono-conc',7)}</th>`;
+  const _sth=(col,lbl,idx,extra='')=>`<th class="${_sortThCls('crono-conc',col)} col-info${extra?' cal-sticky':''}" ${extra} data-col-key="${col}" onclick="toggleSort('crono-conc','${col}')" style="cursor:pointer;position:relative">${lbl}${_sortArrow('crono-conc',col)}${extra?'':_colBtns('crono-conc',col,idx)}</th>`;
+  const _cDefs=[
+    {k:'pais',h:()=>_sth('pais','País',1),c:(conc,ri,sc)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="pais" style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td>`},
+    {k:'agente',h:()=>_sth('agente','Agente',2),c:(conc,ri,sc)=>`<td class="sub sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="agente" style="font-size:11px">${conc.agente||'—'}</td>`},
+    {k:'resp',h:()=>`<th class="col-info" data-col-key="resp" style="position:relative">Resp.${_colBtns('crono-conc','resp',3)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="resp">${x.respCell}</td>`},
+    {k:'prioridade',h:()=>`<th class="col-info" data-col-key="prioridade" style="position:relative">Prioridade${_colBtns('crono-conc','prioridade',4)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="prioridade" style="padding:4px 8px">${x.priorCell}</td>`},
+    {k:'tipo',h:()=>`<th class="col-info" data-col-key="tipo" style="position:relative">Tipo${_colBtns('crono-conc','tipo',5)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="tipo" style="padding:4px 8px">${x.concTipoChipHtml}</td>`},
+    {k:'frequencia',h:()=>`<th class="col-info" data-col-key="frequencia" style="position:relative">${t('lbl-freq')}${_colBtns('crono-conc','frequencia',6)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="frequencia" style="padding:4px 8px">${x.freqCell}</td>`},
+    {k:'acompanhamento',h:()=>`<th class="col-info" data-col-key="acompanhamento" style="white-space:nowrap;position:relative">Acompanhamento${_colBtns('crono-conc','acompanhamento',7)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="acompanhamento" style="white-space:nowrap;padding:4px 8px">${x.d1ChipHtml}</td>`},
+  ];
+  const _ccPins=(_pinnedCols['crono-conc']||[]).filter(k=>_cDefs.some(d=>d.k===k));
+  const _ord=[..._ccPins.map(k=>_cDefs.find(d=>d.k===k)),..._cDefs.filter(d=>!_ccPins.includes(d.k))];
+  const colInfos=`${_sth('nome','Nome',0,'cal-sticky')}${_ord.map(d=>d.h()).join('')}`;
 
   const statusCfg={
     concluido:{bg:'#dcfce7',color:'#15803d'},
@@ -6663,7 +6702,8 @@ function renderCronogramaConciliacoes(){
     const concTipoChipHtml=`<span class="chip ${_ct[0]}" style="font-size:10px">${_ct[1]}</span>`;
     const _concNomeInner=conc.obs?`<span data-link="${_esc(conc.obs)}" onmouseenter="showNoteTooltip(event,this)" onmouseleave="scheduleHideNoteTooltip()" style="pointer-events:auto">${_esc(conc.nome)}<sup style="color:var(--e-purple);font-size:7px;margin-left:1px">●</sup></span>`:_esc(conc.nome);
     const _freqCell=conc.frequencia?`<span class="chip" style="font-size:10px;background:var(--e-ghost);color:var(--e-mid);border:1px solid var(--e-pale)">${conc.frequencia}</span>`:`<span style="color:var(--e-muted);font-size:11px">—</span>`;
-    return `<tr class="row-ativa"><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:600;white-space:nowrap">${_concNomeInner}</td><td class="sel-cell" data-sr="${ri}" data-sc="1" style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td><td class="sub sel-cell" data-sr="${ri}" data-sc="2" style="font-size:11px">${conc.agente||'—'}</td><td class="sel-cell" data-sr="${ri}" data-sc="3">${respCell}</td><td class="sel-cell" data-sr="${ri}" data-sc="4" style="padding:4px 8px">${priorCell}</td><td class="sel-cell" data-sr="${ri}" data-sc="5" style="padding:4px 8px">${concTipoChipHtml}</td><td class="sel-cell" data-sr="${ri}" data-sc="6" style="padding:4px 8px">${_freqCell}</td><td class="sel-cell" data-sr="${ri}" data-sc="7" style="white-space:nowrap;padding:4px 8px">${d1ChipHtml}</td>${cells}</tr>`;
+    const _ctx={respCell,priorCell,concTipoChipHtml,freqCell:_freqCell,d1ChipHtml};
+    return `<tr class="row-ativa"><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:600;white-space:nowrap">${_concNomeInner}</td>${_ord.map((d,i)=>d.c(conc,ri,i+1,_ctx)).join('')}${cells}</tr>`;
   }).join('')}</tbody>`;
 
   if(calScrollEl){calScrollEl.scrollLeft=_savedSL;calScrollEl.scrollTop=_savedST;}
@@ -6704,7 +6744,7 @@ function renderCronogramaConciliacoes(){
       onConcCellClick(ev,td.dataset.ck,td.dataset.dt);
     });
   }
-  setTimeout(()=>_applyHiddenCols('crono-conc','crono-conc-cal-table',7),0);
+  setTimeout(()=>{const _t=document.getElementById('crono-conc-cal-table');if(_ccPins.length){const pg=document.getElementById('page-cronograma-conciliacoes');if(pg)for(let i=1;i<=8;i++)pg.classList.remove('hide-col-'+i);_applyHiddenColsByKey(_t,'crono-conc');_applyPinnedSticky(_t,'crono-conc',calScrollEl);}else{_applyHiddenCols('crono-conc','crono-conc-cal-table',7);}},0);
   _saveFilters('crono-conc');
 }
 
