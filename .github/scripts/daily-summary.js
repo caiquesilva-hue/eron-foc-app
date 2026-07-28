@@ -112,9 +112,9 @@ async function main() {
     cronogramaData[k.replace(/,/g, '.')] = v;
   });
 
-  // Filtrar contas pelo schedule de D-1 (inclui encerradas, igual ao app)
+  // Filtrar contas pelo schedule de D-1 (exclui encerradas)
   const filtered = contas.filter(c =>
-    c && c.tipo && freqs.includes(c.tipo)
+    c && c.tipo && freqs.includes(c.tipo) && c.status !== 'encerrada'
   );
 
   console.log(`Contas filtradas: ${filtered.length}`);
