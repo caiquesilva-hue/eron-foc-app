@@ -2966,7 +2966,7 @@ function _pinBtn(key,colKey){const active=(_pinnedCols[key]||[]).includes(colKey
 function _colBtns(key,colKey,logicalIdx){if(logicalIdx===0)return '';const pinned=(_pinnedCols[key]||[]).includes(colKey);return `<span class="col-head-btns${pinned?' has-pin':''}">${_hideBtn(key,logicalIdx)}${_pinBtn(key,colKey)}</span>`;}
 function toggleColPin(key,colKey){if(!_pinnedCols[key])_pinnedCols[key]=[];const arr=_pinnedCols[key];const i=arr.indexOf(colKey);if(i>=0)arr.splice(i,1);else arr.push(colKey);_savePinnedCols();if(key==='crono')renderCronogramaAccounts();else renderCronogramaConciliacoes();}
 function _applyHiddenColsByKey(tbl,key){if(!tbl)return;const km={crono:['','pais','agente','resp','banco','numeroConta','tipo','tipoConta','top','acompanhamento'],'crono-conc':['','pais','agente','resp','prioridade','tipo','frequencia','acompanhamento']};const ka=km[key]||[];(_hiddenCols[key]||new Set()).forEach(idx=>{const ck=ka[idx];if(ck)tbl.querySelectorAll(`[data-col-key="${ck}"]`).forEach(el=>el.style.display='none');});}
-function _applyPinnedSticky(tbl,key,scrollEl){const pinned=_pinnedCols[key]||[];if(!tbl||!pinned.length)return;requestAnimationFrame(()=>{const ths=[...tbl.querySelectorAll('thead tr:first-child th')];let left=0;ths.forEach((th,thIdx)=>{if(th.classList.contains('cal-sticky')){left+=th.offsetWidth;return;}const ck=th.dataset.colKey;if(ck&&pinned.includes(ck)){const pl=left;th.dataset.pinLeft=pl;left+=th.offsetWidth;tbl.querySelectorAll(`tbody tr td:nth-child(${thIdx+1})`).forEach(td=>{td.style.position='sticky';td.style.left=pl+'px';td.style.background='var(--e-bg)';td.style.zIndex='2';});}});if(scrollEl?._calStickyHandler)scrollEl._calStickyHandler();});}
+function _applyPinnedSticky(tbl,key,scrollEl){const pinned=_pinnedCols[key]||[];if(!tbl||!pinned.length)return;requestAnimationFrame(()=>{const ths=[...tbl.querySelectorAll('thead tr:first-child th')];let left=0;ths.forEach((th,thIdx)=>{if(th.classList.contains('cal-sticky')){left+=th.offsetWidth;return;}const ck=th.dataset.colKey;if(ck&&pinned.includes(ck)){const pl=left;th.dataset.pinLeft=pl;th.style.background='var(--e-ghost)';th.style.zIndex='4';left+=th.offsetWidth;tbl.querySelectorAll(`tbody tr td:nth-child(${thIdx+1})`).forEach(td=>{td.style.position='sticky';td.style.left=pl+'px';td.style.background='var(--e-row-bg)';td.style.zIndex='2';});}});if(scrollEl?._calStickyHandler)scrollEl._calStickyHandler();});}
 // ─── COLUMN HIDE ──────────────────────────────────────────────────
 const _HIDDEN_KEY='eron-foc-hidden-v1';
 const _hiddenCols={crono:new Set(),'crono-conc':new Set()};
@@ -5657,7 +5657,7 @@ function _renderUnlinkedGateways(){
 }
 function _initCalStickyCorner(tbl,scrollEl,savedSL){
   if(!tbl||!scrollEl) return;
-  const applyX=x=>{tbl.querySelectorAll('thead th.cal-sticky').forEach(th=>{th.style.transform='translateX('+x+'px)';});tbl.querySelectorAll('thead th[data-pin-left]').forEach(th=>{th.style.transform='translateX('+(x+parseInt(th.dataset.pinLeft,10))+'px)';});};
+  const applyX=x=>{tbl.querySelectorAll('thead th.cal-sticky,thead th[data-pin-left]').forEach(th=>{th.style.transform='translateX('+x+'px)';});};
   if(savedSL) applyX(savedSL);
   if(scrollEl._calStickyHandler) scrollEl.removeEventListener('scroll',scrollEl._calStickyHandler);
   const handler=()=>applyX(scrollEl.scrollLeft);
