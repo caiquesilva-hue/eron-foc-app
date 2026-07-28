@@ -4818,9 +4818,12 @@ function renderCierreTable(){
     if(col==='_aging') return [...list].sort((a,b)=>(_agingDays(a,mes)-_agingDays(b,mes))*dir);
     return _applySortBy(list,col,dir);
   };
-  const pending=_ciSort(contas.filter(c=>!_isConcluido(c)));
-  const concluded=_ciSort(contas.filter(c=>_isConcluido(c)));
-  contas=[...pending,...concluded];
+  const _ap=c=>((store.cierreData[_cierreKey(c,mes)]||{}).apontamento||'');
+  const g0=_ciSort(contas.filter(c=>!_isConcluido(c)&&_ap(c)==='Verificar Saldo'));
+  const g1=_ciSort(contas.filter(c=>!_isConcluido(c)&&_ap(c)==='Falta PDF'));
+  const g2=_ciSort(contas.filter(c=>!_isConcluido(c)&&!_ap(c)));
+  const g3=_ciSort(contas.filter(c=>_isConcluido(c)));
+  contas=[...g0,...g1,...g2,...g3];
   document.getElementById('cierre-stats').innerHTML=_cierreStatsHtml(mes,contas);
   document.getElementById('cierre-count-header').textContent=`${contas.length} conta(s)`;
   const empty=document.getElementById('cierre-empty');
