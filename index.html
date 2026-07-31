@@ -4910,7 +4910,8 @@ function saveStore(){
     volumeRankings:store.volumeRankings,concilVolumeMap:store.concilVolumeMap,
     liquidacoesConfig:store.liquidacoesConfig,liquidacoesStatus:store.liquidacoesStatus,liquidacoesManual:store.liquidacoesManual,liquidacoesExcluidos:store.liquidacoesExcluidos,
     auditLog:store.auditLog,
-    permissions:store.permissions,credentials:store.credentials};
+    permissions:store.permissions,credentials:store.credentials,
+    slackConfig:store.slackConfig};
   try{localStorage.setItem(STORE_KEY,JSON.stringify(_ls));}catch(e){}
 }
 function loadStore(){
@@ -4946,6 +4947,7 @@ function loadStore(){
     if(saved.auditLog) store.auditLog=(Array.isArray(saved.auditLog)?saved.auditLog:Object.values(saved.auditLog)).filter(Boolean);
     if(saved.permissions) store.permissions=saved.permissions;
     if(saved.credentials) store.credentials=saved.credentials;
+    if(saved.slackConfig) store.slackConfig=saved.slackConfig;
     if(store.volumeRankings&&store.concilVolumeMap) _rebuildCombinedRanking();
   } catch(e){}
 }
@@ -5143,7 +5145,8 @@ async function startFirebaseSync(){
         paises:store.paises,agentes:store.agentes,bancos:store.bancos,
         responsaveis:store.responsaveis,contas:store.contas,
         cronogramaData:store.cronogramaData,auditLog:store.auditLog,
-        permissions:store.permissions,credentials:store.credentials
+        permissions:store.permissions,credentials:store.credentials,
+        slackConfig:store.slackConfig
       }));}catch(e){}
     }
     _syncBadge('synced');
@@ -5179,7 +5182,7 @@ async function startFirebaseSync(){
       const crono={};
       Object.entries(d).forEach(([k,v])=>crono[_decFbKey(k)]=v);
       store.cronogramaData=crono;
-      localStorage.setItem(STORE_KEY,JSON.stringify({paises:store.paises,agentes:store.agentes,bancos:store.bancos,responsaveis:store.responsaveis,contas:store.contas,cronogramaData:store.cronogramaData,cierreData:store.cierreData,auditLog:store.auditLog,permissions:store.permissions,credentials:store.credentials}));
+      localStorage.setItem(STORE_KEY,JSON.stringify({paises:store.paises,agentes:store.agentes,bancos:store.bancos,responsaveis:store.responsaveis,contas:store.contas,cronogramaData:store.cronogramaData,cierreData:store.cierreData,auditLog:store.auditLog,permissions:store.permissions,credentials:store.credentials,slackConfig:store.slackConfig}));
       renderCronogramaAccounts();
       updateCounts();
     });
