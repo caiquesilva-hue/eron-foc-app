@@ -10,6 +10,10 @@ on:
         description: 'Forçar dia da semana (1=seg, 2=ter, 3=qua, 4=qui, 5=sex) — deixe vazio para usar o dia atual'
         required: false
         default: ''
+      override_monthly:
+        description: 'Forçar envio do relatório "1 vez ao mês" (como se fosse dia 5) — informe "1" para ativar'
+        required: false
+        default: ''
 
 jobs:
   send-summary:
@@ -32,4 +36,5 @@ jobs:
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           SLACK_CHANNEL: C0BH1SG3EUS
           OVERRIDE_DAY: ${{ inputs.override_day }}
+          OVERRIDE_MONTHLY: ${{ inputs.override_monthly }}
         run: node .github/scripts/daily-summary.js
