@@ -249,13 +249,17 @@ async function main() {
       c && c.tipo === '1 vez ao mês' && c.status !== 'encerrada'
     );
     const mensalLabel = `${dayName} — 1× ao Mês`;
-    console.log(`[Mensal] Contas filtradas: ${filteredMensal.length}`);
+    // Status do último dia do mês anterior (ex: dia 5/08 → reflete 31/07)
+    const lastDayPrevMonth = new Date(today);
+    lastDayPrevMonth.setUTCDate(0);
+    const prevMonthLastStr = fmtDate(lastDayPrevMonth);
+    console.log(`[Mensal] Contas filtradas: ${filteredMensal.length} | Status de: ${prevMonthLastStr}`);
     await sendReport({
       contas: filteredMensal,
       cronogramaData,
       label: mensalLabel,
       freqsLabel: '1 vez ao mês',
-      d1Str,
+      d1Str: prevMonthLastStr,
       todayStr,
     });
   }
