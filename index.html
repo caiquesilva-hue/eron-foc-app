@@ -636,8 +636,7 @@
         <svg class="sb-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 6l4 4 4-4"/></svg>
       </div>
       <div class="sb-children collapsed" id="automacoes-children">
-        <div class="sb-item" data-page="automacoes-extratos" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-dl-extratos">Download Extratos</span></div>
-        <div class="sb-item" data-page="automacoes-credenciais" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-cred-bancos">Credenciais Bancos</span></div>
+        <div class="sb-item" data-page="automacoes-baixa" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-baixa-auto">Baixa automática</span></div>
       </div>
     </div>
     <div class="sb-footer">
@@ -1240,75 +1239,145 @@
         <div class="table-wrap"><div id="acessos-empty" class="empty-state"><div class="empty-icon">👤</div><div class="empty-title" data-i18n="acessos-empty-title">Nenhum acesso cadastrado</div><div class="empty-sub" data-i18n="acessos-empty-sub">Adicione responsáveis que aparecerão no sistema.</div></div><div class="table-scroll" id="acessos-table-inner" style="display:none"><table><thead><tr><th data-i18n="lbl-nome">Nome</th><th data-i18n="col-email">Email</th><th style="width:60px" data-i18n="col-sigla">Sigla</th><th style="width:130px" data-i18n="col-perfil">Perfil</th><th style="width:110px" data-i18n="col-ambientes">Ambientes</th><th style="width:140px" data-i18n="col-status">Status</th><th style="width:130px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="acessos-tbody"></tbody></table></div></div>
       </div>
     </div>
-    <!-- ── AUTOMAÇÕES: DOWNLOAD EXTRATOS ──────────────────────────── -->
-    <div class="page" id="page-automacoes-extratos">
+    <!-- ── AUTOMAÇÕES: BAIXA AUTOMÁTICA ──────────────────────────── -->
+    <div class="page" id="page-automacoes-baixa">
       <div class="page-header">
-        <div class="page-header-left"><div class="page-title-text" data-i18n="nav-dl-extratos">Download Extratos</div></div>
+        <div class="page-header-left"><div class="page-title-text" data-i18n="nav-baixa-auto">Baixa automática</div></div>
       </div>
-      <div style="max-width:640px;display:flex;flex-direction:column;gap:16px;padding-bottom:40px">
-        <!-- Contas -->
-        <div style="background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:20px 24px">
-          <div style="font-size:11px;font-weight:700;color:var(--e-muted);text-transform:uppercase;letter-spacing:.09em;margin-bottom:12px" data-i18n="extr-accounts-label">Contas</div>
-          <div style="position:relative" id="extr-ms-wrap">
-            <button type="button" id="extr-ms-trigger" onclick="_extrToggleDropdown()" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border:1px solid var(--e-pale);border-radius:8px;background:#fff;cursor:pointer;font-family:inherit;font-size:13px;color:var(--e-muted);text-align:left">
-              <span id="extr-ms-label" data-i18n="extr-sel-ph">Selecionar contas...</span>
-              <svg id="extr-ms-chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0;transition:transform .2s"><path d="M4 6l4 4 4-4"/></svg>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;padding-bottom:40px">
+
+        <!-- ── Coluna 1: Download Extratos ── -->
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--e-lilac);margin-bottom:14px" data-i18n="baixa-sec-extr">Download Extratos</div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:20px 24px">
+              <div style="font-size:11px;font-weight:700;color:var(--e-muted);text-transform:uppercase;letter-spacing:.09em;margin-bottom:12px" data-i18n="extr-accounts-label">Contas</div>
+              <div style="position:relative" id="extr-ms-wrap">
+                <button type="button" id="extr-ms-trigger" onclick="_extrToggleDropdown()" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border:1px solid var(--e-pale);border-radius:8px;background:#fff;cursor:pointer;font-family:inherit;font-size:13px;color:var(--e-muted);text-align:left">
+                  <span id="extr-ms-label" data-i18n="extr-sel-ph">Selecionar contas...</span>
+                  <svg id="extr-ms-chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0;transition:transform .2s"><path d="M4 6l4 4 4-4"/></svg>
+                </button>
+                <div id="extr-ms-panel" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--e-pale);border-radius:10px;box-shadow:0 8px 28px rgba(80,60,160,.13);z-index:300;overflow:hidden;flex-direction:column">
+                  <div style="padding:10px 10px 6px">
+                    <input type="text" id="extr-ms-search" oninput="_extrSearch()" style="width:100%;box-sizing:border-box;border:1px solid var(--e-pale);border-radius:7px;padding:7px 10px;font-size:12px;font-family:inherit;outline:none;color:var(--e-text);background:var(--e-ghost)" data-i18n-placeholder="extr-search-ph" placeholder="Buscar banco ou agente...">
+                  </div>
+                  <div id="extr-ms-list" style="overflow-y:auto;max-height:280px;padding:0 6px 8px"></div>
+                </div>
+              </div>
+              <div id="extr-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"></div>
+            </div>
+            <div style="background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:20px 24px">
+              <div style="font-size:11px;font-weight:700;color:var(--e-muted);text-transform:uppercase;letter-spacing:.09em;margin-bottom:14px" data-i18n="extr-date-label">Data</div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--e-text)">
+                  <input type="radio" name="extr-date-mode" value="ontem" checked onchange="_extrSetDate('ontem')" style="accent-color:var(--e-lilac);width:15px;height:15px;flex-shrink:0">
+                  <span data-i18n="extr-date-yesterday">Ontem</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--e-text)">
+                  <input type="radio" name="extr-date-mode" value="custom" onchange="_extrSetDate('custom')" style="accent-color:var(--e-lilac);width:15px;height:15px;flex-shrink:0">
+                  <span data-i18n="extr-date-custom">Personalizado</span>
+                </label>
+                <div id="extr-date-range" style="display:none;margin-left:25px">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
+                    <div>
+                      <div style="font-size:11px;font-weight:600;color:var(--e-muted);margin-bottom:5px" data-i18n="extr-date-from">De</div>
+                      <input type="date" id="extr-from" style="width:100%;box-sizing:border-box;border:1px solid var(--e-pale);border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text)">
+                    </div>
+                    <div>
+                      <div style="font-size:11px;font-weight:600;color:var(--e-muted);margin-bottom:5px" data-i18n="extr-date-to">Até</div>
+                      <input type="date" id="extr-to" style="width:100%;box-sizing:border-box;border:1px solid var(--e-pale);border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text)">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button class="btn-primary" id="extr-run-btn" onclick="runExtratosJob()" style="width:100%;padding:12px 20px;font-size:14px;justify-content:center;gap:8px;opacity:.45;cursor:not-allowed" disabled>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span data-i18n="extr-run">Executar</span>
             </button>
-            <div id="extr-ms-panel" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--e-pale);border-radius:10px;box-shadow:0 8px 28px rgba(80,60,160,.13);z-index:300;overflow:hidden;flex-direction:column">
-              <div style="padding:10px 10px 6px">
-                <input type="text" id="extr-ms-search" oninput="_extrSearch()" style="width:100%;box-sizing:border-box;border:1px solid var(--e-pale);border-radius:7px;padding:7px 10px;font-size:12px;font-family:inherit;outline:none;color:var(--e-text);background:var(--e-ghost)" data-i18n-placeholder="extr-search-ph" placeholder="Buscar banco ou agente...">
-              </div>
-              <div id="extr-ms-list" style="overflow-y:auto;max-height:280px;padding:0 6px 8px"></div>
-            </div>
-          </div>
-          <div id="extr-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"></div>
-        </div>
-        <!-- Data -->
-        <div style="background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:20px 24px">
-          <div style="font-size:11px;font-weight:700;color:var(--e-muted);text-transform:uppercase;letter-spacing:.09em;margin-bottom:14px" data-i18n="extr-date-label">Data</div>
-          <div style="display:flex;flex-direction:column;gap:10px">
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--e-text)">
-              <input type="radio" name="extr-date-mode" value="ontem" checked onchange="_extrSetDate('ontem')" style="accent-color:var(--e-lilac);width:15px;height:15px;flex-shrink:0">
-              <span data-i18n="extr-date-yesterday">Ontem</span>
-            </label>
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--e-text)">
-              <input type="radio" name="extr-date-mode" value="custom" onchange="_extrSetDate('custom')" style="accent-color:var(--e-lilac);width:15px;height:15px;flex-shrink:0">
-              <span data-i18n="extr-date-custom">Personalizado</span>
-            </label>
-            <div id="extr-date-range" style="display:none;margin-left:25px">
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
-                <div>
-                  <div style="font-size:11px;font-weight:600;color:var(--e-muted);margin-bottom:5px" data-i18n="extr-date-from">De</div>
-                  <input type="date" id="extr-from" style="width:100%;box-sizing:border-box;border:1px solid var(--e-pale);border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text)">
-                </div>
-                <div>
-                  <div style="font-size:11px;font-weight:600;color:var(--e-muted);margin-bottom:5px" data-i18n="extr-date-to">Até</div>
-                  <input type="date" id="extr-to" style="width:100%;box-sizing:border-box;border:1px solid var(--e-pale);border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text)">
-                </div>
-              </div>
+            <div id="extr-job-status" style="display:none;background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:16px 20px;font-size:13px;color:var(--e-text)"></div>
+            <div style="text-align:center;padding-top:2px">
+              <a href="https://drive.google.com/drive/folders/1GTVS6kZdFYAfVcsalOi3wVwa8jgDhkYp?hl=pt-br" target="_blank" rel="noopener noreferrer" data-i18n="extr-drive-link" style="font-size:13px;color:var(--e-lilac);text-decoration:none;display:inline-flex;align-items:center;gap:6px">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                Pasta dos extratos baixados
+              </a>
             </div>
           </div>
         </div>
-        <!-- Run -->
-        <button class="btn-primary" id="extr-run-btn" onclick="runExtratosJob()" style="width:100%;padding:12px 20px;font-size:14px;justify-content:center;gap:8px;opacity:.45;cursor:not-allowed" disabled>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          <span data-i18n="extr-run">Executar</span>
-        </button>
-        <div id="extr-job-status" style="display:none;background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:16px 20px;font-size:13px;color:var(--e-text)"></div>
-        <div style="text-align:center;padding-top:4px">
-          <a href="https://drive.google.com/drive/folders/1GTVS6kZdFYAfVcsalOi3wVwa8jgDhkYp?hl=pt-br" target="_blank" rel="noopener noreferrer" data-i18n="extr-drive-link" style="font-size:13px;color:var(--e-lilac);text-decoration:none;display:inline-flex;align-items:center;gap:6px">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            Pasta dos extratos baixados
-          </a>
+
+        <!-- ── Coluna 2: Atualização de Credenciais ── -->
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--e-lilac);margin-bottom:14px" data-i18n="baixa-sec-cred">Atualização de Credenciais</div>
+          <div style="background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:20px 24px;display:flex;flex-direction:column;gap:16px">
+            <!-- Mode toggle -->
+            <div style="display:flex;background:var(--e-ghost);border-radius:20px;padding:3px;gap:2px">
+              <button type="button" id="cred-btn-update" onclick="_credSetMode('update')" style="flex:1;border:none;border-radius:17px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;background:var(--e-lilac);color:#fff;font-family:inherit" data-i18n="cred-mode-upd">Atualizar existente</button>
+              <button type="button" id="cred-btn-new" onclick="_credSetMode('new')" style="flex:1;border:none;border-radius:17px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;background:transparent;color:var(--e-muted);font-family:inherit" data-i18n="cred-mode-new">Criar nova</button>
+            </div>
+            <!-- Bank select -->
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--e-muted);text-transform:uppercase;letter-spacing:.09em;margin-bottom:7px" data-i18n="cred-bank-lbl">Banco</div>
+              <select id="cred-bank-sel" onchange="_credBankChange()" style="width:100%;box-sizing:border-box;border:1px solid var(--e-pale);border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;cursor:pointer">
+                <option value="" data-i18n="cred-bank-ph">Selecionar banco...</option>
+                <option value="bancolombia">Bancolombia</option>
+                <option value="bancoomeva">Bancoomeva</option>
+                <option value="coltefinanciera">Coltefinanciera</option>
+                <option value="bbva_co">BBVA Colombia</option>
+                <option value="bogota">Banco de Bogotá</option>
+                <option value="avvillas">AV Villas</option>
+                <option value="davivienda">Davivienda</option>
+                <option value="caja_social_co">Caja Social</option>
+                <option value="iris_co">Iris (CO)</option>
+                <option value="bcp">BCP</option>
+                <option value="banbif">Banbif</option>
+                <option value="bbva_pe">BBVA Perú</option>
+                <option value="interbank">Interbank</option>
+                <option value="bbva_ar">BBVA Argentina</option>
+                <option value="galicia_ar">Galicia</option>
+                <option value="industrial_ar">Industrial</option>
+                <option value="ciudad_ar">Ciudad</option>
+                <option value="gmail">Gmail (2FA)</option>
+              </select>
+            </div>
+            <!-- Agent select -->
+            <div id="cred-agent-wrap" style="display:none">
+              <div style="font-size:11px;font-weight:700;color:var(--e-muted);text-transform:uppercase;letter-spacing:.09em;margin-bottom:7px" data-i18n="cred-agent-lbl">Agente</div>
+              <select id="cred-agent-sel" onchange="_credAgentChange()" style="width:100%;box-sizing:border-box;border:1px solid var(--e-pale);border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;cursor:pointer">
+                <option value="" data-i18n="cred-agent-ph">Selecionar agente...</option>
+              </select>
+            </div>
+            <!-- Dynamic credential fields -->
+            <div id="cred-fields-wrap" style="display:none;flex-direction:column;gap:12px"></div>
+            <!-- BCP note -->
+            <div id="cred-bcp-note-box" style="display:none;background:#f0f0ff;border:1px solid #c7c2f0;border-radius:8px;padding:10px 14px;font-size:12px;color:#5046a0">
+              <strong>ℹ️</strong> <span id="cred-bcp-note-text"></span>
+            </div>
+            <!-- Gmail note -->
+            <div id="cred-gmail-note-box" style="display:none;background:#f0f7f0;border:1px solid #b0d8b0;border-radius:8px;padding:10px 14px;font-size:12px;color:#376337">
+              <strong>📧</strong> <span data-i18n="cred-gmail-note">Conta de e-mail para 2FA de outros bancos</span>
+            </div>
+            <!-- Detokenize fields -->
+            <div id="cred-detok-wrap" style="display:none;flex-direction:column;gap:12px">
+              <div style="font-size:11px;font-weight:700;color:var(--e-muted);text-transform:uppercase;letter-spacing:.09em;padding-top:4px;border-top:1px solid var(--e-ghost)">Detokenize.me</div>
+              <div>
+                <div style="font-size:11px;font-weight:600;color:var(--e-muted);margin-bottom:5px" data-i18n="cred-f-pasta">Pasta</div>
+                <input type="text" id="cred-detok-pasta" oninput="_credUpdateSaveBtn()" style="width:100%;box-sizing:border-box;border:1px solid var(--e-pale);border-radius:7px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text)">
+              </div>
+              <div>
+                <div style="font-size:11px;font-weight:600;color:var(--e-muted);margin-bottom:5px" data-i18n="cred-f-token-num">Nº Token</div>
+                <input type="text" id="cred-detok-token" oninput="_credUpdateSaveBtn()" style="width:100%;box-sizing:border-box;border:1px solid var(--e-pale);border-radius:7px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text)">
+              </div>
+            </div>
+            <!-- Save button -->
+            <button id="cred-save-btn" onclick="_credSave()" disabled style="width:100%;padding:11px 20px;font-size:13px;font-weight:600;border:none;border-radius:8px;cursor:not-allowed;background:var(--e-lilac);color:#fff;opacity:.45;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span data-i18n="cred-save">Salvar</span>
+            </button>
+            <div id="cred-status" style="display:none;font-size:13px"></div>
+          </div>
         </div>
+
       </div>
-    </div>
-    <!-- ── AUTOMAÇÕES: CREDENCIAIS BANCOS ──────────────────────────── -->
-    <div class="page" id="page-automacoes-credenciais">
-      <div class="page-header">
-        <div class="page-header-left"><div class="page-title-text" data-i18n="nav-cred-bancos">Credenciais Bancos</div></div>
-      </div>
-      <div class="empty-state"><div class="empty-icon">🔐</div><div class="empty-title" style="color:var(--e-text)">Em breve</div></div>
     </div>
   </div>
 </div>
@@ -1981,8 +2050,8 @@ const i18n = {
     'ops-platform':'FOC App','login-welcome':'Bem-vindo de volta',
     'login-desc':'Faça login com sua conta corporativa Eron para continuar.',
     'login-btn':'Continuar com Google','login-note':'',
-    'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Cadastro','nav-automacoes':'Automações','nav-dl-extratos':'Download Extratos','nav-cred-bancos':'Credenciais Bancos',
-    'extr-accounts-label':'Contas','extr-sel-ph':'Selecionar contas...','extr-search-ph':'Buscar banco ou agente...','extr-sel-all':'Tudo','extr-date-label':'Data','extr-date-yesterday':'Ontem','extr-date-custom':'Personalizado','extr-date-from':'De','extr-date-to':'Até','extr-run':'Executar','extr-n-sel':'{n} selecionada(s)','extr-drive-link':'Pasta dos extratos baixados',
+    'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Cadastro','nav-automacoes':'Automações','nav-dl-extratos':'Download Extratos','nav-cred-bancos':'Credenciais Bancos','nav-baixa-auto':'Baixa automática','baixa-sec-extr':'Download Extratos','baixa-sec-cred':'Atualização de Credenciais',
+    'extr-accounts-label':'Contas','extr-sel-ph':'Selecionar contas...','extr-search-ph':'Buscar banco ou agente...','extr-sel-all':'Tudo','extr-date-label':'Data','extr-date-yesterday':'Ontem','extr-date-custom':'Personalizado','extr-date-from':'De','extr-date-to':'Até','extr-run':'Executar','extr-n-sel':'{n} selecionada(s)','extr-drive-link':'Pasta dos extratos baixados','cred-mode-upd':'Atualizar existente','cred-mode-new':'Criar nova','cred-bank-lbl':'Banco','cred-agent-lbl':'Agente','cred-bank-ph':'Selecionar banco...','cred-agent-ph':'Selecionar agente...','cred-f-empresa':'Empresa','cred-f-usuario':'Usuário','cred-f-senha':'Senha','cred-f-operador':'Operador','cred-f-referencia':'Referência','cred-f-nit':'NIT','cred-f-tipo':'Tipo','cred-f-totp':'TOTP Secret','cred-f-pasta':'Pasta','cred-f-token-num':'Nº Token','cred-save':'Salvar','cred-bcp-note':'Usuário = {agente} (calculado localmente)','cred-gmail-note':'Conta de e-mail para 2FA de outros bancos',
     'nav-accounts':'Accounts','nav-custos':'Liquidações','nav-conciliacoes':'Conciliações','nav-cierre':'Accounts – Cierre',
     'nav-pais':'País','nav-agente':'Agente','nav-banco':'Banco',
     'dev-badge':'Em desenvolvimento',
@@ -2086,8 +2155,8 @@ const i18n = {
     'ops-platform':'FOC App','login-welcome':'Welcome back',
     'login-desc':'Sign in with your Eron corporate account to continue.',
     'login-btn':'Continue with Google','login-note':'',
-    'nav-gerencial':'Management','nav-cronograma':'Schedule','nav-cadastro':'Registry','nav-automacoes':'Automations','nav-dl-extratos':'Download Statements','nav-cred-bancos':'Bank Credentials',
-    'extr-accounts-label':'Accounts','extr-sel-ph':'Select accounts...','extr-search-ph':'Search bank or agent...','extr-sel-all':'All','extr-date-label':'Date','extr-date-yesterday':'Yesterday','extr-date-custom':'Custom','extr-date-from':'From','extr-date-to':'To','extr-run':'Run','extr-n-sel':'{n} selected','extr-drive-link':'Downloaded statements folder',
+    'nav-gerencial':'Management','nav-cronograma':'Schedule','nav-cadastro':'Registry','nav-automacoes':'Automations','nav-dl-extratos':'Download Statements','nav-cred-bancos':'Bank Credentials','nav-baixa-auto':'Automatic download','baixa-sec-extr':'Download Statements','baixa-sec-cred':'Credential Update',
+    'extr-accounts-label':'Accounts','extr-sel-ph':'Select accounts...','extr-search-ph':'Search bank or agent...','extr-sel-all':'All','extr-date-label':'Date','extr-date-yesterday':'Yesterday','extr-date-custom':'Custom','extr-date-from':'From','extr-date-to':'To','extr-run':'Run','extr-n-sel':'{n} selected','extr-drive-link':'Downloaded statements folder','cred-mode-upd':'Update existing','cred-mode-new':'Create new','cred-bank-lbl':'Bank','cred-agent-lbl':'Agent','cred-bank-ph':'Select bank...','cred-agent-ph':'Select agent...','cred-f-empresa':'Company','cred-f-usuario':'User','cred-f-senha':'Password','cred-f-operador':'Operator','cred-f-referencia':'Reference','cred-f-nit':'NIT','cred-f-tipo':'Type','cred-f-totp':'TOTP Secret','cred-f-pasta':'Folder','cred-f-token-num':'Token No.','cred-save':'Save','cred-bcp-note':'User = {agente} (calculated locally)','cred-gmail-note':'Email account for 2FA on other banks',
     'nav-accounts':'Accounts','nav-custos':'Settlements','nav-conciliacoes':'Reconciliations',
     'nav-pais':'Country','nav-agente':'Agent','nav-banco':'Bank',
     'dev-badge':'In development',
@@ -2184,8 +2253,8 @@ const i18n = {
     'ops-platform':'FOC App','login-welcome':'Bienvenido de nuevo',
     'login-desc':'Inicia sesión con tu cuenta corporativa Eron para continuar.',
     'login-btn':'Continuar con Google','login-note':'',
-    'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Registro','nav-automacoes':'Automatizaciones','nav-dl-extratos':'Descargar Extractos','nav-cred-bancos':'Credenciales Bancos',
-    'extr-accounts-label':'Cuentas','extr-sel-ph':'Seleccionar cuentas...','extr-search-ph':'Buscar banco o agente...','extr-sel-all':'Todo','extr-date-label':'Fecha','extr-date-yesterday':'Ayer','extr-date-custom':'Personalizado','extr-date-from':'Desde','extr-date-to':'Hasta','extr-run':'Ejecutar','extr-n-sel':'{n} seleccionada(s)','extr-drive-link':'Carpeta de extractos descargados',
+    'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Registro','nav-automacoes':'Automatizaciones','nav-dl-extratos':'Descargar Extractos','nav-cred-bancos':'Credenciales Bancos','nav-baixa-auto':'Descarga automática','baixa-sec-extr':'Descargar Extractos','baixa-sec-cred':'Actualización de Credenciales',
+    'extr-accounts-label':'Cuentas','extr-sel-ph':'Seleccionar cuentas...','extr-search-ph':'Buscar banco o agente...','extr-sel-all':'Todo','extr-date-label':'Fecha','extr-date-yesterday':'Ayer','extr-date-custom':'Personalizado','extr-date-from':'Desde','extr-date-to':'Hasta','extr-run':'Ejecutar','extr-n-sel':'{n} seleccionada(s)','extr-drive-link':'Carpeta de extractos descargados','cred-mode-upd':'Actualizar existente','cred-mode-new':'Crear nueva','cred-bank-lbl':'Banco','cred-agent-lbl':'Agente','cred-bank-ph':'Seleccionar banco...','cred-agent-ph':'Seleccionar agente...','cred-f-empresa':'Empresa','cred-f-usuario':'Usuario','cred-f-senha':'Contraseña','cred-f-operador':'Operador','cred-f-referencia':'Referencia','cred-f-nit':'NIT','cred-f-tipo':'Tipo','cred-f-totp':'TOTP Secret','cred-f-pasta':'Carpeta','cred-f-token-num':'Nº Token','cred-save':'Guardar','cred-bcp-note':'Usuario = {agente} (calculado localmente)','cred-gmail-note':'Cuenta de email para 2FA de otros bancos',
     'nav-accounts':'Cuentas','nav-custos':'Liquidaciones','nav-conciliacoes':'Conciliaciones',
     'nav-pais':'País','nav-agente':'Agente','nav-banco':'Banco',
     'dev-badge':'En desarrollo',
@@ -2370,8 +2439,7 @@ const pagesMeta = {
   'cronograma-custos':{parentKey:'nav-cronograma',labelKey:'nav-custos'},
   'cronograma-conciliacoes':{parentKey:'nav-cronograma',labelKey:'nav-conciliacoes'},
   'cronograma-cierre':{parentKey:'nav-cronograma',labelKey:'nav-cierre'},
-  'automacoes-extratos':{parentKey:'nav-automacoes',labelKey:'nav-dl-extratos'},
-  'automacoes-credenciais':{parentKey:'nav-automacoes',labelKey:'nav-cred-bancos'},
+  'automacoes-baixa':{parentKey:'nav-automacoes',labelKey:'nav-baixa-auto'},
   'cadastro-pais':{parentKey:'nav-cadastro',labelKey:'nav-pais'},
   'cadastro-agente':{parentKey:'nav-cadastro',labelKey:'nav-agente'},
   'cadastro-banco':{parentKey:'nav-cadastro',labelKey:'nav-banco'},
@@ -2380,7 +2448,7 @@ const pagesMeta = {
 };
 function navigate(pageId){
   if(pageId==='cadastro-acessos'&&!canViewAcessos()) return;
-  if((pageId==='automacoes-extratos'||pageId==='automacoes-credenciais')&&_currentEnv!=='eron') return;
+  if(pageId==='automacoes-baixa'&&_currentEnv!=='eron') return;
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.sb-item[data-page]').forEach(el=>el.classList.remove('active'));
   document.getElementById('page-'+pageId).classList.add('active');
@@ -2401,7 +2469,7 @@ function navigate(pageId){
   if(pageId==='gerencial-conciliacoes'){ renderGerencialConciliacoes(); _renderVolLastImport(); renderSlackConfig('conciliacoes'); }
   if(pageId==='gerencial-custos'){ renderGerencialLiquidacoes(); }
   if(pageId==='cronograma-custos'){ renderCronogramaLiquidacoes(); }
-  if(pageId==='automacoes-extratos'){ _extrInit(); }
+  if(pageId==='automacoes-baixa'){ _extrInit();_credInit(); }
 }
 function updateBreadcrumb(){
   const m=pagesMeta[currentPageId];
@@ -5528,6 +5596,155 @@ async function runExtratosJob(){
     if(status) status.innerHTML=`<span style="color:#dc2626">❌ Erro: ${e.message}</span>`;
   } finally{
     if(btn){btn.disabled=_extrSelected.size===0;btn.style.opacity=_extrSelected.size===0?'.45':'1';}
+  }
+}
+
+const CRED_BANKS={
+  bancolombia:{fields:['nit','usuario','senha'],detokenize:false},
+  bancoomeva:{fields:['nit','usuario','senha'],detokenize:false},
+  coltefinanciera:{fields:['usuario','senha'],detokenize:false},
+  bbva_co:{fields:['referencia','usuario','senha'],detokenize:false},
+  bogota:{fields:['empresa','usuario','senha'],detokenize:true},
+  avvillas:{fields:['empresa','usuario','senha'],detokenize:true},
+  davivienda:{fields:['empresa','usuario','senha'],detokenize:true},
+  caja_social_co:{fields:['empresa','usuario','senha'],detokenize:true},
+  iris_co:{fields:['empresa','usuario','senha'],detokenize:false},
+  bcp:{fields:['senha'],bcp_special:true,detokenize:false},
+  banbif:{fields:['operador','usuario','senha'],detokenize:false},
+  bbva_pe:{fields:['empresa','usuario','senha'],detokenize:false},
+  interbank:{fields:['tipo','usuario','senha'],detokenize:false},
+  bbva_ar:{fields:['referencia','usuario','senha'],detokenize:false},
+  galicia_ar:{fields:['empresa','usuario','senha'],detokenize:false},
+  industrial_ar:{fields:['empresa','usuario','senha'],detokenize:false},
+  ciudad_ar:{fields:['empresa','usuario','senha'],detokenize:false},
+  gmail:{fields:['usuario','senha','totp_secret'],gmail_special:true,detokenize:false},
+};
+const CRED_BANK_AGENTS={
+  bancolombia:['COLPROCESA','COGREPOS','GOHILL','NLASE'],
+  bancoomeva:['COLPROCESA','COGREPOS','QM','COLPAYMENTS','COMERCIAL'],
+  coltefinanciera:['COLPROCESA','COGREPOS','COLPAYMENTS','COMERCIAL','KATAGA','QM'],
+  bbva_co:['COLPROCESA','GOHILL','KATAGA','NLASE','QM'],
+  bogota:['COLPROCESA','COGREPOS','COLPAYMENTS','COMERCIAL','GOHILL','NLASE','KATAGA','QM'],
+  avvillas:['COLPROCESA','COGREPOS','COLPAYMENTS','COMERCIAL','GOHILL','NLASE','KATAGA','QM'],
+  davivienda:['COLPROCESA','COGREPOS','COLPAYMENTS','COMERCIAL','GOHILL','NLASE','KATAGA','QM'],
+  caja_social_co:['COLPROCESA','COGREPOS','COLPAYMENTS','COMERCIAL','GOHILL','NLASE','KATAGA','QM'],
+  iris_co:['COLPROCESA','COGREPOS','COLPAYMENTS','COMERCIAL','GOHILL','NLASE','KATAGA','QM'],
+  bcp:['ONLINEPRO','MALISAC','TPROG','SURTCAPITAL'],
+  banbif:['ONLINEPRO','SURTCAPITAL'],
+  bbva_pe:['ONLINEPRO','SURTCAPITAL','MALISAC'],
+  interbank:['ONLINEPRO','MALISAC','TPROG'],
+  bbva_ar:['BUHAPAY'],
+  galicia_ar:['BUHAPAY'],
+  industrial_ar:['BUHAPAY'],
+  ciudad_ar:['BUHAPAY'],
+  gmail:['COLPROCESA','COGREPOS','COLPAYMENTS','COMERCIAL','GOHILL','NLASE','KATAGA','QM','BUHAPAY','ONLINEPRO','SURTCAPITAL','MALISAC','TPROG'],
+};
+let _credMode='update';
+
+function _credInit(){
+  _credMode='update';
+  const bankSel=document.getElementById('cred-bank-sel');
+  if(bankSel) bankSel.value='';
+  _credSetMode('update');
+  ['cred-agent-wrap','cred-fields-wrap','cred-detok-wrap','cred-bcp-note-box','cred-gmail-note-box','cred-status'].forEach(id=>{
+    const el=document.getElementById(id);if(el) el.style.display='none';
+  });
+  const fw=document.getElementById('cred-fields-wrap');if(fw) fw.innerHTML='';
+  _credUpdateSaveBtn();
+}
+
+function _credSetMode(mode){
+  _credMode=mode;
+  const active='flex:1;border:none;border-radius:17px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;background:var(--e-lilac);color:#fff;font-family:inherit';
+  const inactive='flex:1;border:none;border-radius:17px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;background:transparent;color:var(--e-muted);font-family:inherit';
+  const u=document.getElementById('cred-btn-update'),n=document.getElementById('cred-btn-new');
+  if(u) u.style.cssText=mode==='update'?active:inactive;
+  if(n) n.style.cssText=mode==='new'?active:inactive;
+}
+
+function _credBankChange(){
+  const bank=document.getElementById('cred-bank-sel')?.value||'';
+  const agentWrap=document.getElementById('cred-agent-wrap');
+  const agentSel=document.getElementById('cred-agent-sel');
+  const fw=document.getElementById('cred-fields-wrap');
+  ['cred-detok-wrap','cred-bcp-note-box','cred-gmail-note-box'].forEach(id=>{const el=document.getElementById(id);if(el) el.style.display='none';});
+  if(fw){fw.style.display='none';fw.innerHTML='';}
+  if(agentSel) agentSel.innerHTML=`<option value="">${t('cred-agent-ph')}</option>`;
+  if(!bank){if(agentWrap) agentWrap.style.display='none';_credUpdateSaveBtn();return;}
+  const agents=CRED_BANK_AGENTS[bank]||[];
+  agents.forEach(ag=>{const o=document.createElement('option');o.value=ag;o.textContent=ag;agentSel.appendChild(o);});
+  if(agentWrap) agentWrap.style.display='';
+  _credUpdateSaveBtn();
+}
+
+function _credAgentChange(){
+  const bank=document.getElementById('cred-bank-sel')?.value||'';
+  const agent=document.getElementById('cred-agent-sel')?.value||'';
+  const cfg=CRED_BANKS[bank];
+  const fw=document.getElementById('cred-fields-wrap');
+  const detok=document.getElementById('cred-detok-wrap');
+  const bcpBox=document.getElementById('cred-bcp-note-box');
+  const gmailBox=document.getElementById('cred-gmail-note-box');
+  if(detok){detok.style.display='none';['cred-detok-pasta','cred-detok-token'].forEach(id=>{const el=document.getElementById(id);if(el) el.value='';});}
+  if(!bank||!agent||!cfg){if(fw){fw.style.display='none';fw.innerHTML='';}if(bcpBox) bcpBox.style.display='none';if(gmailBox) gmailBox.style.display='none';_credUpdateSaveBtn();return;}
+  if(bcpBox) bcpBox.style.display=cfg.bcp_special?'':'none';
+  if(cfg.bcp_special){const s=document.getElementById('cred-bcp-note-text');if(s) s.textContent=t('cred-bcp-note').replace('{agente}',agent);}
+  if(gmailBox) gmailBox.style.display=cfg.gmail_special?'':'none';
+  _credRenderFields(cfg);
+  if(cfg.detokenize&&detok) detok.style.display='flex';
+  _credUpdateSaveBtn();
+}
+
+function _credRenderFields(cfg){
+  const fw=document.getElementById('cred-fields-wrap');
+  if(!fw) return;
+  const I18N={empresa:'cred-f-empresa',usuario:'cred-f-usuario',senha:'cred-f-senha',operador:'cred-f-operador',referencia:'cred-f-referencia',nit:'cred-f-nit',tipo:'cred-f-tipo',totp_secret:'cred-f-totp'};
+  fw.innerHTML=cfg.fields.map(f=>`<div>
+    <div style="font-size:11px;font-weight:600;color:var(--e-muted);margin-bottom:5px">${t(I18N[f])||f}</div>
+    <input type="${f==='senha'?'password':'text'}" id="cred-field-${f}" oninput="_credUpdateSaveBtn()" autocomplete="off" style="width:100%;box-sizing:border-box;border:1px solid var(--e-pale);border-radius:7px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text)">
+  </div>`).join('');
+  fw.style.display='flex';fw.style.flexDirection='column';fw.style.gap='12px';
+}
+
+function _credUpdateSaveBtn(){
+  const bank=document.getElementById('cred-bank-sel')?.value||'';
+  const agent=document.getElementById('cred-agent-sel')?.value||'';
+  const cfg=CRED_BANKS[bank];
+  let ok=!!(bank&&agent&&cfg);
+  if(ok&&cfg.fields) ok=cfg.fields.every(f=>{const el=document.getElementById('cred-field-'+f);return !el||el.value.trim()!=='';});
+  if(ok&&cfg?.detokenize){
+    const p=document.getElementById('cred-detok-pasta')?.value.trim();
+    const tk=document.getElementById('cred-detok-token')?.value.trim();
+    if(!p||!tk) ok=false;
+  }
+  const btn=document.getElementById('cred-save-btn');
+  if(btn){btn.disabled=!ok;btn.style.opacity=ok?'1':'.45';btn.style.cursor=ok?'pointer':'not-allowed';}
+}
+
+async function _credSave(){
+  const bank=document.getElementById('cred-bank-sel')?.value||'';
+  const agent=document.getElementById('cred-agent-sel')?.value||'';
+  const cfg=CRED_BANKS[bank];
+  if(!bank||!agent||!cfg) return;
+  const fields={};
+  cfg.fields.forEach(f=>{const el=document.getElementById('cred-field-'+f);if(el) fields[f]=el.value.trim();});
+  if(cfg.detokenize){
+    fields.detok_pasta=document.getElementById('cred-detok-pasta')?.value.trim()||'';
+    fields.detok_token=document.getElementById('cred-detok-token')?.value.trim()||'';
+  }
+  const reqId='cred_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  const payload={type:_credMode==='new'?'create_credential':'update_credential',bank,agent,fields,requested_by:window._loggedEmail||'—',created_at:Date.now(),status:'pending'};
+  const btn=document.getElementById('cred-save-btn');
+  const status=document.getElementById('cred-status');
+  if(btn){btn.disabled=true;btn.style.opacity='.45';}
+  if(status){status.style.display='';status.innerHTML=`<span style="color:var(--e-muted)">⏳ Salvando...</span>`;}
+  try{
+    await _getEronFb().database().ref('credentialChangeRequests/'+reqId).set(payload);
+    if(status) status.innerHTML=`<span style="color:#059669">✅ ${reqId}</span>`;
+    setTimeout(_credInit,2500);
+  }catch(e){
+    if(status) status.innerHTML=`<span style="color:#dc2626">❌ ${e.message}</span>`;
+    if(btn){btn.disabled=false;btn.style.opacity='1';}
   }
 }
 
