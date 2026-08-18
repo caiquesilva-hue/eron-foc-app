@@ -5762,7 +5762,8 @@ async function _credSave(){
     fields.detok_token=document.getElementById('cred-detok-token')?.value.trim()||'';
   }
   const reqId='cred_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
-  const payload={type:_credMode==='new'?'create_credential':'update_credential',bank,agent,fields,requested_by:window._loggedEmail||'—',created_at:Date.now(),status:'pending'};
+  const bankKey=bank.replace(/_(co|pe|ar)$/,'');
+  const payload={type:_credMode==='new'?'create_credential':'update_credential',bank:bankKey,agent,fields,requested_by:window._loggedEmail||'—',created_at:Date.now(),status:'pending'};
   const btn=document.getElementById('cred-save-btn');
   const status=document.getElementById('cred-status');
   if(btn){btn.disabled=true;btn.style.opacity='.45';}
