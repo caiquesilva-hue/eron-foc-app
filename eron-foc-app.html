@@ -629,6 +629,16 @@
         <div class="sb-item" data-page="cronograma-custos" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-custos">Liquidações</span></div>
         <div class="sb-item" data-page="cronograma-conciliacoes" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-conciliacoes">Conciliações</span></div>
       </div>
+      <div class="sb-divider" id="automacoes-divider"></div>
+      <!-- AUTOMAÇÕES (quarto) -->
+      <div class="sb-section-header collapsed" id="automacoes-toggle" onclick="toggleSection('automacoes')">
+        <span data-i18n="nav-automacoes">Automações</span>
+        <svg class="sb-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 6l4 4 4-4"/></svg>
+      </div>
+      <div class="sb-children collapsed" id="automacoes-children">
+        <div class="sb-item" data-page="automacoes-extratos" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-dl-extratos">Download Extratos</span></div>
+        <div class="sb-item" data-page="automacoes-credenciais" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-cred-bancos">Credenciais Bancos</span></div>
+      </div>
     </div>
     <div class="sb-footer">
       <div class="avatar" id="sb-avatar">?</div>
@@ -1233,6 +1243,70 @@
   </div>
 </div>
 
+<!-- ── AUTOMAÇÕES: DOWNLOAD EXTRATOS ──────────────────────────── -->
+    <div class="page" id="page-automacoes-extratos">
+      <div class="page-header">
+        <div class="page-header-left"><div class="page-title-text" data-i18n="nav-dl-extratos">Download Extratos</div></div>
+      </div>
+      <div style="max-width:640px;display:flex;flex-direction:column;gap:16px;padding-bottom:40px">
+        <!-- Contas -->
+        <div style="background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:20px 24px">
+          <div style="font-size:11px;font-weight:700;color:var(--e-muted);text-transform:uppercase;letter-spacing:.09em;margin-bottom:12px" data-i18n="extr-accounts-label">Contas</div>
+          <div style="position:relative" id="extr-ms-wrap">
+            <button type="button" id="extr-ms-trigger" onclick="_extrToggleDropdown()" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border:1px solid var(--e-pale);border-radius:8px;background:#fff;cursor:pointer;font-family:inherit;font-size:13px;color:var(--e-muted);text-align:left">
+              <span id="extr-ms-label" data-i18n="extr-sel-ph">Selecionar contas...</span>
+              <svg id="extr-ms-chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0;transition:transform .2s"><path d="M4 6l4 4 4-4"/></svg>
+            </button>
+            <div id="extr-ms-panel" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--e-pale);border-radius:10px;box-shadow:0 8px 28px rgba(80,60,160,.13);z-index:300;overflow:hidden;flex-direction:column">
+              <div style="padding:10px 10px 6px">
+                <input type="text" id="extr-ms-search" oninput="_extrSearch()" style="width:100%;box-sizing:border-box;border:1px solid var(--e-pale);border-radius:7px;padding:7px 10px;font-size:12px;font-family:inherit;outline:none;color:var(--e-text);background:var(--e-ghost)" data-i18n-placeholder="extr-search-ph" placeholder="Buscar banco ou agente...">
+              </div>
+              <div id="extr-ms-list" style="overflow-y:auto;max-height:280px;padding:0 6px 8px"></div>
+            </div>
+          </div>
+          <div id="extr-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"></div>
+        </div>
+        <!-- Data -->
+        <div style="background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:20px 24px">
+          <div style="font-size:11px;font-weight:700;color:var(--e-muted);text-transform:uppercase;letter-spacing:.09em;margin-bottom:14px" data-i18n="extr-date-label">Data</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--e-text)">
+              <input type="radio" name="extr-date-mode" value="ontem" checked onchange="_extrSetDate('ontem')" style="accent-color:var(--e-lilac);width:15px;height:15px;flex-shrink:0">
+              <span data-i18n="extr-date-yesterday">Ontem</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--e-text)">
+              <input type="radio" name="extr-date-mode" value="custom" onchange="_extrSetDate('custom')" style="accent-color:var(--e-lilac);width:15px;height:15px;flex-shrink:0">
+              <span data-i18n="extr-date-custom">Personalizado</span>
+            </label>
+            <div id="extr-date-range" style="display:none;margin-left:25px">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
+                <div>
+                  <div style="font-size:11px;font-weight:600;color:var(--e-muted);margin-bottom:5px" data-i18n="extr-date-from">De</div>
+                  <input type="date" id="extr-from" style="width:100%;box-sizing:border-box;border:1px solid var(--e-pale);border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text)">
+                </div>
+                <div>
+                  <div style="font-size:11px;font-weight:600;color:var(--e-muted);margin-bottom:5px" data-i18n="extr-date-to">Até</div>
+                  <input type="date" id="extr-to" style="width:100%;box-sizing:border-box;border:1px solid var(--e-pale);border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text)">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Run -->
+        <button class="btn-primary" id="extr-run-btn" onclick="runExtratosJob()" style="width:100%;padding:12px 20px;font-size:14px;justify-content:center;gap:8px;opacity:.45;cursor:not-allowed" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span data-i18n="extr-run">Executar</span>
+        </button>
+        <div id="extr-job-status" style="display:none;background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:16px 20px;font-size:13px;color:var(--e-text)"></div>
+      </div>
+    </div>
+    <!-- ── AUTOMAÇÕES: CREDENCIAIS BANCOS ──────────────────────────── -->
+    <div class="page" id="page-automacoes-credenciais">
+      <div class="page-header">
+        <div class="page-header-left"><div class="page-title-text" data-i18n="nav-cred-bancos">Credenciais Bancos</div></div>
+      </div>
+      <div class="empty-state"><div class="empty-icon">🔐</div><div class="empty-title" style="color:var(--e-text)">Em breve</div></div>
+    </div>
 <!-- ── MODAL: ADD / EDIT ACCOUNT ──────────────────────────────── -->
 <div class="modal-overlay" id="modal-account" onclick="if(event.target===this)closeModal('modal-account')">
   <div class="modal-card">
@@ -1902,7 +1976,8 @@ const i18n = {
     'ops-platform':'FOC App','login-welcome':'Bem-vindo de volta',
     'login-desc':'Faça login com sua conta corporativa Eron para continuar.',
     'login-btn':'Continuar com Google','login-note':'',
-    'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Cadastro',
+    'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Cadastro','nav-automacoes':'Automações','nav-dl-extratos':'Download Extratos','nav-cred-bancos':'Credenciais Bancos',
+    'extr-accounts-label':'Contas','extr-sel-ph':'Selecionar contas...','extr-search-ph':'Buscar banco ou agente...','extr-sel-all':'Tudo','extr-date-label':'Data','extr-date-yesterday':'Ontem','extr-date-custom':'Personalizado','extr-date-from':'De','extr-date-to':'Até','extr-run':'Executar','extr-n-sel':'{n} selecionada(s)',
     'nav-accounts':'Accounts','nav-custos':'Liquidações','nav-conciliacoes':'Conciliações','nav-cierre':'Accounts – Cierre',
     'nav-pais':'País','nav-agente':'Agente','nav-banco':'Banco',
     'dev-badge':'Em desenvolvimento',
@@ -2006,7 +2081,8 @@ const i18n = {
     'ops-platform':'FOC App','login-welcome':'Welcome back',
     'login-desc':'Sign in with your Eron corporate account to continue.',
     'login-btn':'Continue with Google','login-note':'',
-    'nav-gerencial':'Management','nav-cronograma':'Schedule','nav-cadastro':'Registry',
+    'nav-gerencial':'Management','nav-cronograma':'Schedule','nav-cadastro':'Registry','nav-automacoes':'Automations','nav-dl-extratos':'Download Statements','nav-cred-bancos':'Bank Credentials',
+    'extr-accounts-label':'Accounts','extr-sel-ph':'Select accounts...','extr-search-ph':'Search bank or agent...','extr-sel-all':'All','extr-date-label':'Date','extr-date-yesterday':'Yesterday','extr-date-custom':'Custom','extr-date-from':'From','extr-date-to':'To','extr-run':'Run','extr-n-sel':'{n} selected',
     'nav-accounts':'Accounts','nav-custos':'Settlements','nav-conciliacoes':'Reconciliations',
     'nav-pais':'Country','nav-agente':'Agent','nav-banco':'Bank',
     'dev-badge':'In development',
@@ -2103,7 +2179,8 @@ const i18n = {
     'ops-platform':'FOC App','login-welcome':'Bienvenido de nuevo',
     'login-desc':'Inicia sesión con tu cuenta corporativa Eron para continuar.',
     'login-btn':'Continuar con Google','login-note':'',
-    'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Registro',
+    'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Registro','nav-automacoes':'Automatizaciones','nav-dl-extratos':'Descargar Extractos','nav-cred-bancos':'Credenciales Bancos',
+    'extr-accounts-label':'Cuentas','extr-sel-ph':'Seleccionar cuentas...','extr-search-ph':'Buscar banco o agente...','extr-sel-all':'Todo','extr-date-label':'Fecha','extr-date-yesterday':'Ayer','extr-date-custom':'Personalizado','extr-date-from':'Desde','extr-date-to':'Hasta','extr-run':'Ejecutar','extr-n-sel':'{n} seleccionada(s)',
     'nav-accounts':'Cuentas','nav-custos':'Liquidaciones','nav-conciliacoes':'Conciliaciones',
     'nav-pais':'País','nav-agente':'Agente','nav-banco':'Banco',
     'dev-badge':'En desarrollo',
@@ -2288,6 +2365,8 @@ const pagesMeta = {
   'cronograma-custos':{parentKey:'nav-cronograma',labelKey:'nav-custos'},
   'cronograma-conciliacoes':{parentKey:'nav-cronograma',labelKey:'nav-conciliacoes'},
   'cronograma-cierre':{parentKey:'nav-cronograma',labelKey:'nav-cierre'},
+  'automacoes-extratos':{parentKey:'nav-automacoes',labelKey:'nav-dl-extratos'},
+  'automacoes-credenciais':{parentKey:'nav-automacoes',labelKey:'nav-cred-bancos'},
   'cadastro-pais':{parentKey:'nav-cadastro',labelKey:'nav-pais'},
   'cadastro-agente':{parentKey:'nav-cadastro',labelKey:'nav-agente'},
   'cadastro-banco':{parentKey:'nav-cadastro',labelKey:'nav-banco'},
@@ -2296,6 +2375,7 @@ const pagesMeta = {
 };
 function navigate(pageId){
   if(pageId==='cadastro-acessos'&&!canViewAcessos()) return;
+  if((pageId==='automacoes-extratos'||pageId==='automacoes-credenciais')&&_currentEnv!=='eron') return;
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.sb-item[data-page]').forEach(el=>el.classList.remove('active'));
   document.getElementById('page-'+pageId).classList.add('active');
@@ -2316,6 +2396,7 @@ function navigate(pageId){
   if(pageId==='gerencial-conciliacoes'){ renderGerencialConciliacoes(); _renderVolLastImport(); renderSlackConfig('conciliacoes'); }
   if(pageId==='gerencial-custos'){ renderGerencialLiquidacoes(); }
   if(pageId==='cronograma-custos'){ renderCronogramaLiquidacoes(); }
+  if(pageId==='automacoes-extratos'){ _extrInit(); }
 }
 function updateBreadcrumb(){
   const m=pagesMeta[currentPageId];
@@ -2333,9 +2414,10 @@ function updateBreadcrumb(){
 }
 function toggleSection(id){
   const wasCollapsed=document.getElementById(id+'-toggle').classList.contains('collapsed');
-  ['cadastro','gerencial','cronograma'].forEach(s=>{
-    document.getElementById(s+'-toggle').classList.add('collapsed');
-    document.getElementById(s+'-children').classList.add('collapsed');
+  ['cadastro','gerencial','cronograma','automacoes'].forEach(s=>{
+    const t=document.getElementById(s+'-toggle'),c=document.getElementById(s+'-children');
+    if(t) t.classList.add('collapsed');
+    if(c) c.classList.add('collapsed');
   });
   if(wasCollapsed){
     document.getElementById(id+'-toggle').classList.remove('collapsed');
@@ -5240,7 +5322,219 @@ async function switchEnvironment(envKey){
   await startFirebaseSync();
   try{renderAll();updateCounts();}catch(e){}
 }
+// ─── AUTOMAÇÕES: DOWNLOAD EXTRATOS ───────────────────────────────────────────
+const EXTR_TAREFAS=[
+  {pais:'CO',banco:'Bancolombia',agente:'COLPROCESA'},{pais:'CO',banco:'Bancolombia',agente:'COGREPOS'},
+  {pais:'CO',banco:'Bancolombia',agente:'GOHILL'},{pais:'CO',banco:'Bancolombia',agente:'NLASE'},
+  {pais:'CO',banco:'Coltefinanciera',agente:'COLPROCESA'},{pais:'CO',banco:'Coltefinanciera',agente:'COGREPOS'},
+  {pais:'CO',banco:'Coltefinanciera',agente:'COLPAYMENTS'},{pais:'CO',banco:'Coltefinanciera',agente:'COMERCIAL'},
+  {pais:'CO',banco:'Coltefinanciera',agente:'KATAGA'},{pais:'CO',banco:'Coltefinanciera',agente:'QM'},
+  {pais:'CO',banco:'Bancoomeva',agente:'COLPROCESA'},{pais:'CO',banco:'Bancoomeva',agente:'COGREPOS'},
+  {pais:'CO',banco:'Bancoomeva',agente:'QM'},{pais:'CO',banco:'Bancoomeva',agente:'COLPAYMENTS'},
+  {pais:'CO',banco:'Bancoomeva',agente:'COMERCIAL'},{pais:'CO',banco:'BBVA Colombia',agente:'COLPROCESA'},
+  {pais:'CO',banco:'BBVA Colombia',agente:'GOHILL'},{pais:'CO',banco:'BBVA Colombia',agente:'KATAGA'},
+  {pais:'CO',banco:'BBVA Colombia',agente:'NLASE'},{pais:'CO',banco:'BBVA Colombia',agente:'QM'},
+  {pais:'AR',banco:'BBVA Argentina',agente:'BUHAPAY'},{pais:'AR',banco:'Galicia',agente:'BUHAPAY'},
+  {pais:'PE',banco:'Banbif',agente:'ONLINEPRO'},{pais:'PE',banco:'Banbif',agente:'SURTCAPITAL'},
+  {pais:'PE',banco:'BBVA',agente:'ONLINEPRO'},{pais:'PE',banco:'BBVA',agente:'SURTCAPITAL'},
+  {pais:'PE',banco:'BBVA',agente:'MALISAC'},{pais:'PE',banco:'Interbank',agente:'ONLINEPRO'},
+  {pais:'PE',banco:'Interbank',agente:'MALISAC'},{pais:'PE',banco:'Interbank',agente:'TPROG'},
+  {pais:'PE',banco:'BCP',agente:'ONLINEPRO'},{pais:'PE',banco:'BCP',agente:'MALISAC'},
+  {pais:'PE',banco:'BCP',agente:'TPROG'},{pais:'PE',banco:'BCP',agente:'SURTCAPITAL'},
+];
+const EXTR_PAIS={CO:{flag:'🇨🇴',name:'Colombia'},AR:{flag:'🇦🇷',name:'Argentina'},PE:{flag:'🇵🇪',name:'Perú'}};
+let _extrSelected=new Set();
+let _extrDateMode='ontem';
+let _extrPanelOpen=false;
+
+function _extrKey(t){return `${t.pais}__${t.banco}__${t.agente}`;}
+
+function _extrFmtYesterday(){
+  const d=new Date();d.setDate(d.getDate()-1);
+  return d.toISOString().slice(0,10);
+}
+
+function _extrInit(){
+  _extrSelected.clear();
+  _extrDateMode='ontem';
+  _extrPanelOpen=false;
+  const panel=document.getElementById('extr-ms-panel');
+  if(panel) panel.style.display='none';
+  const chevron=document.getElementById('extr-ms-chevron');
+  if(chevron) chevron.style.transform='';
+  const range=document.getElementById('extr-date-range');
+  if(range) range.style.display='none';
+  document.querySelectorAll('input[name="extr-date-mode"]').forEach(r=>{r.checked=r.value==='ontem';});
+  _extrUpdateUI();
+  _extrRenderList();
+  document.removeEventListener('click',_extrOutsideClick);
+  document.addEventListener('click',_extrOutsideClick);
+}
+
+function _extrOutsideClick(e){
+  const wrap=document.getElementById('extr-ms-wrap');
+  if(wrap&&!wrap.contains(e.target)) _extrCloseDropdown();
+}
+
+function _extrToggleDropdown(){
+  if(_extrPanelOpen) _extrCloseDropdown();
+  else _extrOpenDropdown();
+}
+
+function _extrOpenDropdown(){
+  _extrPanelOpen=true;
+  const panel=document.getElementById('extr-ms-panel');
+  if(panel){panel.style.display='flex';panel.style.flexDirection='column';}
+  const chevron=document.getElementById('extr-ms-chevron');
+  if(chevron) chevron.style.transform='rotate(180deg)';
+  const search=document.getElementById('extr-ms-search');
+  if(search){search.value='';setTimeout(()=>search.focus(),50);}
+  _extrRenderList();
+}
+
+function _extrCloseDropdown(){
+  _extrPanelOpen=false;
+  const panel=document.getElementById('extr-ms-panel');
+  if(panel) panel.style.display='none';
+  const chevron=document.getElementById('extr-ms-chevron');
+  if(chevron) chevron.style.transform='';
+}
+
+function _extrSearch(){_extrRenderList();}
+
+function _extrRenderList(){
+  const q=(document.getElementById('extr-ms-search')?.value||'').toLowerCase();
+  const groups={};
+  EXTR_TAREFAS.forEach(tarefa=>{
+    const key=_extrKey(tarefa);
+    if(q&&!tarefa.banco.toLowerCase().includes(q)&&!tarefa.agente.toLowerCase().includes(q)) return;
+    if(!groups[tarefa.pais]) groups[tarefa.pais]=[];
+    groups[tarefa.pais].push({...tarefa,key});
+  });
+  const list=document.getElementById('extr-ms-list');
+  if(!list) return;
+  let html='';let first=true;
+  ['CO','AR','PE'].forEach(pais=>{
+    const items=groups[pais];if(!items||!items.length) return;
+    const info=EXTR_PAIS[pais]||{flag:'',name:pais};
+    const allChk=items.every(i=>_extrSelected.has(i.key));
+    html+=`<div style="padding:${first?'4':'8'}px 8px 4px;display:flex;align-items:center;gap:8px;font-size:10px;font-weight:700;color:var(--e-muted);text-transform:uppercase;letter-spacing:.09em;${!first?'border-top:1px solid var(--e-ghost)':''}">
+      <input type="checkbox" id="extr-grp-${pais}" ${allChk?'checked':''} onchange="_extrToggleGroup('${pais}',this.checked)" style="accent-color:var(--e-lilac);cursor:pointer;width:14px;height:14px">
+      <label for="extr-grp-${pais}" style="cursor:pointer">${info.flag} ${info.name}</label>
+    </div>`;
+    items.forEach(i=>{
+      const chk=_extrSelected.has(i.key);
+      html+=`<label style="display:flex;align-items:center;gap:9px;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--e-text)" onmouseover="this.style.background='var(--e-ghost)'" onmouseout="this.style.background=''">
+        <input type="checkbox" value="${i.key}" ${chk?'checked':''} onchange="_extrToggleItem('${i.key}',this.checked)" style="accent-color:var(--e-lilac);cursor:pointer;width:13px;height:13px;flex-shrink:0">
+        <span><span style="color:var(--e-muted)">${i.banco}</span> – ${i.agente}</span>
+      </label>`;
+    });
+    first=false;
+  });
+  if(!html) html=`<div style="padding:20px;text-align:center;font-size:12px;color:var(--e-muted)">—</div>`;
+  list.innerHTML=html;
+  // Set indeterminate on group checkboxes
+  ['CO','AR','PE'].forEach(pais=>{
+    const items=groups[pais]||[];
+    const el=document.getElementById('extr-grp-'+pais);
+    if(el&&items.length){
+      const some=items.some(i=>_extrSelected.has(i.key));
+      const all=items.every(i=>_extrSelected.has(i.key));
+      el.indeterminate=some&&!all;
+    }
+  });
+}
+
+function _extrToggleItem(key,checked){
+  if(checked) _extrSelected.add(key); else _extrSelected.delete(key);
+  _extrUpdateUI();_extrRenderList();
+}
+
+function _extrToggleGroup(pais,checked){
+  EXTR_TAREFAS.filter(t=>t.pais===pais).forEach(t=>{
+    if(checked) _extrSelected.add(_extrKey(t)); else _extrSelected.delete(_extrKey(t));
+  });
+  _extrUpdateUI();_extrRenderList();
+}
+
+function _extrUpdateUI(){
+  const n=_extrSelected.size;
+  const label=document.getElementById('extr-ms-label');
+  if(label){
+    if(n===0){label.textContent=t('extr-sel-ph');label.style.color='var(--e-muted)';}
+    else{label.textContent=t('extr-n-sel').replace('{n}',n);label.style.color='var(--e-text)';}
+  }
+  // Chips
+  const chips=document.getElementById('extr-chips');
+  if(chips){
+    chips.innerHTML=[..._extrSelected].map(key=>{
+      const parts=key.split('__');
+      const lbl=`${parts[1]} – ${parts[2]}`;
+      return `<span style="display:inline-flex;align-items:center;gap:5px;background:var(--e-ghost);border:1px solid var(--e-pale);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--e-text)">
+        ${lbl}
+        <span onclick="_extrToggleItem('${key}',false)" style="cursor:pointer;color:var(--e-muted);font-size:14px;line-height:1;margin-left:1px">×</span>
+      </span>`;
+    }).join('');
+  }
+  // Run button
+  const btn=document.getElementById('extr-run-btn');
+  if(btn){
+    btn.disabled=n===0;
+    btn.style.opacity=n===0?'.45':'1';
+    btn.style.cursor=n===0?'not-allowed':'pointer';
+  }
+}
+
+function _extrSetDate(mode){
+  _extrDateMode=mode;
+  const range=document.getElementById('extr-date-range');
+  if(!range) return;
+  range.style.display=mode==='custom'?'block':'none';
+  if(mode==='custom'){
+    const y=_extrFmtYesterday();
+    const f=document.getElementById('extr-from');
+    const to=document.getElementById('extr-to');
+    if(f&&!f.value) f.value=y;
+    if(to&&!to.value) to.value=y;
+  }
+}
+
+async function runExtratosJob(){
+  if(_extrSelected.size===0) return;
+  const btn=document.getElementById('extr-run-btn');
+  const status=document.getElementById('extr-job-status');
+  let dateFrom,dateTo;
+  if(_extrDateMode==='ontem'){
+    dateFrom=dateTo=_extrFmtYesterday();
+  } else {
+    dateFrom=document.getElementById('extr-from')?.value;
+    dateTo=document.getElementById('extr-to')?.value;
+    if(!dateFrom||!dateTo){_toast('Preencha as datas.',3000);return;}
+  }
+  const contas=[..._extrSelected].map(key=>{const p=key.split('__');return{pais:p[0],banco:p[1],agente:p[2]};});
+  const jobId='extr_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  const job={type:'download_extratos',status:'pending',requested_by:window._loggedEmail||'—',created_at:Date.now(),params:{contas,date_from:dateFrom,date_to:dateTo}};
+  if(btn){btn.disabled=true;btn.style.opacity='.45';}
+  if(status){status.style.display='';status.innerHTML=`<span style="color:var(--e-muted)">⏳ Enviando job...</span>`;}
+  try{
+    await _getEronFb().database().ref('jobRequests/'+jobId).set(job);
+    if(status) status.innerHTML=`<span style="color:#059669">✅ Job <b>${jobId}</b> criado com sucesso.</span><br><span style="font-size:11px;color:var(--e-muted)">${contas.length} conta(s) · ${dateFrom}${dateFrom!==dateTo?' → '+dateTo:''}</span>`;
+  } catch(e){
+    if(status) status.innerHTML=`<span style="color:#dc2626">❌ Erro: ${e.message}</span>`;
+  } finally{
+    if(btn){btn.disabled=_extrSelected.size===0;btn.style.opacity=_extrSelected.size===0?'.45':'1';}
+  }
+}
+
+function _updateAutomacoesVisibility(){
+  const show=_currentEnv==='eron';
+  ['automacoes-toggle','automacoes-children','automacoes-divider'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display=show?'':'none';
+  });
+}
 function _updateEnvSwitcher(){
+  _updateAutomacoesVisibility();
   const wrap=document.getElementById('env-switcher-wrap');
   if(!wrap) return;
   const logU=store.responsaveis.find(r=>r.email===window._loggedEmail);
