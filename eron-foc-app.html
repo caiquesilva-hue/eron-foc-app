@@ -2153,6 +2153,7 @@ const i18n = {
     'conc-modal-new':'Nova Conciliação','conc-modal-edit-prefix':'Editar: ',
     'ph-buscar':'Buscar...','ph-buscar-gateway':'Buscar por ID, nome ou país...',
     'vol-gw-sem-volume':'Gateway sem volume importado','vol-import-first':'Importe os dados primeiro em Gerencial › Conciliações → Importar Volume',
+    'vol-add-by-id-ph':'Adicionar por ID (ex: 1410)','vol-add-by-id-btn':'+ Adicionar',
     'job-banner-title':'Job iniciado – chamando o robô.','job-banner-desc':'Pode demorar até 1 min para iniciar (o robot verifica o Firebase a cada ~1 min). Pode usar sua máquina normalmente.',
     'lbl-prioridade-volume':'Prioridade por Volume','lbl-tipos-operacao':'Tipos de operação',
     'lbl-encerrar-concil':'Encerrar conciliação','encerrar-concil-desc':'Marca a conciliação como inativa permanentemente.',
@@ -2253,6 +2254,7 @@ const i18n = {
     'conc-modal-new':'New Reconciliation','conc-modal-edit-prefix':'Edit: ',
     'ph-buscar':'Search...','ph-buscar-gateway':'Search by ID, name or country...',
     'vol-gw-sem-volume':'Gateway without volume data','vol-import-first':'Import data first in Gerencial › Reconciliations → Import Volume',
+    'vol-add-by-id-ph':'Add by ID (e.g. 1410)','vol-add-by-id-btn':'+ Add',
     'job-banner-title':'Job started – calling the robot.','job-banner-desc':'May take up to 1 min to start (the robot checks Firebase every ~1 min). You can use your machine normally.',
     'lbl-prioridade-volume':'Volume Priority','lbl-tipos-operacao':'Operation Types',
     'lbl-encerrar-concil':'Close reconciliation','encerrar-concil-desc':'Permanently marks this reconciliation as inactive.',
@@ -2354,6 +2356,7 @@ const i18n = {
     'conc-modal-new':'Nueva Conciliación','conc-modal-edit-prefix':'Editar: ',
     'ph-buscar':'Buscar...','ph-buscar-gateway':'Buscar por ID, nombre o país...',
     'vol-gw-sem-volume':'Gateway sin datos de volumen','vol-import-first':'Importe los datos primero en Gerencial › Conciliaciones → Importar Volumen',
+    'vol-add-by-id-ph':'Agregar por ID (ej: 1410)','vol-add-by-id-btn':'+ Agregar',
     'job-banner-title':'Job iniciado – llamando al robot.','job-banner-desc':'Puede tardar hasta 1 min en iniciar (el robot verifica Firebase cada ~1 min). Puede usar su máquina normalmente.',
     'lbl-prioridade-volume':'Prioridad por Volumen','lbl-tipos-operacao':'Tipos de operación',
     'lbl-encerrar-concil':'Cerrar conciliación','encerrar-concil-desc':'Marca la conciliación como inactiva permanentemente.',
@@ -6546,8 +6549,8 @@ function openConciliacaoModal(editIdx=-1){
           <div class="contas-ms-tags" id="vol-combined-ms-tags"></div>
         </div>
         <div style="display:flex;gap:6px;margin-top:6px;align-items:center">
-          <input type="text" id="vol-add-manual-id" placeholder="Adicionar por ID (ex: 1410)" style="flex:1;padding:5px 10px;font-size:12px;border:1px solid var(--e-pale);border-radius:6px;background:var(--e-bg);color:var(--e-text);min-width:0" onkeydown="if(event.key==='Enter'){event.preventDefault();addGatewayById();}">
-          <button type="button" onclick="addGatewayById()" style="padding:5px 12px;font-size:12px;border-radius:6px;border:1px solid var(--e-accent);color:var(--e-accent);background:transparent;cursor:pointer;white-space:nowrap;font-weight:600">+ Adicionar</button>
+          <input type="text" id="vol-add-manual-id" placeholder="${t('vol-add-by-id-ph')}" style="flex:1;padding:5px 10px;font-size:12px;border:1px solid var(--e-pale);border-radius:6px;background:var(--e-bg);color:var(--e-text);min-width:0" onkeydown="if(event.key==='Enter'){event.preventDefault();addGatewayById();}">
+          <button type="button" onclick="addGatewayById()" style="padding:5px 12px;font-size:12px;border-radius:6px;border:1px solid var(--e-accent);color:var(--e-accent);background:transparent;cursor:pointer;white-space:nowrap;font-weight:600">${t('vol-add-by-id-btn')}</button>
         </div>
       </div>
     </div>
