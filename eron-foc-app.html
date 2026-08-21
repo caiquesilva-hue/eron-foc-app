@@ -5204,7 +5204,7 @@ function _fbSetCronoEntry(storeKey,entry){
 function _fbSync(field){
   if(typeof _fbRef==='undefined') return;
   let val;
-  if(field==='cierreData'||field==='cronogramaData'){
+  if(field==='cierreData'||field==='cronogramaData'||field==='concilVolumeMap'){
     val={};Object.entries(store[field]||{}).forEach(([k,v])=>val[_encFbKey(k)]=v);
   } else if(field==='credentials'){
     val={};Object.entries(store.credentials).forEach(([k,v])=>val[_encK(k)]=v);
@@ -5255,7 +5255,7 @@ function _applyFbData(saved){
   if(saved.processadoresResp&&!_ownWrites.processadoresResp)store.processadoresResp=saved.processadoresResp;
   if(saved.conciliacoesPrioridade&&!_ownWrites.conciliacoesPrioridade)store.conciliacoesPrioridade=saved.conciliacoesPrioridade;
   if(saved.volumeRankings&&!_ownWrites.volumeRankings)store.volumeRankings=saved.volumeRankings;
-  if(saved.concilVolumeMap&&!_ownWrites.concilVolumeMap)store.concilVolumeMap=saved.concilVolumeMap;
+  if(saved.concilVolumeMap&&!_ownWrites.concilVolumeMap){const _cvm={};Object.entries(saved.concilVolumeMap).forEach(([k,v])=>{_cvm[_decFbKey(k)]=v;});store.concilVolumeMap=_cvm;}
   if(saved.ignoredGatewayIds&&!_ownWrites.ignoredGatewayIds)store.ignoredGatewayIds=saved.ignoredGatewayIds;
   if(saved.liquidacoesConfig&&!_ownWrites.liquidacoesConfig)store.liquidacoesConfig=saved.liquidacoesConfig;
   if(saved.liquidacoesStatus&&!_ownWrites.liquidacoesStatus)store.liquidacoesStatus=saved.liquidacoesStatus;
@@ -5661,7 +5661,7 @@ function _renderJobMonitor(job){
   }).join('');
   const dateLabel=dateFrom+(dateFrom!==dateTo&&dateTo?' → '+dateTo:'');
   div.style.display='';
-  const _bannerHtml=(status==='pending'||status==='running')?`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:12px;color:#92400e;line-height:1.5;margin-top:10px"><strong>Job iniciado – chamando o robô.</strong> ⚠️ Pode demorar até 1 min para iniciar (o robot verifica o Firebase a cada ~1 min). Pode usar sua máquina normalmente.</div>`:'';
+  const _bannerHtml=(status==='pending'||status==='running')?`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:12px;color:#92400e;line-height:1.5;margin-top:10px"><strong>Job iniciado – chamando o robô.</strong><br>⚠️ Pode demorar até 1 min para iniciar (o robot verifica o Firebase a cada ~1 min). Pode usar sua máquina normalmente.</div>`:'';
   const _logSection=logs.length?`<div id="job-log-box" style="background:#0f172a;border-radius:8px;padding:12px 14px;max-height:240px;overflow-y:auto;font-family:'SFMono-Regular',Consolas,monospace;font-size:12px;margin-top:10px">${logsHtml}</div>`:'';
   div.innerHTML=`
 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
