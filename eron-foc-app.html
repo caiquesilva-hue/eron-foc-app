@@ -6466,10 +6466,10 @@ function openConciliacaoModal(editIdx=-1){
   _tipoAtivosConc=tipoAtualInit==='mista'?['processadores','bancos']:tipoAtualInit==='processadores'?['processadores']:['bancos'];
   const concId=isEdit?(conc.id||conc.nome).replace(/['"]/g,''):'';
   const concMap=(store.concilVolumeMap||{})[concId]||{};
-  _selectedCashinIds=concMap.cashinIds?[...concMap.cashinIds]:(concMap.cashinId?[concMap.cashinId]:[]);
-  _selectedCashoutIds=concMap.cashoutIds?[...concMap.cashoutIds]:(concMap.cashoutId?[concMap.cashoutId]:[]);
-  _selectedRefundIds=concMap.refundIds?[...concMap.refundIds]:[];
-  _selectedChargebackIds=concMap.chargebackIds?[...concMap.chargebackIds]:[];
+  _selectedCashinIds=concMap.cashinIds?concMap.cashinIds.map(String):(concMap.cashinId?[String(concMap.cashinId)]:[]);
+  _selectedCashoutIds=concMap.cashoutIds?concMap.cashoutIds.map(String):(concMap.cashoutId?[String(concMap.cashoutId)]:[]);
+  _selectedRefundIds=concMap.refundIds?concMap.refundIds.map(String):[];
+  _selectedChargebackIds=concMap.chargebackIds?concMap.chargebackIds.map(String):[];
   _selectedGatewayIds=[...new Set([..._selectedCashinIds,..._selectedCashoutIds,..._selectedRefundIds,..._selectedChargebackIds])];
   // backward compat: infer tiposOperacao from existing linked IDs
   _selectedOpTypes=concMap.tiposOperacao?[...concMap.tiposOperacao]:[
@@ -7157,7 +7157,7 @@ function renderVolCombinedTags(){
     let e=null;
     for(const tp of [..._selectedOpTypes,'cashin','cashout','refunds','chargebacks']){e=(store.volumeRankings?.[tp]||{})[id];if(e) break;}
     const lbl=e?`#${e.rank} ${e.name} (${e.country||'?'})`:id;
-    const sid=id.replace(/'/g,"\\'");
+    const sid=String(id).replace(/'/g,"\\'");
     return `<span class="contas-tag">${lbl}<button type="button" onclick="toggleVolCombined('${sid}',false);renderVolCombinedList();renderVolCombinedTags()">×</button></span>`;
   }).join('');
 }
