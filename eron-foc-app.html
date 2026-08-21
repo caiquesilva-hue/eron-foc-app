@@ -7002,23 +7002,24 @@ function _parseCashoutCSV(text){
   sorted.forEach((e,i)=>{data[e.id]={rank:i+1,name:e.name,country:e.country,usd:e.usd};});
   return {data,count:sorted.length};
 }
-// Refunds/Chargebacks: row(0), country(1), name(2), usd(3) — keyed by name
+// Refunds/Chargebacks: row(0), country(1), name(2), gatewayId(3), usd(4) — keyed by ID
 function _parseRefundsCbCSV(text){
   const lines=text.trim().split('\n');
   const agg={};
   for(let i=1;i<lines.length;i++){
     const cols=_parseCSVLine(lines[i]);
-    if(cols.length<4) continue;
+    if(cols.length<5) continue;
     const country=cols[1]?.trim();
     const name=cols[2]?.trim();
-    const usd=parseFloat((cols[3]||'0').replace(/,/g,''))||0;
-    if(!name) continue;
-    if(!agg[name]) agg[name]={name,country,usd:0};
-    agg[name].usd+=usd;
+    const id=cols[3]?.trim();
+    const usd=parseFloat((cols[4]||'0').replace(/,/g,''))||0;
+    if(!id) continue;
+    if(!agg[id]) agg[id]={id,name,country,usd:0};
+    agg[id].usd+=usd;
   }
   const sorted=Object.values(agg).sort((a,b)=>b.usd-a.usd);
   const data={};
-  sorted.forEach((e,i)=>{data[e.name]={rank:i+1,country:e.country,usd:e.usd};});
+  sorted.forEach((e,i)=>{data[e.id]={rank:i+1,name:e.name,country:e.country,usd:e.usd};});
   return {data,count:sorted.length};
 }
 function _rebuildCombinedRanking(){
