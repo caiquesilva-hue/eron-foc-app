@@ -8003,4 +8003,15 @@ function renderGerencialLiquidacoes(){
 }
 // ── End Liquidações Module ──────────────────────────────────────────
 _initApp();
+
+// Força repaint ao voltar para a aba — Chrome descarta tiles de GPU em
+// containers overflow:hidden + overflow-y:auto quando a aba fica em background.
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) return;
+  const p = document.querySelector('.page.active');
+  if (!p) return;
+  p.style.display = 'none';
+  p.offsetHeight; // força reflow
+  p.style.display = 'block';
+});
 </script>
