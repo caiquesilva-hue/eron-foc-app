@@ -1277,17 +1277,8 @@
                   <input type="radio" name="extr-date-mode" value="custom" onchange="_extrSetDate('custom')" style="accent-color:var(--e-lilac);width:15px;height:15px;flex-shrink:0">
                   <span data-i18n="extr-date-custom">Personalizado</span>
                 </label>
-                <div id="extr-date-range" style="display:none;margin-left:25px">
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
-                    <div>
-                      <div style="font-size:11px;font-weight:600;color:#374151;margin-bottom:5px" data-i18n="extr-date-from">De</div>
-                      <input type="date" id="extr-from" style="width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;outline:none;color:#111827">
-                    </div>
-                    <div>
-                      <div style="font-size:11px;font-weight:600;color:#374151;margin-bottom:5px" data-i18n="extr-date-to">Até</div>
-                      <input type="date" id="extr-to" style="width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;outline:none;color:#111827">
-                    </div>
-                  </div>
+                <div id="extr-date-range" style="display:none;margin-left:25px;margin-top:6px">
+                  <input type="date" id="extr-from" style="width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;outline:none;color:#111827">
                 </div>
               </div>
             </div>
@@ -5571,11 +5562,8 @@ function _extrSetDate(mode){
   if(!range) return;
   range.style.display=mode==='custom'?'block':'none';
   if(mode==='custom'){
-    const y=_extrFmtYesterday();
     const f=document.getElementById('extr-from');
-    const to=document.getElementById('extr-to');
-    if(f&&!f.value) f.value=y;
-    if(to&&!to.value) to.value=y;
+    if(f&&!f.value) f.value=_extrFmtYesterday();
   }
 }
 
@@ -5636,8 +5624,8 @@ async function runExtratosJob(){
     dateFrom=dateTo=_extrFmtYesterday();
   } else {
     dateFrom=document.getElementById('extr-from')?.value;
-    dateTo=document.getElementById('extr-to')?.value;
-    if(!dateFrom||!dateTo){_toast('Preencha as datas.',3000);return;}
+    if(!dateFrom){_toast('Selecione uma data.',3000);return;}
+    dateTo=dateFrom;
   }
   const contas=[..._extrSelected].map(key=>{const p=key.split('__');return{pais:p[0],banco:p[1],agente:p[2]};});
   const jobId='extr_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
