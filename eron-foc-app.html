@@ -108,6 +108,7 @@
   /* BUTTONS */
   .btn-primary{background:var(--e-purple);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .15s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
   .btn-primary:hover{opacity:.88;}
+  #page-automacoes-baixa{--e-purple:#7c3aed;}
   .btn-secondary{background:#fff;color:var(--e-sub);border:1px solid var(--e-pale);border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:border-color .15s;white-space:nowrap;}
   .btn-secondary:hover{border-color:var(--e-muted);}
   .btn-danger{background:#ef4444;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .15s;white-space:nowrap;}
@@ -1270,15 +1271,15 @@
               <div style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.09em;margin-bottom:14px" data-i18n="extr-date-label">Data</div>
               <div style="display:flex;flex-direction:column;gap:10px">
                 <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--e-text)">
-                  <input type="radio" name="extr-date-mode" value="ontem" checked onchange="_extrSetDate('ontem')" style="accent-color:var(--e-lilac);width:15px;height:15px;flex-shrink:0">
+                  <input type="radio" name="extr-date-mode" value="ontem" checked onchange="_extrSetDate('ontem')" style="accent-color:var(--e-purple);width:15px;height:15px;flex-shrink:0">
                   <span data-i18n="extr-date-yesterday">Ontem</span>
                 </label>
                 <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--e-text)">
-                  <input type="radio" name="extr-date-mode" value="custom" onchange="_extrSetDate('custom')" style="accent-color:var(--e-lilac);width:15px;height:15px;flex-shrink:0">
+                  <input type="radio" name="extr-date-mode" value="custom" onchange="_extrSetDate('custom')" style="accent-color:var(--e-purple);width:15px;height:15px;flex-shrink:0">
                   <span data-i18n="extr-date-custom">Personalizado</span>
                 </label>
                 <div id="extr-date-range" style="display:none;margin-left:25px;margin-top:6px">
-                  <input type="date" id="extr-from" style="width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;outline:none;color:#111827">
+                  <input type="date" id="extr-from" oninput="_extrUpdateUI()" style="width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;outline:none;color:#111827">
                 </div>
               </div>
             </div>
@@ -1286,7 +1287,7 @@
               <div style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.09em;margin-bottom:10px">Tipo de download</div>
               <div style="display:flex;background:#ede9fe;border-radius:20px;padding:3px;gap:2px">
                 <button type="button" id="extr-tipo-extrato" onclick="_extrSetTipo('extrato')" style="flex:1;border:none;border-radius:17px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;background:#7c3aed;color:#fff;font-family:inherit">Extrato Cru</button>
-                <button type="button" id="extr-tipo-pdf" onclick="_extrSetTipo('pdf')" style="flex:1;border:none;border-radius:17px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;background:transparent;color:#4c1d95;font-family:inherit">PDF</button>
+                <button type="button" id="extr-tipo-pdf" onclick="_extrSetTipo('pdf')" style="flex:1;border:none;border-radius:17px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;background:transparent;color:#5b21b6;font-family:inherit">PDF</button>
               </div>
             </div>
             <div onclick="_extrToggleImportador()" style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:14px 20px;cursor:pointer;gap:12px;user-select:none">
@@ -1320,7 +1321,7 @@
             <!-- Mode toggle -->
             <div style="display:flex;background:#ede9fe;border-radius:20px;padding:3px;gap:2px">
               <button type="button" id="cred-btn-update" onclick="_credSetMode('update')" style="flex:1;border:none;border-radius:17px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;background:#7c3aed;color:#fff;font-family:inherit" data-i18n="cred-mode-upd">Atualizar existente</button>
-              <button type="button" id="cred-btn-new" onclick="_credSetMode('new')" style="flex:1;border:none;border-radius:17px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;background:transparent;color:#4c1d95;font-family:inherit" data-i18n="cred-mode-new">Criar nova</button>
+              <button type="button" id="cred-btn-new" onclick="_credSetMode('new')" style="flex:1;border:none;border-radius:17px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;background:transparent;color:#5b21b6;font-family:inherit" data-i18n="cred-mode-new">Criar nova</button>
             </div>
             <!-- Bank select -->
             <div>
@@ -5436,6 +5437,7 @@ let _extrDateMode='ontem';
 let _extrPanelOpen=false;
 let _extrTipo='extrato';
 let _extrImportador=false;
+let _jobRunning=false;
 
 function _extrKey(t){return `${t.pais}__${t.banco}__${t.agente}`;}
 
@@ -5450,9 +5452,11 @@ function _extrInit(){
   _extrPanelOpen=false;
   _extrTipo='extrato';
   _extrImportador=false;
+  _jobRunning=false;
+  _jobMonitorLastKey=null;
   const et=document.getElementById('extr-tipo-extrato');const pt=document.getElementById('extr-tipo-pdf');
   if(et){et.style.background='#7c3aed';et.style.color='#fff';}
-  if(pt){pt.style.background='transparent';pt.style.color='#4c1d95';}
+  if(pt){pt.style.background='transparent';pt.style.color='#5b21b6';}
   const itrack=document.getElementById('extr-imp-track');const ithumb=document.getElementById('extr-imp-thumb');
   if(itrack) itrack.style.background='#d1d5db';
   if(ithumb) ithumb.style.left='2px';
@@ -5577,9 +5581,13 @@ function _extrUpdateUI(){
   // Run button
   const btn=document.getElementById('extr-run-btn');
   if(btn){
-    btn.disabled=n===0;
-    btn.style.opacity=n===0?'.45':'1';
-    btn.style.cursor=n===0?'not-allowed':'pointer';
+    const dateOk=_extrDateMode!=='custom'||!!document.getElementById('extr-from')?.value;
+    const enabled=n>0&&dateOk&&!_jobRunning;
+    btn.disabled=!enabled;
+    btn.style.background=enabled?'':'#d1d5db';
+    btn.style.color=enabled?'':'#6b7280';
+    btn.style.opacity='1';
+    btn.style.cursor=enabled?'pointer':'not-allowed';
   }
 }
 
@@ -5587,8 +5595,8 @@ function _extrSetTipo(t){
   _extrTipo=t;
   const ea=document.getElementById('extr-tipo-extrato');
   const pa=document.getElementById('extr-tipo-pdf');
-  if(ea){ea.style.background=t==='extrato'?'#7c3aed':'transparent';ea.style.color=t==='extrato'?'#fff':'#4c1d95';}
-  if(pa){pa.style.background=t==='pdf'?'#7c3aed':'transparent';pa.style.color=t==='pdf'?'#fff':'#4c1d95';}
+  if(ea){ea.style.background=t==='extrato'?'#7c3aed':'transparent';ea.style.color=t==='extrato'?'#fff':'#5b21b6';}
+  if(pa){pa.style.background=t==='pdf'?'#7c3aed':'transparent';pa.style.color=t==='pdf'?'#fff':'#5b21b6';}
 }
 function _extrToggleImportador(){
   _extrImportador=!_extrImportador;
@@ -5606,16 +5614,19 @@ function _extrSetDate(mode){
     const f=document.getElementById('extr-from');
     if(f&&!f.value) f.value=_extrFmtYesterday();
   }
+  _extrUpdateUI();
 }
 
 // ── Job live monitor ──────────────────────────────────────────────────────
-let _jobMonitorRef=null, _jobMonitorCb=null, _jobMonitorMeta=null;
+let _jobMonitorRef=null, _jobMonitorCb=null, _jobMonitorMeta=null, _jobMonitorLastKey=null;
 function _escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function _stopJobMonitor(){
   if(_jobMonitorRef&&_jobMonitorCb){_jobMonitorRef.off('value',_jobMonitorCb);_jobMonitorCb=null;_jobMonitorRef=null;}
+  _jobMonitorLastKey=null;
 }
 function _startJobMonitor(jobId,meta){
-  _stopJobMonitor();
+  // Só limpa o ref anterior — NÃO reseta _jobMonitorLastKey para evitar flash
+  if(_jobMonitorRef&&_jobMonitorCb){_jobMonitorRef.off('value',_jobMonitorCb);_jobMonitorCb=null;_jobMonitorRef=null;}
   _jobMonitorMeta=meta;
   _jobMonitorRef=_getEronFb().database().ref('jobRequests/'+jobId);
   _jobMonitorCb=_jobMonitorRef.on('value',snap=>{
@@ -5627,6 +5638,14 @@ function _renderJobMonitor(job){
   const div=document.getElementById('extr-job-status');
   if(!div) return;
   const status=job.status||'pending';
+  const _logKeys=job.logs?Object.keys(job.logs):[];
+  const _renderKey=status+'|'+_logKeys.length+'|'+(_logKeys[_logKeys.length-1]||'');
+  if(_renderKey===_jobMonitorLastKey) return;
+  _jobMonitorLastKey=_renderKey;
+  if((status==='completed'||status==='failed')&&_jobRunning){
+    _jobRunning=false;
+    _extrUpdateUI();
+  }
   const {nContas=0,dateFrom='',dateTo=''}=_jobMonitorMeta||{};
   const SI={
     pending:{c:'#6b7280',bg:'#f3f4f6',label:'Aguardando robot'},
@@ -5642,54 +5661,48 @@ function _renderJobMonitor(job){
   }).join('');
   const dateLabel=dateFrom+(dateFrom!==dateTo&&dateTo?' → '+dateTo:'');
   div.style.display='';
+  const _bannerHtml=(status==='pending'||status==='running')?`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:12px;color:#92400e;line-height:1.5;margin-top:10px"><strong>Job iniciado – chamando o robô.</strong> ⚠️ Pode demorar até 1 min para iniciar (o robot verifica o Firebase a cada ~1 min). Pode usar sua máquina normalmente.</div>`:'';
+  const _logSection=logs.length?`<div id="job-log-box" style="background:#0f172a;border-radius:8px;padding:12px 14px;max-height:240px;overflow-y:auto;font-family:'SFMono-Regular',Consolas,monospace;font-size:12px;margin-top:10px">${logsHtml}</div>`:'';
   div.innerHTML=`
-<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
   <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
     <span style="background:${SI.bg};color:${SI.c};padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">${SI.label}</span>
     ${sum?`<span style="font-size:12px;color:#6b7280">${sum.concluidos}/${sum.total} contas · ${sum.erros} erro(s)</span>`:''}
   </div>
   <span style="font-size:11px;color:var(--e-muted)">${nContas} conta(s) · ${dateLabel}</span>
 </div>
-${logs.length?`<div id="job-log-box" style="background:#0f172a;border-radius:8px;padding:12px 14px;max-height:240px;overflow-y:auto;font-family:'SFMono-Regular',Consolas,monospace;font-size:12px">${logsHtml}</div>`
-:`<div style="font-size:12px;color:var(--e-muted);text-align:center;padding:16px 0">Aguardando logs do robot...</div>`}`;
+${_bannerHtml}
+${_logSection}`;
   const box=document.getElementById('job-log-box');
   if(box) box.scrollTop=box.scrollHeight;
 }
 
 async function runExtratosJob(){
-  if(_extrSelected.size===0) return;
-  const btn=document.getElementById('extr-run-btn');
+  if(_extrSelected.size===0||_jobRunning) return;
+  _jobRunning=true;
+  _extrUpdateUI();
   const statusDiv=document.getElementById('extr-job-status');
   let dateFrom,dateTo;
   if(_extrDateMode==='ontem'){
     dateFrom=dateTo=_extrFmtYesterday();
   } else {
     dateFrom=document.getElementById('extr-from')?.value;
-    if(!dateFrom){_toast('Selecione uma data.',3000);return;}
+    if(!dateFrom){_jobRunning=false;_extrUpdateUI();_toast('Selecione uma data.',3000);return;}
     dateTo=dateFrom;
   }
   const contas=[..._extrSelected].map(key=>{const p=key.split('__');return{pais:p[0],banco:p[1],agente:p[2]};});
   const jobId='extr_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
   const job={type:'download_extratos',status:'pending',requested_by:window._loggedEmail||'—',created_at:Date.now(),params:{contas,date_from:dateFrom,date_to:dateTo,tipo:_extrTipo,enviar_importador:_extrImportador}};
-  if(btn){btn.disabled=true;btn.style.opacity='.45';}
-  if(statusDiv){
-    statusDiv.style.display='';
-    statusDiv.innerHTML=`
-<div style="display:flex;flex-direction:column;gap:10px">
-  <span style="color:var(--e-muted);font-size:13px">⏳ Enviando job...</span>
-  <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:12px 14px;font-size:12px;color:#92400e;line-height:1.6">
-    <strong>Job iniciado – chamando o robô.</strong><br>
-    ⚠️ <strong>Atenção:</strong> A chamada pode demorar até 1 minuto para acontecer (o robot verifica o Firebase a cada 1 min). Pode usar sua máquina normalmente enquanto isso.
-  </div>
-</div>`;
-  }
+  _jobMonitorLastKey=null;
+  _jobMonitorMeta={nContas:contas.length,dateFrom,dateTo};
+  _renderJobMonitor({status:'pending'});
   try{
     await _getEronFb().database().ref('jobRequests/'+jobId).set(job);
     _startJobMonitor(jobId,{nContas:contas.length,dateFrom,dateTo});
   } catch(e){
+    _jobRunning=false;
+    _extrUpdateUI();
     if(statusDiv) statusDiv.innerHTML=`<span style="color:#dc2626">❌ Erro: ${_escHtml(e.message)}</span>`;
-  } finally{
-    if(btn){btn.disabled=_extrSelected.size===0;btn.style.opacity=_extrSelected.size===0?'.45':'1';}
   }
 }
 
@@ -5758,7 +5771,7 @@ function _credInit(){
 function _credSetMode(mode){
   _credMode=mode;
   const active='flex:1;border:none;border-radius:17px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;background:#7c3aed;color:#fff;font-family:inherit';
-  const inactive='flex:1;border:none;border-radius:17px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;background:transparent;color:#4c1d95;font-family:inherit';
+  const inactive='flex:1;border:none;border-radius:17px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;background:transparent;color:#5b21b6;font-family:inherit';
   const u=document.getElementById('cred-btn-update'),n=document.getElementById('cred-btn-new');
   if(u) u.style.cssText=mode==='update'?active:inactive;
   if(n) n.style.cssText=mode==='new'?active:inactive;
@@ -6639,8 +6652,15 @@ function submitConciliacao(){
   const encerrado=isEdit&&(document.getElementById('conc-encerrar')?.checked||false);
   let concId;
   if(isEdit){
-    store.conciliacoes[_editConcIdx]={...store.conciliacoes[_editConcIdx],nome,pais,agente,tipo,contas,processadores,obs,frequencia,status:encerrado?'encerrada':'ativa'};
+    const _oldConc=store.conciliacoes[_editConcIdx];
+    const _oldConcId=(_oldConc.id||_oldConc.nome||'').replace(/['"]/g,'');
+    store.conciliacoes[_editConcIdx]={..._oldConc,nome,pais,agente,tipo,contas,processadores,obs,frequencia,status:encerrado?'encerrada':'ativa'};
     concId=(store.conciliacoes[_editConcIdx].id||nome).replace(/['"]/g,'');
+    // Migrar entrada do volume map se a chave mudou (renomeou sem id)
+    if(_oldConcId&&_oldConcId!==concId&&store.concilVolumeMap?.[_oldConcId]){
+      store.concilVolumeMap[concId]=store.concilVolumeMap[_oldConcId];
+      delete store.concilVolumeMap[_oldConcId];
+    }
   } else {
     concId=nome.toLowerCase().replace(/[^a-z0-9]/g,'_')+'_'+Date.now();
     store.conciliacoes.push({id:concId,nome,pais,agente,tipo,contas,processadores,obs,frequencia});
