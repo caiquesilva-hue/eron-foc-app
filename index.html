@@ -6281,6 +6281,7 @@ let _selectedCashoutIds=[];
 let _selectedRefundIds=[];
 let _selectedChargebackIds=[];
 let _selectedOpTypes=[];
+let _gatewayModified=false;
 let _unlinkedGwSelected=new Set();
 
 function _toggleUnlinkedGwSelect(type,id,checked){
@@ -6487,6 +6488,7 @@ function openConciliacaoModal(editIdx=-1){
   _selectedRefundIds=_toSA(concMap.refundIds);
   _selectedChargebackIds=_toSA(concMap.chargebackIds);
   _selectedGatewayIds=[...new Set([..._selectedCashinIds,..._selectedCashoutIds,..._selectedRefundIds,..._selectedChargebackIds])];
+  _gatewayModified=false;
   // backward compat: infer tiposOperacao from existing linked IDs
   _selectedOpTypes=concMap.tiposOperacao?[...concMap.tiposOperacao]:[
     ...(_selectedCashinIds.length?['cashin']:[]),
@@ -6681,13 +6683,18 @@ function submitConciliacao(){
     concId=nome.toLowerCase().replace(/[^a-z0-9]/g,'_')+'_'+Date.now();
     store.conciliacoes.push({id:concId,nome,pais,agente,tipo,contas,processadores,obs,frequencia});
   }
-  if(tiposOperacao.length){
+  if(!isEdit||_gatewayModified){
+    // Nova conciliação: salva sempre. Edição: só salva se o usuário modificou gateways.
     if(!store.concilVolumeMap) store.concilVolumeMap={};
-    store.concilVolumeMap[concId]={tiposOperacao,cashinIds,cashoutIds,refundIds,chargebackIds};
+    if(tiposOperacao.length){
+      store.concilVolumeMap[concId]={tiposOperacao,cashinIds,cashoutIds,refundIds,chargebackIds};
+    } else if(store.concilVolumeMap?.[concId]){
+      delete store.concilVolumeMap[concId];
+    }
     _rebuildCombinedRanking();
     _fbSync('concilVolumeMap');
-  } else if(store.concilVolumeMap?.[concId]){
-    delete store.concilVolumeMap[concId];
+  } else if(isEdit&&_oldConcId&&_oldConcId!==concId){
+    // Renomeou sem mexer nos gateways: chave já foi migrada acima, só sincroniza
     _rebuildCombinedRanking();
     _fbSync('concilVolumeMap');
   }
@@ -7164,6 +7171,7 @@ function renderVolCombinedList(){
   ||(filtered.length===0?'<div style="padding:8px 12px;font-size:12px;color:var(--e-muted)">Nenhum resultado</div>':'');
 }
 function toggleVolCombined(id,checked){
+  _gatewayModified=true;
   if(checked&&!_selectedGatewayIds.includes(id)) _selectedGatewayIds.push(id);
   else if(!checked){const i=_selectedGatewayIds.indexOf(id);if(i>=0)_selectedGatewayIds.splice(i,1);}
   renderVolCombinedTags();
@@ -7180,6 +7188,7 @@ function renderVolCombinedTags(){
   }).join('');
 }
 function toggleOpType(type){
+  _gatewayModified=true;
   const idx=_selectedOpTypes.indexOf(type);
   if(idx>=0) _selectedOpTypes.splice(idx,1);
   else _selectedOpTypes.push(type);
