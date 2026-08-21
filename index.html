@@ -1282,6 +1282,23 @@
                 </div>
               </div>
             </div>
+            <div style="background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:16px 20px">
+              <div style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.09em;margin-bottom:10px">Tipo de download</div>
+              <div style="display:flex;background:#ede9fe;border-radius:20px;padding:3px;gap:2px">
+                <button type="button" id="extr-tipo-extrato" onclick="_extrSetTipo('extrato')" style="flex:1;border:none;border-radius:17px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;background:#7c3aed;color:#fff;font-family:inherit">Extrato Cru</button>
+                <button type="button" id="extr-tipo-pdf" onclick="_extrSetTipo('pdf')" style="flex:1;border:none;border-radius:17px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;background:transparent;color:#4c1d95;font-family:inherit">PDF</button>
+              </div>
+            </div>
+            <div onclick="_extrToggleImportador()" style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:14px 20px;cursor:pointer;gap:12px;user-select:none">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--e-text)">Enviar ao importador</div>
+                <div style="font-size:11px;color:var(--e-muted);margin-top:2px">Aciona o script de importação após concluir</div>
+              </div>
+              <div style="position:relative;width:40px;height:22px;flex-shrink:0">
+                <div id="extr-imp-track" style="position:absolute;inset:0;border-radius:11px;background:#d1d5db;transition:background .18s"></div>
+                <div id="extr-imp-thumb" style="position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .18s"></div>
+              </div>
+            </div>
             <button class="btn-primary" id="extr-run-btn" onclick="runExtratosJob()" style="width:100%;padding:12px 20px;font-size:14px;justify-content:center;gap:8px;opacity:.45;cursor:not-allowed" disabled>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               <span data-i18n="extr-run">Executar</span>
@@ -5417,6 +5434,8 @@ const EXTR_PAIS={CO:{flag:'🇨🇴',name:'Colombia'},AR:{flag:'🇦🇷',name:'
 let _extrSelected=new Set();
 let _extrDateMode='ontem';
 let _extrPanelOpen=false;
+let _extrTipo='extrato';
+let _extrImportador=false;
 
 function _extrKey(t){return `${t.pais}__${t.banco}__${t.agente}`;}
 
@@ -5429,6 +5448,14 @@ function _extrInit(){
   _extrSelected.clear();
   _extrDateMode='ontem';
   _extrPanelOpen=false;
+  _extrTipo='extrato';
+  _extrImportador=false;
+  const et=document.getElementById('extr-tipo-extrato');const pt=document.getElementById('extr-tipo-pdf');
+  if(et){et.style.background='#7c3aed';et.style.color='#fff';}
+  if(pt){pt.style.background='transparent';pt.style.color='#4c1d95';}
+  const itrack=document.getElementById('extr-imp-track');const ithumb=document.getElementById('extr-imp-thumb');
+  if(itrack) itrack.style.background='#d1d5db';
+  if(ithumb) ithumb.style.left='2px';
   const panel=document.getElementById('extr-ms-panel');
   if(panel) panel.style.display='none';
   const chevron=document.getElementById('extr-ms-chevron');
@@ -5556,6 +5583,20 @@ function _extrUpdateUI(){
   }
 }
 
+function _extrSetTipo(t){
+  _extrTipo=t;
+  const ea=document.getElementById('extr-tipo-extrato');
+  const pa=document.getElementById('extr-tipo-pdf');
+  if(ea){ea.style.background=t==='extrato'?'#7c3aed':'transparent';ea.style.color=t==='extrato'?'#fff':'#4c1d95';}
+  if(pa){pa.style.background=t==='pdf'?'#7c3aed':'transparent';pa.style.color=t==='pdf'?'#fff':'#4c1d95';}
+}
+function _extrToggleImportador(){
+  _extrImportador=!_extrImportador;
+  const track=document.getElementById('extr-imp-track');
+  const thumb=document.getElementById('extr-imp-thumb');
+  if(track) track.style.background=_extrImportador?'#7c3aed':'#d1d5db';
+  if(thumb) thumb.style.left=_extrImportador?'20px':'2px';
+}
 function _extrSetDate(mode){
   _extrDateMode=mode;
   const range=document.getElementById('extr-date-range');
@@ -5629,7 +5670,7 @@ async function runExtratosJob(){
   }
   const contas=[..._extrSelected].map(key=>{const p=key.split('__');return{pais:p[0],banco:p[1],agente:p[2]};});
   const jobId='extr_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
-  const job={type:'download_extratos',status:'pending',requested_by:window._loggedEmail||'—',created_at:Date.now(),params:{contas,date_from:dateFrom,date_to:dateTo}};
+  const job={type:'download_extratos',status:'pending',requested_by:window._loggedEmail||'—',created_at:Date.now(),params:{contas,date_from:dateFrom,date_to:dateTo,tipo:_extrTipo,enviar_importador:_extrImportador}};
   if(btn){btn.disabled=true;btn.style.opacity='.45';}
   if(statusDiv){statusDiv.style.display='';statusDiv.innerHTML=`<span style="color:var(--e-muted);font-size:13px">⏳ Enviando job...</span>`;}
   try{
