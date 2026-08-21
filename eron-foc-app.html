@@ -6766,22 +6766,25 @@ function _parseCSVLine(line){
   return result;
 }
 function _parseCashinCSV(text){
+  // CSV cols: rank(0), GatewayID(1), PayMethod(2), Name(3), [Country(4)?,] USD, Count
+  // Two formats: 7-col (with Country at col4, USD at col5) or 6-col (no Country, USD at col4)
   const lines=text.trim().split('\n');
   const agg={};
   for(let i=1;i<lines.length;i++){
     const cols=_parseCSVLine(lines[i]);
-    if(cols.length<7) continue;
-    const country=cols[1]?.trim();
-    const gatewayId=cols[3]?.trim();
-    const name=cols[5]?.trim();
-    const usd=parseFloat((cols[6]||'0').replace(/,/g,''))||0;
-    if(!gatewayId||!name) continue;
-    if(!agg[gatewayId]) agg[gatewayId]={id:gatewayId,name,country,usd:0};
+    if(cols.length<6) continue;
+    const gatewayId=cols[1]?.trim();
+    if(!gatewayId||isNaN(+gatewayId)) continue;
+    const name=cols[3]?.trim()||'';
+    // Detect format: if col[4] is non-numeric → it's a Country name (7-col format)
+    const hasCountry=cols.length>=7&&isNaN(+(cols[4]||'').replace(/,/g,''));
+    const usd=parseFloat(((hasCountry?cols[5]:cols[4])||'0').replace(/,/g,''))||0;
+    if(!agg[gatewayId]) agg[gatewayId]={id:gatewayId,name,usd:0};
     agg[gatewayId].usd+=usd;
   }
   const sorted=Object.values(agg).sort((a,b)=>b.usd-a.usd);
   const cashin={};
-  sorted.forEach((e,i)=>{cashin[e.id]={rank:i+1,name:e.name,country:e.country,usd:e.usd};});
+  sorted.forEach((e,i)=>{cashin[e.id]={rank:i+1,name:e.name,usd:e.usd};});
   return {cashin,count:sorted.length};
 }
 // Cashout: row(0), id(1), country(2), name(3), usd(4)
