@@ -5579,10 +5579,58 @@ function _extrSetDate(mode){
   }
 }
 
+// ── Job live monitor ──────────────────────────────────────────────────────
+let _jobMonitorRef=null, _jobMonitorCb=null, _jobMonitorMeta=null;
+function _escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function _stopJobMonitor(){
+  if(_jobMonitorRef&&_jobMonitorCb){_jobMonitorRef.off('value',_jobMonitorCb);_jobMonitorCb=null;_jobMonitorRef=null;}
+}
+function _startJobMonitor(jobId,meta){
+  _stopJobMonitor();
+  _jobMonitorMeta=meta;
+  _jobMonitorRef=_getEronFb().database().ref('jobRequests/'+jobId);
+  _jobMonitorCb=_jobMonitorRef.on('value',snap=>{
+    const j=snap.val();
+    if(j) _renderJobMonitor(j);
+  });
+}
+function _renderJobMonitor(job){
+  const div=document.getElementById('extr-job-status');
+  if(!div) return;
+  const status=job.status||'pending';
+  const {nContas=0,dateFrom='',dateTo=''}=_jobMonitorMeta||{};
+  const SI={
+    pending:{c:'#6b7280',bg:'#f3f4f6',label:'Aguardando robot'},
+    running:{c:'#7c3aed',bg:'#ede9fe',label:'Executando'},
+    completed:{c:'#059669',bg:'#d1fae5',label:'Concluído'},
+    failed:{c:'#dc2626',bg:'#fee2e2',label:'Falhou'},
+  }[status]||{c:'#6b7280',bg:'#f3f4f6',label:status};
+  const logs=job.logs?Object.values(job.logs):[];
+  const sum=job.summary;
+  const logsHtml=logs.slice(-150).map(l=>{
+    const lc=l.level==='ERROR'?'#f87171':l.level==='WARNING'?'#fbbf24':'#94a3b8';
+    return `<div style="display:flex;gap:8px;line-height:1.6;min-width:0"><span style="color:#64748b;flex-shrink:0">${_escHtml(l.ts||'')}</span><span style="color:${lc};word-break:break-word;min-width:0">${_escHtml(l.msg||'')}</span></div>`;
+  }).join('');
+  const dateLabel=dateFrom+(dateFrom!==dateTo&&dateTo?' → '+dateTo:'');
+  div.style.display='';
+  div.innerHTML=`
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <span style="background:${SI.bg};color:${SI.c};padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">${SI.label}</span>
+    ${sum?`<span style="font-size:12px;color:#6b7280">${sum.concluidos}/${sum.total} contas · ${sum.erros} erro(s)</span>`:''}
+  </div>
+  <span style="font-size:11px;color:var(--e-muted)">${nContas} conta(s) · ${dateLabel}</span>
+</div>
+${logs.length?`<div id="job-log-box" style="background:#0f172a;border-radius:8px;padding:12px 14px;max-height:240px;overflow-y:auto;font-family:'SFMono-Regular',Consolas,monospace;font-size:12px">${logsHtml}</div>`
+:`<div style="font-size:12px;color:var(--e-muted);text-align:center;padding:16px 0">Aguardando logs do robot...</div>`}`;
+  const box=document.getElementById('job-log-box');
+  if(box) box.scrollTop=box.scrollHeight;
+}
+
 async function runExtratosJob(){
   if(_extrSelected.size===0) return;
   const btn=document.getElementById('extr-run-btn');
-  const status=document.getElementById('extr-job-status');
+  const statusDiv=document.getElementById('extr-job-status');
   let dateFrom,dateTo;
   if(_extrDateMode==='ontem'){
     dateFrom=dateTo=_extrFmtYesterday();
@@ -5595,12 +5643,12 @@ async function runExtratosJob(){
   const jobId='extr_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
   const job={type:'download_extratos',status:'pending',requested_by:window._loggedEmail||'—',created_at:Date.now(),params:{contas,date_from:dateFrom,date_to:dateTo}};
   if(btn){btn.disabled=true;btn.style.opacity='.45';}
-  if(status){status.style.display='';status.innerHTML=`<span style="color:var(--e-muted)">⏳ Enviando job...</span>`;}
+  if(statusDiv){statusDiv.style.display='';statusDiv.innerHTML=`<span style="color:var(--e-muted);font-size:13px">⏳ Enviando job...</span>`;}
   try{
     await _getEronFb().database().ref('jobRequests/'+jobId).set(job);
-    if(status) status.innerHTML=`<span style="color:#059669">✅ Job <b>${jobId}</b> criado com sucesso.</span><br><span style="font-size:11px;color:var(--e-muted)">${contas.length} conta(s) · ${dateFrom}${dateFrom!==dateTo?' → '+dateTo:''}</span>`;
+    _startJobMonitor(jobId,{nContas:contas.length,dateFrom,dateTo});
   } catch(e){
-    if(status) status.innerHTML=`<span style="color:#dc2626">❌ Erro: ${e.message}</span>`;
+    if(statusDiv) statusDiv.innerHTML=`<span style="color:#dc2626">❌ Erro: ${_escHtml(e.message)}</span>`;
   } finally{
     if(btn){btn.disabled=_extrSelected.size===0;btn.style.opacity=_extrSelected.size===0?'.45':'1';}
   }
