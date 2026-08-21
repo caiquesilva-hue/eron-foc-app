@@ -5668,7 +5668,7 @@ function _renderJobMonitor(job){
     completed:{c:'#059669',bg:'#d1fae5',label:'Concluído'},
     failed:{c:'#dc2626',bg:'#fee2e2',label:'Falhou'},
   }[status]||{c:'#6b7280',bg:'#f3f4f6',label:status};
-  const logs=job.logs?Object.values(job.logs):[];
+  const logs=job.logs?Object.entries(job.logs).sort((a,b)=>a[0]<b[0]?-1:1).map(([,v])=>v):[];
   const sum=job.summary;
   const logsHtml=logs.slice(-150).map(l=>{
     const lc=l.level==='ERROR'?'#f87171':l.level==='WARNING'?'#fbbf24':'#94a3b8';
