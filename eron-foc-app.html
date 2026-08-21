@@ -6538,12 +6538,16 @@ function openConciliacaoModal(editIdx=-1){
         <button type="button" class="op-type-toggle" data-type="refunds" onclick="toggleOpType('refunds')">Refunds</button>
         <button type="button" class="op-type-toggle" data-type="chargebacks" onclick="toggleOpType('chargebacks')">Chargebacks</button>
       </div>
-      <div id="vol-combined-wrap" style="display:none" class="form-field" style="margin-bottom:0">
+      <div id="vol-combined-wrap" style="display:none;margin-bottom:0">
         <label class="form-label" style="font-size:11px">${t('conc-col-gateways')}</label>
         <div class="contas-ms-wrap">
           <div class="contas-ms-search"><input type="text" placeholder="${t('ph-buscar-gateway')}" id="vol-combined-ms-input" oninput="renderVolCombinedList()"></div>
           <div class="contas-ms-list" id="vol-combined-ms-list"></div>
           <div class="contas-ms-tags" id="vol-combined-ms-tags"></div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:6px;align-items:center">
+          <input type="text" id="vol-add-manual-id" placeholder="Adicionar por ID (ex: 1410)" style="flex:1;padding:5px 10px;font-size:12px;border:1px solid var(--e-pale);border-radius:6px;background:var(--e-bg);color:var(--e-text);min-width:0" onkeydown="if(event.key==='Enter'){event.preventDefault();addGatewayById();}">
+          <button type="button" onclick="addGatewayById()" style="padding:5px 12px;font-size:12px;border-radius:6px;border:1px solid var(--e-accent);color:var(--e-accent);background:transparent;cursor:pointer;white-space:nowrap;font-weight:600">+ Adicionar</button>
         </div>
       </div>
     </div>
@@ -7174,6 +7178,17 @@ function toggleVolCombined(id,checked){
   _gatewayModified=true;
   if(checked&&!_selectedGatewayIds.includes(id)) _selectedGatewayIds.push(id);
   else if(!checked){const i=_selectedGatewayIds.indexOf(id);if(i>=0)_selectedGatewayIds.splice(i,1);}
+  renderVolCombinedTags();
+}
+function addGatewayById(){
+  const inp=document.getElementById('vol-add-manual-id');
+  if(!inp) return;
+  const id=inp.value.trim();
+  if(!id) return;
+  _gatewayModified=true;
+  if(!_selectedGatewayIds.includes(id)) _selectedGatewayIds.push(id);
+  inp.value='';
+  renderVolCombinedList();
   renderVolCombinedTags();
 }
 function renderVolCombinedTags(){
