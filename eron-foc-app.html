@@ -2152,6 +2152,8 @@ const i18n = {
     'slack-sending':'Aguardando Slack...','slack-link-prev':'Link replicado do dia anterior',
     'conc-modal-new':'Nova Conciliação','conc-modal-edit-prefix':'Editar: ',
     'ph-buscar':'Buscar...','ph-buscar-gateway':'Buscar por ID, nome ou país...',
+    'vol-gw-sem-volume':'Gateway sem volume importado','vol-import-first':'Importe os dados primeiro em Gerencial › Conciliações → Importar Volume',
+    'job-banner-title':'Job iniciado – chamando o robô.','job-banner-desc':'Pode demorar até 1 min para iniciar (o robot verifica o Firebase a cada ~1 min). Pode usar sua máquina normalmente.',
     'lbl-prioridade-volume':'Prioridade por Volume','lbl-tipos-operacao':'Tipos de operação',
     'lbl-encerrar-concil':'Encerrar conciliação','encerrar-concil-desc':'Marca a conciliação como inativa permanentemente.',
     'lbl-proc-e-contas':'Processadores e contas vinculadas','lbl-proc-vinc':'Processadores vinculados',
@@ -2250,6 +2252,8 @@ const i18n = {
     'slack-sending':'Waiting for Slack...','slack-link-prev':'Link copied from previous day',
     'conc-modal-new':'New Reconciliation','conc-modal-edit-prefix':'Edit: ',
     'ph-buscar':'Search...','ph-buscar-gateway':'Search by ID, name or country...',
+    'vol-gw-sem-volume':'Gateway without volume data','vol-import-first':'Import data first in Gerencial › Reconciliations → Import Volume',
+    'job-banner-title':'Job started – calling the robot.','job-banner-desc':'May take up to 1 min to start (the robot checks Firebase every ~1 min). You can use your machine normally.',
     'lbl-prioridade-volume':'Volume Priority','lbl-tipos-operacao':'Operation Types',
     'lbl-encerrar-concil':'Close reconciliation','encerrar-concil-desc':'Permanently marks this reconciliation as inactive.',
     'lbl-proc-e-contas':'Linked processors and accounts','lbl-proc-vinc':'Linked processors',
@@ -2349,6 +2353,8 @@ const i18n = {
     'cierre-verificando':'Verificando',
     'conc-modal-new':'Nueva Conciliación','conc-modal-edit-prefix':'Editar: ',
     'ph-buscar':'Buscar...','ph-buscar-gateway':'Buscar por ID, nombre o país...',
+    'vol-gw-sem-volume':'Gateway sin datos de volumen','vol-import-first':'Importe los datos primero en Gerencial › Conciliaciones → Importar Volumen',
+    'job-banner-title':'Job iniciado – llamando al robot.','job-banner-desc':'Puede tardar hasta 1 min en iniciar (el robot verifica Firebase cada ~1 min). Puede usar su máquina normalmente.',
     'lbl-prioridade-volume':'Prioridad por Volumen','lbl-tipos-operacao':'Tipos de operación',
     'lbl-encerrar-concil':'Cerrar conciliación','encerrar-concil-desc':'Marca la conciliación como inactiva permanentemente.',
     'lbl-proc-e-contas':'Procesadores y cuentas vinculadas','lbl-proc-vinc':'Procesadores vinculados',
@@ -5255,7 +5261,16 @@ function _applyFbData(saved){
   if(saved.processadoresResp&&!_ownWrites.processadoresResp)store.processadoresResp=saved.processadoresResp;
   if(saved.conciliacoesPrioridade&&!_ownWrites.conciliacoesPrioridade)store.conciliacoesPrioridade=saved.conciliacoesPrioridade;
   if(saved.volumeRankings&&!_ownWrites.volumeRankings)store.volumeRankings=saved.volumeRankings;
-  if(saved.concilVolumeMap&&!_ownWrites.concilVolumeMap){const _cvm={};Object.entries(saved.concilVolumeMap).forEach(([k,v])=>{_cvm[_decFbKey(k)]=v;});store.concilVolumeMap=_cvm;}
+  if(saved.concilVolumeMap&&!_ownWrites.concilVolumeMap){
+    const _cvm={};
+    const _validMapKeys=new Set(['tiposOperacao','cashinIds','cashoutIds','refundIds','chargebackIds']);
+    Object.entries(saved.concilVolumeMap).forEach(([k,v])=>{
+      if(v&&typeof v==='object'&&Object.keys(v).some(kk=>_validMapKeys.has(kk))) _cvm[_decFbKey(k)]=v;
+    });
+    // Merge: keep local entries not in Firebase (corrupted remote data could wipe valid local entries)
+    Object.entries(store.concilVolumeMap||{}).forEach(([k,v])=>{ if(!_cvm[k]) _cvm[k]=v; });
+    store.concilVolumeMap=_cvm;
+  }
   if(saved.ignoredGatewayIds&&!_ownWrites.ignoredGatewayIds)store.ignoredGatewayIds=saved.ignoredGatewayIds;
   if(saved.liquidacoesConfig&&!_ownWrites.liquidacoesConfig)store.liquidacoesConfig=saved.liquidacoesConfig;
   if(saved.liquidacoesStatus&&!_ownWrites.liquidacoesStatus)store.liquidacoesStatus=saved.liquidacoesStatus;
@@ -5661,7 +5676,7 @@ function _renderJobMonitor(job){
   }).join('');
   const dateLabel=dateFrom+(dateFrom!==dateTo&&dateTo?' → '+dateTo:'');
   div.style.display='';
-  const _bannerHtml=(status==='pending'||status==='running')?`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:12px;color:#92400e;line-height:1.5;margin-top:10px"><strong>Job iniciado – chamando o robô.</strong><br>⚠️ Pode demorar até 1 min para iniciar (o robot verifica o Firebase a cada ~1 min). Pode usar sua máquina normalmente.</div>`:'';
+  const _bannerHtml=(status==='pending'||status==='running')?`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:12px;color:#92400e;line-height:1.5;margin-top:10px"><strong>${t('job-banner-title')}</strong><br>⚠️ ${t('job-banner-desc')}</div>`:'';
   const _logSection=logs.length?`<div id="job-log-box" style="background:#0f172a;border-radius:8px;padding:12px 14px;max-height:240px;overflow-y:auto;font-family:'SFMono-Regular',Consolas,monospace;font-size:12px;margin-top:10px">${logsHtml}</div>`:'';
   div.innerHTML=`
 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
@@ -7132,9 +7147,9 @@ function renderVolCombinedList(){
     Object.entries(store.volumeRankings?.[type]||{}).forEach(([id,e])=>{ if(!allEntries.has(id)) allEntries.set(id,e); });
   });
   // Inclui gateways já selecionados que não estão no volume (gateways antigos)
-  _selectedGatewayIds.forEach(id=>{ if(!allEntries.has(id)) allEntries.set(id,{rank:'?',name:'Gateway sem volume importado',country:''}); });
+  _selectedGatewayIds.forEach(id=>{ if(!allEntries.has(id)) allEntries.set(id,{rank:'?',name:t('vol-gw-sem-volume'),country:''}); });
   const entries=[...allEntries.entries()].sort((a,b)=>(a[1].rank==='?'?99999:a[1].rank)-(b[1].rank==='?'?99999:b[1].rank));
-  if(!entries.length){list.innerHTML='<div style="padding:8px 12px;font-size:12px;color:var(--e-muted)">Importe os dados primeiro em Gerencial › Conciliações → Importar Volume</div>';return;}
+  if(!entries.length){list.innerHTML=`<div style="padding:8px 12px;font-size:12px;color:var(--e-muted)">${t('vol-import-first')}</div>`;return;}
   const filtered=q?entries.filter(([id,e])=>e.name.toLowerCase().includes(q)||(e.country||'').toLowerCase().includes(q)||id.toString().includes(q)||String(e.rank).startsWith(q)):entries;
   list.innerHTML=filtered.slice(0,80).map(([id,e])=>{
     const chk=_selectedGatewayIds.includes(id);
