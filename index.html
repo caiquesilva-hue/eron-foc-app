@@ -6466,10 +6466,11 @@ function openConciliacaoModal(editIdx=-1){
   _tipoAtivosConc=tipoAtualInit==='mista'?['processadores','bancos']:tipoAtualInit==='processadores'?['processadores']:['bancos'];
   const concId=isEdit?(conc.id||conc.nome).replace(/['"]/g,''):'';
   const concMap=(store.concilVolumeMap||{})[concId]||{};
-  _selectedCashinIds=concMap.cashinIds?concMap.cashinIds.map(String):(concMap.cashinId?[String(concMap.cashinId)]:[]);
-  _selectedCashoutIds=concMap.cashoutIds?concMap.cashoutIds.map(String):(concMap.cashoutId?[String(concMap.cashoutId)]:[]);
-  _selectedRefundIds=concMap.refundIds?concMap.refundIds.map(String):[];
-  _selectedChargebackIds=concMap.chargebackIds?concMap.chargebackIds.map(String):[];
+  const _toSA=v=>!v?[]:Array.isArray(v)?v.map(String):Object.values(v).map(String);
+  _selectedCashinIds=concMap.cashinIds?_toSA(concMap.cashinIds):(concMap.cashinId?[String(concMap.cashinId)]:[]);
+  _selectedCashoutIds=concMap.cashoutIds?_toSA(concMap.cashoutIds):(concMap.cashoutId?[String(concMap.cashoutId)]:[]);
+  _selectedRefundIds=_toSA(concMap.refundIds);
+  _selectedChargebackIds=_toSA(concMap.chargebackIds);
   _selectedGatewayIds=[...new Set([..._selectedCashinIds,..._selectedCashoutIds,..._selectedRefundIds,..._selectedChargebackIds])];
   // backward compat: infer tiposOperacao from existing linked IDs
   _selectedOpTypes=concMap.tiposOperacao?[...concMap.tiposOperacao]:[
