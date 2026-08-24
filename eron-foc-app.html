@@ -1304,7 +1304,7 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               <span data-i18n="extr-run">Executar</span>
             </button>
-            <div id="extr-job-status" style="display:none;background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:16px 20px;font-size:13px;color:var(--e-text)"></div>
+            <div id="extr-job-monitors" style="display:flex;flex-direction:column;gap:10px"></div>
             <div style="text-align:center;padding-top:4px">
               <a href="https://drive.google.com/drive/folders/1GTVS6kZdFYAfVcsalOi3wVwa8jgDhkYp?hl=pt-br" target="_blank" rel="noopener noreferrer" data-i18n="extr-drive-link" style="font-size:12px;font-weight:600;color:#5b21b6;text-decoration:none;display:inline-flex;align-items:center;gap:7px;background:#ede9fe;border:1.5px solid #c4b5fd;border-radius:20px;padding:7px 16px">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
@@ -5471,7 +5471,11 @@ function _extrInit(){
   _extrTipo='extrato';
   _extrImportador=false;
   _jobRunning=false;
-  _jobMonitorLastKey=null;
+  _currentJobId=null;
+  _stopAllJobMonitors();
+  const monitors=document.getElementById('extr-job-monitors');
+  if(monitors) monitors.innerHTML='';
+  _loadUserJobs();
   const et=document.getElementById('extr-tipo-extrato');const pt=document.getElementById('extr-tipo-pdf');
   if(et){et.style.background='#7c3aed';et.style.color='#fff';}
   if(pt){pt.style.background='transparent';pt.style.color='#5b21b6';}
@@ -5635,71 +5639,152 @@ function _extrSetDate(mode){
   _extrUpdateUI();
 }
 
-// ── Job live monitor ──────────────────────────────────────────────────────
-let _jobMonitorRef=null, _jobMonitorCb=null, _jobMonitorMeta=null, _jobMonitorLastKey=null;
+// ── Job live monitor (per-job, collapsible) ──────────────────────────────
+const _jobMonitors=new Map(); // jobId → {ref, cb, meta, lastKey}
+let _currentJobId=null;       // job started in this session (for _jobRunning gating)
+const _JOB_RETENTION_DAYS=3;
 function _escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function _stopJobMonitor(){
-  if(_jobMonitorRef&&_jobMonitorCb){_jobMonitorRef.off('value',_jobMonitorCb);_jobMonitorCb=null;_jobMonitorRef=null;}
-  _jobMonitorLastKey=null;
-}
-function _startJobMonitor(jobId,meta){
-  // Só limpa o ref anterior — NÃO reseta _jobMonitorLastKey para evitar flash
-  if(_jobMonitorRef&&_jobMonitorCb){_jobMonitorRef.off('value',_jobMonitorCb);_jobMonitorCb=null;_jobMonitorRef=null;}
-  _jobMonitorMeta=meta;
-  _jobMonitorRef=_getEronFb().database().ref('jobRequests/'+jobId);
-  _jobMonitorCb=_jobMonitorRef.on('value',snap=>{
-    const j=snap.val();
-    if(j) _renderJobMonitor(j);
-  });
-}
-function _renderJobMonitor(job){
-  const div=document.getElementById('extr-job-status');
-  if(!div) return;
-  const status=job.status||'pending';
-  const _logKeys=job.logs?Object.keys(job.logs):[];
-  const _renderKey=status+'|'+_logKeys.length+'|'+(_logKeys[_logKeys.length-1]||'');
-  if(_renderKey===_jobMonitorLastKey) return;
-  _jobMonitorLastKey=_renderKey;
-  if((status==='completed'||status==='failed')&&_jobRunning){
-    _jobRunning=false;
-    _extrUpdateUI();
-  }
-  const {nContas=0,dateFrom='',dateTo=''}=_jobMonitorMeta||{};
-  const SI={
-    pending:{c:'#6b7280',bg:'#f3f4f6',label:'Aguardando robot'},
+
+function _jobDateKey(ts){return new Date(ts).toISOString().slice(0,10);}
+
+function _jobSI(status){
+  return ({
+    pending:{c:'#6b7280',bg:'#f3f4f6',label:'Aguardando'},
     running:{c:'#7c3aed',bg:'#ede9fe',label:'Executando'},
     completed:{c:'#059669',bg:'#d1fae5',label:'Concluído'},
     failed:{c:'#dc2626',bg:'#fee2e2',label:'Falhou'},
-  }[status]||{c:'#6b7280',bg:'#f3f4f6',label:status};
+  })[status]||{c:'#6b7280',bg:'#f3f4f6',label:status};
+}
+
+function toggleJobCard(jobId){
+  const body=document.getElementById('jm-body-'+jobId);
+  const chev=document.getElementById('jm-chev-'+jobId);
+  if(!body) return;
+  const nowCollapsed=body.style.display==='none';
+  body.style.display=nowCollapsed?'':'none';
+  if(chev) chev.style.transform=nowCollapsed?'':'rotate(-90deg)';
+}
+
+function _createJobCard(jobId,meta,initialStatus){
+  const wrap=document.getElementById('extr-job-monitors');
+  if(!wrap||document.getElementById('jm-card-'+jobId)) return;
+  const {nContas=0,dateFrom='',dateTo='',createdAt=Date.now()}=meta||{};
+  const dateLabel=dateFrom+(dateFrom!==dateTo&&dateTo?' → '+dateTo:'');
+  const timeStr=new Date(createdAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const shortId=jobId.slice(-8);
+  const SI=_jobSI(initialStatus||'pending');
+  const startCollapsed=initialStatus==='completed'||initialStatus==='failed';
+  const card=document.createElement('div');
+  card.id='jm-card-'+jobId;
+  card.style.cssText='border:1px solid var(--e-pale);border-radius:12px;overflow:hidden;background:var(--e-bg);font-size:13px;color:var(--e-text)';
+  card.innerHTML=`
+<div onclick="toggleJobCard('${jobId}')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;gap:8px;border-bottom:1px solid var(--e-pale)">
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0">
+    <span id="jm-badge-${jobId}" style="background:${SI.bg};color:${SI.c};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;flex-shrink:0">${SI.label}</span>
+    <span style="font-size:12px;font-weight:600;color:var(--e-text)">Job ${shortId}</span>
+    <span style="font-size:11px;color:var(--e-muted)">${nContas} conta(s) · ${_escHtml(dateLabel)}</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+    <span style="font-size:11px;color:var(--e-muted)">${timeStr}</span>
+    <span id="jm-chev-${jobId}" style="color:var(--e-muted);font-size:14px;transition:transform .18s;display:inline-block;transform:${startCollapsed?'rotate(-90deg)':''}">▼</span>
+  </div>
+</div>
+<div id="jm-body-${jobId}" style="padding:14px 16px;display:${startCollapsed?'none':'block'}">
+  <div id="jm-content-${jobId}"></div>
+</div>`;
+  wrap.insertBefore(card,wrap.firstChild);
+}
+
+function _renderJobCard(jobId,job){
+  const content=document.getElementById('jm-content-'+jobId);
+  if(!content) return;
+  const m=_jobMonitors.get(jobId);
+  const status=job.status||'pending';
+  const _logKeys=job.logs?Object.keys(job.logs):[];
+  const _rk=status+'|'+_logKeys.length+'|'+(_logKeys[_logKeys.length-1]||'');
+  if(m&&_rk===m.lastKey) return;
+  if(m) m.lastKey=_rk;
+  const badge=document.getElementById('jm-badge-'+jobId);
+  if(badge){const SI=_jobSI(status);badge.style.background=SI.bg;badge.style.color=SI.c;badge.textContent=SI.label;}
+  if((status==='completed'||status==='failed')&&_jobRunning&&jobId===_currentJobId){
+    _jobRunning=false;
+    _extrUpdateUI();
+  }
+  const {nContas=0,dateFrom='',dateTo=''}=(m&&m.meta)||{};
   const logs=job.logs?Object.entries(job.logs).sort((a,b)=>a[0]<b[0]?-1:1).map(([,v])=>v):[];
   const sum=job.summary;
   const logsHtml=logs.slice(-150).map(l=>{
     const lc=l.level==='ERROR'?'#f87171':l.level==='WARNING'?'#fbbf24':'#94a3b8';
     return `<div style="display:flex;gap:8px;line-height:1.6;min-width:0"><span style="color:#64748b;flex-shrink:0">${_escHtml(l.ts||'')}</span><span style="color:${lc};word-break:break-word;min-width:0">${_escHtml(l.msg||'')}</span></div>`;
   }).join('');
-  const dateLabel=dateFrom+(dateFrom!==dateTo&&dateTo?' → '+dateTo:'');
-  div.style.display='';
-  const _bannerHtml=(status==='pending'||status==='running')?`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:12px;color:#92400e;line-height:1.5;margin-top:10px"><strong>${t('job-banner-title')}</strong><br>⚠️ ${t('job-banner-desc')}</div>`:'';
-  const _logSection=logs.length?`<div id="job-log-box" style="background:#0f172a;border-radius:8px;padding:12px 14px;max-height:240px;overflow-y:auto;font-family:'SFMono-Regular',Consolas,monospace;font-size:12px;margin-top:10px">${logsHtml}</div>`:'';
-  div.innerHTML=`
-<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-    <span style="background:${SI.bg};color:${SI.c};padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">${SI.label}</span>
-    ${sum?`<span style="font-size:12px;color:#6b7280">${sum.concluidos}/${sum.total} contas · ${sum.erros} erro(s)</span>`:''}
-  </div>
-  <span style="font-size:11px;color:var(--e-muted)">${nContas} conta(s) · ${dateLabel}</span>
-</div>
-${_bannerHtml}
-${_logSection}`;
-  const box=document.getElementById('job-log-box');
+  const _bannerHtml=(status==='pending'||status==='running')?`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:12px;color:#92400e;line-height:1.5;margin-bottom:10px"><strong>${t('job-banner-title')}</strong><br>⚠️ ${t('job-banner-desc')}</div>`:'';
+  const _summaryHtml=sum?`<div style="margin-bottom:8px;font-size:12px;color:#6b7280">${sum.concluidos}/${sum.total} contas · ${sum.erros} erro(s)</div>`:'';
+  const _logSection=logs.length?`<div id="jm-log-${jobId}" style="background:#0f172a;border-radius:8px;padding:12px 14px;max-height:240px;overflow-y:auto;font-family:'SFMono-Regular',Consolas,monospace;font-size:12px">${logsHtml}</div>`:'<span style="font-size:12px;color:var(--e-muted)">Aguardando logs...</span>';
+  content.innerHTML=`${_summaryHtml}${_bannerHtml}${_logSection}`;
+  const box=document.getElementById('jm-log-'+jobId);
   if(box) box.scrollTop=box.scrollHeight;
+}
+
+function _stopJobMonitor(jobId){
+  const m=_jobMonitors.get(jobId);
+  if(!m) return;
+  if(m.ref&&m.cb){m.ref.off('value',m.cb);}
+  _jobMonitors.delete(jobId);
+}
+
+function _stopAllJobMonitors(){_jobMonitors.forEach((_,id)=>_stopJobMonitor(id));}
+
+function _startJobMonitor(jobId,meta){
+  if(_jobMonitors.has(jobId)) _stopJobMonitor(jobId);
+  _jobMonitors.set(jobId,{ref:null,cb:null,meta,lastKey:null});
+  const m=_jobMonitors.get(jobId);
+  m.ref=_getEronFb().database().ref('jobRequests/'+jobId);
+  m.cb=m.ref.on('value',snap=>{
+    const j=snap.val();
+    if(!j) return;
+    _renderJobCard(jobId,j);
+    if(j.status==='completed'||j.status==='failed'){
+      m.ref.off('value',m.cb); m.cb=null;
+    }
+  });
+}
+
+async function _loadUserJobs(){
+  const email=window._loggedEmail||'';
+  if(!email) return;
+  const today=_jobDateKey(Date.now());
+  const retainCutoff=Date.now()-_JOB_RETENTION_DAYS*86400000;
+  try{
+    const db=_getEronFb().database();
+    // Load all jobs from retention window
+    const snap=await db.ref('jobRequests').orderByChild('created_at').startAt(retainCutoff).once('value');
+    const all=snap.val()||{};
+    // Delete jobs older than retention
+    const snapOld=await db.ref('jobRequests').orderByChild('created_at').endAt(retainCutoff-1).once('value');
+    const old=snapOld.val()||{};
+    const toDelete=Object.keys(old);
+    if(toDelete.length){
+      const upd={};toDelete.forEach(jid=>upd['jobRequests/'+jid]=null);
+      await db.ref().update(upd);
+    }
+    // Render today's jobs for this user (oldest first → card prepend puts newest at top)
+    const todayJobs=Object.entries(all)
+      .filter(([,job])=>job&&job.requested_by===email&&_jobDateKey(job.created_at)===today)
+      .sort(([,a],[,b])=>a.created_at-b.created_at);
+    todayJobs.forEach(([jid,job])=>{
+      if(_jobMonitors.has(jid)) return;
+      const p=job.params||{};
+      const meta={nContas:(p.contas||[]).length,dateFrom:p.date_from||'',dateTo:p.date_to||'',createdAt:job.created_at};
+      _createJobCard(jid,meta,job.status);
+      _startJobMonitor(jid,meta);
+    });
+  }catch(e){console.warn('_loadUserJobs:',e);}
 }
 
 async function runExtratosJob(){
   if(_extrSelected.size===0||_jobRunning) return;
   _jobRunning=true;
   _extrUpdateUI();
-  const statusDiv=document.getElementById('extr-job-status');
   let dateFrom,dateTo;
   if(_extrDateMode==='ontem'){
     dateFrom=dateTo=_extrFmtYesterday();
@@ -5710,17 +5795,20 @@ async function runExtratosJob(){
   }
   const contas=[..._extrSelected].map(key=>{const p=key.split('__');return{pais:p[0],banco:p[1],agente:p[2]};});
   const jobId='extr_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
-  const job={type:'download_extratos',status:'pending',requested_by:window._loggedEmail||'—',created_at:Date.now(),params:{contas,date_from:dateFrom,date_to:dateTo,tipo:_extrTipo,enviar_importador:_extrImportador}};
-  _jobMonitorLastKey=null;
-  _jobMonitorMeta={nContas:contas.length,dateFrom,dateTo};
-  _renderJobMonitor({status:'pending'});
+  const now=Date.now();
+  const job={type:'download_extratos',status:'pending',requested_by:window._loggedEmail||'—',created_at:now,params:{contas,date_from:dateFrom,date_to:dateTo,tipo:_extrTipo,enviar_importador:_extrImportador}};
+  const meta={nContas:contas.length,dateFrom,dateTo,createdAt:now};
+  _currentJobId=jobId;
+  _createJobCard(jobId,meta,'pending');
+  _startJobMonitor(jobId,meta);
+  _renderJobCard(jobId,{status:'pending'});
   try{
     await _getEronFb().database().ref('jobRequests/'+jobId).set(job);
-    _startJobMonitor(jobId,{nContas:contas.length,dateFrom,dateTo});
-  } catch(e){
+  }catch(e){
     _jobRunning=false;
     _extrUpdateUI();
-    if(statusDiv) statusDiv.innerHTML=`<span style="color:#dc2626">❌ Erro: ${_escHtml(e.message)}</span>`;
+    const content=document.getElementById('jm-content-'+jobId);
+    if(content) content.innerHTML=`<span style="color:#dc2626">❌ Erro: ${_escHtml(e.message)}</span>`;
   }
 }
 
@@ -6338,7 +6426,7 @@ function _renderUnlinkedGateways(){
   if(!wrap) return;
   const vr=store.volumeRankings||{};
   const ignored=store.ignoredGatewayIds||{};
-  const ignCI=new Set(ignored.cashin||[]),ignCO=new Set(ignored.cashout||[]),ignRF=new Set(ignored.refunds||[]),ignCB=new Set(ignored.chargebacks||[]);
+  const ignCI=new Set((ignored.cashin||[]).map(String)),ignCO=new Set((ignored.cashout||[]).map(String)),ignRF=new Set((ignored.refunds||[]).map(String)),ignCB=new Set((ignored.chargebacks||[]).map(String));
   const allCashinIds=Object.keys(vr.cashin||{});
   const allCashoutIds=Object.keys(vr.cashout||{});
   const allRefundNames=Object.keys(vr.refunds||{});
@@ -6350,8 +6438,8 @@ function _renderUnlinkedGateways(){
     const cvm=(store.concilVolumeMap||{})[(c.id||c.nome||'').replace(/['"]/g,'')]||{};
     (cvm.cashinIds||[]).forEach(id=>actCI.add(id));
     (cvm.cashoutIds||[]).forEach(id=>actCO.add(id));
-    (cvm.refundIds||[]).forEach(id=>actRF.add(id));
-    (cvm.chargebackIds||[]).forEach(id=>actCB.add(id));
+    (cvm.refundIds||[]).forEach(id=>actRF.add(String(id)));
+    (cvm.chargebackIds||[]).forEach(id=>actCB.add(String(id)));
   });
   const uCI=allCashinIds.filter(id=>!actCI.has(id)&&!ignCI.has(id));
   const uCO=allCashoutIds.filter(id=>!actCO.has(id)&&!ignCO.has(id));
@@ -7141,6 +7229,7 @@ async function processVolumeImport(){
   _rebuildCombinedRanking();
   saveStore(); _fbSync('volumeRankings');
   _renderVolLastImport();
+  _renderUnlinkedGateways();
   resultEl.textContent=msgs.join(' ')+' Dados salvos.';
   renderCronogramaConciliacoes();
 }
@@ -7263,8 +7352,8 @@ function _renderCronconcUnlinkedBanner(){
     const cvm=(store.concilVolumeMap||{})[(c.id||c.nome||'').replace(/['"]/g,'')]||{};
     (cvm.cashinIds||[]).forEach(id=>actCI.add(id));
     (cvm.cashoutIds||[]).forEach(id=>actCO.add(id));
-    (cvm.refundIds||[]).forEach(id=>actRF.add(id));
-    (cvm.chargebackIds||[]).forEach(id=>actCB.add(id));
+    (cvm.refundIds||[]).forEach(id=>actRF.add(String(id)));
+    (cvm.chargebackIds||[]).forEach(id=>actCB.add(String(id)));
   });
   const total=
     Object.keys(vr.cashin||{}).filter(id=>!actCI.has(id)).length+
