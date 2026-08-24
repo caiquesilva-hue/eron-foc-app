@@ -5674,18 +5674,26 @@ function _createJobCard(jobId,meta,initialStatus){
   const shortId=jobId.slice(-8);
   const SI=_jobSI(initialStatus||'pending');
   const startCollapsed=initialStatus==='completed'||initialStatus==='failed';
+  const btnBase='border:none;cursor:pointer;padding:4px 6px;border-radius:6px;line-height:1;transition:background .15s;flex-shrink:0';
+  const isActive=!startCollapsed; // pending or running start visible → show stop btn
   const card=document.createElement('div');
   card.id='jm-card-'+jobId;
   card.style.cssText='border:1px solid var(--e-pale);border-radius:12px;overflow:hidden;background:var(--e-bg);font-size:13px;color:var(--e-text)';
   card.innerHTML=`
-<div onclick="toggleJobCard('${jobId}')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;gap:8px;border-bottom:1px solid var(--e-pale)">
+<div onclick="toggleJobCard('${jobId}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;user-select:none;gap:8px;border-bottom:1px solid var(--e-pale)">
   <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0">
     <span id="jm-badge-${jobId}" style="background:${SI.bg};color:${SI.c};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;flex-shrink:0">${SI.label}</span>
     <span style="font-size:12px;font-weight:600;color:var(--e-text)">Job ${shortId}</span>
     <span style="font-size:11px;color:var(--e-muted)">${nContas} conta(s) · ${_escHtml(dateLabel)}</span>
   </div>
-  <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
-    <span style="font-size:11px;color:var(--e-muted)">${timeStr}</span>
+  <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+    <span style="font-size:11px;color:var(--e-muted);margin-right:4px">${timeStr}</span>
+    <button id="jm-stop-${jobId}" onclick="event.stopPropagation();stopJobCard('${jobId}')" title="Forçar conclusão do job" style="${btnBase};background:#f0fdf4;color:#16a34a;display:${isActive?'flex':'none'};align-items:center;gap:3px;font-size:11px;font-weight:600">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Concluir
+    </button>
+    <button onclick="event.stopPropagation();deleteJobCard('${jobId}')" title="Remover card" style="${btnBase};background:#fef2f2;color:#dc2626;display:flex;align-items:center;gap:3px;font-size:11px;font-weight:600">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>Excluir
+    </button>
     <span id="jm-chev-${jobId}" style="color:var(--e-muted);font-size:14px;transition:transform .18s;display:inline-block;transform:${startCollapsed?'rotate(-90deg)':''}">▼</span>
   </div>
 </div>
@@ -5693,6 +5701,21 @@ function _createJobCard(jobId,meta,initialStatus){
   <div id="jm-content-${jobId}"></div>
 </div>`;
   wrap.insertBefore(card,wrap.firstChild);
+}
+
+async function stopJobCard(jobId){
+  try{
+    await _getEronFb().database().ref('jobRequests/'+jobId).update({status:'completed'});
+    if(jobId===_currentJobId&&_jobRunning){_jobRunning=false;_extrUpdateUI();}
+  }catch(e){_toast('Erro ao forçar conclusão.',3000);}
+}
+
+async function deleteJobCard(jobId){
+  _stopJobMonitor(jobId);
+  const card=document.getElementById('jm-card-'+jobId);
+  if(card) card.remove();
+  if(jobId===_currentJobId&&_jobRunning){_jobRunning=false;_extrUpdateUI();}
+  try{await _getEronFb().database().ref('jobRequests/'+jobId).remove();}catch(e){}
 }
 
 function _renderJobCard(jobId,job){
@@ -5706,6 +5729,8 @@ function _renderJobCard(jobId,job){
   if(m) m.lastKey=_rk;
   const badge=document.getElementById('jm-badge-'+jobId);
   if(badge){const SI=_jobSI(status);badge.style.background=SI.bg;badge.style.color=SI.c;badge.textContent=SI.label;}
+  const stopBtn=document.getElementById('jm-stop-'+jobId);
+  if(stopBtn) stopBtn.style.display=(status==='completed'||status==='failed')?'none':'flex';
   if((status==='completed'||status==='failed')&&_jobRunning&&jobId===_currentJobId){
     _jobRunning=false;
     _extrUpdateUI();
