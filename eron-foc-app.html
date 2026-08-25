@@ -398,6 +398,7 @@
   #page-cronograma-conciliacoes.hide-col-5 #crono-conc-cal-table thead th:nth-child(6),#page-cronograma-conciliacoes.hide-col-5 #crono-conc-cal-table tbody td:nth-child(6){display:none!important;}
   #page-cronograma-conciliacoes.hide-col-6 #crono-conc-cal-table thead th:nth-child(7),#page-cronograma-conciliacoes.hide-col-6 #crono-conc-cal-table tbody td:nth-child(7){display:none!important;}
   #page-cronograma-conciliacoes.hide-col-7 #crono-conc-cal-table thead th:nth-child(8),#page-cronograma-conciliacoes.hide-col-7 #crono-conc-cal-table tbody td:nth-child(8){display:none!important;}
+  #page-cronograma-conciliacoes.hide-col-8 #crono-conc-cal-table thead th:nth-child(9),#page-cronograma-conciliacoes.hide-col-8 #crono-conc-cal-table tbody td:nth-child(9){display:none!important;}
   .chip-operacional{background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd;}
   .chip-administrativa{background:#fce7f3;color:#9d174d;border:1px solid #f9a8d4;}
   .chip-bbpix{background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;}
@@ -787,6 +788,8 @@
       <div style="display:flex;gap:8px;align-items:stretch">
         <button class="btn-secondary" onclick="openVolumeImportModal()" data-requires-edit title="Importar CSVs de volume para calcular prioridade automaticamente" style="font-size:12px;padding:5px 12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> <span data-i18n="btn-importar-volume">Importar Volume</span></button>
         <button class="btn-secondary" onclick="_crossCheckConciliacoes(true)" data-requires-edit title="Verifica e registra países, agentes e processadores que estejam nas conciliações mas ausentes no cadastro" style="font-size:12px;padding:5px 12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 12l2 2 4-4"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0"/></svg> Verificar dados</button>
+        <button class="btn-secondary" onclick="_triggerConcilCSVImport()" data-requires-edit title="Atualiza frequência e gateways das conciliações a partir de um CSV de grupos" style="font-size:12px;padding:5px 12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Importar CSV grupos</button>
+        <input type="file" id="concil-csv-file-input" accept=".csv" style="display:none" onchange="_onConcilCSVFile(this)">
         <button class="btn-primary" onclick="openConciliacaoModal()" data-requires-edit><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg> <span data-i18n="btn-add-conciliacao">Adicionar conciliação</span></button>
       </div>
       <span id="vol-last-import-lbl" style="font-size:10px;color:var(--e-muted);white-space:nowrap"></span>
@@ -1080,6 +1083,10 @@
     <button id="crono-conc-clear-btn" onclick="clearCronconcFilters()" style="display:none;align-items:center;gap:6px;font-size:12px;padding:5px 12px;background:var(--e-ghost);color:var(--e-muted);border:1px solid var(--e-pale);border-radius:8px;cursor:pointer;font-family:inherit" title="Limpar filtros">
       <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
       Limpar filtros
+    </button>
+    <button class="btn-csv" onclick="downloadConcilCSV()" title="Baixar CSV com os filtros aplicados">
+      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+      <span>Baixar CSV</span>
     </button>
   </div>
   <div id="crono-conc-unlinked-banner"></div>
@@ -6460,6 +6467,7 @@ async function submitResetPwd(){
 
 // ─── GERENCIAL CONCILIAÇÕES ──────────────────────────────────────
 let _editConcIdx=-1;
+let _lastFilteredConcilList=[];
 let _selectedContas=[];
 let _selectedProcessadores=[];
 let _tipoAtivosConc=[];
@@ -6954,6 +6962,93 @@ function _crossCheckConciliacoes(showToast=false){
   if(addedProc.length) parts.push(`${addedProc.length} processador(es) adicionado(s): ${addedProc.join(', ')}`);
   if(missingContas.length) parts.push(`⚠ Contas sem cadastro completo (requerem banco): ${[...new Set(missingContas)].join('; ')}`);
   _toast(parts.length?parts.join(' | '):'✓ Tudo consistente — nenhum dado faltando.',7000);
+}
+
+// ─── CSV DOWNLOAD CRONOGRAMA CONCILIAÇÕES ──────────────────────────
+function downloadConcilCSV(){
+  const list=_lastFilteredConcilList||[];
+  if(!list.length){alert('Nenhuma conciliação para exportar.');return;}
+  const now=new Date();
+  const d1=new Date(now.getFullYear(),now.getMonth(),now.getDate()-1);
+  const d1Str=`${d1.getFullYear()}-${String(d1.getMonth()+1).padStart(2,'0')}-${String(d1.getDate()).padStart(2,'0')}`;
+  const STATUS_LBL={concluido:'Concluída',pronto_conciliacao:'Pronto p/ Conc.',sem_movimento:'Sem Movimento',sem_acesso:'Sem Acesso',conta_encerrada:'Conta Encerrada',pendente:'Pendente'};
+  const TIPO_LBL={bancos:'Bancos',processadores:'Processadores',mista:'Mista'};
+  const fmtV=v=>v?Math.round(v).toLocaleString('en-US'):'';
+  const headers=['Nome','País','Agente','Volume USD','Resp.','Prioridade','Tipo','Frequência','Acompanhamento'];
+  const rows=[headers,...list.map(c=>{
+    const concId=(c.id||c.nome).replace(/['"]/g,'');
+    const rEmail=_getConcilResp(c);
+    const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;
+    const vol=(store.volumeRankings?.combined||{})[concId]?.usd||0;
+    const d1r=_getConcilStatus(c,d1Str);
+    const prioridade=_computeVolumePrioridade(concId)||'';
+    return [c.nome,c.pais||'',c.agente||'',fmtV(vol),rUser?.sigla||'',prioridade,TIPO_LBL[c.tipo]||c.tipo||'',c.frequencia||'',STATUS_LBL[d1r.status]||''];
+  })];
+  _downloadCSV(rows,`conciliacoes-${now.toISOString().slice(0,10)}.csv`);
+}
+
+// ─── IMPORT CSV DE GRUPOS DE CONCILIAÇÃO ─────────────────────────
+function _extractFreqFromRule(rule){
+  if(!rule||!rule.trim()) return '';
+  const parts=rule.split(' - ');
+  const last=(parts[parts.length-1]||'').trim();
+  if(/^T\d+$/.test(last)) return last;
+  if(last.toLowerCase().includes('rio')) return 'Diário';
+  return '';
+}
+function _importUpdateConcilCSV(csvText){
+  const lines=csvText.trim().split('\n');
+  if(lines.length<2){_toast('CSV vazio.',3000);return;}
+  const groups=new Map();
+  for(let i=1;i<lines.length;i++){
+    const cols=_parseCSVLine(lines[i]);
+    if(cols.length<5) continue;
+    const nome=(cols[1]||'').trim();
+    const tipoCSV=(cols[3]||'').trim().toLowerCase();
+    const gwRaw=(cols[4]||'').trim();
+    const cronRule=cols.length>14?(cols[14]||'').trim():'';
+    if(!nome) continue;
+    const gwIds=gwRaw.split(',').map(s=>s.trim()).filter(Boolean);
+    const opType=tipoCSV==='cashin'?'cashin':tipoCSV==='cashout'?'cashout':tipoCSV==='refund'?'refunds':tipoCSV==='chargeback'?'chargebacks':null;
+    const freq=_extractFreqFromRule(cronRule);
+    if(!groups.has(nome)) groups.set(nome,{gateways:{cashin:[],cashout:[],refunds:[],chargebacks:[]},freq});
+    const g=groups.get(nome);
+    if(opType&&gwIds.length) g.gateways[opType].push(...gwIds);
+    if(freq&&!g.freq) g.freq=freq;
+  }
+  let updated=0;const notFound=[];
+  for(const [nome,data] of groups){
+    const idx=(store.conciliacoes||[]).findIndex(c=>c.nome===nome);
+    if(idx<0){notFound.push(nome);continue;}
+    const conc=store.conciliacoes[idx];
+    const concId=(conc.id||conc.nome||'').replace(/['"]/g,'');
+    if(data.freq) store.conciliacoes[idx]={...conc,frequencia:data.freq};
+    if(!store.concilVolumeMap) store.concilVolumeMap={};
+    const existing=store.concilVolumeMap[concId]||{};
+    const tiposOperacao=Object.entries(data.gateways).filter(([,ids])=>ids.length>0).map(([tp])=>tp);
+    store.concilVolumeMap[concId]={
+      tiposOperacao:tiposOperacao.length?tiposOperacao:(existing.tiposOperacao||[]),
+      cashinIds:data.gateways.cashin.length?[...new Set(data.gateways.cashin)]:(existing.cashinIds||[]),
+      cashoutIds:data.gateways.cashout.length?[...new Set(data.gateways.cashout)]:(existing.cashoutIds||[]),
+      refundIds:data.gateways.refunds.length?[...new Set(data.gateways.refunds)]:(existing.refundIds||[]),
+      chargebackIds:data.gateways.chargebacks.length?[...new Set(data.gateways.chargebacks)]:(existing.chargebackIds||[])
+    };
+    updated++;
+  }
+  if(updated>0){
+    saveStore();_fbSync('conciliacoes');_fbSync('concilVolumeMap');
+    _rebuildCombinedRanking();_renderUnlinkedGateways();
+    renderGerencialConciliacoes();renderCronogramaConciliacoes();
+  }
+  const msg=`Atualizado: ${updated} conciliação(ões).${notFound.length?' Não encontradas ('+notFound.length+'): '+notFound.slice(0,5).join(', ')+(notFound.length>5?'…':''):''}`;
+  _toast(msg,9000);
+}
+function _triggerConcilCSVImport(){document.getElementById('concil-csv-file-input')?.click();}
+function _onConcilCSVFile(inp){
+  const file=inp.files[0];if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{_importUpdateConcilCSV(e.target.result);inp.value='';};
+  reader.readAsText(file,'UTF-8');
 }
 
 // ─── CRONOGRAMA CONCILIAÇÕES ─────────────────────────────────────
@@ -7484,6 +7579,8 @@ function _renderCronconcUnlinkedBanner(){
   const wrap=document.getElementById('crono-conc-unlinked-banner');
   if(!wrap) return;
   const vr=store.volumeRankings||{};
+  const ignored=store.ignoredGatewayIds||{};
+  const ignCI=new Set((ignored.cashin||[]).map(String)),ignCO=new Set((ignored.cashout||[]).map(String)),ignRF=new Set((ignored.refunds||[]).map(String)),ignCB=new Set((ignored.chargebacks||[]).map(String));
   const allIds=[
     ...Object.keys(vr.cashin||{}),
     ...Object.keys(vr.cashout||{}),
@@ -7501,10 +7598,10 @@ function _renderCronconcUnlinkedBanner(){
     (cvm.chargebackIds||[]).forEach(id=>actCB.add(String(id)));
   });
   const total=
-    Object.keys(vr.cashin||{}).filter(id=>!actCI.has(id)).length+
-    Object.keys(vr.cashout||{}).filter(id=>!actCO.has(id)).length+
-    Object.keys(vr.refunds||{}).filter(n=>!actRF.has(n)).length+
-    Object.keys(vr.chargebacks||{}).filter(n=>!actCB.has(n)).length;
+    Object.keys(vr.cashin||{}).filter(id=>!actCI.has(id)&&!ignCI.has(id)).length+
+    Object.keys(vr.cashout||{}).filter(id=>!actCO.has(id)&&!ignCO.has(id)).length+
+    Object.keys(vr.refunds||{}).filter(n=>!actRF.has(n)&&!ignRF.has(n)).length+
+    Object.keys(vr.chargebacks||{}).filter(n=>!actCB.has(n)&&!ignCB.has(n)).length;
   if(!total){wrap.innerHTML='';return;}
   wrap.innerHTML=`<div style="display:flex;align-items:center;gap:8px;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin:0 0 10px">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -7618,7 +7715,12 @@ function renderCronogramaConciliacoes(){
   const _priorRank=c=>{const v=_computeVolumePrioridade((c.id||c.nome).replace(/['"]/g,''));return v!=null?(_priorOrd[v]??5):6;};
   const st=_sortState['crono-conc'];
   list=[...list].sort((a,b)=>{
-    if(st.col){
+    if(st.col==='volume'){
+      const _va=(store.volumeRankings?.combined||{})[(a.id||a.nome).replace(/['"]/g,'')]?.usd||0;
+      const _vb=(store.volumeRankings?.combined||{})[(b.id||b.nome).replace(/['"]/g,'')]?.usd||0;
+      const d=(_va-_vb)*st.dir;
+      if(d!==0) return d;
+    } else if(st.col){
       const va=String(a[st.col]||'').toLowerCase();
       const vb=String(b[st.col]||'').toLowerCase();
       const d=va<vb?-st.dir:va>vb?st.dir:0;
@@ -7626,6 +7728,7 @@ function renderCronogramaConciliacoes(){
     }
     return _priorRank(a)-_priorRank(b);
   });
+  _lastFilteredConcilList=list;
 
   if(countEl) countEl.textContent=list.length+' conciliação'+(list.length!==1?'s':'');
 
@@ -7639,16 +7742,17 @@ function renderCronogramaConciliacoes(){
   const wd=_wdLabels();
   const dayHdrs=days.map(d=>{const wk=d.getDay()===0||d.getDay()===6;return `<th class="col-day${wk?' weekend':''}">${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}<br><span style="font-size:9px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--e-muted)">${wd[d.getDay()]}</span></th>`;}).join('');
 
-  const INFO_COLS=8;
+  const INFO_COLS=9;
   const _sth=(col,lbl,idx,extra='')=>`<th class="${_sortThCls('crono-conc',col)} col-info${extra?' cal-sticky':''}" ${extra} data-col-key="${col}" onclick="toggleSort('crono-conc','${col}')" style="cursor:pointer;position:relative">${lbl}${_sortArrow('crono-conc',col)}${extra?'':_colBtns('crono-conc',col,idx)}</th>`;
   const _cDefs=[
     {k:'pais',h:()=>_sth('pais','País',1),c:(conc,ri,sc)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="pais" style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td>`},
     {k:'agente',h:()=>_sth('agente','Agente',2),c:(conc,ri,sc)=>`<td class="sub sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="agente" style="font-size:11px">${conc.agente||'—'}</td>`},
-    {k:'resp',h:()=>`<th class="col-info" data-col-key="resp" style="position:relative">Resp.${_colBtns('crono-conc','resp',3)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="resp">${x.respCell}</td>`},
-    {k:'prioridade',h:()=>`<th class="col-info" data-col-key="prioridade" style="position:relative">Prioridade${_colBtns('crono-conc','prioridade',4)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="prioridade" style="padding:4px 8px">${x.priorCell}</td>`},
-    {k:'tipo',h:()=>`<th class="col-info" data-col-key="tipo" style="position:relative">Tipo${_colBtns('crono-conc','tipo',5)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="tipo" style="padding:4px 8px">${x.concTipoChipHtml}</td>`},
-    {k:'frequencia',h:()=>`<th class="col-info" data-col-key="frequencia" style="position:relative">${t('lbl-freq')}${_colBtns('crono-conc','frequencia',6)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="frequencia" style="padding:4px 8px">${x.freqCell}</td>`},
-    {k:'acompanhamento',h:()=>`<th class="col-info" data-col-key="acompanhamento" style="white-space:nowrap;position:relative">Acompanhamento${_colBtns('crono-conc','acompanhamento',7)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="acompanhamento" style="white-space:nowrap;padding:4px 8px">${x.d1ChipHtml}</td>`},
+    {k:'volume',h:()=>_sth('volume','Volume<br><span style="font-weight:400;font-size:9px;color:var(--e-muted)">últimos 7 dias</span>',3),c:(conc,ri,sc)=>{const _cid=(conc.id||conc.nome).replace(/['"]/g,'');const _vol=(store.volumeRankings?.combined||{})[_cid]?.usd||0;const _fmtV=v=>v?'$'+Math.round(v).toLocaleString('en-US'):'<span style="color:var(--e-muted);font-size:11px">—</span>';return `<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="volume" style="font-size:11px;font-weight:600;color:var(--e-mid);white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right;padding-right:10px">${_fmtV(_vol)}</td>`;}},
+    {k:'resp',h:()=>`<th class="col-info" data-col-key="resp" style="position:relative">Resp.${_colBtns('crono-conc','resp',4)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="resp">${x.respCell}</td>`},
+    {k:'prioridade',h:()=>`<th class="col-info" data-col-key="prioridade" style="position:relative">Prioridade${_colBtns('crono-conc','prioridade',5)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="prioridade" style="padding:4px 8px">${x.priorCell}</td>`},
+    {k:'tipo',h:()=>`<th class="col-info" data-col-key="tipo" style="position:relative">Tipo${_colBtns('crono-conc','tipo',6)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="tipo" style="padding:4px 8px">${x.concTipoChipHtml}</td>`},
+    {k:'frequencia',h:()=>`<th class="col-info" data-col-key="frequencia" style="position:relative">${t('lbl-freq')}${_colBtns('crono-conc','frequencia',7)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="frequencia" style="padding:4px 8px">${x.freqCell}</td>`},
+    {k:'acompanhamento',h:()=>`<th class="col-info" data-col-key="acompanhamento" style="white-space:nowrap;position:relative">Acompanhamento${_colBtns('crono-conc','acompanhamento',8)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="acompanhamento" style="white-space:nowrap;padding:4px 8px">${x.d1ChipHtml}</td>`},
   ];
   const _ccPins=(_pinnedCols['crono-conc']||[]).filter(k=>_cDefs.some(d=>d.k===k));
   const _ord=[..._ccPins.map(k=>_cDefs.find(d=>d.k===k)),..._cDefs.filter(d=>!_ccPins.includes(d.k))];
@@ -7752,7 +7856,7 @@ function renderCronogramaConciliacoes(){
       onConcCellClick(ev,td.dataset.ck,td.dataset.dt);
     });
   }
-  setTimeout(()=>{const _t=document.getElementById('crono-conc-cal-table');if(_ccPins.length){const pg=document.getElementById('page-cronograma-conciliacoes');if(pg)for(let i=1;i<=8;i++)pg.classList.remove('hide-col-'+i);_applyHiddenColsByKey(_t,'crono-conc');_applyPinnedSticky(_t,'crono-conc',calScrollEl);}else{_applyHiddenCols('crono-conc','crono-conc-cal-table',7);}},0);
+  setTimeout(()=>{const _t=document.getElementById('crono-conc-cal-table');if(_ccPins.length){const pg=document.getElementById('page-cronograma-conciliacoes');if(pg)for(let i=1;i<=9;i++)pg.classList.remove('hide-col-'+i);_applyHiddenColsByKey(_t,'crono-conc');_applyPinnedSticky(_t,'crono-conc',calScrollEl);}else{_applyHiddenCols('crono-conc','crono-conc-cal-table',8);}},0);
   _saveFilters('crono-conc');
 }
 
