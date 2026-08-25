@@ -7029,13 +7029,14 @@ function _importUpdateConcilCSV(csvText){
     if(opType&&gwIds.length) g.gateways[opType].push(...gwIds);
     if(freq&&!g.freq) g.freq=freq;
   }
-  let updated=0;const notFound=[];
+  let updated=0,freqSet=0,freqEmpty=0;const notFound=[];
   for(const [nome,data] of groups){
     const idx=(store.conciliacoes||[]).findIndex(c=>c.nome===nome);
     if(idx<0){notFound.push(nome);continue;}
     const conc=store.conciliacoes[idx];
     const concId=(conc.id||conc.nome||'').replace(/['"]/g,'');
-    if(data.freq) store.conciliacoes[idx]={...conc,frequencia:data.freq};
+    if(data.freq){store.conciliacoes[idx]={...conc,frequencia:data.freq};freqSet++;}
+    else freqEmpty++;
     if(!store.concilVolumeMap) store.concilVolumeMap={};
     const existing=store.concilVolumeMap[concId]||{};
     const tiposOperacao=Object.entries(data.gateways).filter(([,ids])=>ids.length>0).map(([tp])=>tp);
@@ -7053,8 +7054,11 @@ function _importUpdateConcilCSV(csvText){
     _rebuildCombinedRanking();_renderUnlinkedGateways();
     renderGerencialConciliacoes();renderCronogramaConciliacoes();
   }
-  const msg=`Atualizado: ${updated} conciliação(ões).${notFound.length?' Não encontradas ('+notFound.length+'): '+notFound.slice(0,5).join(', ')+(notFound.length>5?'…':''):''}`;
-  _toast(msg,9000);
+  const parts=[`✓ ${updated} conciliação(ões) atualizadas`];
+  if(freqSet>0) parts.push(`${freqSet} com frequência preenchida`);
+  if(freqEmpty>0) parts.push(`${freqEmpty} sem "Regra de Cronograma" no CSV (frequência mantida)`);
+  if(notFound.length) parts.push(`⚠ Não encontradas (${notFound.length}): ${notFound.slice(0,4).join(', ')}${notFound.length>4?'…':''}`);
+  _toast(parts.join(' | '),12000);
 }
 function _triggerConcilCSVImport(){document.getElementById('concil-csv-file-input')?.click();}
 function _onConcilCSVFile(inp){
