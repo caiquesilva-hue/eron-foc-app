@@ -1294,7 +1294,7 @@
               </div>
               <!-- PDF: seleção de mês -->
               <div id="extr-date-pdf" style="display:none">
-                <div id="extr-months-grid" style="display:flex;flex-direction:column;gap:8px"></div>
+                <select id="extr-months-sel" onchange="_extrSetPdfMonth(this.value)" style="width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:8px;padding:9px 14px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:var(--e-bg);cursor:pointer"></select>
               </div>
             </div>
             <div onclick="_extrToggleImportador()" style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:14px 20px;cursor:pointer;gap:12px;user-select:none">
@@ -5647,8 +5647,8 @@ function _extrSetTipo(tipo){
   _extrUpdateUI();
 }
 function _extrRenderMonths(){
-  const grid=document.getElementById('extr-months-grid');
-  if(!grid) return;
+  const sel=document.getElementById('extr-months-sel');
+  if(!sel) return;
   const now=new Date();
   const months=[];
   for(let i=1;i<=5;i++){
@@ -5657,14 +5657,10 @@ function _extrRenderMonths(){
     const label=d.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
     months.push({key,label});
   }
-  grid.innerHTML=months.map(m=>{
-    const active=_extrPdfMonth===m.key;
-    return `<button type="button" onclick="_extrSetPdfMonth('${m.key}')" style="padding:7px 16px;border-radius:20px;border:1.5px solid ${active?'#7c3aed':'var(--e-pale)'};background:${active?'#7c3aed':'transparent'};color:${active?'#fff':'var(--e-text)'};font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;text-transform:capitalize">${m.label}</button>`;
-  }).join('');
+  sel.innerHTML=`<option value="">Selecionar mês...</option>`+months.map(m=>`<option value="${m.key}" ${_extrPdfMonth===m.key?'selected':''}>${m.label.replace(/^./,c=>c.toUpperCase())}</option>`).join('');
 }
 function _extrSetPdfMonth(key){
-  _extrPdfMonth=key;
-  _extrRenderMonths();
+  _extrPdfMonth=key||null;
   _extrUpdateUI();
 }
 function _extrToggleImportador(){
