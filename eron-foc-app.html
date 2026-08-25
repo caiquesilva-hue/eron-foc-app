@@ -1312,10 +1312,16 @@
               <span data-i18n="extr-run">Executar</span>
             </button>
             <div id="extr-job-monitors" style="display:flex;flex-direction:column;gap:10px"></div>
-            <div style="text-align:center;padding-top:4px">
+            <div id="extr-drive-extrato" style="text-align:center;padding-top:4px">
               <a href="https://drive.google.com/drive/folders/1GTVS6kZdFYAfVcsalOi3wVwa8jgDhkYp?hl=pt-br" target="_blank" rel="noopener noreferrer" data-i18n="extr-drive-link" style="font-size:12px;font-weight:600;color:#5b21b6;text-decoration:none;display:inline-flex;align-items:center;gap:7px;background:#ede9fe;border:1.5px solid #c4b5fd;border-radius:20px;padding:7px 16px">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                 Pasta dos extratos baixados
+              </a>
+            </div>
+            <div id="extr-drive-pdf" style="text-align:center;padding-top:4px;display:none">
+              <a href="https://drive.google.com/drive/folders/1w_X__Y-Py_iPW3NH7joN8li2qwZJTaZV?hl=pt-br" target="_blank" rel="noopener noreferrer" data-i18n="extr-drive-pdf-link" style="font-size:12px;font-weight:600;color:#5b21b6;text-decoration:none;display:inline-flex;align-items:center;gap:7px;background:#ede9fe;border:1.5px solid #c4b5fd;border-radius:20px;padding:7px 16px">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                Pasta dos PDFs baixados
               </a>
             </div>
           </div>
@@ -2074,6 +2080,7 @@ const i18n = {
     'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Cadastro','nav-automacoes':'Automações','nav-dl-extratos':'Download Extratos','nav-cred-bancos':'Credenciais Bancos','nav-baixa-auto':'Baixa automática','baixa-sec-extr':'Download Extratos','baixa-sec-cred':'Atualização de Credenciais',
     'extr-accounts-label':'Contas','extr-sel-ph':'Selecionar contas...','extr-search-ph':'Buscar banco ou agente...','extr-sel-all':'Tudo','extr-date-label':'Data','extr-date-yesterday':'Ontem','extr-date-custom':'Personalizado','extr-date-from':'De','extr-date-to':'Até','extr-run':'Executar','extr-n-sel':'{n} selecionada(s)','extr-drive-link':'Pasta dos extratos baixados',
     'baixa-tipo-dl':'Tipo de download','baixa-tipo-extrato':'Extrato Cru','baixa-enviar-imp':'Enviar ao importador','baixa-enviar-imp-desc':'Aciona o script de importação após concluir',
+    'extr-drive-pdf-link':'Pasta dos PDFs baixados',
     'job-status-pending':'Aguardando','job-status-running':'Executando','job-status-completed':'Concluído','job-status-failed':'Falhou',
     'job-card-concluir':'Concluir','job-card-excluir':'Excluir','job-card-aguard-logs':'Aguardando logs...','job-card-contas':'conta(s)','job-sum-erros':'erro(s)',
     'cred-mode-upd':'Atualizar existente','cred-mode-new':'Criar nova','cred-bank-lbl':'Banco','cred-agent-lbl':'Agente','cred-bank-ph':'Selecionar banco...','cred-agent-ph':'Selecionar agente...','cred-f-empresa':'Empresa','cred-f-usuario':'Usuário','cred-f-senha':'Senha','cred-f-operador':'Operador','cred-f-referencia':'Referência','cred-f-nit':'NIT','cred-f-tipo':'Tipo','cred-f-totp':'TOTP Secret','cred-f-pasta':'Pasta','cred-f-token-num':'Nº Token','cred-save':'Salvar','cred-bcp-note':'Usuário = {agente} (calculado localmente)','cred-gmail-note':'Conta de e-mail para 2FA de outros bancos',
@@ -2186,6 +2193,7 @@ const i18n = {
     'nav-gerencial':'Management','nav-cronograma':'Schedule','nav-cadastro':'Registry','nav-automacoes':'Automations','nav-dl-extratos':'Download Statements','nav-cred-bancos':'Bank Credentials','nav-baixa-auto':'Automatic download','baixa-sec-extr':'Download Statements','baixa-sec-cred':'Credential Update',
     'extr-accounts-label':'Accounts','extr-sel-ph':'Select accounts...','extr-search-ph':'Search bank or agent...','extr-sel-all':'All','extr-date-label':'Date','extr-date-yesterday':'Yesterday','extr-date-custom':'Custom','extr-date-from':'From','extr-date-to':'To','extr-run':'Run','extr-n-sel':'{n} selected','extr-drive-link':'Downloaded statements folder',
     'baixa-tipo-dl':'Download type','baixa-tipo-extrato':'Raw Statement','baixa-enviar-imp':'Send to importer','baixa-enviar-imp-desc':'Triggers the import script after completion',
+    'extr-drive-pdf-link':'Downloaded PDFs folder',
     'job-status-pending':'Waiting','job-status-running':'Running','job-status-completed':'Completed','job-status-failed':'Failed',
     'job-card-concluir':'Complete','job-card-excluir':'Delete','job-card-aguard-logs':'Waiting for logs...','job-card-contas':'account(s)','job-sum-erros':'error(s)',
     'cred-mode-upd':'Update existing','cred-mode-new':'Create new','cred-bank-lbl':'Bank','cred-agent-lbl':'Agent','cred-bank-ph':'Select bank...','cred-agent-ph':'Select agent...','cred-f-empresa':'Company','cred-f-usuario':'User','cred-f-senha':'Password','cred-f-operador':'Operator','cred-f-referencia':'Reference','cred-f-nit':'NIT','cred-f-tipo':'Type','cred-f-totp':'TOTP Secret','cred-f-pasta':'Folder','cred-f-token-num':'Token No.','cred-save':'Save','cred-bcp-note':'User = {agente} (calculated locally)','cred-gmail-note':'Email account for 2FA on other banks',
@@ -2291,6 +2299,7 @@ const i18n = {
     'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Registro','nav-automacoes':'Automatizaciones','nav-dl-extratos':'Descargar Extractos','nav-cred-bancos':'Credenciales Bancos','nav-baixa-auto':'Descarga automática','baixa-sec-extr':'Descargar Extractos','baixa-sec-cred':'Actualización de Credenciales',
     'extr-accounts-label':'Cuentas','extr-sel-ph':'Seleccionar cuentas...','extr-search-ph':'Buscar banco o agente...','extr-sel-all':'Todo','extr-date-label':'Fecha','extr-date-yesterday':'Ayer','extr-date-custom':'Personalizado','extr-date-from':'Desde','extr-date-to':'Hasta','extr-run':'Ejecutar','extr-n-sel':'{n} seleccionada(s)','extr-drive-link':'Carpeta de extractos descargados',
     'baixa-tipo-dl':'Tipo de descarga','baixa-tipo-extrato':'Extracto Bruto','baixa-enviar-imp':'Enviar al importador','baixa-enviar-imp-desc':'Activa el script de importación al concluir',
+    'extr-drive-pdf-link':'Carpeta de PDFs descargados',
     'job-status-pending':'Esperando','job-status-running':'Ejecutando','job-status-completed':'Completado','job-status-failed':'Falló',
     'job-card-concluir':'Completar','job-card-excluir':'Eliminar','job-card-aguard-logs':'Esperando logs...','job-card-contas':'cuenta(s)','job-sum-erros':'error(es)',
     'cred-mode-upd':'Actualizar existente','cred-mode-new':'Crear nueva','cred-bank-lbl':'Banco','cred-agent-lbl':'Agente','cred-bank-ph':'Seleccionar banco...','cred-agent-ph':'Seleccionar agente...','cred-f-empresa':'Empresa','cred-f-usuario':'Usuario','cred-f-senha':'Contraseña','cred-f-operador':'Operador','cred-f-referencia':'Referencia','cred-f-nit':'NIT','cred-f-tipo':'Tipo','cred-f-totp':'TOTP Secret','cred-f-pasta':'Carpeta','cred-f-token-num':'Nº Token','cred-save':'Guardar','cred-bcp-note':'Usuario = {agente} (calculado localmente)','cred-gmail-note':'Cuenta de email para 2FA de otros bancos',
@@ -5510,6 +5519,8 @@ function _extrInit(){
   if(range) range.style.display='none';
   const dex=document.getElementById('extr-date-extrato');const dpdf=document.getElementById('extr-date-pdf');
   if(dex) dex.style.display='';if(dpdf) dpdf.style.display='none';
+  const lext=document.getElementById('extr-drive-extrato');const lpdf=document.getElementById('extr-drive-pdf');
+  if(lext) lext.style.display='';if(lpdf) lpdf.style.display='none';
   document.querySelectorAll('input[name="extr-date-mode"]').forEach(r=>{r.checked=r.value==='ontem';});
   _extrUpdateUI();
   _extrRenderList();
@@ -5643,6 +5654,9 @@ function _extrSetTipo(tipo){
   const dex=document.getElementById('extr-date-extrato');const dpdf=document.getElementById('extr-date-pdf');
   if(dex) dex.style.display=tipo==='extrato'?'':'none';
   if(dpdf) dpdf.style.display=tipo==='pdf'?'':'none';
+  const lext=document.getElementById('extr-drive-extrato');const lpdf=document.getElementById('extr-drive-pdf');
+  if(lext) lext.style.display=tipo==='extrato'?'':'none';
+  if(lpdf) lpdf.style.display=tipo==='pdf'?'':'none';
   if(tipo==='pdf') _extrRenderMonths();
   _extrUpdateUI();
 }
@@ -6500,9 +6514,9 @@ function _renderUnlinkedGateways(){
   const ignCI=new Set((ignored.cashin||[]).map(String)),ignCO=new Set((ignored.cashout||[]).map(String)),ignRF=new Set((ignored.refunds||[]).map(String)),ignCB=new Set((ignored.chargebacks||[]).map(String));
   const allCashinIds=Object.keys(vr.cashin||{});
   const allCashoutIds=Object.keys(vr.cashout||{});
-  const allRefundNames=Object.keys(vr.refunds||{});
-  const allCbkNames=Object.keys(vr.chargebacks||{});
-  if(!allCashinIds.length&&!allCashoutIds.length&&!allRefundNames.length&&!allCbkNames.length){wrap.innerHTML='';return;}
+  const allRefundIds=Object.keys(vr.refunds||{});
+  const allCbkIds=Object.keys(vr.chargebacks||{});
+  if(!allCashinIds.length&&!allCashoutIds.length&&!allRefundIds.length&&!allCbkIds.length){wrap.innerHTML='';return;}
   const actCI=new Set(),actCO=new Set(),actRF=new Set(),actCB=new Set();
   (store.conciliacoes||[]).forEach(c=>{
     if(c.status==='encerrada') return;
@@ -6514,8 +6528,8 @@ function _renderUnlinkedGateways(){
   });
   const uCI=allCashinIds.filter(id=>!actCI.has(id)&&!ignCI.has(id));
   const uCO=allCashoutIds.filter(id=>!actCO.has(id)&&!ignCO.has(id));
-  const uRF=allRefundNames.filter(n=>!actRF.has(n)&&!ignRF.has(n));
-  const uCB=allCbkNames.filter(n=>!actCB.has(n)&&!ignCB.has(n));
+  const uRF=allRefundIds.filter(id=>!actRF.has(id)&&!ignRF.has(id));
+  const uCB=allCbkIds.filter(id=>!actCB.has(id)&&!ignCB.has(id));
   const total=uCI.length+uCO.length+uRF.length+uCB.length;
   if(!total){wrap.innerHTML='';return;}
   const mkRows=(ids,type,dataMap,useKey)=>ids.map(id=>{
@@ -6537,8 +6551,8 @@ function _renderUnlinkedGateways(){
   const body=[
     mkBlock('Cash-in',uCI,'cashin',vr.cashin,false),
     mkBlock('Cash-out',uCO,'cashout',vr.cashout,false),
-    mkBlock('Refunds',uRF,'refunds',vr.refunds,true),
-    mkBlock('Chargebacks',uCB,'chargebacks',vr.chargebacks,true),
+    mkBlock('Refunds',uRF,'refunds',vr.refunds,false),
+    mkBlock('Chargebacks',uCB,'chargebacks',vr.chargebacks,false),
   ].filter(Boolean).join('');
   const selN=_unlinkedGwSelected.size;
   wrap.innerHTML=`<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;margin-bottom:10px;overflow:hidden">
