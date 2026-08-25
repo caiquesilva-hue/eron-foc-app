@@ -2413,6 +2413,7 @@ const FLAG_MAP={
   'España':'🇪🇸','Panama':'🇵🇦','Panamá':'🇵🇦','Costa Rica':'🇨🇷','Guatemala':'🇬🇹',
   'Republica Dominicana':'🇩🇴','República Dominicana':'🇩🇴','Dominican Republic':'🇩🇴',
   'Estônia':'🇪🇪','Estonia':'🇪🇪',
+  'Canadá':'🇨🇦','Canada':'🇨🇦',
 };
 function countryFlag(name){ return FLAG_MAP[name]||'🌍'; }
 
@@ -6855,9 +6856,10 @@ function submitConciliacao(){
   const isEdit=_editConcIdx>=0;
   const encerrado=isEdit&&(document.getElementById('conc-encerrar')?.checked||false);
   let concId;
+  let _oldConcId='';
   if(isEdit){
     const _oldConc=store.conciliacoes[_editConcIdx];
-    const _oldConcId=(_oldConc.id||_oldConc.nome||'').replace(/['"]/g,'');
+    _oldConcId=(_oldConc.id||_oldConc.nome||'').replace(/['"]/g,'');
     store.conciliacoes[_editConcIdx]={..._oldConc,nome,pais,agente,tipo,contas,processadores,obs,frequencia,status:encerrado?'encerrada':'ativa'};
     concId=(store.conciliacoes[_editConcIdx].id||nome).replace(/['"]/g,'');
     // Migrar entrada do volume map se a chave mudou (renomeou sem id)
