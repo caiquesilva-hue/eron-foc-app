@@ -5467,7 +5467,8 @@ let _extrDateMode='ontem';
 let _extrPanelOpen=false;
 let _extrTipo='extrato';
 let _extrImportador=false;
-let _jobRunning=false;
+const _MAX_JOBS=5; // max pending+running jobs per user
+function _activeJobCount(){let n=0;_jobMonitors.forEach(m=>{if(m.status==='pending'||m.status==='running')n++;});return n;}
 
 function _extrKey(t){return `${t.pais}__${t.banco}__${t.agente}`;}
 
@@ -5482,8 +5483,6 @@ function _extrInit(){
   _extrPanelOpen=false;
   _extrTipo='extrato';
   _extrImportador=false;
-  _jobRunning=false;
-  _currentJobId=null;
   _stopAllJobMonitors();
   const monitors=document.getElementById('extr-job-monitors');
   if(monitors) monitors.innerHTML='';
@@ -5616,7 +5615,7 @@ function _extrUpdateUI(){
   const btn=document.getElementById('extr-run-btn');
   if(btn){
     const dateOk=_extrDateMode!=='custom'||!!document.getElementById('extr-from')?.value;
-    const enabled=n>0&&dateOk&&!_jobRunning;
+    const enabled=n>0&&dateOk&&_activeJobCount()<_MAX_JOBS;
     btn.disabled=!enabled;
     btn.style.background=enabled?'':'#d1d5db';
     btn.style.color=enabled?'':'#6b7280';
@@ -5652,8 +5651,7 @@ function _extrSetDate(mode){
 }
 
 // ── Job live monitor (per-job, collapsible) ──────────────────────────────
-const _jobMonitors=new Map(); // jobId → {ref, cb, meta, lastKey}
-let _currentJobId=null;       // job started in this session (for _jobRunning gating)
+const _jobMonitors=new Map(); // jobId → {ref, cb, meta, lastKey, status}
 const _JOB_RETENTION_DAYS=3;
 function _escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
@@ -5717,8 +5715,9 @@ function _createJobCard(jobId,meta,initialStatus){
 
 async function stopJobCard(jobId){
   try{
+    const m=_jobMonitors.get(jobId);if(m) m.status='completed';
+    _extrUpdateUI();
     await _getEronFb().database().ref('jobRequests/'+jobId).update({status:'completed'});
-    if(jobId===_currentJobId&&_jobRunning){_jobRunning=false;_extrUpdateUI();}
   }catch(e){_toast('Erro ao forçar conclusão.',3000);}
 }
 
@@ -5726,7 +5725,7 @@ async function deleteJobCard(jobId){
   _stopJobMonitor(jobId);
   const card=document.getElementById('jm-card-'+jobId);
   if(card) card.remove();
-  if(jobId===_currentJobId&&_jobRunning){_jobRunning=false;_extrUpdateUI();}
+  _extrUpdateUI();
   try{await _getEronFb().database().ref('jobRequests/'+jobId).remove();}catch(e){}
 }
 
@@ -5743,9 +5742,9 @@ function _renderJobCard(jobId,job){
   if(badge){const SI=_jobSI(status);badge.style.background=SI.bg;badge.style.color=SI.c;badge.textContent=SI.label;}
   const stopBtn=document.getElementById('jm-stop-'+jobId);
   if(stopBtn) stopBtn.style.display=(status==='completed'||status==='failed')?'none':'flex';
-  if((status==='completed'||status==='failed')&&_jobRunning&&jobId===_currentJobId){
-    _jobRunning=false;
-    _extrUpdateUI();
+  if(m&&m.status!==status){
+    m.status=status;
+    _extrUpdateUI(); // refresh button state when any job completes
   }
   const {nContas=0,dateFrom='',dateTo=''}=(m&&m.meta)||{};
   const logs=job.logs?Object.entries(job.logs).sort((a,b)=>a[0]<b[0]?-1:1).map(([,v])=>v):[];
@@ -5773,7 +5772,7 @@ function _stopAllJobMonitors(){_jobMonitors.forEach((_,id)=>_stopJobMonitor(id))
 
 function _startJobMonitor(jobId,meta){
   if(_jobMonitors.has(jobId)) _stopJobMonitor(jobId);
-  _jobMonitors.set(jobId,{ref:null,cb:null,meta,lastKey:null});
+  _jobMonitors.set(jobId,{ref:null,cb:null,meta,lastKey:null,status:'pending'});
   const m=_jobMonitors.get(jobId);
   m.ref=_getEronFb().database().ref('jobRequests/'+jobId);
   m.cb=m.ref.on('value',snap=>{
@@ -5819,15 +5818,13 @@ async function _loadUserJobs(){
 }
 
 async function runExtratosJob(){
-  if(_extrSelected.size===0||_jobRunning) return;
-  _jobRunning=true;
-  _extrUpdateUI();
+  if(_extrSelected.size===0||_activeJobCount()>=_MAX_JOBS) return;
   let dateFrom,dateTo;
   if(_extrDateMode==='ontem'){
     dateFrom=dateTo=_extrFmtYesterday();
   } else {
     dateFrom=document.getElementById('extr-from')?.value;
-    if(!dateFrom){_jobRunning=false;_extrUpdateUI();_toast('Selecione uma data.',3000);return;}
+    if(!dateFrom){_toast('Selecione uma data.',3000);return;}
     dateTo=dateFrom;
   }
   const contas=[..._extrSelected].map(key=>{const p=key.split('__');return{pais:p[0],banco:p[1],agente:p[2]};});
@@ -5835,14 +5832,14 @@ async function runExtratosJob(){
   const now=Date.now();
   const job={type:'download_extratos',status:'pending',requested_by:window._loggedEmail||'—',created_at:now,params:{contas,date_from:dateFrom,date_to:dateTo,tipo:_extrTipo,enviar_importador:_extrImportador}};
   const meta={nContas:contas.length,dateFrom,dateTo,createdAt:now};
-  _currentJobId=jobId;
   _createJobCard(jobId,meta,'pending');
   _startJobMonitor(jobId,meta);
   _renderJobCard(jobId,{status:'pending'});
+  _extrUpdateUI();
   try{
     await _getEronFb().database().ref('jobRequests/'+jobId).set(job);
   }catch(e){
-    _jobRunning=false;
+    const m=_jobMonitors.get(jobId);if(m) m.status='failed';
     _extrUpdateUI();
     const content=document.getElementById('jm-content-'+jobId);
     if(content) content.innerHTML=`<span style="color:#dc2626">❌ Erro: ${_escHtml(e.message)}</span>`;
