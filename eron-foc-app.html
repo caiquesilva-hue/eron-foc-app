@@ -5797,6 +5797,24 @@ async function deleteJobCard(jobId){
   try{await _getEronFb().database().ref('jobRequests/'+jobId).remove();}catch(e){}
 }
 
+function _buildJobTerminalSummary(logs){
+  const success=[],noMov=[],errors=[];
+  let cur=null,ok=false,sem=false,err=false;
+  const flush=()=>{if(!cur)return;(err?errors:sem?noMov:ok?success:errors).push(cur);cur=null;ok=false;sem=false;err=false;};
+  for(const l of logs){
+    const msg=l.msg||'';
+    const ms=msg.match(/Iniciando Job:\s*(.+?)\s*\(Agente:\s*(.+?)\)/);
+    if(ms){flush();cur=`${ms[1]} (${ms[2]})`;continue;}
+    if(!cur) continue;
+    if(msg.includes('salvo e enviado')||msg.includes('Upload concluído com sucesso')) ok=true;
+    if(msg.includes('indisponível')||msg.includes('Sem movimento')||msg.includes('no hay')||msg.includes('no tiene')) sem=true;
+    if(msg.includes('Nenhuma conta encontrada')||msg.includes('Nenhum extrato')||l.level==='ERROR') err=true;
+    if(/🏁 Job .+ finalizado/.test(msg)) flush();
+  }
+  flush();
+  return {success,noMov,errors};
+}
+
 function _renderJobCard(jobId,job){
   const content=document.getElementById('jm-content-'+jobId);
   if(!content) return;
@@ -5824,7 +5842,14 @@ function _renderJobCard(jobId,job){
   const _bannerHtml=(status==='pending'||status==='running')?`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:12px;color:#92400e;line-height:1.5;margin-bottom:10px"><strong>${t('job-banner-title')}</strong><br>⚠️ ${t('job-banner-desc')}</div>`:'';
   const _summaryHtml=sum?`<div style="margin-bottom:8px;font-size:12px;color:#6b7280">${sum.concluidos}/${sum.total} ${t('job-card-contas')} · ${sum.erros} ${t('job-sum-erros')}</div>`:'';
   const _logSection=logs.length?`<div id="jm-log-${jobId}" style="background:#0f172a;border-radius:8px;padding:12px 14px;max-height:240px;overflow-y:auto;font-family:'SFMono-Regular',Consolas,monospace;font-size:12px">${logsHtml}</div>`:`<span style="font-size:12px;color:var(--e-muted)">${t('job-card-aguard-logs')}</span>`;
-  content.innerHTML=`${_summaryHtml}${_bannerHtml}${_logSection}`;
+  let _termSummaryHtml='';
+  if((status==='completed'||status==='failed')&&logs.length){
+    const _ts=_buildJobTerminalSummary(logs);
+    const _mkG=(items,emoji,clr)=>items.length?`<div style="margin-bottom:6px"><span style="color:${clr};font-weight:700">${emoji} ${items.length} conta${items.length!==1?'s':''}:</span>${items.map(i=>`<div style="color:#94a3b8;padding-left:12px">• ${_escHtml(i)}</div>`).join('')}</div>`:'';
+    const _tsBody=_mkG(_ts.success,'🟢 Sucesso','#4ade80')+_mkG(_ts.noMov,'🟡 Sem movimento','#fbbf24')+_mkG(_ts.errors,'🔴 Com erro','#f87171');
+    if(_tsBody) _termSummaryHtml=`<div style="background:#0f172a;border-radius:8px;padding:12px 14px;margin-top:8px;font-family:'SFMono-Regular',Consolas,monospace;font-size:12px;line-height:1.7;border-top:1px solid #1e293b">${_tsBody}</div>`;
+  }
+  content.innerHTML=`${_summaryHtml}${_bannerHtml}${_logSection}${_termSummaryHtml}`;
   const box=document.getElementById('jm-log-'+jobId);
   if(box) box.scrollTop=box.scrollHeight;
 }
