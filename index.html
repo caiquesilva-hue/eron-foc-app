@@ -1294,7 +1294,7 @@
               </div>
               <!-- PDF: seleção de mês -->
               <div id="extr-date-pdf" style="display:none">
-                <div id="extr-months-grid" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+                <div id="extr-months-grid" style="display:flex;flex-direction:column;gap:8px"></div>
               </div>
             </div>
             <div onclick="_extrToggleImportador()" style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:14px 20px;cursor:pointer;gap:12px;user-select:none">
@@ -5651,7 +5651,7 @@ function _extrRenderMonths(){
   if(!grid) return;
   const now=new Date();
   const months=[];
-  for(let i=0;i<6;i++){
+  for(let i=0;i<5;i++){
     const d=new Date(now.getFullYear(),now.getMonth()-i,1);
     const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     const label=d.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
