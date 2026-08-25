@@ -1267,27 +1267,34 @@
               </div>
               <div id="extr-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"></div>
             </div>
-            <div style="background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:20px 24px">
-              <div style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.09em;margin-bottom:14px" data-i18n="extr-date-label">Data</div>
-              <div style="display:flex;flex-direction:column;gap:10px">
-                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--e-text)">
-                  <input type="radio" name="extr-date-mode" value="ontem" checked onchange="_extrSetDate('ontem')" style="accent-color:var(--e-purple);width:15px;height:15px;flex-shrink:0">
-                  <span data-i18n="extr-date-yesterday">Ontem</span>
-                </label>
-                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--e-text)">
-                  <input type="radio" name="extr-date-mode" value="custom" onchange="_extrSetDate('custom')" style="accent-color:var(--e-purple);width:15px;height:15px;flex-shrink:0">
-                  <span data-i18n="extr-date-custom">Personalizado</span>
-                </label>
-                <div id="extr-date-range" style="display:none;margin-left:25px;margin-top:6px">
-                  <input type="date" id="extr-from" oninput="_extrUpdateUI()" style="width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;outline:none;color:#111827">
-                </div>
-              </div>
-            </div>
             <div style="background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:16px 20px">
               <div style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.09em;margin-bottom:10px" data-i18n="baixa-tipo-dl">Tipo de download</div>
               <div style="display:flex;background:#ede9fe;border-radius:20px;padding:3px;gap:2px">
                 <button type="button" id="extr-tipo-extrato" onclick="_extrSetTipo('extrato')" style="flex:1;border:none;border-radius:17px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;background:#7c3aed;color:#fff;font-family:inherit" data-i18n="baixa-tipo-extrato">Extrato Cru</button>
                 <button type="button" id="extr-tipo-pdf" onclick="_extrSetTipo('pdf')" style="flex:1;border:none;border-radius:17px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;background:transparent;color:#5b21b6;font-family:inherit">PDF</button>
+              </div>
+            </div>
+            <div style="background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:20px 24px">
+              <div style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.09em;margin-bottom:14px" data-i18n="extr-date-label">Data</div>
+              <!-- Extrato Cru: ontem / personalizado -->
+              <div id="extr-date-extrato">
+                <div style="display:flex;flex-direction:column;gap:10px">
+                  <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--e-text)">
+                    <input type="radio" name="extr-date-mode" value="ontem" checked onchange="_extrSetDate('ontem')" style="accent-color:var(--e-purple);width:15px;height:15px;flex-shrink:0">
+                    <span data-i18n="extr-date-yesterday">Ontem</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--e-text)">
+                    <input type="radio" name="extr-date-mode" value="custom" onchange="_extrSetDate('custom')" style="accent-color:var(--e-purple);width:15px;height:15px;flex-shrink:0">
+                    <span data-i18n="extr-date-custom">Personalizado</span>
+                  </label>
+                  <div id="extr-date-range" style="display:none;margin-left:25px;margin-top:6px">
+                    <input type="date" id="extr-from" oninput="_extrUpdateUI()" style="width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;outline:none;color:#111827">
+                  </div>
+                </div>
+              </div>
+              <!-- PDF: seleção de mês -->
+              <div id="extr-date-pdf" style="display:none">
+                <div id="extr-months-grid" style="display:flex;flex-wrap:wrap;gap:8px"></div>
               </div>
             </div>
             <div onclick="_extrToggleImportador()" style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:14px 20px;cursor:pointer;gap:12px;user-select:none">
@@ -5467,6 +5474,7 @@ let _extrDateMode='ontem';
 let _extrPanelOpen=false;
 let _extrTipo='extrato';
 let _extrImportador=false;
+let _extrPdfMonth=null; // 'YYYY-MM' when tipo=pdf
 const _MAX_JOBS=5; // max pending+running jobs per user
 function _activeJobCount(){let n=0;_jobMonitors.forEach(m=>{if(m.status==='pending'||m.status==='running')n++;});return n;}
 
@@ -5483,6 +5491,7 @@ function _extrInit(){
   _extrPanelOpen=false;
   _extrTipo='extrato';
   _extrImportador=false;
+  _extrPdfMonth=null;
   _stopAllJobMonitors();
   const monitors=document.getElementById('extr-job-monitors');
   if(monitors) monitors.innerHTML='';
@@ -5499,6 +5508,8 @@ function _extrInit(){
   if(chevron) chevron.style.transform='';
   const range=document.getElementById('extr-date-range');
   if(range) range.style.display='none';
+  const dex=document.getElementById('extr-date-extrato');const dpdf=document.getElementById('extr-date-pdf');
+  if(dex) dex.style.display='';if(dpdf) dpdf.style.display='none';
   document.querySelectorAll('input[name="extr-date-mode"]').forEach(r=>{r.checked=r.value==='ontem';});
   _extrUpdateUI();
   _extrRenderList();
@@ -5614,7 +5625,7 @@ function _extrUpdateUI(){
   // Run button
   const btn=document.getElementById('extr-run-btn');
   if(btn){
-    const dateOk=_extrDateMode!=='custom'||!!document.getElementById('extr-from')?.value;
+    const dateOk=_extrTipo==='pdf'?!!_extrPdfMonth:(_extrDateMode!=='custom'||!!document.getElementById('extr-from')?.value);
     const enabled=n>0&&dateOk&&_activeJobCount()<_MAX_JOBS;
     btn.disabled=!enabled;
     btn.style.background=enabled?'':'#d1d5db';
@@ -5624,12 +5635,37 @@ function _extrUpdateUI(){
   }
 }
 
-function _extrSetTipo(t){
-  _extrTipo=t;
-  const ea=document.getElementById('extr-tipo-extrato');
-  const pa=document.getElementById('extr-tipo-pdf');
-  if(ea){ea.style.background=t==='extrato'?'#7c3aed':'transparent';ea.style.color=t==='extrato'?'#fff':'#5b21b6';}
-  if(pa){pa.style.background=t==='pdf'?'#7c3aed':'transparent';pa.style.color=t==='pdf'?'#fff':'#5b21b6';}
+function _extrSetTipo(tipo){
+  _extrTipo=tipo;
+  const ea=document.getElementById('extr-tipo-extrato');const pa=document.getElementById('extr-tipo-pdf');
+  if(ea){ea.style.background=tipo==='extrato'?'#7c3aed':'transparent';ea.style.color=tipo==='extrato'?'#fff':'#5b21b6';}
+  if(pa){pa.style.background=tipo==='pdf'?'#7c3aed':'transparent';pa.style.color=tipo==='pdf'?'#fff':'#5b21b6';}
+  const dex=document.getElementById('extr-date-extrato');const dpdf=document.getElementById('extr-date-pdf');
+  if(dex) dex.style.display=tipo==='extrato'?'':'none';
+  if(dpdf) dpdf.style.display=tipo==='pdf'?'':'none';
+  if(tipo==='pdf') _extrRenderMonths();
+  _extrUpdateUI();
+}
+function _extrRenderMonths(){
+  const grid=document.getElementById('extr-months-grid');
+  if(!grid) return;
+  const now=new Date();
+  const months=[];
+  for(let i=0;i<6;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const label=d.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+    months.push({key,label});
+  }
+  grid.innerHTML=months.map(m=>{
+    const active=_extrPdfMonth===m.key;
+    return `<button type="button" onclick="_extrSetPdfMonth('${m.key}')" style="padding:7px 16px;border-radius:20px;border:1.5px solid ${active?'#7c3aed':'var(--e-pale)'};background:${active?'#7c3aed':'transparent'};color:${active?'#fff':'var(--e-text)'};font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;text-transform:capitalize">${m.label}</button>`;
+  }).join('');
+}
+function _extrSetPdfMonth(key){
+  _extrPdfMonth=key;
+  _extrRenderMonths();
+  _extrUpdateUI();
 }
 function _extrToggleImportador(){
   _extrImportador=!_extrImportador;
@@ -5820,7 +5856,12 @@ async function _loadUserJobs(){
 async function runExtratosJob(){
   if(_extrSelected.size===0||_activeJobCount()>=_MAX_JOBS) return;
   let dateFrom,dateTo;
-  if(_extrDateMode==='ontem'){
+  if(_extrTipo==='pdf'){
+    if(!_extrPdfMonth){_toast('Selecione um mês.',3000);return;}
+    const [yr,mo]=_extrPdfMonth.split('-').map(Number);
+    dateFrom=`${_extrPdfMonth}-01`;
+    dateTo=`${_extrPdfMonth}-${String(new Date(yr,mo,0).getDate()).padStart(2,'0')}`;
+  } else if(_extrDateMode==='ontem'){
     dateFrom=dateTo=_extrFmtYesterday();
   } else {
     dateFrom=document.getElementById('extr-from')?.value;
