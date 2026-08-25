@@ -5651,7 +5651,7 @@ function _extrRenderMonths(){
   if(!grid) return;
   const now=new Date();
   const months=[];
-  for(let i=0;i<5;i++){
+  for(let i=1;i<=5;i++){
     const d=new Date(now.getFullYear(),now.getMonth()-i,1);
     const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     const label=d.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
