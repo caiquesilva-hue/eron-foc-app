@@ -786,6 +786,7 @@
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
       <div style="display:flex;gap:8px;align-items:stretch">
         <button class="btn-secondary" onclick="openVolumeImportModal()" data-requires-edit title="Importar CSVs de volume para calcular prioridade automaticamente" style="font-size:12px;padding:5px 12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> <span data-i18n="btn-importar-volume">Importar Volume</span></button>
+        <button class="btn-secondary" onclick="_crossCheckConciliacoes(true)" data-requires-edit title="Verifica e registra países, agentes e processadores que estejam nas conciliações mas ausentes no cadastro" style="font-size:12px;padding:5px 12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 12l2 2 4-4"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0"/></svg> Verificar dados</button>
         <button class="btn-primary" onclick="openConciliacaoModal()" data-requires-edit><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg> <span data-i18n="btn-add-conciliacao">Adicionar conciliação</span></button>
       </div>
       <span id="vol-last-import-lbl" style="font-size:10px;color:var(--e-muted);white-space:nowrap"></span>
@@ -5161,6 +5162,7 @@ function loadStore(){
     if(saved.credentials) store.credentials=saved.credentials;
     if(saved.slackConfig) store.slackConfig=saved.slackConfig;
     if(store.volumeRankings&&store.concilVolumeMap) _rebuildCombinedRanking();
+    setTimeout(()=>_crossCheckConciliacoes(false),0);
   } catch(e){}
 }
 // ─── FIREBASE REALTIME DATABASE ──────────────────────────────────
@@ -5312,6 +5314,7 @@ function _applyFbData(saved){
   if(saved.liquidacoesManual&&!_ownWrites.liquidacoesManual)store.liquidacoesManual=_fbArr(saved.liquidacoesManual);
   if(saved.liquidacoesExcluidos&&!_ownWrites.liquidacoesExcluidos)store.liquidacoesExcluidos=saved.liquidacoesExcluidos;
   if(store.volumeRankings&&store.concilVolumeMap) _rebuildCombinedRanking();
+  _crossCheckConciliacoes(false);
   // cronogramaData gerenciado pelo listener específico em _fbRef.child('cronogramaData')
   if(saved.cierreData&&!_ownWrites.cierreData){
     const cierre={};
@@ -6902,6 +6905,53 @@ function deleteConciliacao(idx){
     saveStore(); _fbSync('conciliacoes');
     renderGerencialConciliacoes(); updateCounts();
   });
+}
+
+function _crossCheckConciliacoes(showToast=false){
+  if(!store.conciliacoes?.length) return;
+  const addedPaises=[],addedAgentes=[],addedProc=[],missingContas=[];
+  (store.conciliacoes).forEach(conc=>{
+    const pais=(conc.pais||'').trim();
+    const agente=(conc.agente||'').trim();
+    if(pais&&!store.paises.includes(pais)){store.paises.push(pais);addedPaises.push(pais);}
+    if(agente){
+      const exists=(store.agentes||[]).some(a=>a.nome===agente);
+      if(!exists){
+        if(!store.agentes) store.agentes=[];
+        store.agentes.push({nome:agente,pais,responsavel:''});
+        addedAgentes.push(agente);
+      }
+    }
+    (conc.processadores||[]).forEach(p=>{
+      if(p&&!(store.processadores||[]).includes(p)){
+        store.processadores.push(p);
+        addedProc.push(p);
+      }
+    });
+    (conc.contas||[]).forEach(sigla=>{
+      if(sigla&&!(store.contas||[]).some(c=>c.sigla===sigla)){
+        missingContas.push(`${sigla} (em: ${conc.nome})`);
+      }
+    });
+  });
+  store.paises=[...new Set(store.paises)].sort();
+  store.processadores=[...new Set(store.processadores)].sort();
+  const anyAdded=addedPaises.length||addedAgentes.length||addedProc.length;
+  if(anyAdded){
+    saveStore();
+    if(addedPaises.length) _fbSync('paises');
+    if(addedAgentes.length) _fbSync('agentes');
+    if(addedProc.length) _fbSync('processadores');
+    renderCadastro('pais'); renderCadastro('agente'); renderCadastro('processadores');
+    renderGerencialConciliacoes();
+  }
+  if(!showToast) return;
+  const parts=[];
+  if(addedPaises.length) parts.push(`${addedPaises.length} país(es) adicionado(s): ${addedPaises.join(', ')}`);
+  if(addedAgentes.length) parts.push(`${addedAgentes.length} agente(s) adicionado(s): ${addedAgentes.join(', ')}`);
+  if(addedProc.length) parts.push(`${addedProc.length} processador(es) adicionado(s): ${addedProc.join(', ')}`);
+  if(missingContas.length) parts.push(`⚠ Contas sem cadastro completo (requerem banco): ${[...new Set(missingContas)].join('; ')}`);
+  _toast(parts.length?parts.join(' | '):'✓ Tudo consistente — nenhum dado faltando.',7000);
 }
 
 // ─── CRONOGRAMA CONCILIAÇÕES ─────────────────────────────────────
