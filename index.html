@@ -5832,6 +5832,7 @@ function _renderJobCard(jobId,job){
 function _stopJobMonitor(jobId){
   const m=_jobMonitors.get(jobId);
   if(!m) return;
+  if(m._stopTimer){clearTimeout(m._stopTimer);m._stopTimer=null;}
   if(m.ref&&m.cb){m.ref.off('value',m.cb);}
   _jobMonitors.delete(jobId);
 }
@@ -5848,7 +5849,10 @@ function _startJobMonitor(jobId,meta){
     if(!j) return;
     _renderJobCard(jobId,j);
     if(j.status==='completed'||j.status==='failed'){
-      m.ref.off('value',m.cb); m.cb=null;
+      // Delay unsubscribe to allow late-arriving log entries written after status update
+      if(!m._stopTimer) m._stopTimer=setTimeout(()=>{
+        if(m.cb){m.ref.off('value',m.cb);m.cb=null;}
+      },6000);
     }
   });
 }
