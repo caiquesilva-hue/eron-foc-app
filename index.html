@@ -2173,6 +2173,7 @@ const i18n = {
     'liq-st-nao-iniciado':'Não iniciado','liq-st-em-elab':'Em Elaboração','liq-st-concluida':'Concluída','liq-st-sem-mov':'Sem Movimento','liq-st-pendente':'Pendente',
     'liq-search-ph':'Buscar nome, país, agente...','conc-search-ph':'Buscar nome, país, agente...','liq-empty-ger-title':'Nenhuma conciliação de Processadores ou Mista','liq-empty-crono-title':'Nenhuma conciliação encontrada',
     'conc-col-tipo':'Tipo','conc-col-contas':'Contas vinculadas','conc-col-gateways':'Gateways vinculados',
+    'conc-col-resp':'Resp.','conc-col-prioridade':'Prioridade','conc-col-acomp':'Acompanhamento','conc-col-volume':'Volume','conc-col-volume-sub':'últimos 6 dias',
     'conc-empty-title':'Nenhuma conciliação cadastrada','conc-empty-sub':'Adicione conciliações vinculando contas de Gerencial > Accounts.',
     'conc-unlinked-sem':'sem conciliação ativa','conc-unlinked-refunds':'Reembolsos','conc-unlinked-cbk':'Contestações',
     'slack-report-q':'Reportar no Slack?','slack-yes':'Sim, reportar','slack-no':'Não',
@@ -2280,6 +2281,7 @@ const i18n = {
     'liq-st-nao-iniciado':'Not started','liq-st-em-elab':'In Progress','liq-st-concluida':'Completed','liq-st-sem-mov':'No Movement','liq-st-pendente':'Pending',
     'liq-search-ph':'Search name, country, agent...','conc-search-ph':'Search name, country, agent...','liq-empty-ger-title':'No Processor or Mixed reconciliations','liq-empty-crono-title':'No reconciliation found',
     'conc-col-tipo':'Type','conc-col-contas':'Linked accounts','conc-col-gateways':'Linked gateways',
+    'conc-col-resp':'Resp.','conc-col-prioridade':'Priority','conc-col-acomp':'Status','conc-col-volume':'Volume','conc-col-volume-sub':'last 6 days',
     'conc-empty-title':'No reconciliations registered','conc-empty-sub':'Add reconciliations linking accounts from Management > Accounts.',
     'conc-unlinked-sem':'with no active reconciliation','conc-unlinked-refunds':'Refunds','conc-unlinked-cbk':'Chargebacks',
     'slack-report-q':'Report on Slack?','slack-yes':'Yes, report','slack-no':'No',
@@ -2387,6 +2389,7 @@ const i18n = {
     'liq-st-nao-iniciado':'No iniciado','liq-st-em-elab':'En Elaboración','liq-st-concluida':'Concluida','liq-st-sem-mov':'Sin Movimiento','liq-st-pendente':'Pendiente',
     'liq-search-ph':'Buscar nombre, país, agente...','conc-search-ph':'Buscar nombre, país, agente...','liq-empty-ger-title':'Sin conciliaciones de Procesadores o Mixtas','liq-empty-crono-title':'No se encontraron conciliaciones',
     'conc-col-tipo':'Tipo','conc-col-contas':'Cuentas vinculadas','conc-col-gateways':'Gateways vinculados',
+    'conc-col-resp':'Resp.','conc-col-prioridade':'Prioridad','conc-col-acomp':'Seguimiento','conc-col-volume':'Volumen','conc-col-volume-sub':'últimos 6 días',
     'conc-empty-title':'Sin conciliaciones registradas','conc-empty-sub':'Agrega conciliaciones vinculando cuentas desde Gerencial > Accounts.',
     'conc-unlinked-sem':'sin conciliación activa','conc-unlinked-refunds':'Devoluciones','conc-unlinked-cbk':'Contracargos',
     'slack-report-q':'¿Reportar en Slack?','slack-yes':'Sí, reportar','slack-no':'No',
@@ -6990,23 +6993,33 @@ function downloadConcilCSV(){
 // ─── IMPORT CSV DE GRUPOS DE CONCILIAÇÃO ─────────────────────────
 function _extractFreqFromRule(rule){
   if(!rule||!rule.trim()) return '';
-  const parts=rule.split(' - ');
-  const last=(parts[parts.length-1]||'').trim();
-  if(/^T\d+$/.test(last)) return last;
-  if(last.toLowerCase().includes('rio')) return 'Diário';
+  const r=rule.trim().replace(/\r/g,'');
+  // Match T1, T2, T3... as a standalone token (not part of "TOP")
+  const mT=r.match(/(?:^|[\s\-])(T\d+)(?:[\s\-]|$)/);
+  if(mT) return mT[1];
+  // Match Diário / Diario / DiÃ¡rio (encoding variants)
+  if(/di.{0,3}r[íi]?o/i.test(r)||r.toLowerCase().includes('diario')||r.toLowerCase().includes('diário')) return 'Diário';
   return '';
 }
 function _importUpdateConcilCSV(csvText){
-  const lines=csvText.trim().split('\n');
+  const lines=csvText.replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim().split('\n');
   if(lines.length<2){_toast('CSV vazio.',3000);return;}
+  // Parse header dynamically to find correct column indices
+  const headerCols=_parseCSVLine(lines[0]);
+  const _fCol=(...needles)=>{for(const n of needles){const nl=n.toLowerCase();const idx=headerCols.findIndex(h=>(h||'').toLowerCase().includes(nl));if(idx>=0)return idx;}return -1;};
+  const colNome=_fCol('apelido');
+  const colTipo=_fCol('tipo');
+  const colGw=_fCol('id gateway','idgateway');
+  const colRegra=_fCol('cronograma');
+  if(colNome<0){_toast('CSV inválido: coluna "Apelido" não encontrada.',5000);return;}
   const groups=new Map();
   for(let i=1;i<lines.length;i++){
     const cols=_parseCSVLine(lines[i]);
-    if(cols.length<5) continue;
-    const nome=(cols[1]||'').trim();
-    const tipoCSV=(cols[3]||'').trim().toLowerCase();
-    const gwRaw=(cols[4]||'').trim();
-    const cronRule=cols.length>14?(cols[14]||'').trim():'';
+    if(cols.length<3) continue;
+    const nome=(cols[colNome]||'').trim();
+    const tipoCSV=colTipo>=0?(cols[colTipo]||'').trim().toLowerCase():'';
+    const gwRaw=colGw>=0?(cols[colGw]||'').trim():'';
+    const cronRule=colRegra>=0?(cols[colRegra]||'').trim():'';
     if(!nome) continue;
     const gwIds=gwRaw.split(',').map(s=>s.trim()).filter(Boolean);
     const opType=tipoCSV==='cashin'?'cashin':tipoCSV==='cashout'?'cashout':tipoCSV==='refund'?'refunds':tipoCSV==='chargeback'?'chargebacks':null;
@@ -7745,14 +7758,14 @@ function renderCronogramaConciliacoes(){
   const INFO_COLS=9;
   const _sth=(col,lbl,idx,extra='')=>`<th class="${_sortThCls('crono-conc',col)} col-info${extra?' cal-sticky':''}" ${extra} data-col-key="${col}" onclick="toggleSort('crono-conc','${col}')" style="cursor:pointer;position:relative">${lbl}${_sortArrow('crono-conc',col)}${extra?'':_colBtns('crono-conc',col,idx)}</th>`;
   const _cDefs=[
-    {k:'pais',h:()=>_sth('pais','País',1),c:(conc,ri,sc)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="pais" style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td>`},
-    {k:'agente',h:()=>_sth('agente','Agente',2),c:(conc,ri,sc)=>`<td class="sub sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="agente" style="font-size:11px">${conc.agente||'—'}</td>`},
-    {k:'volume',h:()=>_sth('volume','Volume<br><span style="font-weight:400;font-size:9px;color:var(--e-muted)">últimos 7 dias</span>',3),c:(conc,ri,sc)=>{const _cid=(conc.id||conc.nome).replace(/['"]/g,'');const _vol=(store.volumeRankings?.combined||{})[_cid]?.usd||0;const _fmtV=v=>v?'$'+Math.round(v).toLocaleString('en-US'):'<span style="color:var(--e-muted);font-size:11px">—</span>';return `<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="volume" style="font-size:11px;font-weight:600;color:var(--e-mid);white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right;padding-right:10px">${_fmtV(_vol)}</td>`;}},
-    {k:'resp',h:()=>`<th class="col-info" data-col-key="resp" style="position:relative">Resp.${_colBtns('crono-conc','resp',4)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="resp">${x.respCell}</td>`},
-    {k:'prioridade',h:()=>`<th class="col-info" data-col-key="prioridade" style="position:relative">Prioridade${_colBtns('crono-conc','prioridade',5)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="prioridade" style="padding:4px 8px">${x.priorCell}</td>`},
-    {k:'tipo',h:()=>`<th class="col-info" data-col-key="tipo" style="position:relative">Tipo${_colBtns('crono-conc','tipo',6)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="tipo" style="padding:4px 8px">${x.concTipoChipHtml}</td>`},
+    {k:'pais',h:()=>_sth('pais',t('col-pais'),1),c:(conc,ri,sc)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="pais" style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td>`},
+    {k:'agente',h:()=>`<th class="${_sortThCls('crono-conc','agente')} col-info" data-col-key="agente" onclick="toggleSort('crono-conc','agente')" style="cursor:pointer;position:relative;width:120px;max-width:120px">${t('col-agente')}${_sortArrow('crono-conc','agente')}${_colBtns('crono-conc','agente',2)}</th>`,c:(conc,ri,sc)=>`<td class="sub sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="agente" style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${conc.agente||'—'}</td>`},
+    {k:'volume',h:()=>_sth('volume',`${t('conc-col-volume')}<br><span style="font-weight:400;font-size:9px;color:var(--e-muted)">${t('conc-col-volume-sub')}</span>`,3),c:(conc,ri,sc)=>{const _cid=(conc.id||conc.nome).replace(/['"]/g,'');const _vol=(store.volumeRankings?.combined||{})[_cid]?.usd||0;const _fmtV=v=>v?'$'+Math.round(v).toLocaleString('en-US'):'<span style="color:var(--e-muted);font-size:11px">—</span>';return `<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="volume" style="font-size:11px;font-weight:600;color:var(--e-mid);white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right;padding-right:10px">${_fmtV(_vol)}</td>`;}},
+    {k:'resp',h:()=>`<th class="col-info" data-col-key="resp" style="position:relative">${t('conc-col-resp')}${_colBtns('crono-conc','resp',4)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="resp">${x.respCell}</td>`},
+    {k:'prioridade',h:()=>`<th class="col-info" data-col-key="prioridade" style="position:relative">${t('conc-col-prioridade')}${_colBtns('crono-conc','prioridade',5)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="prioridade" style="padding:4px 8px">${x.priorCell}</td>`},
+    {k:'tipo',h:()=>`<th class="col-info" data-col-key="tipo" style="position:relative">${t('conc-col-tipo')}${_colBtns('crono-conc','tipo',6)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="tipo" style="padding:4px 8px">${x.concTipoChipHtml}</td>`},
     {k:'frequencia',h:()=>`<th class="col-info" data-col-key="frequencia" style="position:relative">${t('lbl-freq')}${_colBtns('crono-conc','frequencia',7)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="frequencia" style="padding:4px 8px">${x.freqCell}</td>`},
-    {k:'acompanhamento',h:()=>`<th class="col-info" data-col-key="acompanhamento" style="white-space:nowrap;position:relative">Acompanhamento${_colBtns('crono-conc','acompanhamento',8)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="acompanhamento" style="white-space:nowrap;padding:4px 8px">${x.d1ChipHtml}</td>`},
+    {k:'acompanhamento',h:()=>`<th class="col-info" data-col-key="acompanhamento" style="white-space:nowrap;position:relative">${t('conc-col-acomp')}${_colBtns('crono-conc','acompanhamento',8)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="acompanhamento" style="white-space:nowrap;padding:4px 8px">${x.d1ChipHtml}</td>`},
   ];
   const _ccPins=(_pinnedCols['crono-conc']||[]).filter(k=>_cDefs.some(d=>d.k===k));
   const _ord=[..._ccPins.map(k=>_cDefs.find(d=>d.k===k)),..._cDefs.filter(d=>!_ccPins.includes(d.k))];
