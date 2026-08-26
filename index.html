@@ -6171,8 +6171,9 @@ const _CRED_BANK_LABELS={
 };
 function _credCardSI(status){
   return {
-    pending:{bg:'#fef3c7',c:'#92400e',label:'⏳ Aguardando VM...'},
-    done:   {bg:'#d1fae5',c:'#065f46',label:'✅ Aplicado'},
+    pending:    {bg:'#fef3c7',c:'#92400e',label:'⏳ Aguardando VM...'},
+    processing: {bg:'#dbeafe',c:'#1e40af',label:'⚙️ Processando...'},
+    done:       {bg:'#d1fae5',c:'#065f46',label:'✅ Aplicado'},
     error:  {bg:'#fee2e2',c:'#991b1b',label:'❌ Erro'},
   }[status]||{bg:'#f3f4f6',c:'#374151',label:status};
 }
