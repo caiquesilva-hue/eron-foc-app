@@ -6070,10 +6070,15 @@ function _credRenderFields(cfg){
   const fw=document.getElementById('cred-fields-wrap');
   if(!fw) return;
   const I18N={empresa:'cred-f-empresa',usuario:'cred-f-usuario',senha:'cred-f-senha',operador:'cred-f-operador',referencia:'cred-f-referencia',nit:'cred-f-nit',tipo:'cred-f-tipo',totp_secret:'cred-f-totp'};
-  fw.innerHTML=cfg.fields.map(f=>`<div>
-    <div style="font-size:11px;font-weight:600;color:#374151;margin-bottom:5px">${t(I18N[f])||f}</div>
-    <input type="${f==='senha'?'password':'text'}" id="cred-field-${f}" oninput="_credUpdateSaveBtn()" autocomplete="off" style="width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:7px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none;color:#111827">
-  </div>`).join('');
+  fw.innerHTML=cfg.fields.map(f=>{
+    const isSenha=f==='senha';
+    const inputHtml=`<input type="${isSenha?'password':'text'}" id="cred-field-${f}" oninput="_credUpdateSaveBtn()" autocomplete="off" style="width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:7px;padding:8px ${isSenha?'38px':'12px'} 8px 12px;font-size:13px;font-family:inherit;outline:none;color:#111827">`;
+    const eyeBtn=isSenha?`<button type="button" onclick="togglePwdVisibility('cred-field-senha',this)" title="Mostrar/ocultar senha" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;font-size:15px;color:#6b7280;padding:0;line-height:1">👁</button>`:'';
+    return `<div>
+      <div style="font-size:11px;font-weight:600;color:#374151;margin-bottom:5px">${t(I18N[f])||f}</div>
+      <div style="position:relative">${inputHtml}${eyeBtn}</div>
+    </div>`;
+  }).join('');
   fw.style.display='flex';fw.style.flexDirection='column';fw.style.gap='12px';
 }
 
@@ -6105,7 +6110,10 @@ async function _credSave(){
   }
   const reqId='cred_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
   const bankKey=bank.replace(/_(co|pe|ar)$/,'');
-  const payload={type:_credMode==='new'?'create_credential':'update_credential',bank:bankKey,agent,fields,requested_by:window._loggedEmail||'—',created_at:Date.now(),status:'pending'};
+  const agentKey=agent.toLowerCase();
+  const vaultKeys={};
+  cfg.fields.forEach(f=>{vaultKeys[f]=f==='senha'?`${bankKey}_${agentKey}`:`${f}_${bankKey}_${agentKey}`;});
+  const payload={type:_credMode==='new'?'create_credential':'update_credential',bank:bankKey,agent,fields,vault_keys:vaultKeys,requested_by:window._loggedEmail||'—',created_at:Date.now(),status:'pending'};
   const btn=document.getElementById('cred-save-btn');
   const status=document.getElementById('cred-status');
   if(btn){btn.disabled=true;btn.style.opacity='.45';}
