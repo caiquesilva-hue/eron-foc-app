@@ -1341,7 +1341,7 @@
             <div style="display:flex;background:#ede9fe;border-radius:20px;padding:3px;gap:2px">
               <button type="button" id="cred-btn-update" onclick="_credSetMode('update')" style="flex:1;border:none;border-radius:17px;padding:6px 8px;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .18s;background:#7c3aed;color:#fff;font-family:inherit" data-i18n="cred-mode-upd">Atualizar existente</button>
               <button type="button" id="cred-btn-new" onclick="_credSetMode('new')" style="flex:1;border:none;border-radius:17px;padding:6px 8px;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .18s;background:transparent;color:#5b21b6;font-family:inherit" data-i18n="cred-mode-new">Criar nova</button>
-              <button type="button" id="cred-btn-delete" onclick="_credSetMode('delete')" style="flex:1;border:none;border-radius:17px;padding:6px 8px;font-size:10.5px;font-weight:600;cursor:pointer;transition:all .18s;background:transparent;color:#5b21b6;font-family:inherit;line-height:1.3">Excluir conta<br>da rotina</button>
+              <button type="button" id="cred-btn-delete" onclick="_credSetMode('delete')" style="flex:1;border:none;border-radius:17px;padding:6px 8px;font-size:10.5px;font-weight:600;cursor:pointer;transition:all .18s;background:transparent;color:#5b21b6;font-family:inherit;line-height:1.3"><span data-i18n="cred-mode-del-l1">Excluir conta</span><br><span data-i18n="cred-mode-del-l2">da rotina</span></button>
             </div>
             <!-- Bank select -->
             <div id="cred-bank-wrap">
@@ -2095,7 +2095,9 @@ const i18n = {
     'extr-drive-pdf-link':'Pasta dos PDFs baixados',
     'job-status-pending':'Aguardando','job-status-running':'Executando','job-status-completed':'Concluído','job-status-failed':'Falhou',
     'job-card-concluir':'Concluir','job-card-excluir':'Excluir','job-card-aguard-logs':'Aguardando logs...','job-card-contas':'conta(s)','job-sum-erros':'erro(s)',
-    'cred-mode-upd':'Atualizar existente','cred-mode-new':'Criar nova','cred-bank-lbl':'Banco','cred-agent-lbl':'Agente','cred-bank-ph':'Selecionar banco...','cred-agent-ph':'Selecionar agente...','cred-f-empresa':'Empresa','cred-f-usuario':'Usuário','cred-f-senha':'Senha','cred-f-operador':'Operador','cred-f-referencia':'Referência','cred-f-nit':'NIT','cred-f-tipo':'Tipo','cred-f-totp':'TOTP Secret','cred-f-pasta':'Pasta','cred-f-token-num':'Nº Token','cred-save':'Salvar','cred-bcp-note':'Usuário = {agente} (calculado localmente)','cred-gmail-note':'Conta de e-mail para 2FA de outros bancos',
+    'cred-mode-upd':'Atualizar existente','cred-mode-new':'Criar nova','cred-mode-del-l1':'Excluir conta','cred-mode-del-l2':'da rotina','cred-bank-lbl':'Banco','cred-agent-lbl':'Agente','cred-bank-ph':'Selecionar banco...','cred-agent-ph':'Selecionar agente...','cred-f-empresa':'Empresa','cred-f-usuario':'Usuário','cred-f-senha':'Senha','cred-f-operador':'Operador','cred-f-referencia':'Referência','cred-f-nit':'NIT','cred-f-tipo':'Tipo','cred-f-totp':'TOTP Secret','cred-f-pasta':'Pasta','cred-f-token-num':'Nº Token','cred-save':'Salvar','cred-save-del':'Excluir selecionadas','cred-bcp-note':'Usuário = {agente} (calculado localmente)','cred-gmail-note':'Conta de e-mail para 2FA de outros bancos',
+    'cred-del-loading':'⏳ Carregando contas dinâmicas...','cred-del-empty':'Nenhuma conta cadastrada em dynamic_tasks.','cred-del-select':'Selecione as contas a excluir:','cred-del-err':'❌ Erro ao carregar:','cred-del-saving':'⏳ Excluindo...','cred-del-co':'🇨🇴 Colômbia','cred-del-pe':'🇵🇪 Peru','cred-del-ar':'🇦🇷 Argentina',
+    'cred-st-pending':'⏳ Aguardando VM...','cred-st-processing':'⚙️ Processando...','cred-st-done':'✅ Aplicado','cred-st-error':'❌ Erro','cred-st-done-at':'Aplicado em','cred-st-waiting-detail':'Aguardando próximo ciclo do listener (pode demorar até 1 min)...',
     'nav-accounts':'Accounts','nav-custos':'Liquidações','nav-conciliacoes':'Conciliações','nav-cierre':'Accounts – Cierre',
     'nav-pais':'País','nav-agente':'Agente','nav-banco':'Banco',
     'dev-badge':'Em desenvolvimento',
@@ -2210,7 +2212,9 @@ const i18n = {
     'extr-drive-pdf-link':'Downloaded PDFs folder',
     'job-status-pending':'Waiting','job-status-running':'Running','job-status-completed':'Completed','job-status-failed':'Failed',
     'job-card-concluir':'Complete','job-card-excluir':'Delete','job-card-aguard-logs':'Waiting for logs...','job-card-contas':'account(s)','job-sum-erros':'error(s)',
-    'cred-mode-upd':'Update existing','cred-mode-new':'Create new','cred-bank-lbl':'Bank','cred-agent-lbl':'Agent','cred-bank-ph':'Select bank...','cred-agent-ph':'Select agent...','cred-f-empresa':'Company','cred-f-usuario':'User','cred-f-senha':'Password','cred-f-operador':'Operator','cred-f-referencia':'Reference','cred-f-nit':'NIT','cred-f-tipo':'Type','cred-f-totp':'TOTP Secret','cred-f-pasta':'Folder','cred-f-token-num':'Token No.','cred-save':'Save','cred-bcp-note':'User = {agente} (calculated locally)','cred-gmail-note':'Email account for 2FA on other banks',
+    'cred-mode-upd':'Update existing','cred-mode-new':'Create new','cred-mode-del-l1':'Remove account','cred-mode-del-l2':'from routine','cred-bank-lbl':'Bank','cred-agent-lbl':'Agent','cred-bank-ph':'Select bank...','cred-agent-ph':'Select agent...','cred-f-empresa':'Company','cred-f-usuario':'User','cred-f-senha':'Password','cred-f-operador':'Operator','cred-f-referencia':'Reference','cred-f-nit':'NIT','cred-f-tipo':'Type','cred-f-totp':'TOTP Secret','cred-f-pasta':'Folder','cred-f-token-num':'Token No.','cred-save':'Save','cred-save-del':'Delete selected','cred-bcp-note':'User = {agente} (calculated locally)','cred-gmail-note':'Email account for 2FA on other banks',
+    'cred-del-loading':'⏳ Loading dynamic accounts...','cred-del-empty':'No accounts registered in dynamic_tasks.','cred-del-select':'Select accounts to remove:','cred-del-err':'❌ Load error:','cred-del-saving':'⏳ Deleting...','cred-del-co':'🇨🇴 Colombia','cred-del-pe':'🇵🇪 Peru','cred-del-ar':'🇦🇷 Argentina',
+    'cred-st-pending':'⏳ Waiting for VM...','cred-st-processing':'⚙️ Processing...','cred-st-done':'✅ Applied','cred-st-error':'❌ Error','cred-st-done-at':'Applied on','cred-st-waiting-detail':'Waiting for next listener cycle (may take up to 1 min)...',
     'nav-accounts':'Accounts','nav-custos':'Settlements','nav-conciliacoes':'Reconciliations',
     'nav-pais':'Country','nav-agente':'Agent','nav-banco':'Bank',
     'dev-badge':'In development',
@@ -2318,7 +2322,9 @@ const i18n = {
     'extr-drive-pdf-link':'Carpeta de PDFs descargados',
     'job-status-pending':'Esperando','job-status-running':'Ejecutando','job-status-completed':'Completado','job-status-failed':'Falló',
     'job-card-concluir':'Completar','job-card-excluir':'Eliminar','job-card-aguard-logs':'Esperando logs...','job-card-contas':'cuenta(s)','job-sum-erros':'error(es)',
-    'cred-mode-upd':'Actualizar existente','cred-mode-new':'Crear nueva','cred-bank-lbl':'Banco','cred-agent-lbl':'Agente','cred-bank-ph':'Seleccionar banco...','cred-agent-ph':'Seleccionar agente...','cred-f-empresa':'Empresa','cred-f-usuario':'Usuario','cred-f-senha':'Contraseña','cred-f-operador':'Operador','cred-f-referencia':'Referencia','cred-f-nit':'NIT','cred-f-tipo':'Tipo','cred-f-totp':'TOTP Secret','cred-f-pasta':'Carpeta','cred-f-token-num':'Nº Token','cred-save':'Guardar','cred-bcp-note':'Usuario = {agente} (calculado localmente)','cred-gmail-note':'Cuenta de email para 2FA de otros bancos',
+    'cred-mode-upd':'Actualizar existente','cred-mode-new':'Crear nueva','cred-mode-del-l1':'Eliminar cuenta','cred-mode-del-l2':'de la rutina','cred-bank-lbl':'Banco','cred-agent-lbl':'Agente','cred-bank-ph':'Seleccionar banco...','cred-agent-ph':'Seleccionar agente...','cred-f-empresa':'Empresa','cred-f-usuario':'Usuario','cred-f-senha':'Contraseña','cred-f-operador':'Operador','cred-f-referencia':'Referencia','cred-f-nit':'NIT','cred-f-tipo':'Tipo','cred-f-totp':'TOTP Secret','cred-f-pasta':'Carpeta','cred-f-token-num':'Nº Token','cred-save':'Guardar','cred-save-del':'Eliminar seleccionadas','cred-bcp-note':'Usuario = {agente} (calculado localmente)','cred-gmail-note':'Cuenta de email para 2FA de otros bancos',
+    'cred-del-loading':'⏳ Cargando cuentas dinámicas...','cred-del-empty':'No hay cuentas registradas en dynamic_tasks.','cred-del-select':'Seleccione las cuentas a eliminar:','cred-del-err':'❌ Error al cargar:','cred-del-saving':'⏳ Eliminando...','cred-del-co':'🇨🇴 Colombia','cred-del-pe':'🇵🇪 Perú','cred-del-ar':'🇦🇷 Argentina',
+    'cred-st-pending':'⏳ Esperando VM...','cred-st-processing':'⚙️ Procesando...','cred-st-done':'✅ Aplicado','cred-st-error':'❌ Error','cred-st-done-at':'Aplicado el','cred-st-waiting-detail':'Esperando próximo ciclo del listener (puede tardar hasta 1 min)...',
     'nav-accounts':'Cuentas','nav-custos':'Liquidaciones','nav-conciliacoes':'Conciliaciones',
     'nav-pais':'País','nav-agente':'Agente','nav-banco':'Banco',
     'dev-badge':'En desarrollo',
@@ -6092,7 +6098,7 @@ function _credSetMode(mode){
   }
   // Update save button label
   const saveSpan=document.querySelector('#cred-save-btn span[data-i18n="cred-save"]');
-  if(saveSpan) saveSpan.textContent=mode==='delete'?'Excluir selecionadas':'Salvar';
+  if(saveSpan) saveSpan.textContent=mode==='delete'?t('cred-save-del'):t('cred-save');
   // Toggle agent field type
   const sel=document.getElementById('cred-agent-sel');
   const txt=document.getElementById('cred-agent-txt');
@@ -6199,10 +6205,10 @@ const _CRED_BANK_LABELS={
 };
 function _credCardSI(status){
   return {
-    pending:    {bg:'#fef3c7',c:'#92400e',label:'⏳ Aguardando VM...'},
-    processing: {bg:'#dbeafe',c:'#1e40af',label:'⚙️ Processando...'},
-    done:       {bg:'#d1fae5',c:'#065f46',label:'✅ Aplicado'},
-    error:  {bg:'#fee2e2',c:'#991b1b',label:'❌ Erro'},
+    pending:    {bg:'#fef3c7',c:'#92400e',label:t('cred-st-pending')},
+    processing: {bg:'#dbeafe',c:'#1e40af',label:t('cred-st-processing')},
+    done:       {bg:'#d1fae5',c:'#065f46',label:t('cred-st-done')},
+    error:      {bg:'#fee2e2',c:'#991b1b',label:t('cred-st-error')},
   }[status]||{bg:'#f3f4f6',c:'#374151',label:status};
 }
 function _renderCredCard(reqId,data){
@@ -6217,11 +6223,11 @@ function _renderCredCard(reqId,data){
     let html='';
     if(status==='done'&&data.processed_at){
       const d=new Date(data.processed_at);
-      html=`<span style="font-size:11px;color:#6b7280">Aplicado em ${d.toLocaleString('pt-BR')}</span>`;
+      html=`<span style="font-size:11px;color:#6b7280">${t('cred-st-done-at')} ${d.toLocaleString('pt-BR')}</span>`;
     }else if(status==='error'){
-      html=`<span style="font-size:11px;color:#dc2626">${_escHtml(data.error||'Erro desconhecido')}</span>`;
+      html=`<span style="font-size:11px;color:#dc2626">${_escHtml(data.error||t('cred-st-error'))}</span>`;
     }else{
-      html=`<span style="font-size:11px;color:#6b7280">Aguardando próximo ciclo do listener (pode demorar até 1 min)...</span>`;
+      html=`<span style="font-size:11px;color:#6b7280">${t('cred-st-waiting-detail')}</span>`;
     }
     detail.innerHTML=html;
   }
@@ -6292,12 +6298,12 @@ async function _loadUserCredRequests(){
 async function _credLoadDeleteList(){
   const dw=document.getElementById('cred-delete-wrap');
   if(!dw) return;
-  dw.innerHTML=`<span style="font-size:12px;color:var(--e-muted)">⏳ Carregando contas dinâmicas...</span>`;
+  dw.innerHTML=`<span style="font-size:12px;color:var(--e-muted)">${t('cred-del-loading')}</span>`;
   try{
     const snap=await _getEronFb().database().ref('dynamic_tasks').get();
     const data=snap.val();
     if(!data||typeof data!=='object'){
-      dw.innerHTML=`<span style="font-size:12px;color:var(--e-muted)">Nenhuma conta cadastrada em dynamic_tasks.</span>`;
+      dw.innerHTML=`<span style="font-size:12px;color:var(--e-muted)">${t('cred-del-empty')}</span>`;
       return;
     }
     const byPais={};
@@ -6315,11 +6321,11 @@ async function _credLoadDeleteList(){
     });
     const total=Object.values(byPais).reduce((s,v)=>s+v.length,0);
     if(!total){
-      dw.innerHTML=`<span style="font-size:12px;color:var(--e-muted)">Nenhuma conta cadastrada em dynamic_tasks.</span>`;
+      dw.innerHTML=`<span style="font-size:12px;color:var(--e-muted)">${t('cred-del-empty')}</span>`;
       return;
     }
-    const paisLabel={'CO':'🇨🇴 Colômbia','PE':'🇵🇪 Peru','AR':'🇦🇷 Argentina'};
-    let html=`<div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">Selecione as contas a excluir:</div>`;
+    const paisLabel={'CO':t('cred-del-co'),'PE':t('cred-del-pe'),'AR':t('cred-del-ar')};
+    let html=`<div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">${t('cred-del-select')}</div>`;
     Object.entries(byPais).forEach(([pais,list])=>{
       html+=`<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.07em;margin-top:6px;margin-bottom:3px">${paisLabel[pais]||pais}</div>`;
       list.forEach(({banco_nome,agente})=>{
@@ -6333,7 +6339,7 @@ async function _credLoadDeleteList(){
     dw.innerHTML=html;
     _credUpdateSaveBtn();
   }catch(e){
-    dw.innerHTML=`<span style="font-size:12px;color:#dc2626">❌ Erro ao carregar: ${_escHtml(String(e.message||e))}</span>`;
+    dw.innerHTML=`<span style="font-size:12px;color:#dc2626">${t('cred-del-err')} ${_escHtml(String(e.message||e))}</span>`;
   }
 }
 
@@ -6343,7 +6349,7 @@ async function _credSaveDelete(){
   const btn=document.getElementById('cred-save-btn');
   const statusEl=document.getElementById('cred-status');
   if(btn){btn.disabled=true;btn.style.opacity='.45';}
-  if(statusEl){statusEl.style.display='';statusEl.innerHTML=`<span style="color:var(--e-muted)">⏳ Excluindo...</span>`;}
+  if(statusEl){statusEl.style.display='';statusEl.innerHTML=`<span style="color:var(--e-muted)">${t('cred-del-saving')}</span>`;}
   const erros=[];
   for(const cb of checks){
     const [pais,banco_nome,agente]=(cb.value||'').split('|');
