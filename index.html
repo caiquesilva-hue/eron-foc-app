@@ -7374,7 +7374,8 @@ function _parseCashoutCSV(text){
   sorted.forEach((e,i)=>{data[e.id]={rank:i+1,name:e.name,country:e.country,usd:e.usd};});
   return {data,count:sorted.length};
 }
-// Refunds/Chargebacks: row(0), country(1), name(2), gatewayId(3), usd(4) — keyed by ID
+// Refunds/Chargebacks: row(0), country(1), name(2), gatewayId(3), usd(4)
+// Auto-detects if col[2]/col[3] are swapped (gatewayId first, name second)
 function _parseRefundsCbCSV(text){
   const lines=text.trim().split('\n');
   const agg={};
@@ -7382,8 +7383,12 @@ function _parseRefundsCbCSV(text){
     const cols=_parseCSVLine(lines[i]);
     if(cols.length<5) continue;
     const country=cols[1]?.trim();
-    const name=cols[2]?.trim();
-    const id=cols[3]?.trim();
+    const c2=cols[2]?.trim()||'';
+    const c3=cols[3]?.trim()||'';
+    let id,name;
+    if(/^\d+$/.test(c3)){id=c3;name=c2;}      // expected: col[3]=ID, col[2]=name
+    else if(/^\d+$/.test(c2)){id=c2;name=c3;} // swapped:  col[2]=ID, col[3]=name
+    else{id=c3||c2;name=c2;}                   // fallback: use col[3] as id
     const usd=parseFloat((cols[4]||'0').replace(/,/g,''))||0;
     if(!id) continue;
     if(!agg[id]) agg[id]={id,name,country,usd:0};
