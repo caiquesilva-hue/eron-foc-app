@@ -5477,7 +5477,7 @@ async function switchEnvironment(envKey){
   try{renderAll();updateCounts();}catch(e){}
 }
 // ─── AUTOMAÇÕES: DOWNLOAD EXTRATOS ───────────────────────────────────────────
-const EXTR_TAREFAS=[
+let EXTR_TAREFAS=[
   {pais:'CO',banco:'Bancolombia',agente:'COLPROCESA'},{pais:'CO',banco:'Bancolombia',agente:'COGREPOS'},
   {pais:'CO',banco:'Bancolombia',agente:'GOHILL'},{pais:'CO',banco:'Bancolombia',agente:'NLASE'},
   {pais:'CO',banco:'Coltefinanciera',agente:'COLPROCESA'},{pais:'CO',banco:'Coltefinanciera',agente:'COGREPOS'},
@@ -5968,7 +5968,7 @@ const CRED_BANKS={
   ciudad_ar:{fields:['empresa','usuario','senha'],detokenize:false},
   gmail:{fields:['usuario','senha','totp_secret'],gmail_special:true,detokenize:false},
 };
-const CRED_BANK_AGENTS={
+let CRED_BANK_AGENTS={
   bancolombia:['COLPROCESA','COGREPOS','GOHILL','NLASE'],
   bancoomeva:['COLPROCESA','COGREPOS','QM','COLPAYMENTS','COMERCIAL'],
   coltefinanciera:['COLPROCESA','COGREPOS','COLPAYMENTS','COMERCIAL','KATAGA','QM'],
@@ -5988,6 +5988,60 @@ const CRED_BANK_AGENTS={
   ciudad_ar:['BUHAPAY'],
   gmail:['COLPROCESA','COGREPOS','COLPAYMENTS','COMERCIAL','GOHILL','NLASE','KATAGA','QM','BUHAPAY','ONLINEPRO','SURTCAPITAL','MALISAC','TPROG'],
 };
+
+// Mapeamento inverso de dynamic_tasks: banco_nome (main.py) → {pais, bank_raw (CRED_BANK_AGENTS)}
+const _DT_BANCO_MAP={
+  'Bancolombia':    {pais:'CO',bank_raw:'bancolombia'},
+  'Bancoomeva':     {pais:'CO',bank_raw:'bancoomeva'},
+  'Coltefinanciera':{pais:'CO',bank_raw:'coltefinanciera'},
+  'BBVA Colombia':  {pais:'CO',bank_raw:'bbva_co'},
+  'Bogota':         {pais:'CO',bank_raw:'bogota'},
+  'Av Villas':      {pais:'CO',bank_raw:'avvillas'},
+  'Davivienda':     {pais:'CO',bank_raw:'davivienda'},
+  'Caja Social':    {pais:'CO',bank_raw:'caja_social_co'},
+  'Iris':           {pais:'CO',bank_raw:'iris_co'},
+  'BCP':            {pais:'PE',bank_raw:'bcp'},
+  'Banbif':         {pais:'PE',bank_raw:'banbif'},
+  'BBVA':           {pais:'PE',bank_raw:'bbva_pe'},
+  'Interbank':      {pais:'PE',bank_raw:'interbank'},
+  'BBVA Argentina': {pais:'AR',bank_raw:'bbva_ar'},
+  'Galicia':        {pais:'AR',bank_raw:'galicia_ar'},
+  'Industrial':     {pais:'AR',bank_raw:'industrial_ar'},
+  'Ciudad':         {pais:'AR',bank_raw:'ciudad_ar'},
+};
+
+async function _loadDynamicTasks(){
+  try{
+    const snap=await _getEronFb().database().ref('dynamic_tasks').get();
+    const data=snap.val();
+    if(!data||typeof data!=='object') return;
+    const extrSet=new Set(EXTR_TAREFAS.map(t=>`${t.pais}__${t.banco}__${t.agente}`));
+    ['CO','PE','AR'].forEach(pais=>{
+      const bancos=data[pais];
+      if(!bancos||typeof bancos!=='object') return;
+      Object.entries(bancos).forEach(([banco_nome,agentes])=>{
+        if(!agentes||typeof agentes!=='object') return;
+        const map=_DT_BANCO_MAP[banco_nome];
+        if(!map) return;
+        Object.entries(agentes).forEach(([agente,info])=>{
+          if(!info||!info.active) return;
+          const ag=agente.toUpperCase();
+          const key=`${pais}__${banco_nome}__${ag}`;
+          if(!extrSet.has(key)){
+            EXTR_TAREFAS.push({pais,banco:banco_nome,agente:ag});
+            extrSet.add(key);
+          }
+          if(!CRED_BANK_AGENTS[map.bank_raw]) CRED_BANK_AGENTS[map.bank_raw]=[];
+          if(!CRED_BANK_AGENTS[map.bank_raw].includes(ag))
+            CRED_BANK_AGENTS[map.bank_raw].push(ag);
+        });
+      });
+    });
+  }catch(e){
+    console.warn('[_loadDynamicTasks] Firebase inacessível — usando listas estáticas:',e);
+  }
+}
+
 let _credMode='update';
 
 function _credGetAgent(){
@@ -8254,6 +8308,7 @@ async function _initApp(){
   applyTranslations();
   await startFirebaseSync();       // dados autoritativos do Firebase
   await initAdminCredentials();    // preenche credenciais ausentes
+  await _loadDynamicTasks();       // mescla tarefas dinâmicas em EXTR_TAREFAS e CRED_BANK_AGENTS
   try{renderAll();updateCounts();}catch(e){console.warn('[renderAll post-sync]',e);}
   const fbLoading=document.getElementById('_fb-loading');
   if(fbLoading)fbLoading.style.display='none';
