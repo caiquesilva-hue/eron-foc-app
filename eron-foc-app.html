@@ -1546,6 +1546,28 @@
   </div>
 </div>
 
+<!-- ── MODAL: YES / NO PROMPT ────────────────────────────────── -->
+<div class="modal-overlay" id="modal-yesno" style="z-index:401" onclick="if(event.target===this)_ynCancel()">
+  <div class="confirm-card">
+    <div class="modal-header">
+      <div class="confirm-header-inner">
+        <div class="confirm-icon" id="yesno-icon">❓</div>
+        <div>
+          <div class="confirm-title" id="yesno-title"></div>
+          <div class="confirm-subtitle" id="yesno-subtitle"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div id="yesno-body" style="font-size:13px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="_ynCancel()" data-i18n="yesno-no">Não</button>
+      <button class="btn-primary" onclick="_ynConfirm()" data-i18n="yesno-yes">Sim</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── MODAL: CADASTRO GENÉRICO ───────────────────────────────── -->
 <div class="modal-overlay" id="modal-cadastro" onclick="if(event.target===this)closeModal('modal-cadastro')">
   <div class="modal-card" style="width:560px">
@@ -2098,6 +2120,9 @@ const i18n = {
     'cred-mode-upd':'Atualizar existente','cred-mode-new':'Criar nova','cred-mode-del-l1':'Excluir conta','cred-mode-del-l2':'da rotina','cred-bank-lbl':'Banco','cred-agent-lbl':'Agente','cred-bank-ph':'Selecionar banco...','cred-agent-ph':'Selecionar agente...','cred-f-empresa':'Empresa','cred-f-usuario':'Usuário','cred-f-senha':'Senha','cred-f-operador':'Operador','cred-f-referencia':'Referência','cred-f-nit':'NIT','cred-f-tipo':'Tipo','cred-f-totp':'TOTP Secret','cred-f-pasta':'Pasta','cred-f-token-num':'Nº Token','cred-save':'Salvar','cred-save-del':'Excluir selecionadas','cred-bcp-note':'Usuário = {agente} (calculado localmente)','cred-gmail-note':'Conta de e-mail para 2FA de outros bancos',
     'cred-del-loading':'⏳ Carregando contas dinâmicas...','cred-del-empty':'Nenhuma conta cadastrada em dynamic_tasks.','cred-del-select':'Selecione as contas a excluir:','cred-del-err':'❌ Erro ao carregar:','cred-del-saving':'⏳ Excluindo...','cred-del-co':'🇨🇴 Colômbia','cred-del-pe':'🇵🇪 Peru','cred-del-ar':'🇦🇷 Argentina',
     'cred-st-pending':'⏳ Aguardando VM...','cred-st-processing':'⚙️ Processando...','cred-st-done':'✅ Aplicado','cred-st-error':'❌ Erro','cred-st-done-at':'Aplicado em','cred-st-waiting-detail':'Aguardando próximo ciclo do listener (pode demorar até 1 min)...',
+    'yesno-yes':'Sim','yesno-no':'Não',
+    'yn-encerrar-title':'Encerrar no cronograma?','yn-encerrar-sub':'Contas removidas da rotina. Deseja encerrá-las no cronograma também?',
+    'yn-add-title':'Adicionar ao cronograma?','yn-add-sub':'Esta conta não existe no cronograma. Deseja adicioná-la agora?',
     'nav-accounts':'Accounts','nav-custos':'Liquidações','nav-conciliacoes':'Conciliações','nav-cierre':'Accounts – Cierre',
     'nav-pais':'País','nav-agente':'Agente','nav-banco':'Banco',
     'dev-badge':'Em desenvolvimento',
@@ -2215,6 +2240,9 @@ const i18n = {
     'cred-mode-upd':'Update existing','cred-mode-new':'Create new','cred-mode-del-l1':'Remove account','cred-mode-del-l2':'from routine','cred-bank-lbl':'Bank','cred-agent-lbl':'Agent','cred-bank-ph':'Select bank...','cred-agent-ph':'Select agent...','cred-f-empresa':'Company','cred-f-usuario':'User','cred-f-senha':'Password','cred-f-operador':'Operator','cred-f-referencia':'Reference','cred-f-nit':'NIT','cred-f-tipo':'Type','cred-f-totp':'TOTP Secret','cred-f-pasta':'Folder','cred-f-token-num':'Token No.','cred-save':'Save','cred-save-del':'Delete selected','cred-bcp-note':'User = {agente} (calculated locally)','cred-gmail-note':'Email account for 2FA on other banks',
     'cred-del-loading':'⏳ Loading dynamic accounts...','cred-del-empty':'No accounts registered in dynamic_tasks.','cred-del-select':'Select accounts to remove:','cred-del-err':'❌ Load error:','cred-del-saving':'⏳ Deleting...','cred-del-co':'🇨🇴 Colombia','cred-del-pe':'🇵🇪 Peru','cred-del-ar':'🇦🇷 Argentina',
     'cred-st-pending':'⏳ Waiting for VM...','cred-st-processing':'⚙️ Processing...','cred-st-done':'✅ Applied','cred-st-error':'❌ Error','cred-st-done-at':'Applied on','cred-st-waiting-detail':'Waiting for next listener cycle (may take up to 1 min)...',
+    'yesno-yes':'Yes','yesno-no':'No',
+    'yn-encerrar-title':'Close in schedule?','yn-encerrar-sub':'Accounts removed from routine. Close them in the schedule too?',
+    'yn-add-title':'Add to schedule?','yn-add-sub':'This account does not exist in the schedule. Add it now?',
     'nav-accounts':'Accounts','nav-custos':'Settlements','nav-conciliacoes':'Reconciliations',
     'nav-pais':'Country','nav-agente':'Agent','nav-banco':'Bank',
     'dev-badge':'In development',
@@ -2325,6 +2353,9 @@ const i18n = {
     'cred-mode-upd':'Actualizar existente','cred-mode-new':'Crear nueva','cred-mode-del-l1':'Eliminar cuenta','cred-mode-del-l2':'de la rutina','cred-bank-lbl':'Banco','cred-agent-lbl':'Agente','cred-bank-ph':'Seleccionar banco...','cred-agent-ph':'Seleccionar agente...','cred-f-empresa':'Empresa','cred-f-usuario':'Usuario','cred-f-senha':'Contraseña','cred-f-operador':'Operador','cred-f-referencia':'Referencia','cred-f-nit':'NIT','cred-f-tipo':'Tipo','cred-f-totp':'TOTP Secret','cred-f-pasta':'Carpeta','cred-f-token-num':'Nº Token','cred-save':'Guardar','cred-save-del':'Eliminar seleccionadas','cred-bcp-note':'Usuario = {agente} (calculado localmente)','cred-gmail-note':'Cuenta de email para 2FA de otros bancos',
     'cred-del-loading':'⏳ Cargando cuentas dinámicas...','cred-del-empty':'No hay cuentas registradas en dynamic_tasks.','cred-del-select':'Seleccione las cuentas a eliminar:','cred-del-err':'❌ Error al cargar:','cred-del-saving':'⏳ Eliminando...','cred-del-co':'🇨🇴 Colombia','cred-del-pe':'🇵🇪 Perú','cred-del-ar':'🇦🇷 Argentina',
     'cred-st-pending':'⏳ Esperando VM...','cred-st-processing':'⚙️ Procesando...','cred-st-done':'✅ Aplicado','cred-st-error':'❌ Error','cred-st-done-at':'Aplicado el','cred-st-waiting-detail':'Esperando próximo ciclo del listener (puede tardar hasta 1 min)...',
+    'yesno-yes':'Sí','yesno-no':'No',
+    'yn-encerrar-title':'¿Cerrar en el cronograma?','yn-encerrar-sub':'Cuentas eliminadas de la rutina. ¿Cerrarlas también en el cronograma?',
+    'yn-add-title':'¿Agregar al cronograma?','yn-add-sub':'Esta cuenta no existe en el cronograma. ¿Agregarla ahora?',
     'nav-accounts':'Cuentas','nav-custos':'Liquidaciones','nav-conciliacoes':'Conciliaciones',
     'nav-pais':'País','nav-agente':'Agente','nav-banco':'Banco',
     'dev-badge':'En desarrollo',
@@ -2809,11 +2840,110 @@ function onToggleConcEncerrar(checkbox){
     ]);
   }
 }
+let _credDelPendingEncerrar=null; // [{idx}] when triggered from del flow
 function confirmEncerrar(){
-  document.getElementById(_encerrarTarget).checked=true;
+  if(_credDelPendingEncerrar){
+    const idxs=_credDelPendingEncerrar;
+    _credDelPendingEncerrar=null;
+    closeModal('modal-confirm-encerrar');
+    idxs.forEach(idx=>{if(store.contas[idx]) store.contas[idx].status='encerrada';});
+    saveStore();
+    try{renderAll();updateCounts();}catch(e){}
+    _credInit();
+  }else{
+    document.getElementById(_encerrarTarget).checked=true;
+    closeModal('modal-confirm-encerrar');
+  }
+}
+function cancelEncerrar(){
+  _credDelPendingEncerrar=null;
   closeModal('modal-confirm-encerrar');
 }
-function cancelEncerrar(){ closeModal('modal-confirm-encerrar'); }
+
+// ── Yes/No prompt modal ─────────────────────────────────────────
+let _ynCb=null;
+function _ynShow(icon,title,subtitle,body,onYes,onNo){
+  const g=id=>document.getElementById(id);
+  if(g('yesno-icon')) g('yesno-icon').textContent=icon||'❓';
+  if(g('yesno-title')) g('yesno-title').textContent=title;
+  if(g('yesno-subtitle')) g('yesno-subtitle').textContent=subtitle||'';
+  if(g('yesno-body')) g('yesno-body').innerHTML=body||'';
+  _ynCb={yes:onYes,no:onNo};
+  openModal('modal-yesno');
+}
+function _ynConfirm(){closeModal('modal-yesno');const cb=_ynCb;_ynCb=null;if(cb?.yes) cb.yes();}
+function _ynCancel(){closeModal('modal-yesno');const cb=_ynCb;_ynCb=null;if(cb?.no) cb.no();}
+
+// ── Credencial ↔ Cronograma helpers ────────────────────────────
+const _DT_PAIS_NOME={CO:'Colombia',PE:'Peru',AR:'Argentina'};
+
+function _credMatchContas(entries){
+  const matched=new Map();
+  entries.forEach(({pais,banco_nome,agente})=>{
+    const paisNome=_DT_PAIS_NOME[pais]||pais;
+    (store.contas||[]).forEach((c,idx)=>{
+      if(c.pais!==paisNome||c.banco!==banco_nome) return;
+      const cAgNorm=c.agente.toUpperCase().replace(/^[A-Z]+\./,'');
+      if(cAgNorm===agente||c.agente.toUpperCase().includes(agente)) matched.set(idx,c);
+    });
+  });
+  return [...matched.entries()].map(([idx,conta])=>({idx,conta}));
+}
+
+function _credAskEncerrar(deletedEntries){
+  const matched=_credMatchContas(deletedEntries);
+  if(!matched.length){_credInit();return;}
+  const listHtml=matched.map(({conta:c})=>
+    `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--e-ghost);border-radius:7px;font-size:12px;margin-bottom:5px">
+      <span>🏦</span>
+      <span><strong>${_escHtml(c.banco)}</strong> / ${_escHtml(c.agente)} <span style="color:var(--e-muted)">(${_escHtml(c.pais)} · ${_escHtml(c.sigla||'')})</span></span>
+    </div>`
+  ).join('');
+  _ynShow('⚠️',t('yn-encerrar-title'),t('yn-encerrar-sub'),listHtml,
+    ()=>{
+      _credDelPendingEncerrar=matched.map(({idx})=>idx);
+      _openEncerrarModal(null,[
+        ['📋','Todos os extratos do período foram conferidos e estão fechados.'],
+        ['🔗','Todas as conciliações foram finalizadas e não há divergências pendentes.'],
+        ['💰','O saldo foi zerado ou transferido para outra conta ativa.'],
+      ]);
+    },
+    ()=>{_credInit();}
+  );
+}
+
+function _credAskAddToCronograma(paisCode,banco_nome,agente){
+  const paisNome=_DT_PAIS_NOME[paisCode]||paisCode;
+  const exists=(store.contas||[]).some(c=>{
+    if(c.pais!==paisNome||c.banco!==banco_nome) return false;
+    const cAgNorm=c.agente.toUpperCase().replace(/^[A-Z]+\./,'');
+    return cAgNorm===agente.toUpperCase()||c.agente.toUpperCase().includes(agente.toUpperCase());
+  });
+  if(exists){_credInit();return;}
+  const body=`<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--e-ghost);border-radius:7px;font-size:12px">
+    <span>🏦</span><span><strong>${_escHtml(banco_nome)}</strong> / ${_escHtml(agente)} <span style="color:var(--e-muted)">(${_escHtml(paisNome)})</span></span>
+  </div>`;
+  _ynShow('📋',t('yn-add-title'),t('yn-add-sub'),body,
+    ()=>{_credOpenAddToCronograma(paisNome,banco_nome,agente);},
+    ()=>{_credInit();}
+  );
+}
+
+function _credOpenAddToCronograma(paisNome,banco_nome,agente){
+  openAddAccount();
+  const paisSel=document.getElementById('acc-pais');
+  if(paisSel){paisSel.value=paisNome;onAccountPaisChange();}
+  setTimeout(()=>{
+    const bSel=document.getElementById('acc-banco');
+    if(bSel) bSel.value=banco_nome;
+    const aSel=document.getElementById('acc-agente');
+    if(aSel){
+      const agUp=agente.toUpperCase();
+      const opt=[...aSel.options].find(o=>o.value.toUpperCase().replace(/^[A-Z]+\./,'')===agUp);
+      if(opt) aSel.value=opt.value;
+    }
+  },120);
+}
 
 // ─── RENDER ACCOUNTS TABLE ────────────────────────────────────────
 function renderAccountsTable(){
@@ -6431,6 +6561,7 @@ async function _credSaveDelete(){
   if(btn){btn.disabled=true;btn.style.opacity='.45';}
   if(statusEl){statusEl.style.display='';statusEl.innerHTML=`<span style="color:var(--e-muted)">${t('cred-del-saving')}</span>`;}
   const erros=[];
+  const deletedEntries=[];
   for(const key of [..._credDelSelected]){
     const [pais,banco_nome,agente]=key.split('|');
     if(!pais||!banco_nome||!agente) continue;
@@ -6445,6 +6576,7 @@ async function _credSaveDelete(){
           if(!CRED_BANK_AGENTS[br].length) delete CRED_BANK_AGENTS[br];
         }
       }
+      deletedEntries.push({pais,banco_nome,agente});
     }catch(e){erros.push(`${banco_nome}/${agente}: ${String(e.message||e)}`);}
   }
   if(erros.length){
@@ -6452,7 +6584,7 @@ async function _credSaveDelete(){
     if(btn){btn.disabled=false;btn.style.opacity='1';}
   }else{
     if(statusEl) statusEl.style.display='none';
-    setTimeout(_credInit,500);
+    _credAskEncerrar(deletedEntries);
   }
 }
 
@@ -6489,7 +6621,13 @@ async function _credSave(){
     }
     if(statusEl){statusEl.style.display='none';statusEl.innerHTML='';}
     _addCredCard(reqId,bank,agent);
-    setTimeout(_credInit,1000);
+    if(_credMode==='new'){
+      const dtInfo=_DT_BANK_RAW_MAP[bank];
+      if(dtInfo) setTimeout(()=>_credAskAddToCronograma(dtInfo.pais,dtInfo.banco_nome,agent.toUpperCase()),800);
+      else setTimeout(_credInit,1000);
+    }else{
+      setTimeout(_credInit,1000);
+    }
   }catch(e){
     if(statusEl) statusEl.innerHTML=`<span style="color:#dc2626">❌ ${e.message}</span>`;
     if(btn){btn.disabled=false;btn.style.opacity='1';}
