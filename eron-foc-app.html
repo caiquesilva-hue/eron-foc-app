@@ -1341,7 +1341,7 @@
             <div style="display:flex;background:#ede9fe;border-radius:20px;padding:3px;gap:2px">
               <button type="button" id="cred-btn-update" onclick="_credSetMode('update')" style="flex:1;border:none;border-radius:17px;padding:6px 8px;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .18s;background:#7c3aed;color:#fff;font-family:inherit" data-i18n="cred-mode-upd">Atualizar existente</button>
               <button type="button" id="cred-btn-new" onclick="_credSetMode('new')" style="flex:1;border:none;border-radius:17px;padding:6px 8px;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .18s;background:transparent;color:#5b21b6;font-family:inherit" data-i18n="cred-mode-new">Criar nova</button>
-              <button type="button" id="cred-btn-delete" onclick="_credSetMode('delete')" style="flex:1;border:none;border-radius:17px;padding:6px 8px;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .18s;background:transparent;color:#5b21b6;font-family:inherit">Excluir conta</button>
+              <button type="button" id="cred-btn-delete" onclick="_credSetMode('delete')" style="flex:1;border:none;border-radius:17px;padding:6px 8px;font-size:10.5px;font-weight:600;cursor:pointer;transition:all .18s;background:transparent;color:#5b21b6;font-family:inherit;line-height:1.3">Excluir conta<br>da rotina</button>
             </div>
             <!-- Bank select -->
             <div id="cred-bank-wrap">
@@ -6075,9 +6075,9 @@ function _credInit(){
 
 function _credSetMode(mode){
   _credMode=mode;
-  const active='flex:1;border:none;border-radius:17px;padding:6px 8px;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .18s;background:#7c3aed;color:#fff;font-family:inherit';
-  const inactive='flex:1;border:none;border-radius:17px;padding:6px 8px;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .18s;background:transparent;color:#5b21b6;font-family:inherit';
-  const activeRed='flex:1;border:none;border-radius:17px;padding:6px 8px;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .18s;background:#dc2626;color:#fff;font-family:inherit';
+  const active='flex:1;border:none;border-radius:17px;padding:6px 8px;font-size:10.5px;font-weight:600;cursor:pointer;transition:all .18s;background:#7c3aed;color:#fff;font-family:inherit;line-height:1.3';
+  const inactive='flex:1;border:none;border-radius:17px;padding:6px 8px;font-size:10.5px;font-weight:600;cursor:pointer;transition:all .18s;background:transparent;color:#5b21b6;font-family:inherit;line-height:1.3';
+  const activeRed='flex:1;border:none;border-radius:17px;padding:6px 8px;font-size:10.5px;font-weight:600;cursor:pointer;transition:all .18s;background:#dc2626;color:#fff;font-family:inherit;line-height:1.3';
   const u=document.getElementById('cred-btn-update'),n=document.getElementById('cred-btn-new'),d=document.getElementById('cred-btn-delete');
   if(u) u.style.cssText=mode==='update'?active:inactive;
   if(n) n.style.cssText=mode==='new'?active:inactive;
