@@ -5731,6 +5731,7 @@ function _extrRenderList(){
   let html='';let first=true;
   ['CO','AR','PE'].forEach(pais=>{
     const items=groups[pais];if(!items||!items.length) return;
+    items.sort((a,b)=>a.banco.localeCompare(b.banco)||a.agente.localeCompare(b.agente));
     const info=EXTR_PAIS[pais]||{flag:'',name:pais};
     const allChk=items.every(i=>_extrSelected.has(i.key));
     html+=`<div style="padding:${first?'4':'8'}px 8px 4px;display:flex;align-items:center;gap:8px;font-size:10px;font-weight:700;color:var(--e-muted);text-transform:uppercase;letter-spacing:.09em;${!first?'border-top:1px solid var(--e-ghost)':''}">
