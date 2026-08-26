@@ -6133,7 +6133,7 @@ function _renderCredCard(reqId,data){
     }else if(status==='error'){
       html=`<span style="font-size:11px;color:#dc2626">${_escHtml(data.error||'Erro desconhecido')}</span>`;
     }else{
-      html=`<span style="font-size:11px;color:#6b7280">Aguardando próximo ciclo do listener (até 5 min)...</span>`;
+      html=`<span style="font-size:11px;color:#6b7280">Aguardando próximo ciclo do listener (pode demorar até 1 min)...</span>`;
     }
     detail.innerHTML=html;
   }
@@ -6164,7 +6164,7 @@ function _createCredCard(reqId,bankRaw,agent,initialStatus){
       <button onclick="_removeCredCard('${_esc(reqId)}')" style="border:none;background:none;cursor:pointer;font-size:18px;color:var(--e-muted);padding:0;line-height:1" title="Excluir">×</button>
     </div>
     <div id="cred-card-badge-${reqId}" style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:${si.bg};color:${si.c};margin-bottom:6px">${si.label}</div>
-    <div id="cred-card-detail-${reqId}"><span style="font-size:11px;color:#6b7280">Aguardando próximo ciclo do listener (até 5 min)...</span></div>`;
+    <div id="cred-card-detail-${reqId}"><span style="font-size:11px;color:#6b7280">Aguardando próximo ciclo do listener (pode demorar até 1 min)...</span></div>`;
   wrap.prepend(div);
   const m={ref:null,cb:null,_stopTimer:null};
   _credMonitors.set(reqId,m);
@@ -6217,7 +6217,7 @@ async function _credSave(){
   const agentKey=agent.toLowerCase();
   const vaultKeys={};
   cfg.fields.forEach(f=>{vaultKeys[f]=f==='senha'?`${bankKey}_${agentKey}`:`${f}_${bankKey}_${agentKey}`;});
-  const payload={type:_credMode==='new'?'create_credential':'update_credential',bank:bankKey,agent,fields,vault_keys:vaultKeys,requested_by:window._loggedEmail||'—',created_at:Date.now(),status:'pending'};
+  const payload={type:_credMode==='new'?'create_credential':'update_credential',bank:bankKey,bank_raw:bank,agent,fields,vault_keys:vaultKeys,requested_by:window._loggedEmail||'—',created_at:Date.now(),status:'pending'};
   const btn=document.getElementById('cred-save-btn');
   const statusEl=document.getElementById('cred-status');
   if(btn){btn.disabled=true;btn.style.opacity='.45';}
