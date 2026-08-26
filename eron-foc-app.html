@@ -6008,6 +6008,7 @@ function _credInit(){
   const atxt=document.getElementById('cred-agent-txt');if(atxt) atxt.value='';
   const asel=document.getElementById('cred-agent-sel');if(asel) asel.innerHTML=`<option value="">${t('cred-agent-ph')}</option>`;
   _credUpdateSaveBtn();
+  _loadUserCredRequests();
 }
 
 function _credSetMode(mode){
@@ -6141,15 +6142,18 @@ function _renderCredCard(reqId,data){
     if(!m._stopTimer) m._stopTimer=setTimeout(()=>{if(m.cb){m.ref.off('value',m.cb);m.cb=null;}},3000);
   }
 }
-function _removeCredCard(reqId){
+async function _removeCredCard(reqId){
   const m=_credMonitors.get(reqId);
   if(m){if(m._stopTimer)clearTimeout(m._stopTimer);if(m.ref&&m.cb)m.ref.off('value',m.cb);_credMonitors.delete(reqId);}
   document.getElementById('cred-card-'+reqId)?.remove();
+  try{await _getEronFb().database().ref('credentialChangeRequests/'+reqId).remove();}catch(e){}
 }
-function _addCredCard(reqId,bankRaw,agent){
+function _createCredCard(reqId,bankRaw,agent,initialStatus){
+  if(document.getElementById('cred-card-'+reqId)) return;
   const wrap=document.getElementById('cred-cards-wrap');
   if(!wrap) return;
   const bankLabel=_CRED_BANK_LABELS[bankRaw]||bankRaw;
+  const si=_credCardSI(initialStatus||'pending');
   const div=document.createElement('div');
   div.id='cred-card-'+reqId;
   div.style.cssText='background:#fff;border:1px solid var(--e-pale);border-radius:10px;padding:14px 16px;margin-top:10px';
@@ -6157,15 +6161,44 @@ function _addCredCard(reqId,bankRaw,agent){
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <span>🔑</span>
       <span style="font-size:13px;font-weight:600;flex:1">${_escHtml(bankLabel)} / ${_escHtml(agent)}</span>
-      <button onclick="_removeCredCard('${_esc(reqId)}')" style="border:none;background:none;cursor:pointer;font-size:18px;color:var(--e-muted);padding:0;line-height:1" title="Remover">×</button>
+      <button onclick="_removeCredCard('${_esc(reqId)}')" style="border:none;background:none;cursor:pointer;font-size:18px;color:var(--e-muted);padding:0;line-height:1" title="Excluir">×</button>
     </div>
-    <div id="cred-card-badge-${reqId}" style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:#fef3c7;color:#92400e;margin-bottom:6px">⏳ Aguardando VM...</div>
+    <div id="cred-card-badge-${reqId}" style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:${si.bg};color:${si.c};margin-bottom:6px">${si.label}</div>
     <div id="cred-card-detail-${reqId}"><span style="font-size:11px;color:#6b7280">Aguardando próximo ciclo do listener (até 5 min)...</span></div>`;
   wrap.prepend(div);
   const m={ref:null,cb:null,_stopTimer:null};
   _credMonitors.set(reqId,m);
   m.ref=_getEronFb().database().ref('credentialChangeRequests/'+reqId);
   m.cb=m.ref.on('value',snap=>{const d=snap.val();if(d)_renderCredCard(reqId,d);});
+}
+function _addCredCard(reqId,bankRaw,agent){
+  _createCredCard(reqId,bankRaw,agent,'pending');
+}
+async function _loadUserCredRequests(){
+  const email=window._loggedEmail||'';
+  if(!email) return;
+  const today=_jobDateKey(Date.now());
+  const cutoff=Date.now()-86400000; // só hoje
+  try{
+    const db=_getEronFb().database();
+    const snap=await db.ref('credentialChangeRequests').orderByChild('created_at').startAt(cutoff).once('value');
+    const all=snap.val()||{};
+    // remove requests mais antigos que hoje
+    const snapOld=await db.ref('credentialChangeRequests').orderByChild('created_at').endAt(cutoff-1).once('value');
+    const old=snapOld.val()||{};
+    const toDelete=Object.keys(old);
+    if(toDelete.length){const upd={};toDelete.forEach(id=>upd['credentialChangeRequests/'+id]=null);await db.ref().update(upd);}
+    // renderiza os do usuário de hoje (mais antigo primeiro → prepend coloca mais novo no topo)
+    Object.entries(all)
+      .filter(([,r])=>r&&r.requested_by===email&&_jobDateKey(r.created_at)===today)
+      .sort(([,a],[,b])=>a.created_at-b.created_at)
+      .forEach(([rid,r])=>{
+        const bankFull=r.bank||'';
+        // reconstruir bankRaw (com sufixo de país se precisar) — comparar com labels
+        const bankRaw=Object.keys(_CRED_BANK_LABELS).find(k=>_CRED_BANK_LABELS[k].toLowerCase()===String(r.bank||'').toLowerCase())||r.bank||'';
+        _createCredCard(rid,bankRaw,r.agent||'',r.status);
+      });
+  }catch(e){console.warn('_loadUserCredRequests:',e);}
 }
 
 async function _credSave(){
