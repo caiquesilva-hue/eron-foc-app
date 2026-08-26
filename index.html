@@ -6585,6 +6585,20 @@ async function _credSaveDelete(){
     if(btn){btn.disabled=false;btn.style.opacity='1';}
   }else{
     if(statusEl) statusEl.style.display='none';
+    for(const {pais,banco_nome,agente} of deletedEntries){
+      const mapEntry=_DT_BANCO_MAP[banco_nome];
+      if(!mapEntry) continue;
+      const bankRaw=mapEntry.bank_raw;
+      const bankKey=bankRaw.replace(/_(co|pe|ar)$/,'');
+      const reqId='del_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+      try{
+        await _getEronFb().database().ref('credentialChangeRequests/'+reqId).set({
+          type:'delete_credential',bank:bankKey,bank_raw:bankRaw,agent:agente,
+          requested_by:window._loggedEmail||'—',created_at:Date.now(),status:'pending',
+        });
+        _createCredCard(reqId,bankRaw,agente,'pending');
+      }catch(e){console.warn('OCI delete request error:',e);}
+    }
     _credAskEncerrar(deletedEntries);
   }
 }
