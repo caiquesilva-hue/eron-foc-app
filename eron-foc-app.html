@@ -6010,6 +6010,11 @@ const _DT_BANCO_MAP={
   'Ciudad':         {pais:'AR',bank_raw:'ciudad_ar'},
 };
 
+// Lookup reverso: bank_raw → {pais, banco_nome} (para escrita direta em dynamic_tasks)
+const _DT_BANK_RAW_MAP=Object.fromEntries(
+  Object.entries(_DT_BANCO_MAP).map(([nome,info])=>[info.bank_raw,{pais:info.pais,banco_nome:nome}])
+);
+
 async function _loadDynamicTasks(){
   try{
     const snap=await _getEronFb().database().ref('dynamic_tasks').get();
@@ -6278,6 +6283,13 @@ async function _credSave(){
   if(statusEl){statusEl.style.display='';statusEl.innerHTML=`<span style="color:var(--e-muted)">⏳ Salvando...</span>`;}
   try{
     await _getEronFb().database().ref('credentialChangeRequests/'+reqId).set(payload);
+    // Para nova credencial: registra dynamic_tasks direto no app — não precisa aguardar VM
+    if(_credMode==='new'){
+      const dtInfo=_DT_BANK_RAW_MAP[bank];
+      if(dtInfo) await _getEronFb().database()
+        .ref(`dynamic_tasks/${dtInfo.pais}/${dtInfo.banco_nome}/${agent.toUpperCase()}`)
+        .set({active:true,created_at:Date.now()});
+    }
     if(statusEl){statusEl.style.display='none';statusEl.innerHTML='';}
     _addCredCard(reqId,bank,agent);
     setTimeout(_credInit,1000);
