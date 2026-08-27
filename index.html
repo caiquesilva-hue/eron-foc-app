@@ -2847,7 +2847,7 @@ function confirmEncerrar(){
     _credDelPendingEncerrar=null;
     closeModal('modal-confirm-encerrar');
     idxs.forEach(idx=>{if(store.contas[idx]) store.contas[idx].status='encerrada';});
-    saveStore();
+    saveStore();_fbSync('contas');
     try{renderAll();updateCounts();}catch(e){}
     _credInit();
   }else{
