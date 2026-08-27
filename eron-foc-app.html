@@ -5953,11 +5953,11 @@ function _buildJobTerminalSummary(logs){
     const msAgent=msg.match(/Iniciando Job:\s*(.+?)\s*\(Agente:\s*(.+?)\)/i);
     if(msAgent){flushConta();curAgent=`${msAgent[1]} (${msAgent[2]})`;curConta=null;ok=false;sem=false;err=false;continue;}
     if(!curAgent) continue;
-    const msConta=msg.match(/📂 Processando conta:\s*(\S+)/i);
+    const msConta=msg.match(/📂 Processando conta:\s*(\S+)/i)||msg.match(/📄 Estado de Cuenta[^:]*conta:\s*(\S+)/i);
     if(msConta){flushConta();curConta=msConta[1];continue;}
     if(/📅.+estado de cuenta/i.test(msgLow)){flushConta();curConta='PDF';continue;}
     if(msgLow.includes('salvo e enviado')||msgLow.includes('upload concluído com sucesso')) ok=true;
-    if(msgLow.includes('indisponível')||msgLow.includes('sem movimento')||msgLow.includes('no hay')||msgLow.includes('no tiene')) sem=true;
+    if(msgLow.includes('indisponível')||msgLow.includes('sem conteúdo disponível')||msgLow.includes('sem movimento')||msgLow.includes('no hay')||msgLow.includes('no tiene')) sem=true;
     if(msgLow.includes('nenhuma conta encontrada')||msgLow.includes('nenhum extrato')||l.level==='ERROR') err=true;
     if(/🏁 Job .+ finalizado/i.test(msg)){flushConta();curAgent=null;}
   }
