@@ -276,6 +276,7 @@
   .crono-d1-panel{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
   .d1-stat-card{background:#fff;border:1px solid var(--e-pale);border-radius:10px;padding:8px 14px;display:flex;align-items:center;gap:8px;}
   .d1-stat-num{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;}
+  .d1-stat-vol{font-size:10px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--e-muted);line-height:1.4;min-height:14px;}
   .d1-stat-lbl{font-size:11px;color:var(--e-muted);font-weight:500;}
   .d1-stat-concluida .d1-stat-num{color:#15803d;}
   .d1-stat-sem-mov .d1-stat-num{color:#5b21b6;}
@@ -1162,12 +1163,19 @@
     </button>
   </div>
   <div class="crono-d1-panel" id="crono-conc-d1-panel">
-    <div class="d1-stat-card d1-stat-concluida"><div class="d1-stat-num" id="conc-d1-concluida">—</div><div class="d1-stat-lbl">Concluída</div></div>
-    <div class="d1-stat-card d1-stat-pronto-conc"><div class="d1-stat-num" id="conc-d1-pronto">—</div><div class="d1-stat-lbl">Pronto p/ Conc.</div></div>
-    <div class="d1-stat-card d1-stat-sem-mov"><div class="d1-stat-num" id="conc-d1-sem-mov">—</div><div class="d1-stat-lbl">Sem Movimento</div></div>
-    <div class="d1-stat-card d1-stat-sem-acesso"><div class="d1-stat-num" id="conc-d1-sem-acesso">—</div><div class="d1-stat-lbl">Sem Acesso</div></div>
-    <div class="d1-stat-card"><div class="d1-stat-num" id="conc-d1-conta-encerrada" style="color:#475569">—</div><div class="d1-stat-lbl">Conta Encerrada</div></div>
-    <div class="d1-stat-card d1-stat-pendente"><div class="d1-stat-num" id="conc-d1-pendente">—</div><div class="d1-stat-lbl">Pendente</div></div>
+    <div class="d1-stat-card d1-stat-concluida"><div style="display:flex;flex-direction:column;gap:1px"><div class="d1-stat-num" id="conc-d1-concluida">—</div><div class="d1-stat-vol" id="conc-d1-concluida-vol"></div></div><div class="d1-stat-lbl">Concluída</div></div>
+    <div class="d1-stat-card d1-stat-pronto-conc"><div style="display:flex;flex-direction:column;gap:1px"><div class="d1-stat-num" id="conc-d1-pronto">—</div><div class="d1-stat-vol" id="conc-d1-pronto-vol"></div></div><div class="d1-stat-lbl">Pronto p/ Conc.</div></div>
+    <div class="d1-stat-card d1-stat-sem-mov"><div style="display:flex;flex-direction:column;gap:1px"><div class="d1-stat-num" id="conc-d1-sem-mov">—</div><div class="d1-stat-vol" id="conc-d1-sem-mov-vol"></div></div><div class="d1-stat-lbl">Sem Movimento</div></div>
+    <div class="d1-stat-card d1-stat-sem-acesso"><div style="display:flex;flex-direction:column;gap:1px"><div class="d1-stat-num" id="conc-d1-sem-acesso">—</div><div class="d1-stat-vol" id="conc-d1-sem-acesso-vol"></div></div><div class="d1-stat-lbl">Sem Acesso</div></div>
+    <div class="d1-stat-card"><div style="display:flex;flex-direction:column;gap:1px"><div class="d1-stat-num" id="conc-d1-conta-encerrada" style="color:#475569">—</div><div class="d1-stat-vol" id="conc-d1-conta-encerrada-vol"></div></div><div class="d1-stat-lbl">Conta Encerrada</div></div>
+    <div class="d1-stat-card d1-stat-pendente"><div style="display:flex;flex-direction:column;gap:1px"><div class="d1-stat-num" id="conc-d1-pendente">—</div><div class="d1-stat-vol" id="conc-d1-pendente-vol"></div></div><div class="d1-stat-lbl">Pendente</div></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px;padding:2px 0 10px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="font-size:10px;font-weight:600;color:var(--e-muted);text-transform:uppercase;letter-spacing:.6px">Volume em aberto</div>
+      <div style="font-size:10px;color:var(--e-muted)">Pendente · Pronto p/ Conc. · Sem Acesso</div>
+    </div>
+    <div id="conc-risk-vol" style="font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.5px;line-height:1;color:#16a34a">—</div>
   </div>
   <div class="crono-search-wrap">
     <div class="crono-search-col">
@@ -8248,6 +8256,7 @@ function renderCronogramaConciliacoes(){
 
   // stat counters over unfiltered-by-d1 list (matching país/agente/resp/search/prior)
   const d1C={concluido:0,pronto_conciliacao:0,sem_movimento:0,sem_acesso:0,conta_encerrada:0,pendente:0};
+  const d1V={concluido:0,pronto_conciliacao:0,sem_movimento:0,sem_acesso:0,conta_encerrada:0,pendente:0};
   listWithD1.forEach(({c,d1Status})=>{
     if(activePaises.length&&!activePaises.includes(c.pais)) return;
     if(activeAgentes.length&&!activeAgentes.includes(c.agente)) return;
@@ -8267,16 +8276,26 @@ function renderCronogramaConciliacoes(){
       else{if(!vol||!activePriors.includes(vol)) return;}
     }
     if(searchQ){const _hay=`${c.nome} ${c.pais} ${c.agente}`.toLowerCase();if(searchQ.startsWith('in:')){const _vs=searchQ.slice(3).split(';').map(v=>v.trim()).filter(Boolean);if(!_vs.some(v=>_hay.includes(v))) return;}else if(!_hay.includes(searchQ)) return;}
-    if(Object.prototype.hasOwnProperty.call(d1C,d1Status)) d1C[d1Status]++;
-    else d1C.pendente++;
+    const _bucket=Object.prototype.hasOwnProperty.call(d1C,d1Status)?d1Status:'pendente';
+    d1C[_bucket]++;
+    const _cid=(c.id||c.nome||'').replace(/['"]/g,'');
+    d1V[_bucket]+=((store.volumeRankings?.combined||{})[_cid]?.usd)||0;
   });
   const _upd=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
-  _upd('conc-d1-concluida',d1C.concluido);
-  _upd('conc-d1-pronto',d1C.pronto_conciliacao);
-  _upd('conc-d1-sem-mov',d1C.sem_movimento);
-  _upd('conc-d1-sem-acesso',d1C.sem_acesso);
-  _upd('conc-d1-conta-encerrada',d1C.conta_encerrada);
-  _upd('conc-d1-pendente',d1C.pendente);
+  const _fmtV=v=>v>0?'$'+Math.round(v).toLocaleString('en-US'):'';
+  _upd('conc-d1-concluida',d1C.concluido);_upd('conc-d1-concluida-vol',_fmtV(d1V.concluido));
+  _upd('conc-d1-pronto',d1C.pronto_conciliacao);_upd('conc-d1-pronto-vol',_fmtV(d1V.pronto_conciliacao));
+  _upd('conc-d1-sem-mov',d1C.sem_movimento);_upd('conc-d1-sem-mov-vol',_fmtV(d1V.sem_movimento));
+  _upd('conc-d1-sem-acesso',d1C.sem_acesso);_upd('conc-d1-sem-acesso-vol',_fmtV(d1V.sem_acesso));
+  _upd('conc-d1-conta-encerrada',d1C.conta_encerrada);_upd('conc-d1-conta-encerrada-vol',_fmtV(d1V.conta_encerrada));
+  _upd('conc-d1-pendente',d1C.pendente);_upd('conc-d1-pendente-vol',_fmtV(d1V.pendente));
+  const _totalRisk=d1V.pendente+d1V.pronto_conciliacao+d1V.sem_acesso;
+  const _riskT=Math.min(1,_totalRisk/1_000_000);
+  const _riskEl=document.getElementById('conc-risk-vol');
+  if(_riskEl){
+    _riskEl.textContent=_totalRisk>0?'$'+Math.round(_totalRisk).toLocaleString('en-US'):'—';
+    _riskEl.style.color=`rgb(${Math.round(22+(220-22)*_riskT)},${Math.round(163+(38-163)*_riskT)},${Math.round(74+(38-74)*_riskT)})`;
+  }
 
   // full filter including d1 status filter
   let list=listWithD1.filter(({c,d1Status})=>{
