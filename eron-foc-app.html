@@ -6070,8 +6070,10 @@ async function runExtratosJob(){
   if(_extrTipo==='pdf'){
     if(!_extrPdfMonth){_toast('Selecione um mês.',3000);return;}
     const [yr,mo]=_extrPdfMonth.split('-').map(Number);
-    dateFrom=`${_extrPdfMonth}-01`;
+    // date_from = último dia do mês selecionado: main.py soma +1 dia → 1º do mês seguinte
+    // → mes_atual = mês seguinte → mes_anterior = mês selecionado → portal baixa o mês certo
     dateTo=`${_extrPdfMonth}-${String(new Date(yr,mo,0).getDate()).padStart(2,'0')}`;
+    dateFrom=dateTo;
   } else if(_extrDateMode==='ontem'){
     dateFrom=dateTo=_extrFmtYesterday();
   } else {
