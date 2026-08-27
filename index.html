@@ -2121,7 +2121,7 @@ const i18n = {
     'cred-del-loading':'⏳ Carregando contas dinâmicas...','cred-del-empty':'Nenhuma conta cadastrada em dynamic_tasks.','cred-del-select':'Selecione as contas a excluir:','cred-del-err':'❌ Erro ao carregar:','cred-del-saving':'⏳ Excluindo...','cred-del-co':'🇨🇴 Colômbia','cred-del-pe':'🇵🇪 Peru','cred-del-ar':'🇦🇷 Argentina',
     'cred-st-pending':'⏳ Aguardando VM...','cred-st-processing':'⚙️ Processando...','cred-st-done':'✅ Aplicado','cred-st-error':'❌ Erro','cred-st-done-at':'Aplicado em','cred-st-waiting-detail':'Aguardando próximo ciclo do listener (pode demorar até 1 min)...',
     'yesno-yes':'Sim','yesno-no':'Não',
-    'yn-encerrar-title':'Encerrar no cronograma?','yn-encerrar-sub':'Contas removidas da rotina. Deseja encerrá-las no cronograma também?',
+    'yn-encerrar-title':'Encerrar no cronograma?','yn-encerrar-sub':'Contas removidas da rotina. Deseja encerrá-las no cronograma também?','yn-encerrar-sub-s':'Conta removida da rotina. Deseja encerrá-la no cronograma também?',
     'yn-add-title':'Adicionar ao cronograma?','yn-add-sub':'Esta conta não existe no cronograma. Deseja adicioná-la agora?',
     'nav-accounts':'Accounts','nav-custos':'Liquidações','nav-conciliacoes':'Conciliações','nav-cierre':'Accounts – Cierre',
     'nav-pais':'País','nav-agente':'Agente','nav-banco':'Banco',
@@ -2241,7 +2241,7 @@ const i18n = {
     'cred-del-loading':'⏳ Loading dynamic accounts...','cred-del-empty':'No accounts registered in dynamic_tasks.','cred-del-select':'Select accounts to remove:','cred-del-err':'❌ Load error:','cred-del-saving':'⏳ Deleting...','cred-del-co':'🇨🇴 Colombia','cred-del-pe':'🇵🇪 Peru','cred-del-ar':'🇦🇷 Argentina',
     'cred-st-pending':'⏳ Waiting for VM...','cred-st-processing':'⚙️ Processing...','cred-st-done':'✅ Applied','cred-st-error':'❌ Error','cred-st-done-at':'Applied on','cred-st-waiting-detail':'Waiting for next listener cycle (may take up to 1 min)...',
     'yesno-yes':'Yes','yesno-no':'No',
-    'yn-encerrar-title':'Close in schedule?','yn-encerrar-sub':'Accounts removed from routine. Close them in the schedule too?',
+    'yn-encerrar-title':'Close in schedule?','yn-encerrar-sub':'Accounts removed from routine. Close them in the schedule too?','yn-encerrar-sub-s':'Account removed from routine. Close it in the schedule too?',
     'yn-add-title':'Add to schedule?','yn-add-sub':'This account does not exist in the schedule. Add it now?',
     'nav-accounts':'Accounts','nav-custos':'Settlements','nav-conciliacoes':'Reconciliations',
     'nav-pais':'Country','nav-agente':'Agent','nav-banco':'Bank',
@@ -2354,7 +2354,7 @@ const i18n = {
     'cred-del-loading':'⏳ Cargando cuentas dinámicas...','cred-del-empty':'No hay cuentas registradas en dynamic_tasks.','cred-del-select':'Seleccione las cuentas a eliminar:','cred-del-err':'❌ Error al cargar:','cred-del-saving':'⏳ Eliminando...','cred-del-co':'🇨🇴 Colombia','cred-del-pe':'🇵🇪 Perú','cred-del-ar':'🇦🇷 Argentina',
     'cred-st-pending':'⏳ Esperando VM...','cred-st-processing':'⚙️ Procesando...','cred-st-done':'✅ Aplicado','cred-st-error':'❌ Error','cred-st-done-at':'Aplicado el','cred-st-waiting-detail':'Esperando próximo ciclo del listener (puede tardar hasta 1 min)...',
     'yesno-yes':'Sí','yesno-no':'No',
-    'yn-encerrar-title':'¿Cerrar en el cronograma?','yn-encerrar-sub':'Cuentas eliminadas de la rutina. ¿Cerrarlas también en el cronograma?',
+    'yn-encerrar-title':'¿Cerrar en el cronograma?','yn-encerrar-sub':'Cuentas eliminadas de la rutina. ¿Cerrarlas también en el cronograma?','yn-encerrar-sub-s':'Cuenta eliminada de la rutina. ¿Cerrarla también en el cronograma?',
     'yn-add-title':'¿Agregar al cronograma?','yn-add-sub':'Esta cuenta no existe en el cronograma. ¿Agregarla ahora?',
     'nav-accounts':'Cuentas','nav-custos':'Liquidaciones','nav-conciliacoes':'Conciliaciones',
     'nav-pais':'País','nav-agente':'Agente','nav-banco':'Banco',
@@ -2899,7 +2899,7 @@ function _credAskEncerrar(deletedEntries){
       <span><strong>${_escHtml(c.banco)}</strong> / ${_escHtml(c.agente)} <span style="color:var(--e-muted)">(${_escHtml(c.pais)} · ${_escHtml(c.sigla||'')})</span></span>
     </div>`
   ).join('');
-  _ynShow('⚠️',t('yn-encerrar-title'),t('yn-encerrar-sub'),listHtml,
+  _ynShow('⚠️',t('yn-encerrar-title'),t(matched.length===1?'yn-encerrar-sub-s':'yn-encerrar-sub'),listHtml,
     ()=>{
       _credDelPendingEncerrar=matched.map(({idx})=>idx);
       _openEncerrarModal(null,[
