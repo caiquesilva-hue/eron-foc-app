@@ -5943,13 +5943,14 @@ function _buildJobTerminalSummary(logs){
   const flush=()=>{if(!cur)return;(err?errors:sem?noMov:ok?success:errors).push(cur);cur=null;ok=false;sem=false;err=false;};
   for(const l of logs){
     const msg=l.msg||'';
-    const ms=msg.match(/Iniciando Job:\s*(.+?)\s*\(Agente:\s*(.+?)\)/);
+    const msgLow=msg.toLowerCase();
+    const ms=msg.match(/Iniciando Job:\s*(.+?)\s*\(Agente:\s*(.+?)\)/i);
     if(ms){flush();cur=`${ms[1]} (${ms[2]})`;continue;}
     if(!cur) continue;
-    if(msg.includes('salvo e enviado')||msg.includes('Upload concluído com sucesso')) ok=true;
-    if(msg.includes('indisponível')||msg.includes('Sem movimento')||msg.includes('no hay')||msg.includes('no tiene')) sem=true;
-    if(msg.includes('Nenhuma conta encontrada')||msg.includes('Nenhum extrato')||l.level==='ERROR') err=true;
-    if(/🏁 Job .+ finalizado/.test(msg)) flush();
+    if(msgLow.includes('salvo e enviado')||msgLow.includes('upload concluído com sucesso')) ok=true;
+    if(msgLow.includes('indisponível')||msgLow.includes('sem movimento')||msgLow.includes('no hay')||msgLow.includes('no tiene')) sem=true;
+    if(msgLow.includes('nenhuma conta encontrada')||msgLow.includes('nenhum extrato')||l.level==='ERROR') err=true;
+    if(/🏁 Job .+ finalizado/i.test(msg)) flush();
   }
   flush();
   return {success,noMov,errors};
