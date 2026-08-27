@@ -831,6 +831,7 @@
           <option value="Operacional">Operacional</option>
           <option value="Administrativa">Administrativa</option>
           <option value="BB Pix">BB Pix</option>
+          <option value="Somente download">Somente download</option>
         </select>
         <div class="freq-dd" id="crono-f-top-dd">
           <button class="freq-dd-btn" id="crono-f-top-btn" onclick="_fddToggle(event,'crono-f-top-panel')">Todos os TOPs</button>
@@ -1466,6 +1467,7 @@
             <option value="Operacional">Operacional</option>
             <option value="Administrativa">Administrativa</option>
             <option value="BB Pix">BB Pix</option>
+            <option value="Somente download">Somente download</option>
           </select>
         </div>
       </div>
@@ -2181,7 +2183,7 @@ const i18n = {
     'crono-search-ph':'Buscar cuentas... ej: país:Perú | banco:BCP | agente:PE.Onlinepro | estado:activa | tipo:Diario',
     'd1-concluida':'Concluida','d1-sem-mov':'Sin movimiento','d1-sem-acesso':'Sin acceso',
     'd1-pendente':'Pendiente','d1-ag-extrato':'Ag. extracto',
-    'tipo-op':'Operacional','tipo-adm':'Administrativa','tipo-bbpix':'BB Pix',
+    'tipo-op':'Operacional','tipo-adm':'Administrativa','tipo-bbpix':'BB Pix','tipo-sdl':'Somente download',
     'freq-diario':'Diario','freq-mensal':'1× al mes','freq-semanal':'1× por sem.',
     'cierre-verificando':'Verificando','status-pendente':'Pendiente','status-concluido':'Concluida','status-sem-mov':'Sin mov.','status-sem-acesso':'Sin acceso','status-ag-extrato':'Ag. extracto',
     'preset-prev-month':'Mês anterior','preset-curr-month':'Mês atual','preset-last-7':'Últimos 7 dias','preset-custom':'Personalizado',
@@ -2190,7 +2192,7 @@ const i18n = {
     'crono-search-ph':'Buscar contas... ex: pais:Peru | banco:BCP | agente:PE.Onlinepro | status:ativa | tipo:Diário',
     'd1-concluida':'Concluída','d1-sem-mov':'Sem Movimento','d1-sem-acesso':'Sem Acesso',
     'd1-pendente':'Pendente','d1-ag-extrato':'Ag. Extrato',
-    'tipo-op':'Operacional','tipo-adm':'Administrativa','tipo-bbpix':'BB Pix',
+    'tipo-op':'Operacional','tipo-adm':'Administrativa','tipo-bbpix':'BB Pix','tipo-sdl':'Somente download',
     'freq-diario':'Diário','freq-mensal':'1 vez ao mês','freq-semanal':'1 vez na semana',
     'cierre-verificando':'Verificando','status-pendente':'Pendente','status-concluido':'Concluída','status-sem-mov':'Sem Mov.','status-sem-acesso':'Sem Acesso','status-ag-extrato':'Ag. Extrato',
     'hist-btn':'Histórico','hist-title':'Histórico de Alterações','hist-col-env':'Ambiente','hist-search-ph':'Buscar usuário, módulo, ação...','hist-empty':'Nenhuma ação registrada ainda.',
@@ -2302,7 +2304,7 @@ const i18n = {
     'crono-search-ph':'Search accounts... ex: country:Peru | bank:BCP | agent:PE.Onlinepro | status:active | type:Daily',
     'd1-concluida':'Completed','d1-sem-mov':'No movement','d1-sem-acesso':'No access',
     'd1-pendente':'Pending','d1-ag-extrato':'Aw. statement',
-    'tipo-op':'Operational','tipo-adm':'Administrative','tipo-bbpix':'BB Pix',
+    'tipo-op':'Operational','tipo-adm':'Administrative','tipo-bbpix':'BB Pix','tipo-sdl':'Download only',
     'freq-diario':'Daily','freq-mensal':'1× / month','freq-semanal':'1× / week',
     'cierre-verificando':'Verifying','status-pendente':'Pending','status-concluido':'Completed','status-sem-mov':'No mov.','status-sem-acesso':'No access','status-ag-extrato':'Aw. stmt',
     'hist-btn':'History','hist-title':'Change History','hist-col-env':'Environment','hist-search-ph':'Search user, module, action...','hist-empty':'No actions recorded yet.',
@@ -2415,7 +2417,7 @@ const i18n = {
     'crono-search-ph':'Buscar cuentas... ej: país:Perú | banco:BCP | agente:PE.Onlinepro | estado:activa | tipo:Diario',
     'd1-concluida':'Concluida','d1-sem-mov':'Sin movimiento','d1-sem-acesso':'Sin acceso',
     'd1-pendente':'Pendiente','d1-ag-extrato':'Ag. extracto',
-    'tipo-op':'Operacional','tipo-adm':'Administrativa','tipo-bbpix':'BB Pix',
+    'tipo-op':'Operacional','tipo-adm':'Administrativa','tipo-bbpix':'BB Pix','tipo-sdl':'Somente download',
     'freq-diario':'Diario','freq-mensal':'1× al mes','freq-semanal':'1× por sem.',
     'status-pendente':'Pendiente','status-concluido':'Concluida','status-sem-mov':'Sin mov.','status-sem-acesso':'Sin acceso','status-ag-extrato':'Ag. extracto',
     'hist-btn':'Historial','hist-title':'Historial de cambios','hist-col-env':'Entorno','hist-search-ph':'Buscar usuario, módulo, acción...','hist-empty':'Aún no hay acciones registradas.',
@@ -3044,8 +3046,8 @@ function tipoChip(tipo){
   return `<span class="chip ${map[tipo]||'chip-grey'}">${lbl[tipo]||tipo}</span>`;
 }
 function tipoContaChip(tc){
-  const map={'Operacional':'chip-operacional','Administrativa':'chip-administrativa','BB Pix':'chip-bbpix'};
-  const lbl={'Operacional':t('tipo-op'),'Administrativa':t('tipo-adm'),'BB Pix':t('tipo-bbpix')};
+  const map={'Operacional':'chip-operacional','Administrativa':'chip-administrativa','BB Pix':'chip-bbpix','Somente download':'chip-grey'};
+  const lbl={'Operacional':t('tipo-op'),'Administrativa':t('tipo-adm'),'BB Pix':t('tipo-bbpix'),'Somente download':t('tipo-sdl')};
   return tc?`<span class="chip ${map[tc]||'chip-grey'}">${lbl[tc]||tc}</span>`:'—';
 }
 
@@ -5068,7 +5070,7 @@ function _contaResp(c){
 function _cierreResp(c){ return _contaResp(c); }
 function _isCierreExcluded(c){
   const s=(c.sigla||'').toUpperCase();
-  return s.startsWith('MON')||s.startsWith('STP');
+  return s.startsWith('MON')||s.startsWith('STP')||c.tipoConta==='Somente download';
 }
 function _cierreKey(c,mes){
   return `${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'')+`_${mes}`;
