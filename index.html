@@ -5939,20 +5939,29 @@ async function deleteJobCard(jobId){
 
 function _buildJobTerminalSummary(logs){
   const success=[],noMov=[],errors=[];
-  let cur=null,ok=false,sem=false,err=false;
-  const flush=()=>{if(!cur)return;(err?errors:ok?success:sem?noMov:errors).push(cur);cur=null;ok=false;sem=false;err=false;};
+  let curAgent=null,curConta=null,ok=false,sem=false,err=false;
+  const flushConta=()=>{
+    if(!curAgent) return;
+    if(!curConta&&!ok&&!sem&&!err) return;
+    const label=curConta?`${curAgent} — ${curConta}`:curAgent;
+    (err?errors:ok?success:sem?noMov:errors).push(label);
+    curConta=null;ok=false;sem=false;err=false;
+  };
   for(const l of logs){
     const msg=l.msg||'';
     const msgLow=msg.toLowerCase();
-    const ms=msg.match(/Iniciando Job:\s*(.+?)\s*\(Agente:\s*(.+?)\)/i);
-    if(ms){flush();cur=`${ms[1]} (${ms[2]})`;continue;}
-    if(!cur) continue;
+    const msAgent=msg.match(/Iniciando Job:\s*(.+?)\s*\(Agente:\s*(.+?)\)/i);
+    if(msAgent){flushConta();curAgent=`${msAgent[1]} (${msAgent[2]})`;curConta=null;ok=false;sem=false;err=false;continue;}
+    if(!curAgent) continue;
+    const msConta=msg.match(/📂 Processando conta:\s*(\S+)/i);
+    if(msConta){flushConta();curConta=msConta[1];continue;}
+    if(/📅.+estado de cuenta/i.test(msgLow)){flushConta();curConta='PDF';continue;}
     if(msgLow.includes('salvo e enviado')||msgLow.includes('upload concluído com sucesso')) ok=true;
     if(msgLow.includes('indisponível')||msgLow.includes('sem movimento')||msgLow.includes('no hay')||msgLow.includes('no tiene')) sem=true;
     if(msgLow.includes('nenhuma conta encontrada')||msgLow.includes('nenhum extrato')||l.level==='ERROR') err=true;
-    if(/🏁 Job .+ finalizado/i.test(msg)) flush();
+    if(/🏁 Job .+ finalizado/i.test(msg)){flushConta();curAgent=null;}
   }
-  flush();
+  flushConta();
   return {success,noMov,errors};
 }
 
