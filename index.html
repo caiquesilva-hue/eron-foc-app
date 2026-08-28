@@ -2811,6 +2811,7 @@ function submitAccountForm(){
     if(siglaChanged) _fbSync('conciliacoes');
   } else {
     logAudit('gerencial','add-conta',{sigla:data.sigla,pais:data.pais});
+    data.createdAt=Date.now();
     store.contas.push(data);
     closeModal('modal-account');
     saveStore(); _fbSync('contas');
@@ -5194,7 +5195,8 @@ function renderCierreTable(){
   const q=(document.getElementById('cierre-search')?.value||'').toLowerCase().trim();
   const clearBtn=document.getElementById('cierre-clear-btn');
   if(clearBtn) clearBtn.style.display=_hasCierreFilters()?'inline-flex':'none';
-  let contas=store.contas.filter(c=>c.status!=='encerrada'&&!_isCierreExcluded(c));
+  const _mesEndTs=(()=>{if(!mes)return Infinity;const[yr,mo]=mes.split('-').map(Number);return new Date(yr,mo,0,23,59,59,999).getTime();})();
+  let contas=store.contas.filter(c=>c.status!=='encerrada'&&!_isCierreExcluded(c)&&(!c.createdAt||c.createdAt<=_mesEndTs));
   if(activePaises.length) contas=contas.filter(c=>activePaises.includes(c.pais));
   if(activeAgentes.length) contas=contas.filter(c=>activeAgentes.includes(c.agente));
   if(activeBancos.length) contas=contas.filter(c=>activeBancos.includes(c.banco));
