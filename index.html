@@ -9154,9 +9154,17 @@ function _initLiqColResize(tbl){
       const ths=[...tbl.querySelectorAll('thead tr th')];
       const colIdx=ths.indexOf(th);if(colIdx<0) return;
       const currentWidths=ths.map(t=>t.offsetWidth);
+      // Measure body content width via auto layout
       tbl.style.tableLayout='auto';tbl.style.width='max-content';
-      const naturalW=th.offsetWidth;
+      const bodyW=th.offsetWidth;
       tbl.style.tableLayout='fixed';tbl.style.width='100%';
+      // Measure header label natural width (scrollWidth works even with overflow:hidden)
+      const label=th.querySelector('.liq-th-label');
+      const sortArrow=th.querySelector('.sort-arrow');
+      const hideBtn=th.querySelector('.col-hide-btn');
+      const thCs=getComputedStyle(th);
+      let headerW=(label?label.scrollWidth:0)+(sortArrow?sortArrow.offsetWidth+4:0)+(hideBtn?hideBtn.offsetWidth+4:0)+parseFloat(thCs.paddingLeft||0)+parseFloat(thCs.paddingRight||0)+8;
+      const naturalW=Math.max(bodyW,Math.ceil(headerW));
       ths.forEach((t,i)=>{const w=i===colIdx?naturalW:currentWidths[i];t.style.width=w+'px';t.style.minWidth=w+'px';});
     });
   });
