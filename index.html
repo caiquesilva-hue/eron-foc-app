@@ -7499,7 +7499,7 @@ function submitConciliacao(){
     }
   } else {
     concId=nome.toLowerCase().replace(/[^a-z0-9]/g,'_')+'_'+Date.now();
-    store.conciliacoes.push({id:concId,nome,pais,agente,tipo,contas,processadores,obs,frequencia});
+    store.conciliacoes.push({id:concId,nome,pais,agente,tipo,contas,processadores,obs,frequencia,createdAt:new Date(new Date().getFullYear(),new Date().getMonth(),1).getTime()});
   }
   if(!isEdit||_gatewayModified){
     // Nova conciliação: salva sempre. Edição: só salva se o usuário modificou gateways.
@@ -8765,11 +8765,18 @@ let _liqMonth=(new Date().getMonth()===0?11:new Date().getMonth()-1), _liqYear=(
 
 function _liqConcilList(){
   const excl=store.liquidacoesExcluidos||{};
+  const _liqCreatedOk=c=>{
+    if(!c.createdAt) return true;
+    const d=new Date(c.createdAt);
+    const cy=d.getFullYear(),cm=d.getMonth();
+    return cy<_liqYear||(cy===_liqYear&&cm<=_liqMonth);
+  };
   const auto=store.conciliacoes.filter(c=>{
     if(c.status==='encerrada') return false;
     if(c.tipo!=='processadores'&&c.tipo!=='mista') return false;
     const concId=_liqConcId(c);
     if(excl[concId]) return false;
+    if(!_liqCreatedOk(c)) return false;
     const vm=store.concilVolumeMap?.[concId];
     if(!vm) return true;
     return (vm.cashinIds?.length>0)||(vm.cashoutIds?.length>0);
