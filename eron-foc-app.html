@@ -9136,6 +9136,7 @@ function _initLiqColResize(tbl){
   if(!tbl) return;
   tbl.querySelectorAll('.col-rsz-handle').forEach(handle=>{
     handle.onmousedown=null;
+    handle.ondblclick=null;
     handle.addEventListener('mousedown',e=>{
       e.preventDefault();e.stopPropagation();
       const th=handle.closest('th');if(!th) return;
@@ -9145,6 +9146,17 @@ function _initLiqColResize(tbl){
       const onUp=()=>{handle.classList.remove('rsz-active');document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);};
       document.addEventListener('mousemove',onMove);
       document.addEventListener('mouseup',onUp);
+    });
+    handle.addEventListener('dblclick',e=>{
+      e.preventDefault();e.stopPropagation();
+      const th=handle.closest('th');if(!th) return;
+      const ths=[...tbl.querySelectorAll('thead tr th')];
+      const colIdx=ths.indexOf(th);if(colIdx<0) return;
+      const currentWidths=ths.map(t=>t.offsetWidth);
+      tbl.style.tableLayout='auto';tbl.style.width='max-content';
+      const naturalW=th.offsetWidth;
+      tbl.style.tableLayout='fixed';tbl.style.width='100%';
+      ths.forEach((t,i)=>{const w=i===colIdx?naturalW:currentWidths[i];t.style.width=w+'px';t.style.minWidth=w+'px';});
     });
   });
 }
