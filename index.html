@@ -982,6 +982,7 @@
         <div class="freq-dd" id="cierre-f-status-dd">
           <button class="freq-dd-btn" id="cierre-f-status-btn" onclick="_fddToggle(event,'cierre-f-status-panel')">Todos os status</button>
           <div class="freq-dd-panel" id="cierre-f-status-panel">
+            <button class="freq-toggle" data-val="sem-apontamento" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),'Todos os status');renderCierreTable()">Sem apontamento</button>
             <button class="freq-toggle" data-val="pendente" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),'Todos os status');renderCierreTable()">Pendente</button>
             <button class="freq-toggle" data-val="verificando" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),'Todos os status');renderCierreTable()">Verificando</button>
             <button class="freq-toggle" data-val="concluido" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),'Todos os status');renderCierreTable()">Concluído</button>
@@ -5201,7 +5202,16 @@ function renderCierreTable(){
   if(activeAgentes.length) contas=contas.filter(c=>activeAgentes.includes(c.agente));
   if(activeBancos.length) contas=contas.filter(c=>activeBancos.includes(c.banco));
   if(activeResps.length) contas=contas.filter(c=>{const r=_contaResp(c);return r&&activeResps.includes(r.email);});
-  if(activeStatus.length) contas=contas.filter(c=>activeStatus.includes(_cierreStatus(store.cierreData[_cierreKey(c,mes)])));
+  if(activeStatus.length) contas=contas.filter(c=>{
+    const entry=store.cierreData[_cierreKey(c,mes)]||{};
+    const st=_cierreStatus(entry);
+    const ap=entry.apontamento||'';
+    return activeStatus.some(v=>{
+      if(v==='sem-apontamento') return st==='pendente'&&!ap;
+      if(v==='pendente') return st==='pendente'&&!!ap;
+      return v===st;
+    });
+  });
   if(activeAp.length) contas=contas.filter(c=>activeAp.includes((store.cierreData[_cierreKey(c,mes)]||{}).apontamento||''));
   if(q) contas=contas.filter(c=>[c.sigla,c.pais,c.agente,c.banco,c.numeroConta].some(v=>(v||'').toLowerCase().includes(q)));
   const _isConcluido=c=>_cierreStatus(store.cierreData[_cierreKey(c,mes)])==='concluido';
