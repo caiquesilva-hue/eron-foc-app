@@ -528,6 +528,7 @@
   .cierre-stat{background:#fff;border:1px solid var(--e-pale);border-radius:10px;padding:7px 14px;display:flex;align-items:center;gap:8px;}
   .cierre-stat-num{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;}
   .cierre-stat-lbl{font-size:11px;color:var(--e-muted);font-weight:500;}
+  .cierre-stat-sem-ap .cierre-stat-num{color:#9ca3af;}
   .cierre-stat-pendente .cierre-stat-num{color:#6b7280;}
   .cierre-stat-verificando .cierre-stat-num{color:#92400e;}
   .cierre-stat-concluido .cierre-stat-num{color:#15803d;}
@@ -2812,7 +2813,8 @@ function submitAccountForm(){
     if(siglaChanged) _fbSync('conciliacoes');
   } else {
     logAudit('gerencial','add-conta',{sigla:data.sigla,pais:data.pais});
-    data.createdAt=Date.now();
+    const _now=new Date();
+    data.cierreDesde=`${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
     store.contas.push(data);
     closeModal('modal-account');
     saveStore(); _fbSync('contas');
@@ -5110,9 +5112,15 @@ function _cierreChip(status){
 }
 function _cierreStatsHtml(mes,filteredContas){
   const list=filteredContas||store.contas.filter(c=>c.status!=='encerrada'&&!_isCierreExcluded(c));
-  const cts={pendente:0,verificando:0,concluido:0};
-  list.forEach(c=>{cts[_cierreStatus(store.cierreData[_cierreKey(c,mes)])]++;});
-  return `<div class="cierre-stat cierre-stat-pendente"><div class="cierre-stat-num">${cts.pendente}</div><div class="cierre-stat-lbl">${t('status-pendente')||'Pendente'}</div></div><div class="cierre-stat cierre-stat-verificando"><div class="cierre-stat-num">${cts.verificando}</div><div class="cierre-stat-lbl">${t('cierre-verificando')||'Verificando'}</div></div><div class="cierre-stat cierre-stat-concluido"><div class="cierre-stat-num">${cts.concluido}</div><div class="cierre-stat-lbl">${t('status-concluido')||'Concluído'}</div></div>`;
+  const cts={semAp:0,pendente:0,verificando:0,concluido:0};
+  list.forEach(c=>{
+    const entry=store.cierreData[_cierreKey(c,mes)]||{};
+    const st=_cierreStatus(entry);
+    if(st==='pendente'&&!(entry.apontamento||'')) cts.semAp++;
+    else if(st==='pendente') cts.pendente++;
+    else cts[st]++;
+  });
+  return `<div class="cierre-stat cierre-stat-sem-ap"><div class="cierre-stat-num">${cts.semAp}</div><div class="cierre-stat-lbl">Sem apontamento</div></div><div class="cierre-stat cierre-stat-pendente"><div class="cierre-stat-num">${cts.pendente}</div><div class="cierre-stat-lbl">${t('status-pendente')||'Pendente'}</div></div><div class="cierre-stat cierre-stat-verificando"><div class="cierre-stat-num">${cts.verificando}</div><div class="cierre-stat-lbl">${t('cierre-verificando')||'Verificando'}</div></div><div class="cierre-stat cierre-stat-concluido"><div class="cierre-stat-num">${cts.concluido}</div><div class="cierre-stat-lbl">${t('status-concluido')||'Concluído'}</div></div>`;
 }
 function initCierreFilters(){
   const mesEl=document.getElementById('cierre-f-mes');
@@ -5196,8 +5204,7 @@ function renderCierreTable(){
   const q=(document.getElementById('cierre-search')?.value||'').toLowerCase().trim();
   const clearBtn=document.getElementById('cierre-clear-btn');
   if(clearBtn) clearBtn.style.display=_hasCierreFilters()?'inline-flex':'none';
-  const _mesEndTs=(()=>{if(!mes)return Infinity;const[yr,mo]=mes.split('-').map(Number);return new Date(yr,mo,0,23,59,59,999).getTime();})();
-  let contas=store.contas.filter(c=>c.status!=='encerrada'&&!_isCierreExcluded(c)&&(!c.createdAt||c.createdAt<=_mesEndTs));
+  let contas=store.contas.filter(c=>c.status!=='encerrada'&&!_isCierreExcluded(c)&&(!c.cierreDesde||!mes||c.cierreDesde<=mes));
   if(activePaises.length) contas=contas.filter(c=>activePaises.includes(c.pais));
   if(activeAgentes.length) contas=contas.filter(c=>activeAgentes.includes(c.agente));
   if(activeBancos.length) contas=contas.filter(c=>activeBancos.includes(c.banco));
