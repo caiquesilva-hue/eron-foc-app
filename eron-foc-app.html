@@ -405,6 +405,21 @@
   #page-cronograma-conciliacoes.hide-col-6 #crono-conc-cal-table thead th:nth-child(7),#page-cronograma-conciliacoes.hide-col-6 #crono-conc-cal-table tbody td:nth-child(7){display:none!important;}
   #page-cronograma-conciliacoes.hide-col-7 #crono-conc-cal-table thead th:nth-child(8),#page-cronograma-conciliacoes.hide-col-7 #crono-conc-cal-table tbody td:nth-child(8){display:none!important;}
   #page-cronograma-conciliacoes.hide-col-8 #crono-conc-cal-table thead th:nth-child(9),#page-cronograma-conciliacoes.hide-col-8 #crono-conc-cal-table tbody td:nth-child(9){display:none!important;}
+  #page-cronograma-custos.hide-col-1 #liq-crono-table thead th:nth-child(2),#page-cronograma-custos.hide-col-1 #liq-crono-table tbody td:nth-child(2){display:none!important;}
+  #page-cronograma-custos.hide-col-2 #liq-crono-table thead th:nth-child(3),#page-cronograma-custos.hide-col-2 #liq-crono-table tbody td:nth-child(3){display:none!important;}
+  #page-cronograma-custos.hide-col-3 #liq-crono-table thead th:nth-child(4),#page-cronograma-custos.hide-col-3 #liq-crono-table tbody td:nth-child(4){display:none!important;}
+  #page-cronograma-custos.hide-col-4 #liq-crono-table thead th:nth-child(5),#page-cronograma-custos.hide-col-4 #liq-crono-table tbody td:nth-child(5){display:none!important;}
+  #page-cronograma-custos.hide-col-5 #liq-crono-table thead th:nth-child(6),#page-cronograma-custos.hide-col-5 #liq-crono-table tbody td:nth-child(6){display:none!important;}
+  #page-cronograma-custos.hide-col-6 #liq-crono-table thead th:nth-child(7),#page-cronograma-custos.hide-col-6 #liq-crono-table tbody td:nth-child(7){display:none!important;}
+  #page-cronograma-custos.hide-col-7 #liq-crono-table thead th:nth-child(8),#page-cronograma-custos.hide-col-7 #liq-crono-table tbody td:nth-child(8){display:none!important;}
+  #page-cronograma-custos.hide-col-8 #liq-crono-table thead th:nth-child(9),#page-cronograma-custos.hide-col-8 #liq-crono-table tbody td:nth-child(9){display:none!important;}
+  #page-cronograma-custos.hide-col-9 #liq-crono-table thead th:nth-child(10),#page-cronograma-custos.hide-col-9 #liq-crono-table tbody td:nth-child(10){display:none!important;}
+  .liq-th-inner{display:flex;align-items:center;gap:3px;user-select:none;position:relative;white-space:nowrap;}
+  .liq-th-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;}
+  .col-rsz-handle{position:absolute;right:-4px;top:0;bottom:0;width:8px;cursor:col-resize;z-index:3;display:flex;align-items:center;justify-content:center;}
+  .col-rsz-handle::after{content:'';display:block;width:2px;height:60%;background:var(--e-pale);border-radius:1px;transition:background .15s;}
+  .col-rsz-handle:hover::after,.col-rsz-handle.rsz-active::after{background:var(--e-purple);}
+  .trunc-tip{position:fixed;z-index:9999;background:#1e1b4b;color:#e9e7ff;border-radius:8px;padding:9px 13px;font-size:12px;max-width:380px;white-space:normal;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.3);line-height:1.5;word-break:break-word;}
   .chip-operacional{background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd;}
   .chip-administrativa{background:#fce7f3;color:#9d174d;border:1px solid #f9a8d4;}
   .chip-bbpix{background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;}
@@ -1072,17 +1087,17 @@
   <div class="table-wrap">
     <div id="liq-crono-empty" class="empty-state" style="display:none"><div class="empty-icon">💳</div><div class="empty-title">Nenhuma conciliação encontrada</div><div class="empty-sub">Adicione conciliações em Gerencial › Conciliações com tipo Processadores ou Mista.</div></div>
     <div class="table-scroll" id="liq-crono-table-inner" style="display:none">
-      <table class="no-row-border" style="min-width:1200px"><thead><tr>
-        <th style="min-width:190px" data-i18n="liq-col-concil">Conciliação</th>
-        <th style="min-width:85px" data-i18n="liq-col-pais">País</th>
-        <th style="min-width:110px" data-i18n="liq-col-agente">Agente</th>
-        <th style="min-width:160px" data-i18n="liq-col-tipo">Tipo Liquidação</th>
-        <th style="min-width:175px" data-i18n="liq-col-estado-concil">Estado Concil.</th>
-        <th style="min-width:75px" data-i18n="liq-col-ult-elab">Últ. Elab.</th>
-        <th style="min-width:90px" data-i18n="liq-col-data-ult">Data</th>
-        <th style="min-width:140px;width:160px" data-i18n="liq-col-obs">Observações</th>
-        <th style="min-width:140px;width:160px" data-i18n="liq-col-custo-info">Inf. Custo</th>
-        <th style="min-width:155px" data-i18n="liq-col-status">Status</th>
+      <table id="liq-crono-table" class="no-row-border" style="width:100%"><thead id="liq-crono-thead"><tr>
+        <th style="min-width:140px" class="sortable-th" data-sort-col="nome" onclick="toggleSort('liq','nome')"><div class="liq-th-inner"><span class="liq-th-label" data-i18n="liq-col-concil">Conciliação</span><span class="sort-arrow none"></span><div class="col-rsz-handle"></div></div></th>
+        <th style="min-width:60px" class="sortable-th" data-sort-col="pais" onclick="toggleSort('liq','pais')"><div class="liq-th-inner"><span class="liq-th-label" data-i18n="liq-col-pais">País</span><span class="sort-arrow none"></span><button class="col-hide-btn" onclick="event.stopPropagation();toggleColHide('liq',1)" title="Ocultar coluna"><svg width="11" height="8" viewBox="0 0 22 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="11" cy="8" r="3"/></svg></button><div class="col-rsz-handle"></div></div></th>
+        <th style="min-width:80px" class="sortable-th" data-sort-col="agente" onclick="toggleSort('liq','agente')"><div class="liq-th-inner"><span class="liq-th-label" data-i18n="liq-col-agente">Agente</span><span class="sort-arrow none"></span><button class="col-hide-btn" onclick="event.stopPropagation();toggleColHide('liq',2)" title="Ocultar coluna"><svg width="11" height="8" viewBox="0 0 22 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="11" cy="8" r="3"/></svg></button><div class="col-rsz-handle"></div></div></th>
+        <th style="min-width:110px" class="sortable-th" data-sort-col="_s_tipo" onclick="toggleSort('liq','_s_tipo')"><div class="liq-th-inner"><span class="liq-th-label" data-i18n="liq-col-tipo">Tipo Liquidação</span><span class="sort-arrow none"></span><button class="col-hide-btn" onclick="event.stopPropagation();toggleColHide('liq',3)" title="Ocultar coluna"><svg width="11" height="8" viewBox="0 0 22 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="11" cy="8" r="3"/></svg></button><div class="col-rsz-handle"></div></div></th>
+        <th style="min-width:130px" class="sortable-th" data-sort-col="_s_estado" onclick="toggleSort('liq','_s_estado')"><div class="liq-th-inner"><span class="liq-th-label" data-i18n="liq-col-estado-concil">Estado Concil.</span><span class="sort-arrow none"></span><button class="col-hide-btn" onclick="event.stopPropagation();toggleColHide('liq',4)" title="Ocultar coluna"><svg width="11" height="8" viewBox="0 0 22 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="11" cy="8" r="3"/></svg></button><div class="col-rsz-handle"></div></div></th>
+        <th style="min-width:60px" class="sortable-th" data-sort-col="_s_elab_sigla" onclick="toggleSort('liq','_s_elab_sigla')"><div class="liq-th-inner"><span class="liq-th-label" data-i18n="liq-col-ult-elab">Últ. Elab.</span><span class="sort-arrow none"></span><button class="col-hide-btn" onclick="event.stopPropagation();toggleColHide('liq',5)" title="Ocultar coluna"><svg width="11" height="8" viewBox="0 0 22 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="11" cy="8" r="3"/></svg></button><div class="col-rsz-handle"></div></div></th>
+        <th style="min-width:65px" class="sortable-th" data-sort-col="_s_elab_date" onclick="toggleSort('liq','_s_elab_date')"><div class="liq-th-inner"><span class="liq-th-label" data-i18n="liq-col-data-ult">Data</span><span class="sort-arrow none"></span><button class="col-hide-btn" onclick="event.stopPropagation();toggleColHide('liq',6)" title="Ocultar coluna"><svg width="11" height="8" viewBox="0 0 22 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="11" cy="8" r="3"/></svg></button><div class="col-rsz-handle"></div></div></th>
+        <th style="min-width:110px"><div class="liq-th-inner"><span class="liq-th-label" data-i18n="liq-col-obs">Observações</span><button class="col-hide-btn" onclick="event.stopPropagation();toggleColHide('liq',7)" title="Ocultar coluna"><svg width="11" height="8" viewBox="0 0 22 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="11" cy="8" r="3"/></svg></button><div class="col-rsz-handle"></div></div></th>
+        <th style="min-width:110px"><div class="liq-th-inner"><span class="liq-th-label" data-i18n="liq-col-custo-info">Inf. Custo</span><button class="col-hide-btn" onclick="event.stopPropagation();toggleColHide('liq',8)" title="Ocultar coluna"><svg width="11" height="8" viewBox="0 0 22 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="11" cy="8" r="3"/></svg></button><div class="col-rsz-handle"></div></div></th>
+        <th style="min-width:110px" class="sortable-th" data-sort-col="_s_status" onclick="toggleSort('liq','_s_status')"><div class="liq-th-inner"><span class="liq-th-label" data-i18n="liq-col-status">Status</span><span class="sort-arrow none"></span><button class="col-hide-btn" onclick="event.stopPropagation();toggleColHide('liq',9)" title="Ocultar coluna"><svg width="11" height="8" viewBox="0 0 22 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="11" cy="8" r="3"/></svg></button><div class="col-rsz-handle"></div></div></th>
       </tr></thead>
       <tbody id="liq-crono-tbody"></tbody></table>
     </div>
@@ -3366,17 +3381,17 @@ function _applyHiddenColsByKey(tbl,key){if(!tbl)return;const km={crono:['','pais
 function _applyPinnedSticky(tbl,key,scrollEl){const pinned=_pinnedCols[key]||[];if(!tbl||!pinned.length)return;requestAnimationFrame(()=>{const ths=[...tbl.querySelectorAll('thead tr:first-child th')];let left=0;ths.forEach((th,thIdx)=>{if(th.classList.contains('cal-sticky')){left+=th.offsetWidth;return;}const ck=th.dataset.colKey;if(ck&&pinned.includes(ck)){const pl=left;th.dataset.pinLeft=pl;th.style.background='var(--e-ghost)';th.style.zIndex='4';left+=th.offsetWidth;tbl.querySelectorAll(`tbody tr td:nth-child(${thIdx+1})`).forEach(td=>{td.style.position='sticky';td.style.left=pl+'px';td.style.background='var(--e-row-bg)';td.style.zIndex='2';});}});if(scrollEl?._calStickyHandler)scrollEl._calStickyHandler();});}
 // ─── COLUMN HIDE ──────────────────────────────────────────────────
 const _HIDDEN_KEY='eron-foc-hidden-v1';
-const _hiddenCols={crono:new Set(),'crono-conc':new Set()};
-(()=>{try{const s=JSON.parse(localStorage.getItem(_HIDDEN_KEY)||'{}');if(s.crono)s.crono.forEach(i=>{const n=+i;if(n>0&&n<10)_hiddenCols.crono.add(n);});if(s['crono-conc'])s['crono-conc'].forEach(i=>{const n=+i;if(n>0&&n<7)_hiddenCols['crono-conc'].add(n);});}catch(e){}})();
-function _saveHiddenCols(){try{localStorage.setItem(_HIDDEN_KEY,JSON.stringify({crono:[..._hiddenCols.crono],'crono-conc':[..._hiddenCols['crono-conc']]}));}catch(e){}}
+const _hiddenCols={crono:new Set(),'crono-conc':new Set(),liq:new Set()};
+(()=>{try{const s=JSON.parse(localStorage.getItem(_HIDDEN_KEY)||'{}');if(s.crono)s.crono.forEach(i=>{const n=+i;if(n>0&&n<10)_hiddenCols.crono.add(n);});if(s['crono-conc'])s['crono-conc'].forEach(i=>{const n=+i;if(n>0&&n<7)_hiddenCols['crono-conc'].add(n);});if(s.liq)s.liq.forEach(i=>{const n=+i;if(n>0&&n<10)_hiddenCols.liq.add(n);});}catch(e){}})();
+function _saveHiddenCols(){try{localStorage.setItem(_HIDDEN_KEY,JSON.stringify({crono:[..._hiddenCols.crono],'crono-conc':[..._hiddenCols['crono-conc']],liq:[..._hiddenCols.liq]}));}catch(e){}}
 const _eyeSvg=`<svg width="11" height="8" viewBox="0 0 22 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="11" cy="8" r="3"/></svg>`;
 function _hideBtn(key,idx){if(idx===0)return '';return `<button class="col-hide-btn" onclick="event.stopPropagation();toggleColHide('${key}',${idx})" title="Ocultar coluna">${_eyeSvg}</button>`;}
 function _wdLabels(){return({'pt-BR':['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'],'en':['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],'es':['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']}[currentLang])||['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];}
-function toggleColHide(key,idx){if(!_hiddenCols[key])_hiddenCols[key]=new Set();if(_hiddenCols[key].has(idx))_hiddenCols[key].delete(idx);else _hiddenCols[key].add(idx);_saveHiddenCols();if(key==='crono')renderCronogramaAccounts();else renderCronogramaConciliacoes();}
+function toggleColHide(key,idx){if(!_hiddenCols[key])_hiddenCols[key]=new Set();if(_hiddenCols[key].has(idx))_hiddenCols[key].delete(idx);else _hiddenCols[key].add(idx);_saveHiddenCols();if(key==='crono')renderCronogramaAccounts();else if(key==='liq')renderCronogramaLiquidacoes();else renderCronogramaConciliacoes();}
 function _applyHiddenCols(key,tblId,infoN){
   // Abordagem: CSS estático no bloco <style> + classe no elemento pai da página.
   // Esconde TH e TD juntos via nth-child — sem manipulação de DOM na tabela.
-  const pageId=key==='crono'?'page-cronograma-accounts':'page-cronograma-conciliacoes';
+  const pageId=key==='crono'?'page-cronograma-accounts':key==='liq'?'page-cronograma-custos':'page-cronograma-conciliacoes';
   const page=document.getElementById(pageId);
   if(!page) return;
   const hidden=_hiddenCols[key]||new Set();
@@ -3719,7 +3734,7 @@ function renderCronogramaAccounts(){
   setTimeout(()=>{const _t=document.getElementById('crono-cal-table');if(_crPins.length){const pg=document.getElementById('page-cronograma-accounts');if(pg)for(let i=1;i<=10;i++)pg.classList.remove('hide-col-'+i);_applyHiddenColsByKey(_t,'crono');_applyPinnedSticky(_t,'crono',calScrollEl);}else{_applyHiddenCols('crono','crono-cal-table',10);}},0);
   _saveFilters('crono');
 }
-const _sortState={accounts:{col:null,dir:1},crono:{col:null,dir:1},cierre:{col:null,dir:1},'crono-conc':{col:null,dir:1}};
+const _sortState={accounts:{col:null,dir:1},crono:{col:null,dir:1},cierre:{col:null,dir:1},'crono-conc':{col:null,dir:1},liq:{col:null,dir:1}};
 
 // ─── FILTER PERSISTENCE ──────────────────────────────────────────
 const _FILTER_KEY='eron-foc-filters-v2';
@@ -3850,6 +3865,7 @@ function toggleSort(tbl,col){
   else if(tbl==='crono') renderCronogramaAccounts();
   else if(tbl==='cierre') renderCierreTable();
   else if(tbl==='crono-conc') renderCronogramaConciliacoes();
+  else if(tbl==='liq') renderCronogramaLiquidacoes();
 }
 function _hasCronoFilters(){
   const fp=_fddVals('crono-f-pais-panel').length>0;
@@ -9043,6 +9059,8 @@ function renderCronogramaLiquidacoes(){
     else list=list.filter(c=>activeStatus.includes(_liqGetStatus(_liqConcId(c),'liq')?.v));
   }
   if(fq) list=list.filter(c=>`${c.nome} ${c.pais} ${c.agente}`.toLowerCase().includes(fq));
+  list=list.map(c=>{const id=_liqConcId(c);const cfg=_liqGetConfig(id);const lSt=_liqGetStatus(id,'liq');const elab=_liqLastElab(c);return Object.assign({},c,{_s_tipo:cfg.tipo_liq||'',_s_status:lSt?.v||'',_s_elab_sigla:elab.sigla||'',_s_elab_date:elab._raw||'',_s_estado:elab._raw?elab.status||'ok':'ag'});});
+  list=_applySortBy(list,_sortState.liq.col,_sortState.liq.dir);
   const cnt=document.getElementById('liq-crono-count');
   if(cnt) cnt.textContent=list.length+' conciliação'+(list.length!==1?'s':'');
   let ok=0,ini=0,sm=0,pend=0;
@@ -9068,6 +9086,8 @@ function renderCronogramaLiquidacoes(){
   if(!list.length){if(emptyEl)emptyEl.style.display='';if(tblInner)tblInner.style.display='none';return;}
   if(emptyEl)emptyEl.style.display='none';
   if(tblInner)tblInner.style.display='';
+  _refreshStaticSortHeader('liq-crono-thead','liq');
+  _applyHiddenCols('liq','liq-crono-table',10);
   const tipoMap={bancos:['chip-tipo-bancos','Bancos'],mista:['chip-tipo-mista','Mista'],processadores:['chip-tipo-proc','Processadores']};
   tb.innerHTML=list.map(c=>{
     const id=_liqConcId(c);
@@ -9107,6 +9127,48 @@ function renderCronogramaLiquidacoes(){
     </tr>`;
   }).join('');
   tb.querySelectorAll('textarea.liq-obs').forEach(ta=>{ta.style.height='auto';ta.style.height=Math.max(ta.scrollHeight,32)+'px';});
+  _initLiqColResize(document.getElementById('liq-crono-table'));
+  _initLiqTruncTooltip();
+}
+
+function _initLiqColResize(tbl){
+  if(!tbl) return;
+  tbl.querySelectorAll('.col-rsz-handle').forEach(handle=>{
+    handle.onmousedown=null;
+    handle.addEventListener('mousedown',e=>{
+      e.preventDefault();e.stopPropagation();
+      const th=handle.closest('th');if(!th) return;
+      const startX=e.clientX,startW=th.offsetWidth;
+      handle.classList.add('rsz-active');
+      const onMove=mv=>{th.style.width=Math.max(40,startW+mv.clientX-startX)+'px';th.style.minWidth=th.style.width;};
+      const onUp=()=>{handle.classList.remove('rsz-active');document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);};
+      document.addEventListener('mousemove',onMove);
+      document.addEventListener('mouseup',onUp);
+    });
+  });
+}
+
+function _initLiqTruncTooltip(){
+  const wrap=document.getElementById('liq-crono-table-inner');
+  if(!wrap||wrap._liqTruncBound) return;
+  wrap._liqTruncBound=true;
+  let tip=null,timer=null;
+  const getTip=()=>{if(!tip){tip=document.createElement('div');tip.className='trunc-tip';document.body.appendChild(tip);}return tip;};
+  const hide=()=>{clearTimeout(timer);timer=null;if(tip)tip.style.display='none';};
+  wrap.addEventListener('mouseover',e=>{
+    clearTimeout(timer);if(tip)tip.style.display='none';
+    let el=e.target;let found=null;
+    while(el&&el!==wrap){if(el.scrollWidth>el.clientWidth+1&&(el.textContent||'').trim()){found=el;break;}el=el.parentElement;}
+    if(!found) return;
+    const text=(found.textContent||'').trim();const cx=e.clientX,cy=e.clientY;
+    timer=setTimeout(()=>{
+      const t=getTip();t.textContent=text;t.style.left=(cx+14)+'px';t.style.top=(cy+14)+'px';t.style.display='block';
+      const r=t.getBoundingClientRect();
+      if(r.right>window.innerWidth-10) t.style.left=Math.max(5,cx-r.width-10)+'px';
+      if(r.bottom>window.innerHeight-10) t.style.top=Math.max(5,cy-r.height-10)+'px';
+    },1000);
+  });
+  wrap.addEventListener('mouseleave',hide);
 }
 
 // ── Render Gerencial > Liquidações ──
