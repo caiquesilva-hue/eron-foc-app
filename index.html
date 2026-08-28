@@ -9137,6 +9137,7 @@ function _initLiqColResize(tbl){
   tbl.querySelectorAll('.col-rsz-handle').forEach(handle=>{
     handle.onmousedown=null;
     handle.ondblclick=null;
+    handle.onclick=e=>e.stopPropagation();
     handle.addEventListener('mousedown',e=>{
       e.preventDefault();e.stopPropagation();
       const th=handle.closest('th');if(!th) return;
