@@ -5203,7 +5203,7 @@ function renderCierreTable(){
   const q=(document.getElementById('cierre-search')?.value||'').toLowerCase().trim();
   const clearBtn=document.getElementById('cierre-clear-btn');
   if(clearBtn) clearBtn.style.display=_hasCierreFilters()?'inline-flex':'none';
-  const _createdYM=c=>{if(!c.createdAt)return null;const d=new Date(c.createdAt);return`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`;};
+  const _createdYM=c=>{if(!c.createdAt)return null;const d=new Date(c.createdAt);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;};
   let contas=store.contas.filter(c=>c.status!=='encerrada'&&!_isCierreExcluded(c)&&(!mes||!_createdYM(c)||_createdYM(c)<=mes));
   if(activePaises.length) contas=contas.filter(c=>activePaises.includes(c.pais));
   if(activeAgentes.length) contas=contas.filter(c=>activeAgentes.includes(c.agente));
