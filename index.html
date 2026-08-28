@@ -9157,10 +9157,14 @@ function _initLiqTruncTooltip(){
   const hide=()=>{clearTimeout(timer);timer=null;if(tip)tip.style.display='none';};
   wrap.addEventListener('mouseover',e=>{
     clearTimeout(timer);if(tip)tip.style.display='none';
-    let el=e.target;let found=null;
-    while(el&&el!==wrap){if(el.scrollWidth>el.clientWidth+1&&(el.textContent||'').trim()){found=el;break;}el=el.parentElement;}
-    if(!found) return;
-    const text=(found.textContent||'').trim();const cx=e.clientX,cy=e.clientY;
+    const el=e.target;
+    if(!el||el.nodeType!==1) return;
+    if(['TABLE','THEAD','TBODY','TR','TH','BUTTON','SELECT','TEXTAREA'].includes(el.tagName)) return;
+    if(!el.closest('td')) return;
+    if(el.scrollWidth<=el.clientWidth+2) return;
+    const text=(el.textContent||'').trim();
+    if(!text||text.length<2) return;
+    const cx=e.clientX,cy=e.clientY;
     timer=setTimeout(()=>{
       const t=getTip();t.textContent=text;t.style.left=(cx+14)+'px';t.style.top=(cy+14)+'px';t.style.display='block';
       const r=t.getBoundingClientRect();
