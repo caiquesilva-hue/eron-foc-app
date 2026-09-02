@@ -6551,6 +6551,8 @@ function _renderCredCard(reqId,data){
     }
     detail.innerHTML=html;
   }
+  const retryBtn=document.getElementById('cred-card-retry-'+reqId);
+  if(retryBtn) retryBtn.style.display=status==='error'?'':'none';
   if((status==='done'||status==='error')&&_credMonitors.has(reqId)){
     const m=_credMonitors.get(reqId);
     // onSettle dispara UMA vez, só quando o job do backend realmente termina
@@ -6566,6 +6568,31 @@ async function _removeCredCard(reqId){
   if(m){if(m._stopTimer)clearTimeout(m._stopTimer);if(m.ref&&m.cb)m.ref.off('value',m.cb);_credMonitors.delete(reqId);}
   document.getElementById('cred-card-'+reqId)?.remove();
   try{await _getEronFb().database().ref('credentialChangeRequests/'+reqId).remove();}catch(e){}
+}
+async function _retryCredCard(reqId){
+  try{
+    await _getEronFb().database().ref('credentialChangeRequests/'+reqId).update({
+      status:'pending',error:null,processed_at:null,
+    });
+  }catch(e){console.warn('[retryCredCard]',e);return;}
+  const m=_credMonitors.get(reqId);
+  if(m){
+    // onSettle já disparou uma vez pro erro anterior — libera pra disparar
+    // de novo quando esse novo ciclo terminar, e reconecta o listener caso
+    // já tivesse sido desligado (3s depois do status anterior virar terminal).
+    m._settled=false;
+    if(m._stopTimer){clearTimeout(m._stopTimer);m._stopTimer=null;}
+    if(!m.cb){
+      m.ref=m.ref||_getEronFb().database().ref('credentialChangeRequests/'+reqId);
+      m.cb=m.ref.on('value',snap=>{const d=snap.val();if(d)_renderCredCard(reqId,d);});
+    }
+  }
+  const badge=document.getElementById('cred-card-badge-'+reqId);
+  if(badge){const si=_credCardSI('pending');badge.style.background=si.bg;badge.style.color=si.c;badge.textContent=si.label;}
+  const detail=document.getElementById('cred-card-detail-'+reqId);
+  if(detail) detail.innerHTML=`<span style="font-size:11px;color:#6b7280">${t('cred-st-waiting-detail')}</span>`;
+  const retryBtn=document.getElementById('cred-card-retry-'+reqId);
+  if(retryBtn) retryBtn.style.display='none';
 }
 function _createCredCard(reqId,bankRaw,agent,initialStatus,onSettle){
   if(document.getElementById('cred-card-'+reqId)){
@@ -6583,6 +6610,7 @@ function _createCredCard(reqId,bankRaw,agent,initialStatus,onSettle){
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <span>🔑</span>
       <span style="font-size:13px;font-weight:600;flex:1">${_escHtml(bankLabel)} / ${_escHtml(agent)}</span>
+      <button id="cred-card-retry-${reqId}" onclick="_retryCredCard('${_esc(reqId)}')" style="display:none;border:none;background:none;cursor:pointer;font-size:14px;color:var(--e-purple);padding:0;line-height:1" title="Tentar novamente">↻</button>
       <button onclick="_removeCredCard('${_esc(reqId)}')" style="border:none;background:none;cursor:pointer;font-size:18px;color:var(--e-muted);padding:0;line-height:1" title="Excluir">×</button>
     </div>
     <div id="cred-card-badge-${reqId}" style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:${si.bg};color:${si.c};margin-bottom:6px">${si.label}</div>
@@ -6836,18 +6864,22 @@ async function _credSave(){
     if(statusEl){statusEl.style.display='none';statusEl.innerHTML='';}
     if(_credMode==='new'){
       const dtInfo=_DT_BANK_RAW_MAP[bank];
-      // Só registra a conta na rotina (dynamic_tasks) quando o job de
-      // criação da credencial no vault realmente confirmar sucesso — antes
-      // disso a credencial ainda não existe de verdade no vault, então a
-      // conta não pode começar a ser processada na rotina.
-      _createCredCard(reqId,bank,agent,'pending',async (status)=>{
+      // O backend (credential_sync.py) já grava dynamic_tasks no Firebase
+      // sozinho quando o job de criação confirma sucesso — aqui só espelha
+      // isso no cache local (EXTR_TAREFAS/CRED_BANK_AGENTS) pra a lista de
+      // "Download Extratos" atualizar sem precisar recarregar a página, e
+      // pergunta se quer adicionar a conta em Accounts. Nada disso pode ser
+      // otimista: só roda depois que o job realmente terminar com sucesso.
+      _createCredCard(reqId,bank,agent,'pending',(status)=>{
         if(status!=='done'||!dtInfo) return;
-        try{
-          await _getEronFb().database()
-            .ref(`dynamic_tasks/${dtInfo.pais}/${dtInfo.banco_nome}/${agent.toUpperCase()}`)
-            .set({active:true,created_at:Date.now()});
-          _credAskAddToCronograma(dtInfo.pais,dtInfo.banco_nome,agent.toUpperCase());
-        }catch(e){console.warn('[cred new onSettle]',e);}
+        const ag=agent.toUpperCase();
+        const key=`${dtInfo.pais}__${dtInfo.banco_nome}__${ag}`;
+        if(!EXTR_TAREFAS.some(t=>`${t.pais}__${t.banco}__${t.agente}`===key)){
+          EXTR_TAREFAS.push({pais:dtInfo.pais,banco:dtInfo.banco_nome,agente:ag});
+        }
+        if(!CRED_BANK_AGENTS[bank]) CRED_BANK_AGENTS[bank]=[];
+        if(!CRED_BANK_AGENTS[bank].includes(ag)) CRED_BANK_AGENTS[bank].push(ag);
+        _credAskAddToCronograma(dtInfo.pais,dtInfo.banco_nome,ag);
       });
       _credInit();
     }else{
