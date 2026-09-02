@@ -2713,6 +2713,10 @@ function doLogout(){
 function openModal(id){ document.getElementById(id).classList.add('open'); }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); document.querySelectorAll('.err').forEach(el=>el.classList.remove('err')); }
 function validate(ids){ let ok=true; ids.forEach(id=>{ const el=document.getElementById(id); const v=el?el.value.trim():''; if(!v){if(el)el.classList.add('err');ok=false;}else if(el)el.classList.remove('err'); }); return ok; }
+// Remove acentos/diacríticos e normaliza caixa/espaços — usado pra comparar
+// nomes (país, banco, processador) que podem ter sido digitados com grafias
+// diferentes (ex: "Colômbia" vs "Colombia") sem tratar como duplicatas.
+function _normNome(s){ return (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase(); }
 
 // ─── ACCOUNT MODAL ────────────────────────────────────────────────
 function openAddAccount(){
@@ -3175,6 +3179,14 @@ function submitCadastro(){
   const isEdit=_editCadIdx>=0;
   let _logArgs=null;
   if(cadastroType==='pais'){
+    if(!isEdit){
+      const dup=store.paises.find(p=>_normNome(p)===_normNome(nome));
+      if(dup){
+        document.getElementById('cad-nome').classList.add('err');
+        _toast(`⚠️ País já cadastrado como "${dup}"`, 5000);
+        return;
+      }
+    }
     const prevNome=isEdit?store.paises[_editCadIdx]:'';
     if(isEdit) store.paises[_editCadIdx]=nome;
     else if(!store.paises.includes(nome)) store.paises.push(nome);
