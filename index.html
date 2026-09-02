@@ -5863,7 +5863,7 @@ function _extrRenderList(){
   const list=document.getElementById('extr-ms-list');
   if(!list) return;
   let html='';let first=true;
-  ['CO','AR','PE'].forEach(pais=>{
+  ['CO','AR','PE','CL'].forEach(pais=>{
     const items=groups[pais];if(!items||!items.length) return;
     items.sort((a,b)=>a.banco.localeCompare(b.banco)||a.agente.localeCompare(b.agente));
     const info=EXTR_PAIS[pais]||{flag:'',name:pais};
@@ -5884,7 +5884,7 @@ function _extrRenderList(){
   if(!html) html=`<div style="padding:20px;text-align:center;font-size:12px;color:var(--e-muted)">—</div>`;
   list.innerHTML=html;
   // Set indeterminate on group checkboxes
-  ['CO','AR','PE'].forEach(pais=>{
+  ['CO','AR','PE','CL'].forEach(pais=>{
     const items=groups[pais]||[];
     const el=document.getElementById('extr-grp-'+pais);
     if(el&&items.length){
