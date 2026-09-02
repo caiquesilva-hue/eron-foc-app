@@ -2957,9 +2957,22 @@ function _credAskEncerrar(deletedEntries){
   );
 }
 
-function _credAskAddToCronograma(paisCode,banco_nome,agente){
+async function _credAskAddToCronograma(paisCode,banco_nome,agente){
   const paisNome=_DT_PAIS_NOME[paisCode]||paisCode;
-  const exists=(store.contas||[]).some(c=>{
+  // Busca 'contas' fresco direto do Firebase antes de decidir — o espelho
+  // local (store.contas) pode ainda estar desatualizado logo após salvar uma
+  // credencial nova, por causa da corrida com o guard _pendingWrites/_ownWrites
+  // do listener em tempo real (_fbRef.on('value',...) ignora snapshots
+  // enquanto uma escrita local está em voo).
+  let contasAtuais=store.contas||[];
+  try{
+    if(typeof _fbRef!=='undefined'){
+      const snap=await _fbRef.child('contas').once('value');
+      const fresh=_fbArr(snap.val());
+      if(fresh.length) contasAtuais=fresh;
+    }
+  }catch(e){console.warn('[_credAskAddToCronograma] leitura fresca falhou, usando cache local:',e);}
+  const exists=contasAtuais.some(c=>{
     if(c.pais!==paisNome||c.banco!==banco_nome) return false;
     const cAgNorm=c.agente.toUpperCase().replace(/^[A-Z]+\./,'');
     return cAgNorm===agente.toUpperCase()||c.agente.toUpperCase().includes(agente.toUpperCase());
