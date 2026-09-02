@@ -6610,7 +6610,7 @@ function _createCredCard(reqId,bankRaw,agent,initialStatus,onSettle){
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <span>🔑</span>
       <span style="font-size:13px;font-weight:600;flex:1">${_escHtml(bankLabel)} / ${_escHtml(agent)}</span>
-      <button id="cred-card-retry-${reqId}" onclick="_retryCredCard('${_esc(reqId)}')" style="display:none;border:none;background:none;cursor:pointer;font-size:14px;color:var(--e-purple);padding:0;line-height:1" title="Tentar novamente">↻</button>
+      <button id="cred-card-retry-${reqId}" onclick="_retryCredCard('${_esc(reqId)}')" style="display:none;border:none;background:none;cursor:pointer;padding:0;line-height:1;color:var(--e-purple)" title="Tentar novamente"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"></path></svg></button>
       <button onclick="_removeCredCard('${_esc(reqId)}')" style="border:none;background:none;cursor:pointer;font-size:18px;color:var(--e-muted);padding:0;line-height:1" title="Excluir">×</button>
     </div>
     <div id="cred-card-badge-${reqId}" style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:${si.bg};color:${si.c};margin-bottom:6px">${si.label}</div>
