@@ -6553,6 +6553,11 @@ function _renderCredCard(reqId,data){
   }
   if((status==='done'||status==='error')&&_credMonitors.has(reqId)){
     const m=_credMonitors.get(reqId);
+    // onSettle dispara UMA vez, só quando o job do backend realmente termina
+    // (sucesso ou erro) — é aqui, não no clique de salvar, que a rotina
+    // (dynamic_tasks) deve ser alterada. Antes disso a credencial no vault
+    // ainda não mudou, então a conta precisa continuar rodando normalmente.
+    if(m.onSettle&&!m._settled){m._settled=true;try{m.onSettle(status,data);}catch(e){console.warn('[credCard onSettle]',e);}}
     if(!m._stopTimer) m._stopTimer=setTimeout(()=>{if(m.cb){m.ref.off('value',m.cb);m.cb=null;}},3000);
   }
 }
@@ -6562,8 +6567,11 @@ async function _removeCredCard(reqId){
   document.getElementById('cred-card-'+reqId)?.remove();
   try{await _getEronFb().database().ref('credentialChangeRequests/'+reqId).remove();}catch(e){}
 }
-function _createCredCard(reqId,bankRaw,agent,initialStatus){
-  if(document.getElementById('cred-card-'+reqId)) return;
+function _createCredCard(reqId,bankRaw,agent,initialStatus,onSettle){
+  if(document.getElementById('cred-card-'+reqId)){
+    if(onSettle){const m=_credMonitors.get(reqId);if(m&&!m.onSettle)m.onSettle=onSettle;}
+    return;
+  }
   const wrap=document.getElementById('cred-cards-wrap');
   if(!wrap) return;
   const bankLabel=_CRED_BANK_LABELS[bankRaw]||bankRaw;
@@ -6580,7 +6588,7 @@ function _createCredCard(reqId,bankRaw,agent,initialStatus){
     <div id="cred-card-badge-${reqId}" style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:${si.bg};color:${si.c};margin-bottom:6px">${si.label}</div>
     <div id="cred-card-detail-${reqId}"><span style="font-size:11px;color:#6b7280">Aguardando próximo ciclo do listener (pode demorar até 1 min)...</span></div>`;
   wrap.prepend(div);
-  const m={ref:null,cb:null,_stopTimer:null};
+  const m={ref:null,cb:null,_stopTimer:null,onSettle:onSettle||null,_settled:false};
   _credMonitors.set(reqId,m);
   m.ref=_getEronFb().database().ref('credentialChangeRequests/'+reqId);
   m.cb=m.ref.on('value',snap=>{const d=snap.val();if(d)_renderCredCard(reqId,d);});
@@ -6751,45 +6759,54 @@ async function _credSaveDelete(){
   if(btn){btn.disabled=true;btn.style.opacity='.45';}
   if(statusEl){statusEl.style.display='';statusEl.innerHTML=`<span style="color:var(--e-muted)">${t('cred-del-saving')}</span>`;}
   const erros=[];
-  const deletedEntries=[];
+  const settlements=[];
   for(const key of [..._credDelSelected]){
     const [pais,banco_nome,agente]=key.split('|');
     if(!pais||!banco_nome||!agente) continue;
+    const mapEntry=_DT_BANCO_MAP[banco_nome];
+    if(!mapEntry){erros.push(`${banco_nome}/${agente}: banco não mapeado`);continue;}
+    const bankRaw=mapEntry.bank_raw;
+    const bankKey=bankRaw.replace(/_(co|pe|ar)$/,'');
+    const reqId='del_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
     try{
-      await _getEronFb().database().ref(`dynamic_tasks/${pais}/${banco_nome}/${agente}`).remove();
-      EXTR_TAREFAS=EXTR_TAREFAS.filter(t=>!(t.pais===pais&&t.banco===banco_nome&&t.agente===agente));
-      const mapEntry=_DT_BANCO_MAP[banco_nome];
-      if(mapEntry){
-        const br=mapEntry.bank_raw;
-        if(CRED_BANK_AGENTS[br]){
-          CRED_BANK_AGENTS[br]=CRED_BANK_AGENTS[br].filter(a=>a!==agente);
-          if(!CRED_BANK_AGENTS[br].length) delete CRED_BANK_AGENTS[br];
-        }
-      }
-      deletedEntries.push({pais,banco_nome,agente});
-    }catch(e){erros.push(`${banco_nome}/${agente}: ${String(e.message||e)}`);}
+      await _getEronFb().database().ref('credentialChangeRequests/'+reqId).set({
+        type:'delete_credential',bank:bankKey,bank_raw:bankRaw,agent:agente,
+        requested_by:window._loggedEmail||'—',created_at:Date.now(),status:'pending',
+      });
+    }catch(e){erros.push(`${banco_nome}/${agente}: ${String(e.message||e)}`);continue;}
+    // Só tira da rotina (dynamic_tasks) quando o job de exclusão no vault
+    // realmente confirmar sucesso (status 'done') — se der erro (ex: limite
+    // do vault excedido), a credencial continua válida e a conta precisa
+    // continuar rodando normalmente, sem sumir do cronograma.
+    settlements.push(new Promise(resolve=>{
+      _createCredCard(reqId,bankRaw,agente,'pending',async (status,data)=>{
+        if(status!=='done'){resolve({ok:false,pais,banco_nome,agente,error:data?.error});return;}
+        try{
+          await _getEronFb().database().ref(`dynamic_tasks/${pais}/${banco_nome}/${agente}`).remove();
+          EXTR_TAREFAS=EXTR_TAREFAS.filter(t=>!(t.pais===pais&&t.banco===banco_nome&&t.agente===agente));
+          if(CRED_BANK_AGENTS[bankRaw]){
+            CRED_BANK_AGENTS[bankRaw]=CRED_BANK_AGENTS[bankRaw].filter(a=>a!==agente);
+            if(!CRED_BANK_AGENTS[bankRaw].length) delete CRED_BANK_AGENTS[bankRaw];
+          }
+          resolve({ok:true,pais,banco_nome,agente});
+        }catch(e){resolve({ok:false,pais,banco_nome,agente,error:String(e.message||e)});}
+      });
+    }));
   }
-  if(erros.length){
+  if(erros.length&&!settlements.length){
     if(statusEl) statusEl.innerHTML=`<span style="color:#dc2626">❌ ${_escHtml(erros.join('; '))}</span>`;
     if(btn){btn.disabled=false;btn.style.opacity='1';}
-  }else{
-    if(statusEl) statusEl.style.display='none';
-    for(const {pais,banco_nome,agente} of deletedEntries){
-      const mapEntry=_DT_BANCO_MAP[banco_nome];
-      if(!mapEntry) continue;
-      const bankRaw=mapEntry.bank_raw;
-      const bankKey=bankRaw.replace(/_(co|pe|ar)$/,'');
-      const reqId='del_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
-      try{
-        await _getEronFb().database().ref('credentialChangeRequests/'+reqId).set({
-          type:'delete_credential',bank:bankKey,bank_raw:bankRaw,agent:agente,
-          requested_by:window._loggedEmail||'—',created_at:Date.now(),status:'pending',
-        });
-        _createCredCard(reqId,bankRaw,agente,'pending');
-      }catch(e){console.warn('OCI delete request error:',e);}
-    }
-    _credAskEncerrar(deletedEntries);
+    return;
   }
+  if(statusEl) statusEl.style.display='none';
+  _credInit();
+  // A confirmação do backend pode levar até ~1min (ciclo do listener) — não
+  // trava a tela esperando; quando terminar, oferece marcar como encerradas
+  // no cronograma só as contas cuja exclusão de fato foi concluída.
+  Promise.all(settlements).then(results=>{
+    const ok=results.filter(r=>r.ok);
+    if(ok.length) _credAskEncerrar(ok);
+  });
 }
 
 async function _credSave(){
@@ -6816,20 +6833,25 @@ async function _credSave(){
   if(statusEl){statusEl.style.display='';statusEl.innerHTML=`<span style="color:var(--e-muted)">⏳ Salvando...</span>`;}
   try{
     await _getEronFb().database().ref('credentialChangeRequests/'+reqId).set(payload);
-    // Para nova credencial: registra dynamic_tasks direto no app — não precisa aguardar VM
-    if(_credMode==='new'){
-      const dtInfo=_DT_BANK_RAW_MAP[bank];
-      if(dtInfo) await _getEronFb().database()
-        .ref(`dynamic_tasks/${dtInfo.pais}/${dtInfo.banco_nome}/${agent.toUpperCase()}`)
-        .set({active:true,created_at:Date.now()});
-    }
     if(statusEl){statusEl.style.display='none';statusEl.innerHTML='';}
-    _addCredCard(reqId,bank,agent);
     if(_credMode==='new'){
       const dtInfo=_DT_BANK_RAW_MAP[bank];
-      if(dtInfo) setTimeout(()=>_credAskAddToCronograma(dtInfo.pais,dtInfo.banco_nome,agent.toUpperCase()),800);
-      else setTimeout(_credInit,1000);
+      // Só registra a conta na rotina (dynamic_tasks) quando o job de
+      // criação da credencial no vault realmente confirmar sucesso — antes
+      // disso a credencial ainda não existe de verdade no vault, então a
+      // conta não pode começar a ser processada na rotina.
+      _createCredCard(reqId,bank,agent,'pending',async (status)=>{
+        if(status!=='done'||!dtInfo) return;
+        try{
+          await _getEronFb().database()
+            .ref(`dynamic_tasks/${dtInfo.pais}/${dtInfo.banco_nome}/${agent.toUpperCase()}`)
+            .set({active:true,created_at:Date.now()});
+          _credAskAddToCronograma(dtInfo.pais,dtInfo.banco_nome,agent.toUpperCase());
+        }catch(e){console.warn('[cred new onSettle]',e);}
+      });
+      _credInit();
     }else{
+      _addCredCard(reqId,bank,agent);
       setTimeout(_credInit,1000);
     }
   }catch(e){
