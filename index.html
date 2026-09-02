@@ -1407,6 +1407,7 @@
                 <option value="ciudad_ar">Ciudad</option>
                 <option value="coinag_ar">Coinag</option>
                 <option value="bancochile">Banco de Chile</option>
+                <option value="bci">BCI</option>
                 <option value="gmail">Gmail (2FA)</option>
               </select>
             </div>
@@ -6239,6 +6240,7 @@ const CRED_BANKS={
   industrial_ar:{fields:['empresa','usuario','senha'],detokenize:false},
   ciudad_ar:{fields:['empresa','usuario','senha'],detokenize:false},
   bancochile:{fields:['usuario','senha'],detokenize:false},
+  bci:{fields:['empresa','usuario','senha'],detokenize:false},
   gmail:{fields:['usuario','senha','totp_secret'],gmail_special:true,detokenize:false},
 };
 let CRED_BANK_AGENTS={
@@ -6261,6 +6263,7 @@ let CRED_BANK_AGENTS={
   ciudad_ar:['BUHAPAY'],
   coinag_ar:[],
   bancochile:['MARMATE'],
+  bci:['CLPRO'],
   gmail:['COLPROCESA','COGREPOS','COLPAYMENTS','COMERCIAL','GOHILL','NLASE','KATAGA','QM','BUHAPAY','ONLINEPRO','SURTCAPITAL','MALISAC','TPROG'],
 };
 
@@ -6285,6 +6288,7 @@ const _DT_BANCO_MAP={
   'Ciudad':         {pais:'AR',bank_raw:'ciudad_ar'},
   'Coinag':         {pais:'AR',bank_raw:'coinag_ar'},
   'Banco de Chile': {pais:'CL',bank_raw:'bancochile'},
+  'BCI':            {pais:'CL',bank_raw:'bci'},
 };
 
 // Lookup reverso: bank_raw → {pais, banco_nome} (para escrita direta em dynamic_tasks)
