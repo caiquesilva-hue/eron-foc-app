@@ -2614,6 +2614,13 @@ function navigate(pageId){
   if(pageId==='cronograma-conciliacoes'){
     const rt=document.getElementById('crono-conc-resp-toggles');
     if(rt){rt.innerHTML='';delete rt.dataset.init;}
+    // Mesmo reset do Responsável — sem isso o grid de Analista fica com o
+    // dataset.init travado desde a primeira renderização (ex: do ambiente
+    // carregado no login) e nunca é reconstruído ao trocar de ambiente,
+    // mostrando sempre a lista de responsaveis do primeiro ambiente aberto
+    // na sessão em vez da do ambiente atual.
+    const at=document.getElementById('crono-conc-anl-toggles');
+    if(at){at.innerHTML='';delete at.dataset.init;}
     _applyPendingFilters('crono-conc');
     initCronconcDates();
     renderCronogramaConciliacoes();
@@ -5758,6 +5765,14 @@ async function switchEnvironment(envKey){
   document.getElementById('env-dd').style.display='none';
   document.getElementById('env-btn').classList.remove('open');
   _toast('Ambiente: '+env.label,3000);
+  // Os grids de Responsável/Analista da tela de Conciliações só se
+  // reconstroem quando dataset.init está limpo (ver navigate()) — sem isso
+  // aqui, trocar de ambiente SEM sair da tela deixaria os dois mostrando a
+  // lista de responsaveis do ambiente anterior.
+  ['crono-conc-resp-toggles','crono-conc-anl-toggles'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.innerHTML='';delete el.dataset.init;}
+  });
   await startFirebaseSync();
   try{renderAll();updateCounts();}catch(e){}
 }
