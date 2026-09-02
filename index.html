@@ -1203,7 +1203,6 @@
     <div class="d1-stat-card conc-stat-card d1-stat-pronto-conc"><div class="conc-stat-top"><div class="d1-stat-num" id="conc-d1-pronto">—</div><div class="d1-stat-lbl">Pronto p/ Conc.</div></div><div class="d1-stat-vol" id="conc-d1-pronto-vol"></div></div>
     <div class="d1-stat-card conc-stat-card d1-stat-sem-mov"><div class="conc-stat-top"><div class="d1-stat-num" id="conc-d1-sem-mov">—</div><div class="d1-stat-lbl">Sem Movimento</div></div><div class="d1-stat-vol" id="conc-d1-sem-mov-vol"></div></div>
     <div class="d1-stat-card conc-stat-card d1-stat-sem-acesso"><div class="conc-stat-top"><div class="d1-stat-num" id="conc-d1-sem-acesso">—</div><div class="d1-stat-lbl">Sem Acesso</div></div><div class="d1-stat-vol" id="conc-d1-sem-acesso-vol"></div></div>
-    <div class="d1-stat-card conc-stat-card"><div class="conc-stat-top"><div class="d1-stat-num" id="conc-d1-conta-encerrada" style="color:#475569">—</div><div class="d1-stat-lbl">Conta Encerrada</div></div><div class="d1-stat-vol" id="conc-d1-conta-encerrada-vol"></div></div>
     <div class="d1-stat-card conc-stat-card d1-stat-pendente"><div class="conc-stat-top"><div class="d1-stat-num" id="conc-d1-pendente">—</div><div class="d1-stat-lbl">Pendente</div></div><div class="d1-stat-vol" id="conc-d1-pendente-vol"></div></div>
     <div class="d1-stat-card" style="flex-direction:row;align-items:center;gap:14px;padding:10px 20px;">
       <div style="display:flex;flex-direction:column;gap:3px;text-align:left">
@@ -8455,7 +8454,6 @@ function renderCronogramaConciliacoes(){
   _upd('conc-d1-pronto',d1C.pronto_conciliacao);_upd('conc-d1-pronto-vol',_fmtV(d1V.pronto_conciliacao));
   _upd('conc-d1-sem-mov',d1C.sem_movimento);_upd('conc-d1-sem-mov-vol',_fmtV(d1V.sem_movimento));
   _upd('conc-d1-sem-acesso',d1C.sem_acesso);_upd('conc-d1-sem-acesso-vol',_fmtV(d1V.sem_acesso));
-  _upd('conc-d1-conta-encerrada',d1C.conta_encerrada);_upd('conc-d1-conta-encerrada-vol',_fmtV(d1V.conta_encerrada));
   _upd('conc-d1-pendente',d1C.pendente);_upd('conc-d1-pendente-vol',_fmtV(d1V.pendente));
   const _totalRisk=d1V.pendente+d1V.pronto_conciliacao+d1V.sem_acesso;
   const _riskT=Math.min(1,_totalRisk/1_000_000);
