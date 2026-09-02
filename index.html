@@ -2919,7 +2919,7 @@ function _ynConfirm(){closeModal('modal-yesno');const cb=_ynCb;_ynCb=null;if(cb?
 function _ynCancel(){closeModal('modal-yesno');const cb=_ynCb;_ynCb=null;if(cb?.no) cb.no();}
 
 // ── Credencial ↔ Cronograma helpers ────────────────────────────
-const _DT_PAIS_NOME={CO:'Colombia',PE:'Peru',AR:'Argentina'};
+const _DT_PAIS_NOME={CO:'Colombia',PE:'Peru',AR:'Argentina',CL:'Chile'};
 
 function _credMatchContas(entries){
   const matched=new Map();
@@ -5755,7 +5755,7 @@ let EXTR_TAREFAS=[
   {pais:'PE',banco:'BCP',agente:'ONLINEPRO'},{pais:'PE',banco:'BCP',agente:'MALISAC'},
   {pais:'PE',banco:'BCP',agente:'TPROG'},{pais:'PE',banco:'BCP',agente:'SURTCAPITAL'},
 ];
-const EXTR_PAIS={CO:{flag:'🇨🇴',name:'Colombia'},AR:{flag:'🇦🇷',name:'Argentina'},PE:{flag:'🇵🇪',name:'Perú'}};
+const EXTR_PAIS={CO:{flag:'🇨🇴',name:'Colombia'},AR:{flag:'🇦🇷',name:'Argentina'},PE:{flag:'🇵🇪',name:'Perú'},CL:{flag:'🇨🇱',name:'Chile'}};
 let _extrSelected=new Set();
 let _extrDateMode='ontem';
 let _extrPanelOpen=false;
