@@ -3502,12 +3502,19 @@ function _prevDay(dateStr){
 }
 function _getEronFb(){
   let app;
-  if(typeof _fbApp!=='undefined'&&_currentEnv==='eron') app=_fbApp;
+  const isOwnApp=(typeof _fbApp!=='undefined'&&_currentEnv==='eron');
+  if(isOwnApp) app=_fbApp;
   else{
     try{app=firebase.app('eron_slack');}
     catch(e){app=firebase.initializeApp(ENVIRONMENTS.eron.cfg,'eron_slack');}
   }
-  _ensureAnonAuth(app); // dispara/cacheia o login anônimo, sem bloquear quem só precisa do app
+  // Se for o app do próprio usuário logado no Eron, ele já tem sessão real —
+  // nunca faz login anônimo nele aqui, senão rebaixaria essa sessão pra
+  // anônima. A instância separada 'eron_slack' (usada por quem está logado
+  // em outro ambiente) continua com login anônimo normal — ela só acessa nós
+  // fora de store/ (slackLinks, jobRequests, config etc), que continuam
+  // abertos pra qualquer autenticado, mesmo depois de travarmos store/.
+  if(!isOwnApp) _ensureAnonAuth(app);
   return app;
 }
 // Versão que garante o login anônimo concluído antes de devolver o app —
@@ -3515,7 +3522,8 @@ function _getEronFb(){
 // se reautenticam sozinhas como os listeners (.on) fazem.
 async function _getEronFbReady(){
   const app=_getEronFb();
-  await _ensureAnonAuth(app);
+  const isOwnApp=(typeof _fbApp!=='undefined'&&_currentEnv==='eron'&&app===_fbApp);
+  if(!isOwnApp) await _ensureAnonAuth(app);
   return app;
 }
 let _cachedPat=null;
