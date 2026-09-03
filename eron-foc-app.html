@@ -2715,8 +2715,15 @@ function updateSidebarForRole(){
   }
 }
 function doLogin(){ showAccountPicker(); }
-function doLogout(){
+async function doLogout(){
   clearSession();
+  if(_REAL_AUTH_ENVS.includes(_currentEnv)){
+    // A sessão de verdade vive persistida no Firebase Auth (é o que
+    // checkRememberedSession() restaura sozinho no próximo boot) — sem isso,
+    // "sair" só escondia a tela na hora, mas a sessão real continuava viva e
+    // logava de volta automaticamente num hard reset logo em seguida.
+    try{ await firebase.auth(_fbApp).signOut(); }catch(e){}
+  }
   logAudit('auth','logout',{email:window._loggedEmail});
   document.getElementById('app').classList.remove('visible');
   document.getElementById('login-screen').style.display='flex';
