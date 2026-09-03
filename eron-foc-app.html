@@ -6633,14 +6633,23 @@ async function _loadUserCredRequests(){
     const db=_getEronFb().database();
     const snap=await db.ref('credentialChangeRequests').orderByChild('created_at').startAt(cutoff).once('value');
     const all=snap.val()||{};
-    // remove requests mais antigos que hoje
+    // Requests antigos (de antes de hoje): apaga os que já resolveram (done)
+    // ou ficaram pendentes/processing — mas os com erro ficam, são
+    // persistentes até o usuário excluir manualmente (clicar no "×"), pra
+    // não perder o rastro de uma falha real só porque passou da meia-noite.
     const snapOld=await db.ref('credentialChangeRequests').orderByChild('created_at').endAt(cutoff-1).once('value');
     const old=snapOld.val()||{};
-    const toDelete=Object.keys(old);
+    const toDelete=Object.entries(old).filter(([,r])=>r?.status!=='error').map(([id])=>id);
     if(toDelete.length){const upd={};toDelete.forEach(id=>upd['credentialChangeRequests/'+id]=null);await db.ref().update(upd);}
-    // renderiza os do usuário de hoje (mais antigo primeiro → prepend coloca mais novo no topo)
-    Object.entries(all)
-      .filter(([,r])=>r&&r.requested_by===email&&_jobDateKey(r.created_at)===today)
+    const isMine=r=>r&&r.requested_by===email;
+    // Hoje: renderiza tudo do usuário. Antes de hoje: só os que ainda estão
+    // com erro (persistentes, ver comentário acima).
+    const paraRenderizar=[
+      ...Object.entries(all).filter(([,r])=>isMine(r)&&_jobDateKey(r.created_at)===today),
+      ...Object.entries(old).filter(([,r])=>isMine(r)&&r.status==='error'),
+    ];
+    // renderiza (mais antigo primeiro → prepend coloca mais novo no topo)
+    paraRenderizar
       .sort(([,a],[,b])=>a.created_at-b.created_at)
       .forEach(([rid,r])=>{
         const bankFull=r.bank||'';
