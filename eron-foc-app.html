@@ -8933,16 +8933,16 @@ function renderCronogramaConciliacoes(){
   const dayHdrs=days.map(d=>{const wk=d.getDay()===0||d.getDay()===6;return `<th class="col-day${wk?' weekend':''}">${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}<br><span style="font-size:9px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--e-muted)">${wd[d.getDay()]}</span></th>`;}).join('');
 
   const INFO_COLS=9;
-  const _sth=(col,lbl,idx,extra='')=>`<th class="${_sortThCls('crono-conc',col)} col-info${extra?' cal-sticky':''}" ${extra} data-col-key="${col}" onclick="toggleSort('crono-conc','${col}')" style="cursor:pointer;position:relative">${lbl}${_sortArrow('crono-conc',col)}${extra?'':_colBtns('crono-conc',col,idx)}</th>`;
+  const _sth=(col,lbl,idx,extra='')=>`<th class="${_sortThCls('crono-conc',col)} col-info${extra?' cal-sticky':''}" ${extra} data-col-key="${col}" onclick="toggleSort('crono-conc','${col}')" style="cursor:pointer;position:relative">${lbl}${_sortArrow('crono-conc',col)}${extra?'':_colBtns('crono-conc',col,idx)}<div class="col-rsz-handle"></div></th>`;
   const _cDefs=[
     {k:'pais',h:()=>_sth('pais',t('col-pais'),1),c:(conc,ri,sc)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="pais" style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td>`},
-    {k:'agente',h:()=>`<th class="${_sortThCls('crono-conc','agente')} col-info" data-col-key="agente" onclick="toggleSort('crono-conc','agente')" style="cursor:pointer;position:relative;width:120px;max-width:120px">${t('col-agente')}${_sortArrow('crono-conc','agente')}${_colBtns('crono-conc','agente',2)}</th>`,c:(conc,ri,sc)=>`<td class="sub sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="agente" style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${conc.agente||'—'}</td>`},
+    {k:'agente',h:()=>`<th class="${_sortThCls('crono-conc','agente')} col-info" data-col-key="agente" onclick="toggleSort('crono-conc','agente')" style="cursor:pointer;position:relative;width:120px;max-width:120px">${t('col-agente')}${_sortArrow('crono-conc','agente')}${_colBtns('crono-conc','agente',2)}<div class="col-rsz-handle"></div></th>`,c:(conc,ri,sc)=>`<td class="sub sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="agente" style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${conc.agente||'—'}</td>`},
     {k:'volume',h:()=>_sth('volume',`${t('conc-col-volume')}<br><span style="font-weight:400;font-size:9px;color:var(--e-muted)">${t('conc-col-volume-sub')}</span>`,3),c:(conc,ri,sc)=>{const _cid=(conc.id||conc.nome).replace(/['"]/g,'');const _vol=(store.volumeRankings?.combined||{})[_cid]?.usd||0;const _fmtV=v=>v?'$'+Math.round(v).toLocaleString('en-US'):'<span style="color:var(--e-muted);font-size:11px">—</span>';return `<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="volume" style="font-size:11px;font-weight:600;color:var(--e-mid);white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right;padding-right:10px">${_fmtV(_vol)}</td>`;}},
-    {k:'resp',h:()=>`<th class="col-info" data-col-key="resp" style="position:relative">${t('conc-col-resp')}${_colBtns('crono-conc','resp',4)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="resp">${x.respCell}</td>`},
-    {k:'prioridade',h:()=>`<th class="col-info" data-col-key="prioridade" style="position:relative">${t('conc-col-prioridade')}${_colBtns('crono-conc','prioridade',5)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="prioridade" style="padding:4px 8px">${x.priorCell}</td>`},
-    {k:'tipo',h:()=>`<th class="col-info" data-col-key="tipo" style="position:relative">${t('conc-col-tipo')}${_colBtns('crono-conc','tipo',6)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="tipo" style="padding:4px 8px">${x.concTipoChipHtml}</td>`},
-    {k:'frequencia',h:()=>`<th class="col-info" data-col-key="frequencia" style="position:relative">${t('lbl-freq')}${_colBtns('crono-conc','frequencia',7)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="frequencia" style="padding:4px 8px">${x.freqCell}</td>`},
-    {k:'acompanhamento',h:()=>`<th class="col-info" data-col-key="acompanhamento" style="white-space:nowrap;position:relative">${t('conc-col-acomp')}${_colBtns('crono-conc','acompanhamento',8)}</th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="acompanhamento" style="white-space:nowrap;padding:4px 8px">${x.d1ChipHtml}</td>`},
+    {k:'resp',h:()=>`<th class="col-info" data-col-key="resp" style="position:relative">${t('conc-col-resp')}${_colBtns('crono-conc','resp',4)}<div class="col-rsz-handle"></div></th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="resp">${x.respCell}</td>`},
+    {k:'prioridade',h:()=>`<th class="col-info" data-col-key="prioridade" style="position:relative">${t('conc-col-prioridade')}${_colBtns('crono-conc','prioridade',5)}<div class="col-rsz-handle"></div></th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="prioridade" style="padding:4px 8px">${x.priorCell}</td>`},
+    {k:'tipo',h:()=>`<th class="col-info" data-col-key="tipo" style="position:relative">${t('conc-col-tipo')}${_colBtns('crono-conc','tipo',6)}<div class="col-rsz-handle"></div></th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="tipo" style="padding:4px 8px">${x.concTipoChipHtml}</td>`},
+    {k:'frequencia',h:()=>`<th class="col-info" data-col-key="frequencia" style="position:relative">${t('lbl-freq')}${_colBtns('crono-conc','frequencia',7)}<div class="col-rsz-handle"></div></th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="frequencia" style="padding:4px 8px">${x.freqCell}</td>`},
+    {k:'acompanhamento',h:()=>`<th class="col-info" data-col-key="acompanhamento" style="white-space:nowrap;position:relative">${t('conc-col-acomp')}${_colBtns('crono-conc','acompanhamento',8)}<div class="col-rsz-handle"></div></th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="acompanhamento" style="white-space:nowrap;padding:4px 8px">${x.d1ChipHtml}</td>`},
   ];
   const _ccPins=(_pinnedCols['crono-conc']||[]).filter(k=>_cDefs.some(d=>d.k===k));
   const _ord=[..._ccPins.map(k=>_cDefs.find(d=>d.k===k)),..._cDefs.filter(d=>!_ccPins.includes(d.k))];
@@ -9046,7 +9046,7 @@ function renderCronogramaConciliacoes(){
       onConcCellClick(ev,td.dataset.ck,td.dataset.dt);
     });
   }
-  setTimeout(()=>{const _t=document.getElementById('crono-conc-cal-table');if(_ccPins.length){const pg=document.getElementById('page-cronograma-conciliacoes');if(pg)for(let i=1;i<=9;i++)pg.classList.remove('hide-col-'+i);_applyHiddenColsByKey(_t,'crono-conc');_applyPinnedSticky(_t,'crono-conc',calScrollEl);}else{_applyHiddenCols('crono-conc','crono-conc-cal-table',8);}},0);
+  setTimeout(()=>{const _t=document.getElementById('crono-conc-cal-table');if(_ccPins.length){const pg=document.getElementById('page-cronograma-conciliacoes');if(pg)for(let i=1;i<=9;i++)pg.classList.remove('hide-col-'+i);_applyHiddenColsByKey(_t,'crono-conc');_applyPinnedSticky(_t,'crono-conc',calScrollEl);}else{_applyHiddenCols('crono-conc','crono-conc-cal-table',8);}_initLiqColResize(_t);},0);
   _saveFilters('crono-conc');
 }
 
@@ -9202,7 +9202,15 @@ function submitConcBulkApply(){
       const concId=(c.id||c.nome).replace(/['"]/g,'');
       const ag=c.agente||'—', nm=c.nome||concId;
       const gk=`${ag}|${nm}`;
-      if(!concGroupMap.has(gk)) concGroupMap.set(gk,{agente:ag,banco:nm,keys:[]});
+      if(!concGroupMap.has(gk)){
+        // O report do Slack usa o(s) processador(es) vinculado(s), não o nome
+        // completo da conciliação — "Cashout Kushki CL.Blenet_Masivo" virava
+        // a mensagem inteira em vez de só "Kushki". "nome" continua sendo o
+        // nome completo (usado pra achar/casar a conciliação nos outros
+        // lugares do fluxo); "banco" é só o texto exibido no report.
+        const procNome=Array.isArray(c.processadores)&&c.processadores.length?c.processadores.join(', '):null;
+        concGroupMap.set(gk,{agente:ag,nome:nm,banco:procNome||nm,keys:[]});
+      }
       days.forEach(dateStr=>{concGroupMap.get(gk).keys.push(`${concId}_${dateStr}`);});
     });
     const concGroupsArr=[...concGroupMap.values()];
@@ -9215,7 +9223,7 @@ function submitConcBulkApply(){
       concPrevDate=_prevDay(days[0]);
       outer: for(const g of concGroupsArr){
         for(const c of list){
-          if((c.agente||'—')!==g.agente||(c.nome||'—')!==g.banco) continue;
+          if((c.agente||'—')!==g.agente||(c.nome||'—')!==g.nome) continue;
           const pe=store.cronogramaConciliacoes[`${(c.id||c.nome).replace(/['"]/g,'')}_${concPrevDate}`];
           if(pe?.status==='sem_acesso'&&pe?.reportLink){concPrevLink=pe.reportLink;break outer;}
         }
@@ -9231,7 +9239,7 @@ function submitConcBulkApply(){
           concGroupsArr.forEach(g=>{
             let gLink=null;
             for(const c of list){
-              if((c.agente||'—')!==g.agente||(c.nome||'—')!==g.banco) continue;
+              if((c.agente||'—')!==g.agente||(c.nome||'—')!==g.nome) continue;
               const pe=store.cronogramaConciliacoes[`${(c.id||c.nome).replace(/['"]/g,'')}_${concPrevDate}`];
               if(pe?.status==='sem_acesso'&&pe?.reportLink){gLink=pe.reportLink;break;}
             }
@@ -9702,10 +9710,15 @@ function _initLiqColResize(tbl){
       const ths=[...tbl.querySelectorAll('thead tr th')];
       const colIdx=ths.indexOf(th);if(colIdx<0) return;
       const currentWidths=ths.map(t=>t.offsetWidth);
-      // Measure body content width via auto layout
+      // Measure body content width via auto layout. Preserva o width inline
+      // que a tabela já tinha antes (100% na Liq, vazio/herdado do
+      // .cal-table no calendário) em vez de fixar '100%' pra todo mundo —
+      // essa função é reusada em tabelas com necessidades de largura bem
+      // diferentes (lista simples vs. calendário com scroll horizontal).
+      const origWidth=tbl.style.width;
       tbl.style.tableLayout='auto';tbl.style.width='max-content';
       const bodyW=th.offsetWidth;
-      tbl.style.tableLayout='fixed';tbl.style.width='100%';
+      tbl.style.tableLayout='fixed';tbl.style.width=origWidth;
       // Measure header label natural width (scrollWidth works even with overflow:hidden)
       const label=th.querySelector('.liq-th-label');
       const sortArrow=th.querySelector('.sort-arrow');
