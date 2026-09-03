@@ -5822,7 +5822,10 @@ async function switchEnvironment(envKey){
   STORE_KEY=env.storeKey;
   try{localStorage.setItem(ENV_PERSIST_KEY,envKey);}catch(e){}
   _fbApp=firebase.initializeApp(env.cfg,envKey+'_'+Date.now());
-  await _ensureAnonAuth(_fbApp);
+  // Ambientes já migrados: não força login anônimo aqui — poderia
+  // sobrescrever uma sessão real já persistida pro mesmo projeto Firebase.
+  // O login em si (via tryLogin) ou a sessão restaurada cuidam da auth.
+  if(!_REAL_AUTH_ENVS.includes(envKey)) await _ensureAnonAuth(_fbApp);
   _fbRef=firebase.database(_fbApp).ref(env.storeRoot||'store');
   _fbAuditRef=firebase.database(_fbApp).ref((env.storeRoot||'store')+'/auditLog');
   _fbAuditSeen.clear();
@@ -5843,8 +5846,13 @@ async function switchEnvironment(envKey){
     const el=document.getElementById(id);
     if(el){el.innerHTML='';delete el.dataset.init;}
   });
-  await startFirebaseSync();
-  try{renderAll();updateCounts();}catch(e){}
+  // Ambientes migrados: quem chama switchEnvironment (tryLogin) ainda vai
+  // logar de verdade e sincronizar depois — sincronizar aqui, anônimo,
+  // seria inútil (ou falharia) e não serve pra nada.
+  if(!_REAL_AUTH_ENVS.includes(envKey)){
+    await startFirebaseSync();
+    try{renderAll();updateCounts();}catch(e){}
+  }
 }
 // ─── AUTOMAÇÕES: DOWNLOAD EXTRATOS ───────────────────────────────────────────
 let EXTR_TAREFAS=[
@@ -7087,7 +7095,23 @@ function saveSession(email){
   try{ localStorage.setItem(SESSION_KEY,JSON.stringify({email,expiry:Date.now()+86400000})); }catch(e){}
 }
 function clearSession(){ try{ localStorage.removeItem(SESSION_KEY); }catch(e){} }
-function checkRememberedSession(){
+async function checkRememberedSession(){
+  if(_REAL_AUTH_ENVS.includes(_currentEnv)){
+    // Firebase Auth já mantém a sessão real persistida sozinho — só espera
+    // ele restaurar (assíncrono) e confere se é uma sessão real (não anônima).
+    try{
+      const user=await new Promise(resolve=>{
+        const unsub=firebase.auth(_fbApp).onAuthStateChanged(u=>{unsub();resolve(u);});
+      });
+      if(!user||user.isAnonymous) return false;
+      // user.email fica null em contas via custom token (não associamos um
+      // "email" real no Firebase Auth) — o email de verdade está em uid,
+      // que é exatamente o que passamos ao emitir o token no Apps Script.
+      await _syncAfterRealAuth();
+      selectAccount(user.uid);
+      return true;
+    }catch(e){return false;}
+  }
   try{
     const raw=localStorage.getItem(SESSION_KEY);
     if(!raw) return false;
@@ -7116,31 +7140,41 @@ async function _genSig(data){
 }
 async function generateResetLink(email){
   const exp=Date.now()+3600000;
-  const sig=await _genSig(email+':'+exp+':'+RESET_SECRET);
+  const env=_currentEnv;
+  // env entra na assinatura pra ninguém conseguir reaproveitar um link válido
+  // pra um ambiente diferente do que ele foi emitido só trocando o ?env= na URL.
+  const sig=await _genSig(email+':'+env+':'+exp+':'+RESET_SECRET);
   const base=window.location.origin+window.location.pathname;
-  return base+'?r='+encodeURIComponent(btoa(email))+'&exp='+exp+'&sig='+sig;
+  return base+'?r='+encodeURIComponent(btoa(email))+'&env='+encodeURIComponent(env)+'&exp='+exp+'&sig='+sig;
 }
-async function validateResetToken(encodedEmail,exp,sig){
+async function validateResetToken(encodedEmail,env,exp,sig){
   try{
     if(Date.now()>exp) return null;
     const email=atob(decodeURIComponent(encodedEmail));
-    const expected=await _genSig(email+':'+exp+':'+RESET_SECRET);
+    const expected=await _genSig(email+':'+env+':'+exp+':'+RESET_SECRET);
     return sig===expected?email:null;
   }catch(e){return null;}
 }
 async function checkResetLink(){
   const params=new URLSearchParams(window.location.search);
   const r=params.get('r');
+  const env=params.get('env')||'eron';
   const exp=parseInt(params.get('exp')||'0');
   const sig=params.get('sig')||'';
   if(!r||!exp||!sig) return;
-  const email=await validateResetToken(r,exp,sig);
+  // O link foi emitido pra um ambiente específico (está na assinatura) — troca
+  // pra ele ANTES de validar, senão um link de um ambiente nunca bateria a
+  // assinatura noutro, e a troca de senha iria pro projeto Firebase errado.
+  if(env!==_currentEnv&&ENVIRONMENTS[env]?.cfg) await switchEnvironment(env);
+  const email=await validateResetToken(r,env,exp,sig);
   if(!email){
     const errEl=document.getElementById('login-err');
     if(errEl){errEl.style.display='block';errEl.textContent='Link de redefinição inválido ou expirado.';}
     return;
   }
   window._resetEmail=email;
+  window._resetExp=exp;
+  window._resetSig=sig;
   document.getElementById('reset-link-user-email').textContent=email;
   document.getElementById('reset-link-pwd-1').value='';
   document.getElementById('reset-link-pwd-2').value='';
@@ -7166,13 +7200,23 @@ async function submitForgotPassword(){
   const email=document.getElementById('forgot-email-input').value.trim().toLowerCase();
   const errEl=document.getElementById('forgot-err');
   errEl.style.display='none';
-  const user=store.responsaveis.find(r=>r.email===email);
-  if(!user){errEl.style.display='block';errEl.textContent='Este email não está cadastrado no sistema.';return;}
   const btn=document.getElementById('btn-gerar-link');
+  let userName=null;
+  if(_REAL_AUTH_ENVS.includes(_currentEnv)){
+    if(btn){btn.disabled=true;btn.textContent='Verificando...';}
+    const data=await _gasCall({action:'check_user',env:_currentEnv,email});
+    if(btn){btn.disabled=false;btn.textContent='Enviar link';}
+    if(!data.ok){errEl.style.display='block';errEl.textContent='Este email não está cadastrado no sistema.';return;}
+    userName=data.nome;
+  } else {
+    const user=store.responsaveis.find(r=>r.email===email);
+    if(!user){errEl.style.display='block';errEl.textContent='Este email não está cadastrado no sistema.';return;}
+    userName=user.nome;
+  }
   if(btn){btn.disabled=true;btn.textContent='Gerando...';}
   const link=await generateResetLink(email);
   document.getElementById('forgot-reset-link').value=link;
-  await _sendResetEmail(email, link);
+  await _sendResetEmail(email, link, userName);
   document.getElementById('forgot-result').style.display='';
   const sentEmail=document.getElementById('forgot-sent-email');
   if(sentEmail)sentEmail.textContent=email;
@@ -7181,11 +7225,27 @@ async function submitForgotPassword(){
   if(cancelBtn)cancelBtn.textContent='Fechar';
 }
 // Google Apps Script — colar URL após implantar o script em script.google.com
-const _GAS_URL='https://script.google.com/macros/s/AKfycbwywWhdyJ13O-6DwnxvklsiYMBQAqar8tHoRm9YYSrZMMFJf7iI9D5jiX3qnaSKo5KhoQ/exec';
+const _GAS_URL='https://script.google.com/macros/s/AKfycbyijVT_l1vVyLijjE6iLWwqBdIFJU97Qgi2j-daVmdnIDUSMYf9Gcs5irVGvkCjidBu/exec';
 
-async function _sendResetEmail(toEmail, resetLink){
-  const user=store.responsaveis.find(r=>r.email===toEmail);
-  const userName=user?user.nome:'usuário';
+// O redirect que o Apps Script usa pra devolver a resposta (script.google.com
+// → script.googleusercontent.com) falha de forma intermitente (~1 em cada 3
+// chamadas, mesmo com tudo certo do nosso lado) — sem retry, login/reset de
+// senha falhariam sozinhos com essa frequência. Tenta de novo antes de desistir.
+async function _gasCall(payload,attempts=3){
+  for(let i=0;i<attempts;i++){
+    try{
+      const res=await fetch(_GAS_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
+      const text=await res.text();
+      return JSON.parse(text);
+    }catch(e){
+      if(i===attempts-1) return {ok:false,reason:'network_error'};
+      await new Promise(r=>setTimeout(r,300*(i+1)));
+    }
+  }
+}
+
+async function _sendResetEmail(toEmail, resetLink, userNameOverride){
+  const userName=userNameOverride||store.responsaveis.find(r=>r.email===toEmail)?.nome||'usuário';
   if(!_GAS_URL){
     // GAS não configurado ainda — fallback mailto
     const subj=encodeURIComponent('Redefinição de senha — Eron FOC App');
@@ -7193,13 +7253,7 @@ async function _sendResetEmail(toEmail, resetLink){
     window.location.href='mailto:'+toEmail+'?subject='+subj+'&body='+body;
     return;
   }
-  const res=await fetch(_GAS_URL,{
-    method:'POST',
-    redirect:'follow',
-    headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify({to_email:toEmail,reset_link:resetLink,user_name:userName})
-  });
-  const data=await res.json().catch(()=>({}));
+  const data=await _gasCall({to_email:toEmail,reset_link:resetLink,user_name:userName});
   if(data.ok===false) throw new Error(data.error||'Erro ao enviar email');
 }
 async function submitResetFromLink(){
@@ -7214,9 +7268,23 @@ async function submitResetFromLink(){
     if(p1!==p2){showErr('As senhas não coincidem.');return;}
     const email=window._resetEmail;
     if(!email){showErr('Sessão expirada — reabra o link do email.');return;}
-    if(!store.responsaveis.find(r=>r.email===email)){showErr('Usuário não encontrado: '+email);return;}
     if(btn){btn.disabled=true;btn.textContent='Salvando...';}
     const hash=await hashPwd(p1);
+
+    if(_REAL_AUTH_ENVS.includes(_currentEnv)){
+      // Servidor revalida a assinatura do link de novo (nunca confia no
+      // cliente) e grava a senha via token de admin — path específico,
+      // não mexe na credencial de mais ninguém.
+      const data=await _gasCall({action:'reset_password',env:_currentEnv,email,exp:window._resetExp,sig:window._resetSig,new_password_hash:hash});
+      if(!data.ok){showErr('Erro ao redefinir senha ('+(data.reason||'desconhecido')+'). Reabra o link do email.');return;}
+      closeModal('modal-reset-link');
+      await _completeRealLogin(data.token);
+      logAudit('auth','password-reset-via-link',{email});
+      selectAccount(email);
+      return;
+    }
+
+    if(!store.responsaveis.find(r=>r.email===email)){showErr('Usuário não encontrado: '+email);return;}
     store.credentials[email]={hash,mustChange:false};
     if(!Array.isArray(store.auditLog)) store.auditLog=[];
     saveStore(); _fbSync('credentials');
@@ -7244,37 +7312,80 @@ async function _tryFindUserInEnv(envKey,email){
     return (d.responsaveis||[]).find(r=>r.email===email)||null;
   }catch(e){return null;}finally{try{await app?.delete();}catch(e){}}
 }
-// Autenticação real (Firebase Auth via custom token, emitido pelo Apps Script
-// depois de validar a senha contra store/credentials). Ambientes ainda sem
-// suporte no Apps Script (_ENV_FIREBASE_URL/_ENV_SA_PROPERTY) simplesmente
-// retornam erro no mint_token — fica seguro habilitar aqui antes de todos
-// os ambientes estarem prontos, sem quebrar nada (fire-and-forget no login).
-const _REAL_AUTH_ENVS=['staging','astropay'];
-async function _signInRealAuth(email,hash){
-  if(!_REAL_AUTH_ENVS.includes(_currentEnv)) return;
-  try{
-    const res=await fetch(_GAS_URL,{
-      method:'POST',
-      redirect:'follow',
-      headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({action:'mint_token',env:_currentEnv,email,password_hash:hash})
-    });
-    const data=await res.json().catch(()=>({}));
-    if(data.ok&&data.token){
-      const cred=await firebase.auth(_fbApp).signInWithCustomToken(data.token);
-      console.log('[auth-real] Firebase Auth conectado:',cred.user.uid);
-    }else{
-      console.warn('[auth-real] mint_token falhou:',data.error);
-    }
-  }catch(e){
-    console.warn('[auth-real] erro:',e);
-  }
+// Ambientes onde o login já é validado inteiramente no servidor (Apps
+// Script) — o cliente nunca lê store.credentials/responsaveis de forma
+// anônima nesses ambientes, só depois de provar identidade real.
+const _REAL_AUTH_ENVS=['staging','astropay','eron','limepay'];
+// Login validado inteiramente no servidor (Apps Script), pros ambientes já
+// migrados (_REAL_AUTH_ENVS) — o cliente nunca lê store.credentials nem
+// store.responsaveis de forma anônima, só depois de provar identidade real.
+async function _remoteLogin(env,email,passwordHash){
+  return _gasCall({action:'login',env,email,password_hash:passwordHash});
+}
+// Depois de logar de verdade (custom token), sincroniza a store inteira
+// ANTES de qualquer outra coisa — _fbSync faz substituição completa do nó,
+// então gravar (ex: force-pwd) antes de ter os dados de todo mundo apagaria
+// a credencial de todo mundo, sobrando só a de quem acabou de entrar.
+async function _syncAfterRealAuth(){
+  await startFirebaseSync();
+  await initAdminCredentials();
+  await _loadDynamicTasks();
+  try{renderAll();updateCounts();}catch(e){console.warn('[syncAfterRealAuth renderAll]',e);}
+}
+async function _completeRealLogin(token){
+  await firebase.auth(_fbApp).signInWithCustomToken(token);
+  await _syncAfterRealAuth();
 }
 async function tryLogin(){
   const email=document.getElementById('login-email-input').value.trim().toLowerCase();
   const pwd=document.getElementById('login-pwd-input').value;
   const errEl=document.getElementById('login-err');
+  errEl.style.display='none';
   if(!email){errEl.style.display='block';errEl.textContent='Informe seu email.';return;}
+
+  if(_REAL_AUTH_ENVS.includes(_currentEnv)){
+    const hash=await hashPwd(pwd);
+    let env=_currentEnv;
+    let result=await _remoteLogin(env,email,hash);
+    if(result.reason==='not_found'||result.reason==='bad_env'){
+      // Tenta achar o usuário em outros ambientes já migrados.
+      for(const envKey of _REAL_AUTH_ENVS){
+        if(envKey===_currentEnv) continue;
+        const r2=await _remoteLogin(envKey,email,hash);
+        if(r2.reason!=='not_found'&&r2.reason!=='bad_env'){env=envKey;result=r2;break;}
+      }
+    }
+    if(result.reason==='not_found'||result.reason==='bad_env'){errEl.style.display='block';errEl.textContent='Usuário não cadastrado. Solicite acesso ao administrador.';return;}
+    if(result.reason==='no_credential'){
+      if(env!==_currentEnv) await switchEnvironment(env);
+      document.getElementById('forgot-email-input').value=email;
+      document.getElementById('forgot-result').style.display='none';
+      document.getElementById('forgot-err').style.display='none';
+      document.getElementById('modal-forgot-pwd').querySelector('.modal-title').textContent='🔐 Primeiro acesso';
+      document.getElementById('modal-forgot-pwd').querySelector('[style*="margin-top:2px"]').textContent='Configure sua senha para continuar.';
+      openModal('modal-forgot-pwd');
+      return;
+    }
+    if(result.reason==='wrong_password'){errEl.style.display='block';errEl.textContent='Senha incorreta.';return;}
+    if(!result.ok){errEl.style.display='block';errEl.textContent='Erro ao entrar. Tente novamente.';return;}
+
+    document.getElementById('account-picker').style.display='none';
+    if(env!==_currentEnv) await switchEnvironment(env);
+    await _completeRealLogin(result.token);
+    if(result.mustChange){
+      window._pendingLoginEmail=email;
+      document.getElementById('force-pwd-1').value='';
+      document.getElementById('force-pwd-2').value='';
+      document.getElementById('force-pwd-err').style.display='none';
+      openModal('modal-force-pwd');
+    }else{
+      if(document.getElementById('login-remember')?.checked) saveSession(email);
+      selectAccount(email);
+    }
+    return;
+  }
+
+  // Ambientes ainda não migrados: fluxo antigo, inalterado.
   let user=store.responsaveis.find(r=>r.email===email);
   if(!user){
     // Tenta encontrar o usuário em outros ambientes
@@ -7313,7 +7424,6 @@ async function tryLogin(){
     openModal('modal-force-pwd');
   } else {
     if(document.getElementById('login-remember')?.checked) saveSession(email);
-    _signInRealAuth(email,cred.hash);
     selectAccount(email);
   }
 }
@@ -9037,6 +9147,23 @@ async function _initApp(){
   loadStore();         // localStorage rápido
   try{renderAll();}catch(e){console.warn('[renderAll pre-sync]',e);}
   applyTranslations();
+
+  if(_REAL_AUTH_ENVS.includes(_currentEnv)){
+    // Ambiente migrado: nada sensível é lido antes de provar identidade
+    // real — nem login anônimo é necessário aqui (o login em si passa pelo
+    // Apps Script, que usa token de admin próprio, não depende do cliente
+    // estar autenticado no Firebase de jeito nenhum).
+    const fbLoading=document.getElementById('_fb-loading');
+    if(fbLoading)fbLoading.style.display='none';
+    if(new URLSearchParams(window.location.search).has('r')){
+      await checkResetLink();
+    } else {
+      await checkRememberedSession();
+    }
+    _updateEnvSwitcher();
+    return;
+  }
+
   await _ensureAnonAuth(_fbApp);   // login anônimo antes de qualquer leitura/escrita no Firebase
   await startFirebaseSync();       // dados autoritativos do Firebase
   await initAdminCredentials();    // preenche credenciais ausentes
