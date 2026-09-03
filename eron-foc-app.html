@@ -1380,7 +1380,8 @@
         <!-- ── Coluna 2: Atualização de Credenciais ── -->
         <div>
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#5b21b6;margin-bottom:14px" data-i18n="baixa-sec-cred">Atualização de Credenciais</div>
-          <div style="background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:20px 24px;display:flex;flex-direction:column;gap:16px">
+          <div id="cred-noperm-box" style="display:none;background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:20px 24px;font-size:13px;color:#6b7280" data-i18n="cred-no-perm">Acesso restrito — apenas Analista ou superior pode criar, editar ou excluir credenciais.</div>
+          <div id="cred-panel-col" style="background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:20px 24px;display:flex;flex-direction:column;gap:16px">
             <!-- Mode toggle -->
             <div style="display:flex;background:#ede9fe;border-radius:20px;padding:3px;gap:2px">
               <button type="button" id="cred-btn-update" onclick="_credSetMode('update')" style="flex:1;border:none;border-radius:17px;padding:6px 8px;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .18s;background:#7c3aed;color:#fff;font-family:inherit" data-i18n="cred-mode-upd">Atualizar existente</button>
@@ -2160,7 +2161,7 @@ const i18n = {
     'ops-platform':'FOC App','login-welcome':'Bem-vindo de volta',
     'login-desc':'Faça login com sua conta corporativa Eron para continuar.',
     'login-btn':'Continuar com Google','login-note':'',
-    'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Cadastro','nav-automacoes':'Automações','nav-dl-extratos':'Download Extratos','nav-cred-bancos':'Credenciais Bancos','nav-baixa-auto':'Baixa automática','baixa-sec-extr':'Download Extratos','baixa-sec-cred':'Atualização de Credenciais',
+    'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Cadastro','nav-automacoes':'Automações','nav-dl-extratos':'Download Extratos','nav-cred-bancos':'Credenciais Bancos','nav-baixa-auto':'Baixa automática','baixa-sec-extr':'Download Extratos','baixa-sec-cred':'Atualização de Credenciais','cred-no-perm':'Acesso restrito — apenas Analista ou superior pode criar, editar ou excluir credenciais.',
     'extr-accounts-label':'Contas','extr-sel-ph':'Selecionar contas...','extr-search-ph':'Buscar banco ou agente...','extr-sel-all':'Tudo','extr-date-label':'Data','extr-date-yesterday':'Ontem','extr-date-custom':'Personalizado','extr-date-from':'De','extr-date-to':'Até','extr-run':'Executar','extr-n-sel':'{n} selecionada(s)','extr-drive-link':'Pasta dos extratos baixados',
     'baixa-tipo-dl':'Tipo de download','baixa-tipo-extrato':'Extrato Cru','baixa-enviar-imp':'Enviar ao importador','baixa-enviar-imp-desc':'Move os extratos para a pasta do importador; acione-o após a finalização da baixa',
     'baixa-enviar-pdf':'Enviar para a pasta de PDFs','baixa-enviar-pdf-desc':'Move os PDFs baixados para a pasta compartilhada',
@@ -2280,7 +2281,7 @@ const i18n = {
     'ops-platform':'FOC App','login-welcome':'Welcome back',
     'login-desc':'Sign in with your Eron corporate account to continue.',
     'login-btn':'Continue with Google','login-note':'',
-    'nav-gerencial':'Management','nav-cronograma':'Schedule','nav-cadastro':'Registry','nav-automacoes':'Automations','nav-dl-extratos':'Download Statements','nav-cred-bancos':'Bank Credentials','nav-baixa-auto':'Automatic download','baixa-sec-extr':'Download Statements','baixa-sec-cred':'Credential Update',
+    'nav-gerencial':'Management','nav-cronograma':'Schedule','nav-cadastro':'Registry','nav-automacoes':'Automations','nav-dl-extratos':'Download Statements','nav-cred-bancos':'Bank Credentials','nav-baixa-auto':'Automatic download','baixa-sec-extr':'Download Statements','baixa-sec-cred':'Credential Update','cred-no-perm':'Restricted access — only Analyst role or higher can create, edit, or delete credentials.',
     'extr-accounts-label':'Accounts','extr-sel-ph':'Select accounts...','extr-search-ph':'Search bank or agent...','extr-sel-all':'All','extr-date-label':'Date','extr-date-yesterday':'Yesterday','extr-date-custom':'Custom','extr-date-from':'From','extr-date-to':'To','extr-run':'Run','extr-n-sel':'{n} selected','extr-drive-link':'Downloaded statements folder',
     'baixa-tipo-dl':'Download type','baixa-tipo-extrato':'Raw Statement','baixa-enviar-imp':'Send to importer','baixa-enviar-imp-desc':'Moves statements to the importer folder; trigger it after the download completes',
     'baixa-enviar-pdf':'Send to PDFs folder','baixa-enviar-pdf-desc':'Moves downloaded PDFs to the shared folder',
@@ -2393,7 +2394,7 @@ const i18n = {
     'ops-platform':'FOC App','login-welcome':'Bienvenido de nuevo',
     'login-desc':'Inicia sesión con tu cuenta corporativa Eron para continuar.',
     'login-btn':'Continuar con Google','login-note':'',
-    'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Registro','nav-automacoes':'Automatizaciones','nav-dl-extratos':'Descargar Extractos','nav-cred-bancos':'Credenciales Bancos','nav-baixa-auto':'Descarga automática','baixa-sec-extr':'Descargar Extractos','baixa-sec-cred':'Actualización de Credenciales',
+    'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Registro','nav-automacoes':'Automatizaciones','nav-dl-extratos':'Descargar Extractos','nav-cred-bancos':'Credenciales Bancos','nav-baixa-auto':'Descarga automática','baixa-sec-extr':'Descargar Extractos','baixa-sec-cred':'Actualización de Credenciales','cred-no-perm':'Acceso restringido — solo el rol Analista o superior puede crear, editar o eliminar credenciales.',
     'extr-accounts-label':'Cuentas','extr-sel-ph':'Seleccionar cuentas...','extr-search-ph':'Buscar banco o agente...','extr-sel-all':'Todo','extr-date-label':'Fecha','extr-date-yesterday':'Ayer','extr-date-custom':'Personalizado','extr-date-from':'Desde','extr-date-to':'Hasta','extr-run':'Ejecutar','extr-n-sel':'{n} seleccionada(s)','extr-drive-link':'Carpeta de extractos descargados',
     'baixa-tipo-dl':'Tipo de descarga','baixa-tipo-extrato':'Extracto Bruto','baixa-enviar-imp':'Enviar al importador','baixa-enviar-imp-desc':'Mueve los extractos a la carpeta del importador; acciónelo tras finalizar la descarga',
     'baixa-enviar-pdf':'Enviar a la carpeta de PDFs','baixa-enviar-pdf-desc':'Mueve los PDFs descargados a la carpeta compartida',
@@ -6449,6 +6450,15 @@ function _credGetAgent(){
 }
 
 function _credInit(){
+  const noPermBox=document.getElementById('cred-noperm-box');
+  const panelCol=document.getElementById('cred-panel-col');
+  if(!canEdit()){
+    if(noPermBox) noPermBox.style.display='';
+    if(panelCol) panelCol.style.display='none';
+    return;
+  }
+  if(noPermBox) noPermBox.style.display='none';
+  if(panelCol) panelCol.style.display='flex';
   _credMode='update';
   const bankSel=document.getElementById('cred-bank-sel');
   if(bankSel) bankSel.value='';
@@ -6911,6 +6921,7 @@ async function _credSaveDelete(){
 }
 
 async function _credSave(){
+  if(!canEdit()){alert('Acesso restrito — apenas Analista ou superior pode criar, editar ou excluir credenciais.');return;}
   if(_credMode==='delete'){await _credSaveDelete();return;}
   const bank=document.getElementById('cred-bank-sel')?.value||'';
   const agent=_credGetAgent();
@@ -7170,7 +7181,7 @@ async function submitForgotPassword(){
   if(cancelBtn)cancelBtn.textContent='Fechar';
 }
 // Google Apps Script — colar URL após implantar o script em script.google.com
-const _GAS_URL='https://script.google.com/macros/s/AKfycbyqf88WWleiqdRFuNWIg3qJLCYCHx9xMVXWE8lMfWoNjPVo3PgTLULgf8f3UqplY6s1VQ/exec';
+const _GAS_URL='https://script.google.com/macros/s/AKfycbxunETYFomWJKY9gBufOy2ij3CssCiRKe_GneKjKS-TXfBArmFXPHEZ9tkRyVEumBIM8g/exec';
 
 async function _sendResetEmail(toEmail, resetLink){
   const user=store.responsaveis.find(r=>r.email===toEmail);
@@ -7233,6 +7244,29 @@ async function _tryFindUserInEnv(envKey,email){
     return (d.responsaveis||[]).find(r=>r.email===email)||null;
   }catch(e){return null;}finally{try{await app?.delete();}catch(e){}}
 }
+// Autenticação real (Firebase Auth via custom token, emitido pelo Apps Script
+// depois de validar a senha contra store/credentials). Por enquanto só em
+// staging, pra testar sem afetar produção.
+async function _signInRealAuth(email,hash){
+  if(_currentEnv!=='staging') return;
+  try{
+    const res=await fetch(_GAS_URL,{
+      method:'POST',
+      redirect:'follow',
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action:'mint_token',env:_currentEnv,email,password_hash:hash})
+    });
+    const data=await res.json().catch(()=>({}));
+    if(data.ok&&data.token){
+      const cred=await firebase.auth(_fbApp).signInWithCustomToken(data.token);
+      console.log('[auth-real] Firebase Auth conectado:',cred.user.uid);
+    }else{
+      console.warn('[auth-real] mint_token falhou:',data.error);
+    }
+  }catch(e){
+    console.warn('[auth-real] erro:',e);
+  }
+}
 async function tryLogin(){
   const email=document.getElementById('login-email-input').value.trim().toLowerCase();
   const pwd=document.getElementById('login-pwd-input').value;
@@ -7276,6 +7310,7 @@ async function tryLogin(){
     openModal('modal-force-pwd');
   } else {
     if(document.getElementById('login-remember')?.checked) saveSession(email);
+    _signInRealAuth(email,cred.hash);
     selectAccount(email);
   }
 }
