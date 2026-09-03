@@ -6200,6 +6200,12 @@ function _buildJobTerminalSummary(logs){
   const flushAgent=()=>{
     if(!curAgent) return;
     for(const [num,st] of contas){
+      // Linhas de preâmbulo (login, listagem de contas etc.) antes da primeira
+      // "Processando conta" caem aqui sem nenhum sinal real — o handler de log
+      // do robô captura TODO log do processo (não só do banco atual), então
+      // sem essa guarda uma linha qualquer de ruído vira "erro" fantasma sem
+      // conta nenhuma associada, uma vez por agente, em todo job.
+      if((!num||num==='__none__')&&!st.ok&&!st.sem&&!st.err) continue;
       const label=(num&&num!=='__none__')?`${curAgent} — ${num}`:curAgent;
       (st.err?errors:st.ok?success:st.sem?noMov:errors).push(label);
     }
@@ -6220,7 +6226,12 @@ function _buildJobTerminalSummary(logs){
     const st=getConta(curContaNum);
     if(msgLow.includes('salvo e enviado')||msgLow.includes('upload concluído com sucesso')) st.ok=true;
     if(msgLow.includes('indisponível')||msgLow.includes('sem conteúdo disponível')||msgLow.includes('sem movimento')||msgLow.includes('no hay')||msgLow.includes('no tiene')) st.sem=true;
-    if(msgLow.includes('nenhuma conta encontrada')||msgLow.includes('nenhum extrato')||l.level==='ERROR') st.err=true;
+    // Não usa l.level==='ERROR' aqui: o handler de log do robô captura TODO
+    // log do processo (não só do banco/conta atual), então nível ERROR sozinho
+    // não indica que ESSA conta falhou — pode ser ruído de outra lib/retry já
+    // tratado internamente. Uma conta real sem nenhum sinal explícito ainda
+    // cai em "erro" pelo fallback do ternário abaixo, então nada se perde.
+    if(msgLow.includes('nenhuma conta encontrada')||msgLow.includes('nenhum extrato')) st.err=true;
     if(/🏁 Job .+ finalizado/i.test(msg)){flushAgent();curAgent=null;}
   }
   flushAgent();
