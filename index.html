@@ -9191,13 +9191,17 @@ async function _initApp(){
     // real — nem login anônimo é necessário aqui (o login em si passa pelo
     // Apps Script, que usa token de admin próprio, não depende do cliente
     // estar autenticado no Firebase de jeito nenhum).
+    // O spinner de "Conectando..." só esconde DEPOIS de saber se existe uma
+    // sessão lembrada válida — senão a tela de login pisca por baixo dele
+    // enquanto o Firebase Auth ainda está restaurando a sessão de forma
+    // assíncrona, mesmo pra quem vai ser logado automaticamente em seguida.
     const fbLoading=document.getElementById('_fb-loading');
-    if(fbLoading)fbLoading.style.display='none';
     if(new URLSearchParams(window.location.search).has('r')){
       await checkResetLink();
     } else {
       await checkRememberedSession();
     }
+    if(fbLoading)fbLoading.style.display='none';
     _updateEnvSwitcher();
     return;
   }
