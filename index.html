@@ -4505,7 +4505,9 @@ async function _writeUserToOtherEnv(envKey,user,pwdHash,opts={}){
     // se o ambiente de destino ainda não tiver credencial — nunca sobrescreve
     // uma senha já definida lá.
     if(pwdHash!==undefined){
-      if(forcePwd||!creds[user.email]) creds[user.email]={hash:pwdHash,mustChange};
+      // Firebase proíbe "." em chaves — emails em credentials ficam codificados (_encK).
+      const ek=_encK(user.email);
+      if(forcePwd||!creds[ek]) creds[ek]={hash:pwdHash,mustChange};
       await ref.child('credentials').set(creds);
     }
     await ref.child('responsaveis').set(resp);
