@@ -3543,13 +3543,62 @@ async function _readGithubPat(){
   _cachedPat=snap.val();
   return _cachedPat;
 }
+// Antes de qualquer report ir pro Slack, garante que o canal de destino está
+// configurado (store.slackConfig, o mesmo usado na tela Gerencial). Sem essa
+// checagem, um canal vazio caía silenciosamente num ID fixo hardcoded — o
+// report parecia funcionar, mas podia estar indo pra um canal errado/morto
+// sem ninguém perceber. Se estiver vazio, avisa e pede a ID aqui mesmo; o
+// que for salvo usa saveSlackChannel (mesma função da tela Gerencial), então
+// já vale pros próximos reports também, não só esse.
+function _ensureSlackChannelConfigured(configKey,label){
+  return new Promise(resolve=>{
+    const existing=(store.slackConfig?.[configKey]||'').trim();
+    if(existing){resolve(existing);return;}
+    const ov=document.createElement('div');
+    ov.id='_slk-cfg-ov';
+    ov.style.cssText='position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.25)';
+    ov.innerHTML=`<div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 36px rgba(0,0,0,.18);padding:22px 26px;min-width:320px;max-width:400px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span style="font-size:12px;font-weight:700;color:#92400e">Canal do Slack não configurado</span>
+      </div>
+      <div style="font-size:12.5px;color:#374151;margin-bottom:12px;line-height:1.5">O canal de report "<b>${label}</b>" está vazio. Informe a ID do canal do Slack para continuar — ela será salva e usada nos próximos reports também.</div>
+      <input id="_slk-cfg-input" type="text" placeholder="ex: C0ABC1234" autocomplete="off"
+        style="width:100%;border:1.5px solid #d1d5db;border-radius:7px;padding:7px 10px;font-size:12px;font-family:ui-monospace,monospace;box-sizing:border-box;outline:none"
+        onfocus="this.style.borderColor='#976ff4'" onblur="this.style.borderColor='#d1d5db'">
+      <div style="font-size:10.5px;color:#9ca3af;margin-top:8px;line-height:1.5">${t('slack-ch-tip')}</div>
+      <div id="_slk-cfg-err" style="font-size:11px;color:#dc2626;margin-top:6px;display:none">Informe uma ID de canal válida.</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+        <button id="_slk-cfg-cancel" style="font-size:12px;padding:7px 16px;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer;background:#fff;font-family:inherit;color:#374151">Cancelar</button>
+        <button id="_slk-cfg-ok" style="font-size:12px;padding:7px 18px;border:none;border-radius:8px;cursor:pointer;background:#976ff4;color:#fff;font-family:inherit;font-weight:600">Salvar e continuar</button>
+      </div>
+    </div>`;
+    document.body.appendChild(ov);
+    const input=document.getElementById('_slk-cfg-input');
+    setTimeout(()=>input?.focus(),50);
+    const cleanup=()=>ov.remove();
+    document.getElementById('_slk-cfg-cancel').onclick=()=>{cleanup();resolve(null);};
+    ov.addEventListener('mousedown',e=>{if(e.target===ov){cleanup();resolve(null);}});
+    const submit=()=>{
+      const val=(input.value||'').trim();
+      if(!val){document.getElementById('_slk-cfg-err').style.display='block';return;}
+      saveSlackChannel(configKey,val);
+      cleanup();
+      resolve(val);
+    };
+    document.getElementById('_slk-cfg-ok').onclick=submit;
+    input.addEventListener('keydown',e=>{if(e.key==='Enter')submit();});
+  });
+}
 async function _triggerSlackNotif(module,banco,agente,onResult){
+  const cfgKey=module==='accounts'?'accounts_sem_acesso':'conciliacoes_sem_acesso';
+  const slackCh=await _ensureSlackChannelConfigured(cfgKey,t('slack-ch-sem-acesso'));
+  if(!slackCh){onResult(null);return;}
   let pat=null;
   try{pat=await _readGithubPat();}catch(e){console.error('_triggerSlackNotif: cannot read PAT',e);}
   if(!pat){onResult(null);return;}
   const notifId='sa_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
   const envLabel=ENVIRONMENTS[_currentEnv]?.label||_currentEnv;
-  const slackCh=(module==='accounts'?store.slackConfig?.accounts_sem_acesso:store.slackConfig?.conciliacoes_sem_acesso)||'C0AQFCE263E';
   const extraInputs={slack_channel:slackCh};
   try{
     const resp=await fetch('https://api.github.com/repos/caiquesilva-hue/eron-foc-app/actions/workflows/slack-sem-acesso.yml/dispatches',{
@@ -5145,6 +5194,8 @@ function _fmtDateBR(s){
   const [y,m,d]=s.split('-');return `${d}/${m}/${y}`;
 }
 async function _triggerAgExtratoNotif(banco,agente,diaInicial,diaFinal,onResult){
+  const agExtrCh=await _ensureSlackChannelConfigured('accounts_ag_extrato',t('slack-ch-ag-extrato'));
+  if(!agExtrCh){onResult(null);return;}
   let pat=null;
   try{pat=await _readGithubPat();}catch(e){
     console.error('_triggerAgExtratoNotif: PAT timeout',e);
@@ -5153,7 +5204,6 @@ async function _triggerAgExtratoNotif(banco,agente,diaInicial,diaFinal,onResult)
   if(!pat){_toast('❌ GitHub PAT não configurado',3000);onResult(null);return;}
   const notifId='ag_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
   const envLabel=ENVIRONMENTS[_currentEnv]?.label||_currentEnv;
-  const agExtrCh=store.slackConfig?.accounts_ag_extrato||'C0AQFCE263E';
   const agExtrExtra={slack_channel:agExtrCh};
   let dispatchOk=false;
   try{
