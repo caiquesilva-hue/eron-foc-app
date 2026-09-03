@@ -2145,6 +2145,7 @@
 <!-- Firebase SDK (compat) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 
 <!-- Loading overlay while Firebase connects -->
 <div id="_fb-loading" style="position:fixed;inset:0;background:#1b133c;display:flex;align-items:center;justify-content:center;z-index:99999;flex-direction:column;gap:14px;">
@@ -3499,15 +3500,28 @@ function _prevDay(dateStr){
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 function _getEronFb(){
-  if(typeof _fbApp!=='undefined'&&_currentEnv==='eron') return _fbApp;
-  try{return firebase.app('eron_slack');}catch(e){}
-  return firebase.initializeApp(ENVIRONMENTS.eron.cfg,'eron_slack');
+  let app;
+  if(typeof _fbApp!=='undefined'&&_currentEnv==='eron') app=_fbApp;
+  else{
+    try{app=firebase.app('eron_slack');}
+    catch(e){app=firebase.initializeApp(ENVIRONMENTS.eron.cfg,'eron_slack');}
+  }
+  _ensureAnonAuth(app); // dispara/cacheia o login anônimo, sem bloquear quem só precisa do app
+  return app;
+}
+// Versão que garante o login anônimo concluído antes de devolver o app —
+// usar em leituras/escritas avulsas (once/get/set/update/remove), que não
+// se reautenticam sozinhas como os listeners (.on) fazem.
+async function _getEronFbReady(){
+  const app=_getEronFb();
+  await _ensureAnonAuth(app);
+  return app;
 }
 let _cachedPat=null;
 async function _readGithubPat(){
   if(_cachedPat) return _cachedPat;
   const snap=await Promise.race([
-    _getEronFb().database().ref('config/githubPat').once('value'),
+    (await _getEronFbReady()).database().ref('config/githubPat').once('value'),
     new Promise((_,rej)=>setTimeout(()=>rej(new Error('PAT timeout')),5000))
   ]);
   _cachedPat=snap.val();
@@ -3530,14 +3544,17 @@ async function _triggerSlackNotif(module,banco,agente,onResult){
     if(!resp.ok){console.error('workflow_dispatch failed',resp.status);onResult(null);return;}
   }catch(e){console.error('workflow_dispatch error',e);onResult(null);return;}
   let attempts=0;
-  function poll(){
+  async function poll(){
     attempts++;
-    _getEronFb().database().ref('slackLinks/'+notifId).once('value')
-      .then(snap=>{
-        const link=snap.val();
-        if(link){onResult(link);return;}
-        if(attempts<30) setTimeout(poll,4000); else onResult(null);
-      }).catch(()=>{if(attempts<30) setTimeout(poll,4000); else onResult(null);});
+    try{
+      const app=await _getEronFbReady();
+      const snap=await app.database().ref('slackLinks/'+notifId).once('value');
+      const link=snap.val();
+      if(link){onResult(link);return;}
+      if(attempts<30) setTimeout(poll,4000); else onResult(null);
+    }catch(e){
+      if(attempts<30) setTimeout(poll,4000); else onResult(null);
+    }
   }
   setTimeout(poll,8000); // GH Actions take ~10-15s to start
 }
@@ -4489,6 +4506,7 @@ async function _writeUserToOtherEnv(envKey,user,pwdHash,opts={}){
   let app;
   try{
     app=firebase.initializeApp(env.cfg,'write_other_'+envKey+'_'+Date.now());
+    await _ensureAnonAuth(app);
     const ref=firebase.database(app).ref(env.storeRoot||'store');
     const snap=await ref.once('value');
     const d=snap.val()||{};
@@ -4553,6 +4571,7 @@ async function _loadAcessosOtherEnv(envKey){
   try{
     if(_acessosOtherApp){try{await _acessosOtherApp.delete();}catch(e){} _acessosOtherApp=null;}
     _acessosOtherApp=firebase.initializeApp(env.cfg,'acessos_other_'+Date.now());
+    await _ensureAnonAuth(_acessosOtherApp);
     const snap=await firebase.database(_acessosOtherApp).ref(env.storeRoot||'store').once('value');
     const d=snap.val()||{};
     return{responsaveis:d.responsaveis||[],credentials:d.credentials||{}};
@@ -5138,11 +5157,17 @@ async function _triggerAgExtratoNotif(banco,agente,diaInicial,diaFinal,onResult)
   }catch(e){console.error('ag-extrato dispatch error',e);_toast('❌ Erro de rede no dispatch',3000);onResult(null);return;}
   if(!dispatchOk){onResult(null);return;}
   let attempts=0;
-  function poll(){
+  async function poll(){
     attempts++;
-    _getEronFb().database().ref('slackLinks/'+notifId).once('value')
-      .then(snap=>{const l=snap.val();if(l){onResult(l);return;}if(attempts<30)setTimeout(poll,4000);else{_toast('⏱ Slack: timeout no polling',3000);onResult(null);}})
-      .catch(()=>{if(attempts<30)setTimeout(poll,4000);else{_toast('⏱ Slack: Firebase polling falhou',3000);onResult(null);}});
+    try{
+      const app=await _getEronFbReady();
+      const snap=await app.database().ref('slackLinks/'+notifId).once('value');
+      const l=snap.val();
+      if(l){onResult(l);return;}
+      if(attempts<30)setTimeout(poll,4000);else{_toast('⏱ Slack: timeout no polling',3000);onResult(null);}
+    }catch(e){
+      if(attempts<30)setTimeout(poll,4000);else{_toast('⏱ Slack: Firebase polling falhou',3000);onResult(null);}
+    }
   }
   setTimeout(poll,8000);
 }
@@ -5478,6 +5503,23 @@ function loadStore(){
   } catch(e){}
 }
 // ─── FIREBASE REALTIME DATABASE ──────────────────────────────────
+// Autenticação anônima: as regras do Realtime Database exigem "auth != null"
+// pra permitir leitura/escrita. Isso não tem relação com o login do app (email
+// + senha, guardado em store.credentials) — é só o token técnico que o SDK do
+// Firebase precisa ter em mãos antes de qualquer operação no banco. Cada app
+// Firebase (o principal e os avulsos criados em runtime pra ler outros
+// ambientes) recebe seu próprio login anônimo, cacheado por instância.
+const _anonAuthPromises=new WeakMap();
+function _ensureAnonAuth(app){
+  if(!app) return Promise.resolve();
+  if(!_anonAuthPromises.has(app)){
+    const p=firebase.auth(app).signInAnonymously().catch(e=>{
+      console.warn('[anon-auth]',app.name,e.code||e.message||e);
+    });
+    _anonAuthPromises.set(app,p);
+  }
+  return _anonAuthPromises.get(app);
+}
 const ENVIRONMENTS={
   eron:{
     label:'Eron',
@@ -5779,6 +5821,7 @@ async function switchEnvironment(envKey){
   STORE_KEY=env.storeKey;
   try{localStorage.setItem(ENV_PERSIST_KEY,envKey);}catch(e){}
   _fbApp=firebase.initializeApp(env.cfg,envKey+'_'+Date.now());
+  await _ensureAnonAuth(_fbApp);
   _fbRef=firebase.database(_fbApp).ref(env.storeRoot||'store');
   _fbAuditRef=firebase.database(_fbApp).ref((env.storeRoot||'store')+'/auditLog');
   _fbAuditSeen.clear();
@@ -6112,7 +6155,7 @@ async function stopJobCard(jobId){
   try{
     const m=_jobMonitors.get(jobId);if(m) m.status='completed';
     _extrUpdateUI();
-    await _getEronFb().database().ref('jobRequests/'+jobId).update({status:'completed'});
+    await (await _getEronFbReady()).database().ref('jobRequests/'+jobId).update({status:'completed'});
   }catch(e){_toast('Erro ao forçar conclusão.',3000);}
 }
 
@@ -6121,7 +6164,7 @@ async function deleteJobCard(jobId){
   const card=document.getElementById('jm-card-'+jobId);
   if(card) card.remove();
   _extrUpdateUI();
-  try{await _getEronFb().database().ref('jobRequests/'+jobId).remove();}catch(e){}
+  try{await (await _getEronFbReady()).database().ref('jobRequests/'+jobId).remove();}catch(e){}
 }
 
 function _buildJobTerminalSummary(logs){
@@ -6225,7 +6268,7 @@ async function _loadUserJobs(){
   const today=_jobDateKey(Date.now());
   const retainCutoff=Date.now()-_JOB_RETENTION_DAYS*86400000;
   try{
-    const db=_getEronFb().database();
+    const db=(await _getEronFbReady()).database();
     // Load all jobs from retention window
     const snap=await db.ref('jobRequests').orderByChild('created_at').startAt(retainCutoff).once('value');
     const all=snap.val()||{};
@@ -6278,7 +6321,7 @@ async function runExtratosJob(){
   _renderJobCard(jobId,{status:'pending'});
   _extrUpdateUI();
   try{
-    await _getEronFb().database().ref('jobRequests/'+jobId).set(job);
+    await (await _getEronFbReady()).database().ref('jobRequests/'+jobId).set(job);
   }catch(e){
     const m=_jobMonitors.get(jobId);if(m) m.status='failed';
     _extrUpdateUI();
@@ -6367,7 +6410,7 @@ const _DT_BANK_RAW_MAP=Object.fromEntries(
 
 async function _loadDynamicTasks(){
   try{
-    const snap=await _getEronFb().database().ref('dynamic_tasks').get();
+    const snap=await (await _getEronFbReady()).database().ref('dynamic_tasks').get();
     const data=snap.val();
     if(!data||typeof data!=='object') return;
     const extrSet=new Set(EXTR_TAREFAS.map(t=>`${t.pais}__${t.banco}__${t.agente}`));
@@ -6588,11 +6631,11 @@ async function _removeCredCard(reqId){
   const m=_credMonitors.get(reqId);
   if(m){if(m._stopTimer)clearTimeout(m._stopTimer);if(m.ref&&m.cb)m.ref.off('value',m.cb);_credMonitors.delete(reqId);}
   document.getElementById('cred-card-'+reqId)?.remove();
-  try{await _getEronFb().database().ref('credentialChangeRequests/'+reqId).remove();}catch(e){}
+  try{await (await _getEronFbReady()).database().ref('credentialChangeRequests/'+reqId).remove();}catch(e){}
 }
 async function _retryCredCard(reqId){
   try{
-    await _getEronFb().database().ref('credentialChangeRequests/'+reqId).update({
+    await (await _getEronFbReady()).database().ref('credentialChangeRequests/'+reqId).update({
       status:'pending',error:null,processed_at:null,
     });
   }catch(e){console.warn('[retryCredCard]',e);return;}
@@ -6651,7 +6694,7 @@ async function _loadUserCredRequests(){
   const today=_jobDateKey(Date.now());
   const cutoff=Date.now()-86400000; // só hoje
   try{
-    const db=_getEronFb().database();
+    const db=(await _getEronFbReady()).database();
     const snap=await db.ref('credentialChangeRequests').orderByChild('created_at').startAt(cutoff).once('value');
     const all=snap.val()||{};
     // Requests antigos (de antes de hoje): apaga os que já resolveram (done)
@@ -6775,7 +6818,7 @@ async function _credLoadDeleteList(){
   _credDelItems=[];_credDelSelected.clear();
   dw.innerHTML=`<span style="font-size:12px;color:var(--e-muted)">${t('cred-del-loading')}</span>`;
   try{
-    const snap=await _getEronFb().database().ref('dynamic_tasks').get();
+    const snap=await (await _getEronFbReady()).database().ref('dynamic_tasks').get();
     const data=snap.val();
     if(data&&typeof data==='object'){
       ['CO','PE','AR','CL'].forEach(pais=>{
@@ -6827,7 +6870,7 @@ async function _credSaveDelete(){
     const bankKey=bankRaw.replace(/_(co|pe|ar)$/,'');
     const reqId='del_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
     try{
-      await _getEronFb().database().ref('credentialChangeRequests/'+reqId).set({
+      await (await _getEronFbReady()).database().ref('credentialChangeRequests/'+reqId).set({
         type:'delete_credential',bank:bankKey,bank_raw:bankRaw,agent:agente,
         requested_by:window._loggedEmail||'—',created_at:Date.now(),status:'pending',
       });
@@ -6840,7 +6883,7 @@ async function _credSaveDelete(){
       _createCredCard(reqId,bankRaw,agente,'pending',async (status,data)=>{
         if(status!=='done'){resolve({ok:false,pais,banco_nome,agente,error:data?.error});return;}
         try{
-          await _getEronFb().database().ref(`dynamic_tasks/${pais}/${banco_nome}/${agente}`).remove();
+          await (await _getEronFbReady()).database().ref(`dynamic_tasks/${pais}/${banco_nome}/${agente}`).remove();
           EXTR_TAREFAS=EXTR_TAREFAS.filter(t=>!(t.pais===pais&&t.banco===banco_nome&&t.agente===agente));
           if(CRED_BANK_AGENTS[bankRaw]){
             CRED_BANK_AGENTS[bankRaw]=CRED_BANK_AGENTS[bankRaw].filter(a=>a!==agente);
@@ -6890,7 +6933,7 @@ async function _credSave(){
   if(btn){btn.disabled=true;btn.style.opacity='.45';}
   if(statusEl){statusEl.style.display='';statusEl.innerHTML=`<span style="color:var(--e-muted)">⏳ Salvando...</span>`;}
   try{
-    await _getEronFb().database().ref('credentialChangeRequests/'+reqId).set(payload);
+    await (await _getEronFbReady()).database().ref('credentialChangeRequests/'+reqId).set(payload);
     if(statusEl){statusEl.style.display='none';statusEl.innerHTML='';}
     if(_credMode==='new'){
       const dtInfo=_DT_BANK_RAW_MAP[bank];
@@ -7184,6 +7227,7 @@ async function _tryFindUserInEnv(envKey,email){
   let app;
   try{
     app=firebase.initializeApp(env.cfg,'probe_'+envKey+'_'+Date.now());
+    await _ensureAnonAuth(app);
     const snap=await firebase.database(app).ref(env.storeRoot||'store').once('value');
     const d=snap.val()||{};
     return (d.responsaveis||[]).find(r=>r.email===email)||null;
@@ -8955,6 +8999,7 @@ async function _initApp(){
   loadStore();         // localStorage rápido
   try{renderAll();}catch(e){console.warn('[renderAll pre-sync]',e);}
   applyTranslations();
+  await _ensureAnonAuth(_fbApp);   // login anônimo antes de qualquer leitura/escrita no Firebase
   await startFirebaseSync();       // dados autoritativos do Firebase
   await initAdminCredentials();    // preenche credenciais ausentes
   await _loadDynamicTasks();       // mescla tarefas dinâmicas em EXTR_TAREFAS e CRED_BANK_AGENTS
