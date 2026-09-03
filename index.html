@@ -7181,7 +7181,7 @@ async function submitForgotPassword(){
   if(cancelBtn)cancelBtn.textContent='Fechar';
 }
 // Google Apps Script — colar URL após implantar o script em script.google.com
-const _GAS_URL='https://script.google.com/macros/s/AKfycbxunETYFomWJKY9gBufOy2ij3CssCiRKe_GneKjKS-TXfBArmFXPHEZ9tkRyVEumBIM8g/exec';
+const _GAS_URL='https://script.google.com/macros/s/AKfycbwywWhdyJ13O-6DwnxvklsiYMBQAqar8tHoRm9YYSrZMMFJf7iI9D5jiX3qnaSKo5KhoQ/exec';
 
 async function _sendResetEmail(toEmail, resetLink){
   const user=store.responsaveis.find(r=>r.email===toEmail);
@@ -7245,10 +7245,13 @@ async function _tryFindUserInEnv(envKey,email){
   }catch(e){return null;}finally{try{await app?.delete();}catch(e){}}
 }
 // Autenticação real (Firebase Auth via custom token, emitido pelo Apps Script
-// depois de validar a senha contra store/credentials). Por enquanto só em
-// staging, pra testar sem afetar produção.
+// depois de validar a senha contra store/credentials). Ambientes ainda sem
+// suporte no Apps Script (_ENV_FIREBASE_URL/_ENV_SA_PROPERTY) simplesmente
+// retornam erro no mint_token — fica seguro habilitar aqui antes de todos
+// os ambientes estarem prontos, sem quebrar nada (fire-and-forget no login).
+const _REAL_AUTH_ENVS=['staging','astropay'];
 async function _signInRealAuth(email,hash){
-  if(_currentEnv!=='staging') return;
+  if(!_REAL_AUTH_ENVS.includes(_currentEnv)) return;
   try{
     const res=await fetch(_GAS_URL,{
       method:'POST',
