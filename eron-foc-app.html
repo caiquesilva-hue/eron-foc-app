@@ -4482,7 +4482,8 @@ function _getSelectedEnvs(){
   const sel=adminEnvs.filter(k=>document.getElementById('acesso-env-'+k)?.checked);
   return sel.length?sel:null; // null signals validation error
 }
-async function _writeUserToOtherEnv(envKey,user,pwdHash){
+async function _writeUserToOtherEnv(envKey,user,pwdHash,opts={}){
+  const {mustChange=true,forcePwd=false}=opts;
   const env=ENVIRONMENTS[envKey];
   if(!env?.cfg) return;
   let app;
@@ -4494,15 +4495,33 @@ async function _writeUserToOtherEnv(envKey,user,pwdHash){
     const resp=d.responsaveis||[];
     const creds=d.credentials||{};
     const idx=resp.findIndex(r=>r.email===user.email);
+    // user={email} (sync de senha) não deve criar um perfil incompleto —
+    // só mescla se o usuário já existir lá; perfis completos (nome presente)
+    // continuam podendo criar uma entrada nova normalmente.
     if(idx>=0) resp[idx]={...resp[idx],...user};
-    else resp.push(user);
-    if(pwdHash!==undefined) creds[user.email]={hash:pwdHash,mustChange:true};
+    else if(user.nome!==undefined) resp.push(user);
+    // forcePwd=true (mudança/reset explícito de senha): sempre propaga o novo hash.
+    // forcePwd=false (ex: adicionar ambiente a um usuário existente): só preenche
+    // se o ambiente de destino ainda não tiver credencial — nunca sobrescreve
+    // uma senha já definida lá.
+    if(pwdHash!==undefined){
+      if(forcePwd||!creds[user.email]) creds[user.email]={hash:pwdHash,mustChange};
+      await ref.child('credentials').set(creds);
+    }
     await ref.child('responsaveis').set(resp);
-    if(pwdHash!==undefined) await ref.child('credentials').set(creds);
   }catch(e){
     console.warn('[writeUserToOtherEnv]',envKey,e);
     _toast('⚠️ Erro ao salvar no ambiente '+(ENVIRONMENTS[envKey]?.label||envKey)+': '+(e.message||e),8000);
   }finally{try{await app?.delete();}catch(e){}}
+}
+// Propaga uma troca/reset de senha para os demais ambientes do usuário (envs),
+// mantendo a credencial em sincronia em todos os Firebase separados.
+async function _syncPwdToOtherEnvs(email,hash,mustChange){
+  const user=store.responsaveis.find(r=>r.email===email);
+  const envs=(user?.envs||[]).filter(k=>k!==_currentEnv&&ENVIRONMENTS[k]?.cfg);
+  for(const envKey of envs){
+    await _writeUserToOtherEnv(envKey,{email},hash,{mustChange,forcePwd:true});
+  }
 }
 function _populateAcessoEnvCheckboxes(selectedEnvs){
   const adminEnvs=_getAdminEnvs();
@@ -4580,7 +4599,7 @@ async function _submitAcessoInner(){
     if(selEnvs&&selEnvs.length>1){
       for(const envKey of selEnvs){
         if(envKey===_currentEnv) continue;
-        await _writeUserToOtherEnv(envKey,{nome,email:r.email,sigla,role:r.role,envs:selEnvs},undefined);
+        await _writeUserToOtherEnv(envKey,{nome,email:r.email,sigla,role:r.role,envs:selEnvs},store.credentials[r.email]?.hash);
       }
     }
   } else {
@@ -7145,6 +7164,7 @@ async function submitResetFromLink(){
     store.credentials[email]={hash,mustChange:false};
     if(!Array.isArray(store.auditLog)) store.auditLog=[];
     saveStore(); _fbSync('credentials');
+    _syncPwdToOtherEnvs(email,hash,false);
     if(!Array.isArray(store.auditLog)) store.auditLog=[];
     logAudit('auth','password-reset-via-link',{email});
     // Fecha modal DEPOIS de tudo — erros ainda serão visíveis
@@ -7223,6 +7243,7 @@ async function submitForcePwd(){
   const email=window._pendingLoginEmail;
   store.credentials[email]={hash:await hashPwd(p1),mustChange:false};
   saveStore(); _fbSync('credentials');
+  _syncPwdToOtherEnvs(email,store.credentials[email].hash,false);
   closeModal('modal-force-pwd');
   logAudit('auth','password-changed-first',{email});
   selectAccount(email);
@@ -7242,6 +7263,7 @@ async function submitChangePwd(){
   if(p1!==p2){errEl.style.display='block';errEl.textContent='As novas senhas não coincidem.';return;}
   store.credentials[email]={hash:await hashPwd(p1),mustChange:false};
   saveStore(); _fbSync('credentials');
+  _syncPwdToOtherEnvs(email,store.credentials[email].hash,false);
   closeModal('modal-change-pwd');
   logAudit('auth','password-changed',{email});
   alert('Senha alterada com sucesso!');
@@ -7271,6 +7293,7 @@ async function submitResetPwd(){
   if(!user) return;
   store.credentials[user.email]={hash:await hashPwd(pwd),mustChange:true};
   saveStore(); _fbSync('credentials');
+  _syncPwdToOtherEnvs(user.email,store.credentials[user.email].hash,true);
   closeModal('modal-reset-pwd');
   logAudit('acessos','password-reset',{email:user.email,by:window._loggedEmail});
   renderAcessos();
