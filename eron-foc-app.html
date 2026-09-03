@@ -7236,7 +7236,18 @@ async function _gasCall(payload,attempts=3){
     try{
       const res=await fetch(_GAS_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
       const text=await res.text();
-      return JSON.parse(text);
+      const data=JSON.parse(text);
+      // O redirect que o Apps Script usa pra devolver a resposta às vezes
+      // "cruza" com a de outra chamada concorrente — volta um JSON válido,
+      // só que da resposta ERRADA (ex: o doGet() genérico em vez do doPost
+      // que pedimos). Nenhum handler de ação nosso devolve "service" — se
+      // vier isso pra uma chamada com action/to_email, foi contaminação.
+      if(data&&data.service&&(payload.action||payload.to_email)){
+        if(i===attempts-1) return {ok:false,reason:'gas_response_mismatch'};
+        await new Promise(r=>setTimeout(r,300*(i+1)));
+        continue;
+      }
+      return data;
     }catch(e){
       if(i===attempts-1) return {ok:false,reason:'network_error'};
       await new Promise(r=>setTimeout(r,300*(i+1)));
