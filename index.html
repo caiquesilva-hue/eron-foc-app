@@ -6185,30 +6185,45 @@ async function deleteJobCard(jobId){
 }
 
 function _buildJobTerminalSummary(logs){
+  // Bancos com fluxo em 2 fases (BCP etc.) reabrem cada conta na FASE 2 sob uma
+  // linha diferente ("📥 Processando download...") da FASE 1 ("📂 Processando
+  // conta...") — por isso os eventos de cada conta são acumulados por número
+  // (não por "conta atualmente aberta") e só consolidados no fim do job, senão
+  // o sinal de sucesso da FASE 2 acaba preso a uma conta errada.
   const success=[],noMov=[],errors=[];
-  let curAgent=null,curConta=null,ok=false,sem=false,err=false;
-  const flushConta=()=>{
+  let curAgent=null,curContaNum=null;
+  let contas=new Map();
+  const getConta=(num)=>{
+    if(!contas.has(num)) contas.set(num,{ok:false,sem:false,err:false});
+    return contas.get(num);
+  };
+  const flushAgent=()=>{
     if(!curAgent) return;
-    if(!curConta&&!ok&&!sem&&!err) return;
-    const label=curConta?`${curAgent} — ${curConta}`:curAgent;
-    (err?errors:ok?success:sem?noMov:errors).push(label);
-    curConta=null;ok=false;sem=false;err=false;
+    for(const [num,st] of contas){
+      const label=(num&&num!=='__none__')?`${curAgent} — ${num}`:curAgent;
+      (st.err?errors:st.ok?success:st.sem?noMov:errors).push(label);
+    }
+    contas=new Map();curContaNum=null;
   };
   for(const l of logs){
     const msg=l.msg||'';
     const msgLow=msg.toLowerCase();
     const msAgent=msg.match(/Iniciando Job:\s*(.+?)\s*\(Agente:\s*(.+?)\)/i);
-    if(msAgent){flushConta();curAgent=`${msAgent[1]} (${msAgent[2]})`;curConta=null;ok=false;sem=false;err=false;continue;}
+    if(msAgent){flushAgent();curAgent=`${msAgent[1]} (${msAgent[2]})`;continue;}
     if(!curAgent) continue;
-    const msConta=msg.match(/📂 Processando conta:\s*(\S+)/i)||msg.match(/📄 Estado de Cuenta[^:]*conta:\s*(\S+)/i);
-    if(msConta){flushConta();curConta=msConta[1];continue;}
-    if(/📅.+estado de cuenta/i.test(msgLow)){flushConta();curConta='PDF';continue;}
-    if(msgLow.includes('salvo e enviado')||msgLow.includes('upload concluído com sucesso')) ok=true;
-    if(msgLow.includes('indisponível')||msgLow.includes('sem conteúdo disponível')||msgLow.includes('sem movimento')||msgLow.includes('no hay')||msgLow.includes('no tiene')) sem=true;
-    if(msgLow.includes('nenhuma conta encontrada')||msgLow.includes('nenhum extrato')||l.level==='ERROR') err=true;
-    if(/🏁 Job .+ finalizado/i.test(msg)){flushConta();curAgent=null;}
+    const msConta=msg.match(/📂 Processando conta:\s*(\S+)/i)
+      ||msg.match(/📥 Processando download para a conta:\s*(\S+)/i)
+      ||msg.match(/📄 Estado de Cuenta[^:]*conta:\s*(\S+)/i);
+    if(msConta){curContaNum=msConta[1];getConta(curContaNum);continue;}
+    if(/📅.+estado de cuenta/i.test(msgLow)){curContaNum='PDF';getConta(curContaNum);continue;}
+    if(!curContaNum) curContaNum='__none__';
+    const st=getConta(curContaNum);
+    if(msgLow.includes('salvo e enviado')||msgLow.includes('upload concluído com sucesso')) st.ok=true;
+    if(msgLow.includes('indisponível')||msgLow.includes('sem conteúdo disponível')||msgLow.includes('sem movimento')||msgLow.includes('no hay')||msgLow.includes('no tiene')) st.sem=true;
+    if(msgLow.includes('nenhuma conta encontrada')||msgLow.includes('nenhum extrato')||l.level==='ERROR') st.err=true;
+    if(/🏁 Job .+ finalizado/i.test(msg)){flushAgent();curAgent=null;}
   }
-  flushConta();
+  flushAgent();
   return {success,noMov,errors};
 }
 
@@ -7135,33 +7150,20 @@ async function checkRememberedSession(){
 }
 
 // ─── RESET DE SENHA VIA LINK ─────────────────────────────────────
-const RESET_SECRET='eron-foc-reset-2026';
-async function _genSig(data){
-  try{
-    const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(data));
-    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,24);
-  }catch(e){
-    let h=0x811c9dc5;
-    for(let i=0;i<data.length;i++){h^=data.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}
-    return h.toString(16).padStart(8,'0');
-  }
-}
+// A assinatura do link (exp+sig) é gerada e validada 100% no servidor
+// (Apps Script, ação 'request_reset'/'reset_password') — o cliente nunca
+// conhece o segredo. Antes o segredo (RESET_SECRET) vivia hardcoded aqui
+// no HTML público, visível via "view-source", o que permitia forjar um
+// link de reset válido pra qualquer email/ambiente sem precisar de nada
+// mais. O cliente agora só carrega o token como opaco (pede pro servidor
+// gerar, guarda, devolve pro servidor no submit) e faz uma checagem local
+// de expiração só por UX — quem decide de verdade é sempre o servidor.
 async function generateResetLink(email){
-  const exp=Date.now()+3600000;
   const env=_currentEnv;
-  // env entra na assinatura pra ninguém conseguir reaproveitar um link válido
-  // pra um ambiente diferente do que ele foi emitido só trocando o ?env= na URL.
-  const sig=await _genSig(email+':'+env+':'+exp+':'+RESET_SECRET);
-  const base=window.location.origin+window.location.pathname;
-  return base+'?r='+encodeURIComponent(btoa(email))+'&env='+encodeURIComponent(env)+'&exp='+exp+'&sig='+sig;
-}
-async function validateResetToken(encodedEmail,env,exp,sig){
-  try{
-    if(Date.now()>exp) return null;
-    const email=atob(decodeURIComponent(encodedEmail));
-    const expected=await _genSig(email+':'+env+':'+exp+':'+RESET_SECRET);
-    return sig===expected?email:null;
-  }catch(e){return null;}
+  const origin=window.location.origin+window.location.pathname;
+  const data=await _gasCall({action:'request_reset',env,email,origin});
+  if(!data.ok) throw new Error('Falha ao gerar link de redefinição ('+(data.reason||'desconhecido')+').');
+  return data.resetLink;
 }
 async function checkResetLink(){
   const params=new URLSearchParams(window.location.search);
@@ -7170,11 +7172,11 @@ async function checkResetLink(){
   const exp=parseInt(params.get('exp')||'0');
   const sig=params.get('sig')||'';
   if(!r||!exp||!sig) return;
-  // O link foi emitido pra um ambiente específico (está na assinatura) — troca
-  // pra ele ANTES de validar, senão um link de um ambiente nunca bateria a
-  // assinatura noutro, e a troca de senha iria pro projeto Firebase errado.
+  // O link foi emitido pra um ambiente específico — troca pra ele ANTES de
+  // exibir o modal, senão a troca de senha iria pro projeto Firebase errado.
   if(env!==_currentEnv&&ENVIRONMENTS[env]?.cfg) await switchEnvironment(env);
-  const email=await validateResetToken(r,env,exp,sig);
+  let email=null;
+  try{ if(Date.now()<=exp) email=atob(decodeURIComponent(r)); }catch(e){}
   if(!email){
     const errEl=document.getElementById('login-err');
     if(errEl){errEl.style.display='block';errEl.textContent='Link de redefinição inválido ou expirado.';}
@@ -7222,9 +7224,15 @@ async function submitForgotPassword(){
     userName=user.nome;
   }
   if(btn){btn.disabled=true;btn.textContent='Gerando...';}
-  const link=await generateResetLink(email);
-  document.getElementById('forgot-reset-link').value=link;
-  await _sendResetEmail(email, link, userName);
+  try{
+    const link=await generateResetLink(email);
+    document.getElementById('forgot-reset-link').value=link;
+    await _sendResetEmail(email, link, userName);
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='Enviar link';}
+    errEl.style.display='block';errEl.textContent='Erro ao gerar o link: '+(e&&e.message?e.message:String(e));
+    return;
+  }
   document.getElementById('forgot-result').style.display='';
   const sentEmail=document.getElementById('forgot-sent-email');
   if(sentEmail)sentEmail.textContent=email;
@@ -7233,7 +7241,7 @@ async function submitForgotPassword(){
   if(cancelBtn)cancelBtn.textContent='Fechar';
 }
 // Google Apps Script — colar URL após implantar o script em script.google.com
-const _GAS_URL='https://script.google.com/macros/s/AKfycbyijVT_l1vVyLijjE6iLWwqBdIFJU97Qgi2j-daVmdnIDUSMYf9Gcs5irVGvkCjidBu/exec';
+const _GAS_URL='https://script.google.com/macros/s/AKfycbxERfQWRW6Z8666XrH5DfpN2z6x0Gfa5tBVNGEi9JxnWNx4QJ8Jcwi2D4aXUIhBqCO6hA/exec';
 
 // O redirect que o Apps Script usa pra devolver a resposta (script.google.com
 // → script.googleusercontent.com) falha de forma intermitente (~1 em cada 3
