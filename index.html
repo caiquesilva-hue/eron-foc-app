@@ -7265,10 +7265,18 @@ const _GAS_URL='https://script.google.com/macros/s/AKfycbxERfQWRW6Z8666XrH5DfpN2
 // → script.googleusercontent.com) falha de forma intermitente (~1 em cada 3
 // chamadas, mesmo com tudo certo do nosso lado) — sem retry, login/reset de
 // senha falhariam sozinhos com essa frequência. Tenta de novo antes de desistir.
-async function _gasCall(payload,attempts=3){
+// A execução do Apps Script em si normalmente leva 1-2s, mas esse segundo
+// hop do redirect às vezes trava por dezenas de segundos (infra do Google,
+// fora do nosso controle) — sem um timeout por tentativa, uma única chamada
+// travada segurava o login inteiro. 9s é folgado o bastante pra uma chamada
+// normal (medido ~1-2,5s) nunca ser abortada à toa, mas curto o bastante pra
+// não deixar o usuário esperando um hop travado por muito tempo.
+async function _gasCall(payload,attempts=3,timeoutMs=9000){
   for(let i=0;i<attempts;i++){
+    const ctrl=new AbortController();
+    const timer=setTimeout(()=>ctrl.abort(),timeoutMs);
     try{
-      const res=await fetch(_GAS_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
+      const res=await fetch(_GAS_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload),signal:ctrl.signal});
       const text=await res.text();
       const data=JSON.parse(text);
       // O redirect que o Apps Script usa pra devolver a resposta às vezes
@@ -7283,8 +7291,14 @@ async function _gasCall(payload,attempts=3){
       }
       return data;
     }catch(e){
-      if(i===attempts-1) return {ok:false,reason:'network_error'};
-      await new Promise(r=>setTimeout(r,300*(i+1)));
+      if(i===attempts-1) return {ok:false,reason:e?.name==='AbortError'?'timeout':'network_error'};
+      // Sem espera extra num timeout — já perdemos timeoutMs esperando; ao
+      // contrário do erro de rede (que costuma pedir um respiro), aqui vale
+      // tentar de novo na hora, uma conexão nova tem chance real de vir mais
+      // rápida que a que travou.
+      if(e?.name!=='AbortError') await new Promise(r=>setTimeout(r,300*(i+1)));
+    }finally{
+      clearTimeout(timer);
     }
   }
 }
