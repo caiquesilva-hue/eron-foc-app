@@ -1,8 +1,9 @@
 import fetch from 'node-fetch';
+import { getFirebaseAccessToken } from './firebase-auth.js';
 
 const SLACK_TOKEN    = process.env.SLACK_TOKEN;
 const FIREBASE_DB_URL = (process.env.FIREBASE_DB_URL || '').replace(/\/$/, '');
-const FIREBASE_SECRET = process.env.FIREBASE_SECRET;
+const FIREBASE_SA_JSON = process.env.FIREBASE_SA_JSON;
 const SLACK_CHANNEL  = process.env.SLACK_CHANNEL || 'C0AQFCE263E';
 const NOTIFICATION_ID = process.env.NOTIFICATION_ID;
 const LANG   = process.env.LANG_INPUT  || 'pt-BR';
@@ -61,7 +62,7 @@ async function sendErrorNotification() {
 
 async function run() {
   if (!SLACK_TOKEN)           throw new Error('SLACK_TOKEN not set');
-  if (!FIREBASE_DB_URL || !FIREBASE_SECRET) throw new Error('Firebase credentials not set');
+  if (!FIREBASE_DB_URL || !FIREBASE_SA_JSON) throw new Error('Firebase credentials not set');
   if (!NOTIFICATION_ID)       throw new Error('NOTIFICATION_ID not set');
 
   console.log(`Sending [${LANG}/${MODULE}] to ${SLACK_CHANNEL}: ${text}`);
@@ -88,11 +89,15 @@ async function run() {
   console.log('getPermalink:', JSON.stringify(plData));
   if (!plData.ok || !plData.permalink) throw new Error(`getPermalink failed: ${plData.error}`);
 
-  // 3. Write permalink to Eron Firebase (notification bus) so the browser can poll for it
-  const fbUrl = `${FIREBASE_DB_URL}/slackLinks/${NOTIFICATION_ID}.json?auth=${FIREBASE_SECRET}`;
+  // 3. Write permalink to Eron Firebase (notification bus) so the browser can poll for it.
+  // Bearer token de service account — o "?auth=<database secret>" legado
+  // parou de funcionar em 2026-09-03 (401 Permission denied), provavelmente
+  // descontinuado pelo Firebase.
+  const accessToken = await getFirebaseAccessToken(FIREBASE_SA_JSON);
+  const fbUrl = `${FIREBASE_DB_URL}/slackLinks/${NOTIFICATION_ID}.json`;
   const fbRes = await fetch(fbUrl, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
     body: JSON.stringify(plData.permalink),
   });
   if (!fbRes.ok) throw new Error(`Firebase write failed: ${fbRes.status} ${await fbRes.text()}`);

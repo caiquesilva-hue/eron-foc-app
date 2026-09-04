@@ -45,7 +45,7 @@ jobs:
         env:
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           FIREBASE_DB_URL: ${{ secrets.FIREBASE_DB_URL }}
-          FIREBASE_SECRET: ${{ secrets.FIREBASE_SECRET }}
+          FIREBASE_SA_JSON: ${{ secrets.FIREBASE_SA_JSON }}
           SLACK_CHANNEL: ${{ inputs.slack_channel || 'C0AQFCE263E' }}
           NOTIFICATION_ID: ${{ inputs.notification_id }}
           LANG_INPUT: ${{ inputs.lang }}

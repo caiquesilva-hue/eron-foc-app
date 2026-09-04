@@ -32,7 +32,7 @@ jobs:
       - name: Gerar e enviar CSV
         env:
           FIREBASE_DB_URL: ${{ secrets.FIREBASE_DB_URL }}
-          FIREBASE_SECRET: ${{ secrets.FIREBASE_SECRET }}
+          FIREBASE_SA_JSON: ${{ secrets.FIREBASE_SA_JSON }}
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           SLACK_CHANNEL: C0BH1SG3EUS
           OVERRIDE_DAY: ${{ inputs.override_day }}

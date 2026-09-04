@@ -1,8 +1,9 @@
 import fetch from 'node-fetch';
+import { getFirebaseAccessToken } from './firebase-auth.js';
 
 // ─── Config ────────────────────────────────────────────────────────────────────
 const FIREBASE_DB_URL = process.env.FIREBASE_DB_URL;
-const FIREBASE_SECRET = process.env.FIREBASE_SECRET;
+const FIREBASE_SA_JSON = process.env.FIREBASE_SA_JSON;
 const SLACK_TOKEN = process.env.SLACK_TOKEN;
 const SLACK_CHANNEL = process.env.SLACK_CHANNEL || 'C0BH1SG3EUS';
 
@@ -78,9 +79,15 @@ function buildCSV(rows) {
 // ─── Firebase ───────────────────────────────────────────────────────────────────
 async function fetchStore() {
   if (!FIREBASE_DB_URL) throw new Error('FIREBASE_DB_URL não configurado');
-  let url = `${FIREBASE_DB_URL}/store.json`;
-  if (FIREBASE_SECRET) url += `?auth=${FIREBASE_SECRET}`;
-  const res = await fetch(url);
+  // Bearer token de service account — o "?auth=<database secret>" legado
+  // parou de funcionar em 2026-09-03 (401 Permission denied), provavelmente
+  // descontinuado pelo Firebase.
+  const headers = {};
+  if (FIREBASE_SA_JSON) {
+    const accessToken = await getFirebaseAccessToken(FIREBASE_SA_JSON);
+    headers.Authorization = `Bearer ${accessToken}`;
+  }
+  const res = await fetch(`${FIREBASE_DB_URL}/store.json`, { headers });
   if (!res.ok) throw new Error(`Firebase ${res.status}: ${await res.text()}`);
   return res.json();
 }
