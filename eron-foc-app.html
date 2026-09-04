@@ -1414,6 +1414,7 @@
                 <option value="bancochile">Banco de Chile</option>
                 <option value="bci">BCI</option>
                 <option value="bice">BICE</option>
+                <option value="santander">Santander</option>
                 <option value="gmail">Gmail (2FA)</option>
               </select>
             </div>
@@ -6451,6 +6452,7 @@ const CRED_BANKS={
   bancochile:{fields:['usuario','senha'],detokenize:false},
   bci:{fields:['usuario','senha'],detokenize:false},
   bice:{fields:['usuario','senha'],detokenize:false},
+  santander:{fields:['usuario','senha'],detokenize:false},
   gmail:{fields:['usuario','senha','totp_secret'],gmail_special:true,detokenize:false},
 };
 let CRED_BANK_AGENTS={
@@ -6475,6 +6477,7 @@ let CRED_BANK_AGENTS={
   bancochile:['MARMATE'],
   bci:['CLPRO'],
   bice:['CLPRO'],
+  santander:['MARMATE'],
   gmail:['COLPROCESA','COGREPOS','COLPAYMENTS','COMERCIAL','GOHILL','NLASE','KATAGA','QM','BUHAPAY','ONLINEPRO','SURTCAPITAL','MALISAC','TPROG'],
 };
 
@@ -6501,6 +6504,7 @@ const _DT_BANCO_MAP={
   'Banco de Chile': {pais:'CL',bank_raw:'bancochile'},
   'BCI':            {pais:'CL',bank_raw:'bci'},
   'BICE':           {pais:'CL',bank_raw:'bice'},
+  'Santander':      {pais:'CL',bank_raw:'santander'},
 };
 
 // Lookup reverso: bank_raw → {pais, banco_nome} (para escrita direta em dynamic_tasks)
