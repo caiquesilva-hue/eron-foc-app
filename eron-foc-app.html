@@ -1416,7 +1416,7 @@
                 <option value="bice">BICE</option>
                 <option value="santander">Santander</option>
                 <option value="itau">Itau</option>
-                <option value="scotiabank">Scotiabank</option>
+                <option value="scotiabank">Scotiabank Chile</option>
                 <option value="gmail">Gmail (2FA)</option>
               </select>
             </div>
@@ -6966,6 +6966,8 @@ function _credDelToggle(){
     if(panel){panel.style.display='flex';panel.style.flexDirection='column';}
     const chev=document.getElementById('cred-del-chevron');
     if(chev) chev.style.transform='rotate(180deg)';
+    const search=document.getElementById('cred-del-search');
+    if(search){search.value='';setTimeout(()=>search.focus(),50);}
     _credDelRender();
     document.removeEventListener('click',_credDelOutsideClick);
     document.addEventListener('click',_credDelOutsideClick);
@@ -6982,8 +6984,10 @@ function _credDelClose(){
 function _credDelRender(){
   const list=document.getElementById('cred-del-list');
   if(!list) return;
+  const q=(document.getElementById('cred-del-search')?.value||'').toLowerCase().trim();
   const byPais={};
   _credDelItems.forEach(item=>{
+    if(q&&!item.banco_nome.toLowerCase().includes(q)&&!item.agente.toLowerCase().includes(q)) return;
     if(!byPais[item.pais]) byPais[item.pais]=[];
     byPais[item.pais].push(item);
   });
@@ -7070,7 +7074,10 @@ async function _credLoadDeleteList(){
           <svg id="cred-del-chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0;transition:transform .2s"><path d="M4 6l4 4 4-4"/></svg>
         </button>
         <div id="cred-del-panel" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--e-pale);border-radius:10px;box-shadow:0 8px 28px rgba(80,60,160,.13);z-index:300;overflow:hidden;flex-direction:column">
-          <div id="cred-del-list" style="overflow-y:auto;max-height:260px;padding:4px 6px 8px"></div>
+          <div style="padding:10px 10px 6px">
+            <input type="text" id="cred-del-search" oninput="_credDelRender()" style="width:100%;box-sizing:border-box;border:1px solid var(--e-pale);border-radius:7px;padding:7px 10px;font-size:12px;font-family:inherit;outline:none;color:var(--e-text);background:var(--e-ghost)" data-i18n-placeholder="extr-search-ph" placeholder="${t('extr-search-ph')}">
+          </div>
+          <div id="cred-del-list" style="overflow-y:auto;max-height:260px;padding:0 6px 8px"></div>
         </div>
       </div>`;
     _credUpdateSaveBtn();
