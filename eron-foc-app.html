@@ -1417,7 +1417,6 @@
                 <option value="santander">Santander</option>
                 <option value="itau">Itau</option>
                 <option value="scotiabank">Scotiabank Chile</option>
-                <option value="mercantil">Mercantil Bolivia</option>
                 <option value="gmail">Gmail (2FA)</option>
               </select>
             </div>
@@ -6459,7 +6458,6 @@ const CRED_BANKS={
   santander:{fields:['usuario','senha'],detokenize:false},
   itau:{fields:['usuario','senha'],detokenize:false},
   scotiabank:{fields:['rut','usuario','senha'],detokenize:false},
-  mercantil:{fields:['usuario','senha'],detokenize:false},
   gmail:{fields:['usuario','senha','totp_secret'],gmail_special:true,detokenize:false},
 };
 let CRED_BANK_AGENTS={
@@ -6487,7 +6485,6 @@ let CRED_BANK_AGENTS={
   santander:['MARMATE'],
   itau:['BYSOLUTION'],
   scotiabank:['BYSOLUTION'],
-  mercantil:['COWGROMO'],
   gmail:['COLPROCESA','COGREPOS','COLPAYMENTS','COMERCIAL','GOHILL','NLASE','KATAGA','QM','BUHAPAY','ONLINEPRO','SURTCAPITAL','MALISAC','TPROG'],
 };
 
@@ -6517,7 +6514,6 @@ const _DT_BANCO_MAP={
   'Santander':      {pais:'CL',bank_raw:'santander'},
   'Itau':           {pais:'CL',bank_raw:'itau'},
   'Scotiabank':     {pais:'CL',bank_raw:'scotiabank'},
-  'Mercantil':      {pais:'BO',bank_raw:'mercantil'},
 };
 
 // Lookup reverso: bank_raw → {pais, banco_nome} (para escrita direta em dynamic_tasks)
