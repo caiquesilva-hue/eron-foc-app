@@ -6548,6 +6548,106 @@ function _credGetAgent(){
     :(document.getElementById('cred-agent-sel')?.value||'');
 }
 
+// ─── DROPDOWN PESQUISÁVEL (genérico, sobre um <select> existente) ─────────
+// Envolve um <select> comum com um botão+painel de busca, mas o <select>
+// continua existindo (só escondido) como fonte única da verdade — todo
+// código que já lê/escreve nele via .value/.innerHTML (ex: _credBankChange,
+// _credSetMode) não precisa mudar nada. Só não sincroniza sozinho quando
+// algo muda o .value por fora (isso não dispara evento nenhum) — por isso
+// _ssRefresh(id) é chamado manualmente logo depois de cada reset desses.
+function _initSearchableSelect(selectId,placeholder){
+  const sel=document.getElementById(selectId);
+  if(!sel||sel._ssWrapped) return;
+  sel._ssWrapped=true;
+
+  const wrap=document.createElement('div');
+  wrap.style.cssText='position:relative';
+  sel.parentNode.insertBefore(wrap,sel);
+  wrap.appendChild(sel);
+  sel.style.cssText='position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;overflow:hidden';
+  sel.tabIndex=-1;
+
+  const trigger=document.createElement('button');
+  trigger.type='button';
+  trigger.style.cssText='width:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid #d1d5db;border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;color:#111827;background:#fff;cursor:pointer;text-align:left';
+  const label=document.createElement('span');
+  label.style.cssText='overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+  const chevron=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  chevron.setAttribute('width','14');chevron.setAttribute('height','14');chevron.setAttribute('viewBox','0 0 16 16');chevron.setAttribute('fill','none');chevron.setAttribute('stroke','currentColor');chevron.setAttribute('stroke-width','2.2');
+  chevron.style.cssText='flex-shrink:0;transition:transform .2s';
+  chevron.innerHTML='<path d="M4 6l4 4 4-4"/>';
+  trigger.appendChild(label);trigger.appendChild(chevron);
+  wrap.appendChild(trigger);
+
+  const panel=document.createElement('div');
+  panel.style.cssText='display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--e-pale);border-radius:10px;box-shadow:0 8px 28px rgba(80,60,160,.13);z-index:300;overflow:hidden;flex-direction:column';
+  const searchWrap=document.createElement('div');
+  searchWrap.style.cssText='padding:10px 10px 6px';
+  const search=document.createElement('input');
+  search.type='text';
+  search.style.cssText='width:100%;box-sizing:border-box;border:1px solid var(--e-pale);border-radius:7px;padding:7px 10px;font-size:12px;font-family:inherit;outline:none;color:var(--e-text);background:var(--e-ghost)';
+  search.placeholder=placeholder||'Buscar...';
+  searchWrap.appendChild(search);
+  const listEl=document.createElement('div');
+  listEl.style.cssText='overflow-y:auto;max-height:280px;padding:0 6px 8px';
+  panel.appendChild(searchWrap);panel.appendChild(listEl);
+  wrap.appendChild(panel);
+
+  const updateLabel=()=>{
+    const opt=[...sel.options].find(o=>o.value===sel.value);
+    const placeholderOpt=sel.options[0];
+    label.textContent=(opt&&sel.value)?opt.textContent:(placeholderOpt?.textContent||'');
+    label.style.color=sel.value?'#111827':'#6b7280';
+  };
+  const renderList=()=>{
+    const q=search.value.toLowerCase().trim();
+    const opts=[...sel.options].filter(o=>o.value);
+    const filtered=q?opts.filter(o=>o.textContent.toLowerCase().includes(q)):opts;
+    listEl.innerHTML=filtered.length?filtered.map(o=>{
+      const on=sel.value===o.value;
+      return `<div data-val="${_escHtml(o.value)}" style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;cursor:pointer;font-size:13px;color:#111827" onmouseover="this.style.background='var(--e-ghost)'" onmouseout="this.style.background=''"><span style="width:14px;flex-shrink:0;color:var(--e-purple);font-weight:700">${on?'✓':''}</span><span>${_escHtml(o.textContent)}</span></div>`;
+    }).join(''):'<div style="padding:16px;text-align:center;font-size:12px;color:var(--e-muted)">—</div>';
+    listEl.querySelectorAll('[data-val]').forEach(el=>{
+      el.onclick=()=>{
+        sel.value=el.dataset.val;
+        sel.dispatchEvent(new Event('change'));
+        updateLabel();
+        closePanel();
+      };
+    });
+  };
+  let open=false;
+  const openPanel=()=>{
+    open=true;panel.style.display='flex';chevron.style.transform='rotate(180deg)';
+    search.value='';setTimeout(()=>search.focus(),50);
+    renderList();
+  };
+  const closePanel=()=>{open=false;panel.style.display='none';chevron.style.transform='';};
+  trigger.onclick=e=>{e.stopPropagation();if(open)closePanel();else openPanel();};
+  search.addEventListener('input',renderList);
+  document.addEventListener('click',e=>{if(open&&!wrap.contains(e.target))closePanel();});
+  sel._ssRefresh=updateLabel;
+  updateLabel();
+  // Código existente (_credSetMode) alterna o <select> original entre
+  // visível/oculto via sel.style.display (ex: troca pra um campo de texto
+  // livre em modo "Criar nova") — como o <select> agora fica sempre
+  // fisicamente escondido (é só a fonte de dados), o botão/painel que o
+  // substitui visualmente precisa espelhar essa troca manualmente.
+  trigger.style.display=sel.style.display==='none'?'none':'flex';
+  new MutationObserver(()=>{
+    const hidden=sel.style.display==='none';
+    trigger.style.display=hidden?'none':'flex';
+    if(hidden) closePanel();
+  }).observe(sel,{attributes:true,attributeFilter:['style']});
+}
+// Chamado logo depois de qualquer reset direto de .value/.innerHTML no
+// <select> por trás — isso não dispara 'change' sozinho, então o botão
+// ficaria mostrando um valor/lista velha sem essa sincronização manual.
+function _ssRefresh(selectId){
+  const sel=document.getElementById(selectId);
+  if(sel&&sel._ssRefresh) sel._ssRefresh();
+}
+
 function _credInit(){
   const noPermBox=document.getElementById('cred-noperm-box');
   const panelCol=document.getElementById('cred-panel-col');
@@ -6558,6 +6658,8 @@ function _credInit(){
   }
   if(noPermBox) noPermBox.style.display='none';
   if(panelCol) panelCol.style.display='flex';
+  _initSearchableSelect('cred-bank-sel',t('cred-bank-ph'));
+  _initSearchableSelect('cred-agent-sel',t('cred-agent-ph'));
   _credMode='update';
   const bankSel=document.getElementById('cred-bank-sel');
   if(bankSel) bankSel.value='';
@@ -6568,6 +6670,7 @@ function _credInit(){
   const fw=document.getElementById('cred-fields-wrap');if(fw) fw.innerHTML='';
   const atxt=document.getElementById('cred-agent-txt');if(atxt) atxt.value='';
   const asel=document.getElementById('cred-agent-sel');if(asel) asel.innerHTML=`<option value="">${t('cred-agent-ph')}</option>`;
+  _ssRefresh('cred-bank-sel');_ssRefresh('cred-agent-sel');
   _credUpdateSaveBtn();
   _loadUserCredRequests();
 }
@@ -6604,6 +6707,7 @@ function _credSetMode(mode){
   if(txt) txt.value='';
   const bankSel=document.getElementById('cred-bank-sel');
   if(bankSel) bankSel.value='';
+  _ssRefresh('cred-bank-sel');_ssRefresh('cred-agent-sel');
   const fw=document.getElementById('cred-fields-wrap');
   if(fw){fw.style.display='none';fw.innerHTML='';}
   ['cred-detok-wrap','cred-bcp-note-box','cred-gmail-note-box'].forEach(id=>{const el=document.getElementById(id);if(el) el.style.display='none';});
@@ -6620,12 +6724,13 @@ function _credBankChange(){
   if(fw){fw.style.display='none';fw.innerHTML='';}
   if(agentSel){agentSel.innerHTML=`<option value="">${t('cred-agent-ph')}</option>`;}
   if(agentTxt) agentTxt.value='';
-  if(!bank){if(agentWrap) agentWrap.style.display='none';_credUpdateSaveBtn();return;}
+  if(!bank){if(agentWrap) agentWrap.style.display='none';_ssRefresh('cred-agent-sel');_credUpdateSaveBtn();return;}
   if(_credMode==='update'){
     const agents=CRED_BANK_AGENTS[bank]||[];
     agents.forEach(ag=>{const o=document.createElement('option');o.value=ag;o.textContent=ag;agentSel.appendChild(o);});
   }
   if(agentWrap) agentWrap.style.display='';
+  _ssRefresh('cred-agent-sel');
   _credUpdateSaveBtn();
 }
 
