@@ -6029,7 +6029,8 @@ function _extrRenderList(){
   const groups={};
   EXTR_TAREFAS.forEach(tarefa=>{
     const key=_extrKey(tarefa);
-    if(q&&!tarefa.banco.toLowerCase().includes(q)&&!tarefa.agente.toLowerCase().includes(q)) return;
+    const paisNome=(EXTR_PAIS[tarefa.pais]?.name||tarefa.pais||'').toLowerCase();
+    if(q&&!tarefa.banco.toLowerCase().includes(q)&&!tarefa.agente.toLowerCase().includes(q)&&!paisNome.includes(q)) return;
     if(!groups[tarefa.pais]) groups[tarefa.pais]=[];
     groups[tarefa.pais].push({...tarefa,key});
   });
@@ -6985,13 +6986,14 @@ function _credDelRender(){
   const list=document.getElementById('cred-del-list');
   if(!list) return;
   const q=(document.getElementById('cred-del-search')?.value||'').toLowerCase().trim();
+  const paisLabel={'CO':t('cred-del-co'),'PE':t('cred-del-pe'),'AR':t('cred-del-ar'),'CL':t('cred-del-cl')};
   const byPais={};
   _credDelItems.forEach(item=>{
-    if(q&&!item.banco_nome.toLowerCase().includes(q)&&!item.agente.toLowerCase().includes(q)) return;
+    const paisNome=(paisLabel[item.pais]||item.pais||'').toLowerCase();
+    if(q&&!item.banco_nome.toLowerCase().includes(q)&&!item.agente.toLowerCase().includes(q)&&!paisNome.includes(q)) return;
     if(!byPais[item.pais]) byPais[item.pais]=[];
     byPais[item.pais].push(item);
   });
-  const paisLabel={'CO':t('cred-del-co'),'PE':t('cred-del-pe'),'AR':t('cred-del-ar'),'CL':t('cred-del-cl')};
   let html='';let first=true;
   ['CO','PE','AR','CL'].forEach(pais=>{
     const items=byPais[pais];if(!items||!items.length) return;
