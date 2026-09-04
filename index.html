@@ -1417,7 +1417,7 @@
                 <option value="santander">Santander</option>
                 <option value="itau">Itau</option>
                 <option value="scotiabank">Scotiabank Chile</option>
-                <option value="gananet">GanaNet Bolivia</option>
+                <option value="gananet">GanaNet</option>
                 <option value="gmail">Gmail (2FA)</option>
               </select>
             </div>
@@ -4572,36 +4572,26 @@ async function _writeUserToOtherEnv(envKey,user,pwdHash,opts={}){
   const {mustChange=true,forcePwd=false}=opts;
   const env=ENVIRONMENTS[envKey];
   if(!env?.cfg) return;
-  let app;
+  // Antes escrevia direto em store/ do outro ambiente com login anônimo —
+  // parou de funcionar quando /store passou a exigir autenticação real (não
+  // anônima) em todo projeto Firebase (mesma correção do login: token de
+  // admin do service account via Apps Script, nunca mais o cliente anônimo).
   try{
-    app=firebase.initializeApp(env.cfg,'write_other_'+envKey+'_'+Date.now());
-    await _ensureAnonAuth(app);
-    const ref=firebase.database(app).ref(env.storeRoot||'store');
-    const snap=await ref.once('value');
-    const d=snap.val()||{};
-    const resp=d.responsaveis||[];
-    const creds=d.credentials||{};
-    const idx=resp.findIndex(r=>r.email===user.email);
-    // user={email} (sync de senha) não deve criar um perfil incompleto —
-    // só mescla se o usuário já existir lá; perfis completos (nome presente)
-    // continuam podendo criar uma entrada nova normalmente.
-    if(idx>=0) resp[idx]={...resp[idx],...user};
-    else if(user.nome!==undefined) resp.push(user);
-    // forcePwd=true (mudança/reset explícito de senha): sempre propaga o novo hash.
-    // forcePwd=false (ex: adicionar ambiente a um usuário existente): só preenche
-    // se o ambiente de destino ainda não tiver credencial — nunca sobrescreve
-    // uma senha já definida lá.
-    if(pwdHash!==undefined){
-      // Firebase proíbe "." em chaves — emails em credentials ficam codificados (_encK).
-      const ek=_encK(user.email);
-      if(forcePwd||!creds[ek]) creds[ek]={hash:pwdHash,mustChange};
-      await ref.child('credentials').set(creds);
+    const data=await _gasCall({
+      action:'sync_user_to_env',
+      env:envKey,
+      user,
+      pwd_hash:pwdHash,
+      must_change:mustChange,
+      force_pwd:forcePwd,
+    });
+    if(!data.ok){
+      _toast('⚠️ Erro ao salvar no ambiente '+(ENVIRONMENTS[envKey]?.label||envKey)+': '+(data.reason||'desconhecido'),8000);
     }
-    await ref.child('responsaveis').set(resp);
   }catch(e){
     console.warn('[writeUserToOtherEnv]',envKey,e);
     _toast('⚠️ Erro ao salvar no ambiente '+(ENVIRONMENTS[envKey]?.label||envKey)+': '+(e.message||e),8000);
-  }finally{try{await app?.delete();}catch(e){}}
+  }
 }
 // Propaga uma troca/reset de senha para os demais ambientes do usuário (envs),
 // mantendo a credencial em sincronia em todos os Firebase separados.
@@ -5880,6 +5870,17 @@ async function switchEnvironment(envKey){
   const env=ENVIRONMENTS[envKey];
   if(!env){alert('Ambiente não reconhecido.');return;}
   if(!env.cfg){alert('O Firebase do ambiente "'+env.label+'" ainda não está configurado.\nEntre em contato com o administrador para configurar.');return;}
+  // Se já está logado de verdade, captura um ID token da sessão atual ANTES
+  // de derrubar o _fbApp — é a prova (verificada no servidor via
+  // accounts:lookup do Google, não um "confie em mim" do cliente) de que
+  // esse usuário já tinha uma sessão real vigente, usada logo abaixo pra
+  // logar de novo no ambiente de destino sem pedir senha de novo.
+  const _priorEnv=_currentEnv;
+  const _priorEmail=window._loggedEmail;
+  let _priorIdToken=null;
+  if(_priorEmail&&_REAL_AUTH_ENVS.includes(_priorEnv)&&_REAL_AUTH_ENVS.includes(envKey)){
+    try{ _priorIdToken=await firebase.auth(_fbApp).currentUser?.getIdToken(); }catch(e){}
+  }
   // Detach Firebase listeners
   try{_fbRef.off();}catch(e){}
   try{_fbAuditRef.off();}catch(e){}
@@ -5921,6 +5922,26 @@ async function switchEnvironment(envKey){
   if(!_REAL_AUTH_ENVS.includes(envKey)){
     await startFirebaseSync();
     try{renderAll();updateCounts();}catch(e){}
+  }else if(_priorIdToken){
+    // Troca de ambiente com o usuário já logado: reautentica em silêncio no
+    // ambiente novo. Sem isso o _fbApp recém-criado ficava sem NENHUMA auth
+    // (linha acima só cobre os ambientes ainda não migrados) — a UI seguia
+    // mostrando o usuário como logado, mas toda leitura/gravação real
+    // falhava calada até um F5, já que as regras exigem auth != null.
+    try{
+      const data=await _gasCall({action:'reauth_env',from_env:_priorEnv,to_env:envKey,id_token:_priorIdToken});
+      if(data.ok){
+        await _completeRealLogin(data.token);
+        selectAccount(_priorEmail);
+      }else{
+        _toast('⚠️ Não foi possível continuar logado em '+env.label+'. Faça login novamente.',6000);
+        doLogout();
+      }
+    }catch(e){
+      console.warn('[switchEnvironment reauth]',e);
+      _toast('⚠️ Não foi possível continuar logado em '+env.label+'. Faça login novamente.',6000);
+      doLogout();
+    }
   }
 }
 // ─── AUTOMAÇÕES: DOWNLOAD EXTRATOS ───────────────────────────────────────────
@@ -7439,7 +7460,7 @@ async function submitForgotPassword(){
   if(cancelBtn)cancelBtn.textContent='Fechar';
 }
 // Google Apps Script — colar URL após implantar o script em script.google.com
-const _GAS_URL='https://script.google.com/macros/s/AKfycbyhehiHCeiL2fB4ZKTVJQ8R42GImuHNFrBZM5XQbzZs0uXEoE4VEhIbpDCcDEEe4mxO/exec';
+const _GAS_URL='https://script.google.com/macros/s/AKfycbzj_Zfg4ZTYFSATx7Zl29rxtal_W4SWwxkgHe1u_pHhmD5eeHKEjYPO1bBQM1-K1CQcGQ/exec';
 
 // O redirect que o Apps Script usa pra devolver a resposta (script.google.com
 // → script.googleusercontent.com) falha de forma intermitente (~1 em cada 3
