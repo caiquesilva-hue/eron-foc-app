@@ -1417,6 +1417,7 @@
                 <option value="santander">Santander</option>
                 <option value="itau">Itau</option>
                 <option value="scotiabank">Scotiabank Chile</option>
+                <option value="mercantil">Mercantil Bolivia</option>
                 <option value="gmail">Gmail (2FA)</option>
               </select>
             </div>
@@ -2172,7 +2173,7 @@ const i18n = {
     'job-status-pending':'Aguardando','job-status-running':'Executando','job-status-completed':'Concluído','job-status-failed':'Falhou',
     'job-card-concluir':'Concluir','job-card-excluir':'Excluir','job-card-aguard-logs':'Aguardando logs...','job-card-contas':'conta(s)','job-sum-erros':'erro(s)',
     'cred-mode-upd':'Atualizar existente','cred-mode-new':'Criar nova','cred-mode-del-l1':'Excluir conta','cred-mode-del-l2':'da rotina','cred-bank-lbl':'Banco','cred-agent-lbl':'Agente','cred-bank-ph':'Selecionar banco...','cred-agent-ph':'Selecionar agente...','cred-f-empresa':'Empresa','cred-f-usuario':'Usuário','cred-f-senha':'Senha','cred-f-operador':'Operador','cred-f-referencia':'Referência','cred-f-nit':'NIT','cred-f-tipo':'Tipo','cred-f-totp':'TOTP Secret','cred-f-rut':'RUT','cred-f-pasta':'Pasta','cred-f-token-num':'Nº Token','cred-save':'Salvar','cred-save-del':'Excluir selecionadas','cred-bcp-note':'Usuário = {agente} (calculado localmente)','cred-gmail-note':'Conta de e-mail para 2FA de outros bancos',
-    'cred-del-loading':'⏳ Carregando contas dinâmicas...','cred-del-empty':'Nenhuma conta cadastrada em dynamic_tasks.','cred-del-select':'Selecione as contas a excluir:','cred-del-err':'❌ Erro ao carregar:','cred-del-saving':'⏳ Excluindo...','cred-del-co':'🇨🇴 Colômbia','cred-del-pe':'🇵🇪 Peru','cred-del-ar':'🇦🇷 Argentina','cred-del-cl':'🇨🇱 Chile',
+    'cred-del-loading':'⏳ Carregando contas dinâmicas...','cred-del-empty':'Nenhuma conta cadastrada em dynamic_tasks.','cred-del-select':'Selecione as contas a excluir:','cred-del-err':'❌ Erro ao carregar:','cred-del-saving':'⏳ Excluindo...','cred-del-co':'🇨🇴 Colômbia','cred-del-pe':'🇵🇪 Peru','cred-del-ar':'🇦🇷 Argentina','cred-del-cl':'🇨🇱 Chile','cred-del-bo':'🇧🇴 Bolívia',
     'cred-st-pending':'⏳ Aguardando VM...','cred-st-processing':'⚙️ Processando...','cred-st-done':'✅ Aplicado','cred-st-error':'❌ Erro','cred-st-done-at':'Aplicado em','cred-st-waiting-detail':'Aguardando próximo ciclo do listener (pode demorar até 1 min)...',
     'yesno-yes':'Sim','yesno-no':'Não',
     'yn-encerrar-title':'Encerrar no cronograma?','yn-encerrar-sub':'Contas removidas da rotina. Deseja encerrá-las no cronograma também?','yn-encerrar-sub-s':'Conta removida da rotina. Deseja encerrá-la no cronograma também?',
@@ -2292,7 +2293,7 @@ const i18n = {
     'job-status-pending':'Waiting','job-status-running':'Running','job-status-completed':'Completed','job-status-failed':'Failed',
     'job-card-concluir':'Complete','job-card-excluir':'Delete','job-card-aguard-logs':'Waiting for logs...','job-card-contas':'account(s)','job-sum-erros':'error(s)',
     'cred-mode-upd':'Update existing','cred-mode-new':'Create new','cred-mode-del-l1':'Remove account','cred-mode-del-l2':'from routine','cred-bank-lbl':'Bank','cred-agent-lbl':'Agent','cred-bank-ph':'Select bank...','cred-agent-ph':'Select agent...','cred-f-empresa':'Company','cred-f-usuario':'User','cred-f-senha':'Password','cred-f-operador':'Operator','cred-f-referencia':'Reference','cred-f-nit':'NIT','cred-f-tipo':'Type','cred-f-totp':'TOTP Secret','cred-f-rut':'RUT','cred-f-pasta':'Folder','cred-f-token-num':'Token No.','cred-save':'Save','cred-save-del':'Delete selected','cred-bcp-note':'User = {agente} (calculated locally)','cred-gmail-note':'Email account for 2FA on other banks',
-    'cred-del-loading':'⏳ Loading dynamic accounts...','cred-del-empty':'No accounts registered in dynamic_tasks.','cred-del-select':'Select accounts to remove:','cred-del-err':'❌ Load error:','cred-del-saving':'⏳ Deleting...','cred-del-co':'🇨🇴 Colombia','cred-del-pe':'🇵🇪 Peru','cred-del-ar':'🇦🇷 Argentina','cred-del-cl':'🇨🇱 Chile',
+    'cred-del-loading':'⏳ Loading dynamic accounts...','cred-del-empty':'No accounts registered in dynamic_tasks.','cred-del-select':'Select accounts to remove:','cred-del-err':'❌ Load error:','cred-del-saving':'⏳ Deleting...','cred-del-co':'🇨🇴 Colombia','cred-del-pe':'🇵🇪 Peru','cred-del-ar':'🇦🇷 Argentina','cred-del-cl':'🇨🇱 Chile','cred-del-bo':'🇧🇴 Bolivia',
     'cred-st-pending':'⏳ Waiting for VM...','cred-st-processing':'⚙️ Processing...','cred-st-done':'✅ Applied','cred-st-error':'❌ Error','cred-st-done-at':'Applied on','cred-st-waiting-detail':'Waiting for next listener cycle (may take up to 1 min)...',
     'yesno-yes':'Yes','yesno-no':'No',
     'yn-encerrar-title':'Close in schedule?','yn-encerrar-sub':'Accounts removed from routine. Close them in the schedule too?','yn-encerrar-sub-s':'Account removed from routine. Close it in the schedule too?',
@@ -2405,7 +2406,7 @@ const i18n = {
     'job-status-pending':'Esperando','job-status-running':'Ejecutando','job-status-completed':'Completado','job-status-failed':'Falló',
     'job-card-concluir':'Completar','job-card-excluir':'Eliminar','job-card-aguard-logs':'Esperando logs...','job-card-contas':'cuenta(s)','job-sum-erros':'error(es)',
     'cred-mode-upd':'Actualizar existente','cred-mode-new':'Crear nueva','cred-mode-del-l1':'Eliminar cuenta','cred-mode-del-l2':'de la rutina','cred-bank-lbl':'Banco','cred-agent-lbl':'Agente','cred-bank-ph':'Seleccionar banco...','cred-agent-ph':'Seleccionar agente...','cred-f-empresa':'Empresa','cred-f-usuario':'Usuario','cred-f-senha':'Contraseña','cred-f-operador':'Operador','cred-f-referencia':'Referencia','cred-f-nit':'NIT','cred-f-tipo':'Tipo','cred-f-totp':'TOTP Secret','cred-f-rut':'RUT','cred-f-pasta':'Carpeta','cred-f-token-num':'Nº Token','cred-save':'Guardar','cred-save-del':'Eliminar seleccionadas','cred-bcp-note':'Usuario = {agente} (calculado localmente)','cred-gmail-note':'Cuenta de email para 2FA de otros bancos',
-    'cred-del-loading':'⏳ Cargando cuentas dinámicas...','cred-del-empty':'No hay cuentas registradas en dynamic_tasks.','cred-del-select':'Seleccione las cuentas a eliminar:','cred-del-err':'❌ Error al cargar:','cred-del-saving':'⏳ Eliminando...','cred-del-co':'🇨🇴 Colombia','cred-del-pe':'🇵🇪 Perú','cred-del-ar':'🇦🇷 Argentina','cred-del-cl':'🇨🇱 Chile',
+    'cred-del-loading':'⏳ Cargando cuentas dinámicas...','cred-del-empty':'No hay cuentas registradas en dynamic_tasks.','cred-del-select':'Seleccione las cuentas a eliminar:','cred-del-err':'❌ Error al cargar:','cred-del-saving':'⏳ Eliminando...','cred-del-co':'🇨🇴 Colombia','cred-del-pe':'🇵🇪 Perú','cred-del-ar':'🇦🇷 Argentina','cred-del-cl':'🇨🇱 Chile','cred-del-bo':'🇧🇴 Bolivia',
     'cred-st-pending':'⏳ Esperando VM...','cred-st-processing':'⚙️ Procesando...','cred-st-done':'✅ Aplicado','cred-st-error':'❌ Error','cred-st-done-at':'Aplicado el','cred-st-waiting-detail':'Esperando próximo ciclo del listener (puede tardar hasta 1 min)...',
     'yesno-yes':'Sí','yesno-no':'No',
     'yn-encerrar-title':'¿Cerrar en el cronograma?','yn-encerrar-sub':'Cuentas eliminadas de la rutina. ¿Cerrarlas también en el cronograma?','yn-encerrar-sub-s':'Cuenta eliminada de la rutina. ¿Cerrarla también en el cronograma?',
@@ -2948,7 +2949,7 @@ function _ynConfirm(){closeModal('modal-yesno');const cb=_ynCb;_ynCb=null;if(cb?
 function _ynCancel(){closeModal('modal-yesno');const cb=_ynCb;_ynCb=null;if(cb?.no) cb.no();}
 
 // ── Credencial ↔ Cronograma helpers ────────────────────────────
-const _DT_PAIS_NOME={CO:'Colombia',PE:'Peru',AR:'Argentina',CL:'Chile'};
+const _DT_PAIS_NOME={CO:'Colombia',PE:'Peru',AR:'Argentina',CL:'Chile',BO:'Bolivia'};
 
 function _credMatchContas(entries){
   const matched=new Map();
@@ -5942,7 +5943,7 @@ let EXTR_TAREFAS=[
   {pais:'PE',banco:'BCP',agente:'ONLINEPRO'},{pais:'PE',banco:'BCP',agente:'MALISAC'},
   {pais:'PE',banco:'BCP',agente:'TPROG'},{pais:'PE',banco:'BCP',agente:'SURTCAPITAL'},
 ];
-const EXTR_PAIS={CO:{flag:'🇨🇴',name:'Colombia'},AR:{flag:'🇦🇷',name:'Argentina'},PE:{flag:'🇵🇪',name:'Perú'},CL:{flag:'🇨🇱',name:'Chile'}};
+const EXTR_PAIS={CO:{flag:'🇨🇴',name:'Colombia'},AR:{flag:'🇦🇷',name:'Argentina'},PE:{flag:'🇵🇪',name:'Perú'},CL:{flag:'🇨🇱',name:'Chile'},BO:{flag:'🇧🇴',name:'Bolivia'}};
 let _extrSelected=new Set();
 let _extrDateMode='ontem';
 let _extrPanelOpen=false;
@@ -6037,7 +6038,7 @@ function _extrRenderList(){
   const list=document.getElementById('extr-ms-list');
   if(!list) return;
   let html='';let first=true;
-  ['CO','AR','PE','CL'].forEach(pais=>{
+  ['CO','AR','PE','CL','BO'].forEach(pais=>{
     const items=groups[pais];if(!items||!items.length) return;
     items.sort((a,b)=>a.banco.localeCompare(b.banco)||a.agente.localeCompare(b.agente));
     const info=EXTR_PAIS[pais]||{flag:'',name:pais};
@@ -6058,7 +6059,7 @@ function _extrRenderList(){
   if(!html) html=`<div style="padding:20px;text-align:center;font-size:12px;color:var(--e-muted)">—</div>`;
   list.innerHTML=html;
   // Set indeterminate on group checkboxes
-  ['CO','AR','PE','CL'].forEach(pais=>{
+  ['CO','AR','PE','CL','BO'].forEach(pais=>{
     const items=groups[pais]||[];
     const el=document.getElementById('extr-grp-'+pais);
     if(el&&items.length){
@@ -6458,6 +6459,7 @@ const CRED_BANKS={
   santander:{fields:['usuario','senha'],detokenize:false},
   itau:{fields:['usuario','senha'],detokenize:false},
   scotiabank:{fields:['rut','usuario','senha'],detokenize:false},
+  mercantil:{fields:['usuario','senha'],detokenize:false},
   gmail:{fields:['usuario','senha','totp_secret'],gmail_special:true,detokenize:false},
 };
 let CRED_BANK_AGENTS={
@@ -6485,6 +6487,7 @@ let CRED_BANK_AGENTS={
   santander:['MARMATE'],
   itau:['BYSOLUTION'],
   scotiabank:['BYSOLUTION'],
+  mercantil:['COWGROMO'],
   gmail:['COLPROCESA','COGREPOS','COLPAYMENTS','COMERCIAL','GOHILL','NLASE','KATAGA','QM','BUHAPAY','ONLINEPRO','SURTCAPITAL','MALISAC','TPROG'],
 };
 
@@ -6514,6 +6517,7 @@ const _DT_BANCO_MAP={
   'Santander':      {pais:'CL',bank_raw:'santander'},
   'Itau':           {pais:'CL',bank_raw:'itau'},
   'Scotiabank':     {pais:'CL',bank_raw:'scotiabank'},
+  'Mercantil':      {pais:'BO',bank_raw:'mercantil'},
 };
 
 // Lookup reverso: bank_raw → {pais, banco_nome} (para escrita direta em dynamic_tasks)
@@ -6527,7 +6531,7 @@ async function _loadDynamicTasks(){
     const data=snap.val();
     if(!data||typeof data!=='object') return;
     const extrSet=new Set(EXTR_TAREFAS.map(t=>`${t.pais}__${t.banco}__${t.agente}`));
-    ['CO','PE','AR','CL'].forEach(pais=>{
+    ['CO','PE','AR','CL','BO'].forEach(pais=>{
       const bancos=data[pais];
       if(!bancos||typeof bancos!=='object') return;
       Object.entries(bancos).forEach(([banco_nome,agentes])=>{
@@ -6986,7 +6990,7 @@ function _credDelRender(){
   const list=document.getElementById('cred-del-list');
   if(!list) return;
   const q=(document.getElementById('cred-del-search')?.value||'').toLowerCase().trim();
-  const paisLabel={'CO':t('cred-del-co'),'PE':t('cred-del-pe'),'AR':t('cred-del-ar'),'CL':t('cred-del-cl')};
+  const paisLabel={'CO':t('cred-del-co'),'PE':t('cred-del-pe'),'AR':t('cred-del-ar'),'CL':t('cred-del-cl'),'BO':t('cred-del-bo')};
   const byPais={};
   _credDelItems.forEach(item=>{
     const paisNome=(paisLabel[item.pais]||item.pais||'').toLowerCase();
@@ -6995,7 +6999,7 @@ function _credDelRender(){
     byPais[item.pais].push(item);
   });
   let html='';let first=true;
-  ['CO','PE','AR','CL'].forEach(pais=>{
+  ['CO','PE','AR','CL','BO'].forEach(pais=>{
     const items=byPais[pais];if(!items||!items.length) return;
     const allChk=items.every(i=>_credDelSelected.has(`${i.pais}|${i.banco_nome}|${i.agente}`));
     html+=`<div style="padding:${first?'4':'8'}px 8px 4px;display:flex;align-items:center;gap:8px;font-size:10px;font-weight:700;color:var(--e-muted);text-transform:uppercase;letter-spacing:.09em;${!first?'border-top:1px solid var(--e-ghost)':''}">
@@ -7014,7 +7018,7 @@ function _credDelRender(){
   });
   if(!html) html=`<div style="padding:16px;text-align:center;font-size:12px;color:var(--e-muted)">—</div>`;
   list.innerHTML=html;
-  ['CO','PE','AR','CL'].forEach(pais=>{
+  ['CO','PE','AR','CL','BO'].forEach(pais=>{
     const items=byPais[pais]||[];
     const el=document.getElementById('cred-del-grp-'+pais);
     if(el&&items.length){
@@ -7053,7 +7057,7 @@ async function _credLoadDeleteList(){
     const snap=await (await _getEronFbReady()).database().ref('dynamic_tasks').get();
     const data=snap.val();
     if(data&&typeof data==='object'){
-      ['CO','PE','AR','CL'].forEach(pais=>{
+      ['CO','PE','AR','CL','BO'].forEach(pais=>{
         const bancos=data[pais];
         if(!bancos||typeof bancos!=='object') return;
         Object.entries(bancos).forEach(([banco_nome,agentes])=>{
