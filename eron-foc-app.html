@@ -452,6 +452,12 @@
   .cal-dd-item:last-child{border-bottom:none;}
   .cal-dd-item:hover{opacity:.8;}
   .day-filled{border-radius:5px;font-size:10px;font-weight:700;padding:3px 7px;text-align:center;white-space:nowrap;line-height:1.5;display:inline-block;}
+  /* Tooltip instantâneo (sem o atraso de ~1s do title nativo do navegador) —
+     usado onde o texto é só uma explicação curta de algo já visível (ex: a
+     abreviação "EN" de conta/conciliação encerrada). */
+  .instant-tip{position:relative;}
+  .instant-tip::after{content:attr(data-tip);position:absolute;bottom:100%;left:50%;transform:translateX(-50%) translateY(-4px);background:#1f2937;color:#fff;font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .08s;z-index:50;}
+  .instant-tip:hover::after{opacity:1;}
 
   /* PERMISSIONS MODAL */
   .perm-btn{font-size:11px;padding:3px 10px;border-radius:5px;border:1px solid var(--e-pale);background:#fff;color:var(--e-muted);cursor:pointer;font-weight:500;transition:all .15s;}
@@ -839,40 +845,40 @@
           <div class="page-title-text" data-i18n="nav-accounts">Accounts</div>
           <div class="page-title-count" id="crono-accounts-count"></div>
         </div>
-        <button id="btn-clear-filters" onclick="clearCronoFilters()" style="display:none;align-items:center;gap:6px;font-size:12px;padding:5px 12px;background:var(--e-ghost);color:var(--e-muted);border:1px solid var(--e-pale);border-radius:8px;cursor:pointer;font-family:inherit" title="Limpar todos os filtros">
+        <button id="btn-clear-filters" onclick="clearCronoFilters()" style="display:none;align-items:center;gap:6px;font-size:12px;padding:5px 12px;background:var(--e-ghost);color:var(--e-muted);border:1px solid var(--e-pale);border-radius:8px;cursor:pointer;font-family:inherit" data-i18n-title="crono-clear-filters" title="Limpar todos os filtros">
           <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
-          Limpar filtros
+          <span data-i18n="crono-clear-filters">Limpar filtros</span>
         </button>
       </div>
       <div class="crono-filters">
         <div class="freq-dd" id="crono-f-pais-dd">
-          <button class="freq-dd-btn" id="crono-f-pais-btn" onclick="_fddToggle(event,'crono-f-pais-panel')">Todos os países</button>
+          <button class="freq-dd-btn" id="crono-f-pais-btn" data-i18n-default="crono-all-paises" onclick="_fddToggle(event,'crono-f-pais-panel')">Todos os países</button>
           <div class="freq-dd-panel" id="crono-f-pais-panel" style="max-height:240px;overflow-y:auto"></div>
         </div>
         <div class="freq-dd" id="crono-f-agente-dd">
-          <button class="freq-dd-btn" id="crono-f-agente-btn" onclick="_fddToggle(event,'crono-f-agente-panel')">Todos os agentes</button>
+          <button class="freq-dd-btn" id="crono-f-agente-btn" data-i18n-default="crono-all-agentes" onclick="_fddToggle(event,'crono-f-agente-panel')">Todos os agentes</button>
           <div class="freq-dd-panel" id="crono-f-agente-panel" style="max-height:240px;overflow-y:auto"></div>
         </div>
         <div class="freq-dd" id="crono-f-banco-dd">
-          <button class="freq-dd-btn" id="crono-f-banco-btn" onclick="_fddToggle(event,'crono-f-banco-panel')">Todos os bancos</button>
+          <button class="freq-dd-btn" id="crono-f-banco-btn" data-i18n-default="crono-all-bancos" onclick="_fddToggle(event,'crono-f-banco-panel')">Todos os bancos</button>
           <div class="freq-dd-panel" id="crono-f-banco-panel" style="max-height:240px;overflow-y:auto"></div>
         </div>
         <select id="crono-f-tipo-conta" onchange="renderCronogramaAccounts()">
-          <option value="">Todos os tipos</option>
-          <option value="Operacional">Operacional</option>
-          <option value="Administrativa">Administrativa</option>
+          <option value="" data-i18n="liq-all-tipos">Todos os tipos</option>
+          <option value="Operacional" data-i18n="tipo-op">Operacional</option>
+          <option value="Administrativa" data-i18n="tipo-adm">Administrativa</option>
           <option value="BB Pix">BB Pix</option>
-          <option value="Somente download">Somente download</option>
+          <option value="Somente download" data-i18n="tipo-sdl">Somente download</option>
         </select>
         <div class="freq-dd" id="crono-f-top-dd">
-          <button class="freq-dd-btn" id="crono-f-top-btn" onclick="_fddToggle(event,'crono-f-top-panel')">Todos os TOPs</button>
+          <button class="freq-dd-btn" id="crono-f-top-btn" data-i18n-default="crono-all-tops" onclick="_fddToggle(event,'crono-f-top-panel')">Todos os TOPs</button>
           <div class="freq-dd-panel" id="crono-f-top-panel">
-            <button class="freq-toggle" data-val="TOP 10" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-f-top-btn',_fddVals('crono-f-top-panel'),'Todos os TOPs');renderCronogramaAccounts()">TOP 10</button>
-            <button class="freq-toggle" data-val="TOP 20" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-f-top-btn',_fddVals('crono-f-top-panel'),'Todos os TOPs');renderCronogramaAccounts()">TOP 20</button>
-            <button class="freq-toggle" data-val="TOP 30" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-f-top-btn',_fddVals('crono-f-top-panel'),'Todos os TOPs');renderCronogramaAccounts()">TOP 30</button>
-            <button class="freq-toggle" data-val="TOP 50" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-f-top-btn',_fddVals('crono-f-top-panel'),'Todos os TOPs');renderCronogramaAccounts()">TOP 50</button>
-            <button class="freq-toggle" data-val="Acima TOP 50" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-f-top-btn',_fddVals('crono-f-top-panel'),'Todos os TOPs');renderCronogramaAccounts()">Acima TOP 50</button>
-            <button class="freq-toggle" data-val="__none__" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-f-top-btn',_fddVals('crono-f-top-panel'),'Todos os TOPs');renderCronogramaAccounts()">Sem TOP</button>
+            <button class="freq-toggle" data-val="TOP 10" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-f-top-btn',_fddVals('crono-f-top-panel'),t('crono-all-tops'));renderCronogramaAccounts()">TOP 10</button>
+            <button class="freq-toggle" data-val="TOP 20" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-f-top-btn',_fddVals('crono-f-top-panel'),t('crono-all-tops'));renderCronogramaAccounts()">TOP 20</button>
+            <button class="freq-toggle" data-val="TOP 30" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-f-top-btn',_fddVals('crono-f-top-panel'),t('crono-all-tops'));renderCronogramaAccounts()">TOP 30</button>
+            <button class="freq-toggle" data-val="TOP 50" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-f-top-btn',_fddVals('crono-f-top-panel'),t('crono-all-tops'));renderCronogramaAccounts()">TOP 50</button>
+            <button class="freq-toggle" data-val="Acima TOP 50" data-i18n="top-acima-50" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-f-top-btn',_fddVals('crono-f-top-panel'),t('crono-all-tops'));renderCronogramaAccounts()">Acima TOP 50</button>
+            <button class="freq-toggle" data-val="__none__" data-i18n="crono-sem-top" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-f-top-btn',_fddVals('crono-f-top-panel'),t('crono-all-tops'));renderCronogramaAccounts()">Sem TOP</button>
           </div>
         </div>
         <div class="freq-dd" id="crono-resp-dd">
@@ -882,7 +888,7 @@
           </div>
         </div>
         <div class="freq-dd" id="crono-anl-dd">
-          <button class="freq-dd-btn" id="crono-anl-btn" onclick="toggleAnlDropdown(event)">Analista</button>
+          <button class="freq-dd-btn" id="crono-anl-btn" data-i18n-default="crono-analista" onclick="toggleAnlDropdown(event)">Analista</button>
           <div class="freq-dd-panel" id="crono-anl-panel">
             <div id="crono-anl-toggles"></div>
           </div>
@@ -892,7 +898,7 @@
           <div class="freq-dd-panel" id="crono-f-freq-wrap">
             <button class="freq-toggle ft-t1" data-freq="T1" onclick="toggleFreqFilter(this)">T1</button>
             <button class="freq-toggle ft-t2" data-freq="T2" onclick="toggleFreqFilter(this)">T2</button>
-            <button class="freq-toggle ft-diario" data-freq="Diário" onclick="toggleFreqFilter(this)">Diário</button>
+            <button class="freq-toggle ft-diario" data-freq="Diário" data-i18n="freq-diario" onclick="toggleFreqFilter(this)">Diário</button>
             <button class="freq-toggle ft-mensal" data-freq="1 vez ao mês" onclick="toggleFreqFilter(this)">1×/mês</button>
             <button class="freq-toggle ft-semanal" data-freq="1 vez na semana" onclick="toggleFreqFilter(this)">1×/sem</button>
           </div>
@@ -914,7 +920,7 @@
           <option value="custom" data-i18n="preset-custom">Personalizado</option>
         </select>
         <div id="crono-date-custom-wrap" style="display:none;align-items:center;gap:8px">
-          <span class="crono-sep">De</span>
+          <span class="crono-sep" data-i18n="extr-date-from">De</span>
           <input type="date" id="crono-date-start" onchange="renderCronogramaAccounts()">
           <span class="crono-sep">→</span>
           <input type="date" id="crono-date-end" onchange="renderCronogramaAccounts()">
@@ -939,11 +945,11 @@
               data-i18n-placeholder="crono-search-ph" placeholder="Buscar contas... ex: pais:Peru | banco:BCP | agente:PE.Onlinepro | status:ativa | tipo:Diário"
               oninput="renderCronogramaAccounts();updateCronoSearchClear()"
               onpaste="_handleSearchPaste(event,'crono-search')">
-            <button class="crono-search-clear" id="crono-search-clear" onclick="clearCronoSearch()" style="display:none" title="Limpar busca">×</button>
-            <button class="crono-search-help-btn" onclick="toggleSearchHelp(event)" title="Sintaxe de busca">?</button>
+            <button class="crono-search-clear" id="crono-search-clear" onclick="clearCronoSearch()" style="display:none" data-i18n-title="tt-limpar-busca" title="Limpar busca">×</button>
+            <button class="crono-search-help-btn" onclick="toggleSearchHelp(event)" data-i18n-title="tt-sintaxe-busca" title="Sintaxe de busca">?</button>
           </div>
           <div class="crono-search-help" id="crono-search-help" style="display:none">
-            <div class="sh-title">Operadores de busca</div>
+            <div class="sh-title" data-i18n="search-help-title">Operadores de busca</div>
             <div class="sh-grid">
               <div class="sh-row"><code>in:BCP_3 PE.Onlinepro<span class="sh-sep">;</span>BCP_1 PE.Onlinepro</code><span>inclui exatamente essas contas (separadas por <b>;</b>)</span></div>
               <div class="sh-row"><code>pais:Peru</code><span>filtra por país</span></div>
@@ -956,7 +962,7 @@
             </div>
           </div>
         </div>
-        <button class="btn-csv" onclick="downloadCronoCSV()" title="Baixar CSV com os filtros aplicados">
+        <button class="btn-csv" onclick="downloadCronoCSV()" data-i18n-title="tt-baixar-csv" title="Baixar CSV com os filtros aplicados">
           <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
           <span data-i18n="crono-download-csv">Baixar CSV</span>
         </button>
@@ -1007,18 +1013,18 @@
         <div class="freq-dd" id="cierre-f-status-dd">
           <button class="freq-dd-btn" id="cierre-f-status-btn" onclick="_fddToggle(event,'cierre-f-status-panel')">Todos os status</button>
           <div class="freq-dd-panel" id="cierre-f-status-panel">
-            <button class="freq-toggle" data-val="sem-apontamento" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),'Todos os status');renderCierreTable()">Sem apontamento</button>
-            <button class="freq-toggle" data-val="pendente" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),'Todos os status');renderCierreTable()">Pendente</button>
-            <button class="freq-toggle" data-val="verificando" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),'Todos os status');renderCierreTable()">Verificando</button>
-            <button class="freq-toggle" data-val="concluido" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),'Todos os status');renderCierreTable()">Concluído</button>
+            <button class="freq-toggle" data-val="sem-apontamento" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),t('filter-all-status'));renderCierreTable()">Sem apontamento</button>
+            <button class="freq-toggle" data-val="pendente" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),t('filter-all-status'));renderCierreTable()">Pendente</button>
+            <button class="freq-toggle" data-val="verificando" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),t('filter-all-status'));renderCierreTable()">Verificando</button>
+            <button class="freq-toggle" data-val="concluido" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),t('filter-all-status'));renderCierreTable()">Concluído</button>
           </div>
         </div>
         <div class="freq-dd" id="cierre-f-ap-dd">
           <button class="freq-dd-btn" id="cierre-f-ap-btn" onclick="_fddToggle(event,'cierre-f-ap-panel')">Todos os apontamentos</button>
           <div class="freq-dd-panel" id="cierre-f-ap-panel">
-            <button class="freq-toggle" data-val="Falta PDF" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-ap-btn',_fddVals('cierre-f-ap-panel'),'Todos os apontamentos');renderCierreTable()">Falta PDF</button>
-            <button class="freq-toggle" data-val="Verificar Saldo" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-ap-btn',_fddVals('cierre-f-ap-panel'),'Todos os apontamentos');renderCierreTable()">Verificar Saldo</button>
-            <button class="freq-toggle" data-val="" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-ap-btn',_fddVals('cierre-f-ap-panel'),'Todos os apontamentos');renderCierreTable()">Sem apontamento</button>
+            <button class="freq-toggle" data-val="Falta PDF" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-ap-btn',_fddVals('cierre-f-ap-panel'),t('cierre-all-apontamentos'));renderCierreTable()">Falta PDF</button>
+            <button class="freq-toggle" data-val="Verificar Saldo" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-ap-btn',_fddVals('cierre-f-ap-panel'),t('cierre-all-apontamentos'));renderCierreTable()">Verificar Saldo</button>
+            <button class="freq-toggle" data-val="" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-ap-btn',_fddVals('cierre-f-ap-panel'),t('cierre-all-apontamentos'));renderCierreTable()">Sem apontamento</button>
           </div>
         </div>
       </div>
@@ -1137,12 +1143,12 @@
     <div class="freq-dd" id="crono-conc-f-prior-dd">
       <button class="freq-dd-btn" id="crono-conc-f-prior-btn" onclick="_fddToggle(event,'crono-conc-f-prior-panel')">Todas as prioridades</button>
       <div class="freq-dd-panel" id="crono-conc-f-prior-panel">
-        <button class="freq-toggle" data-val="TOP 10" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 10</button>
-        <button class="freq-toggle" data-val="TOP 20" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 20</button>
-        <button class="freq-toggle" data-val="TOP 30" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 30</button>
-        <button class="freq-toggle" data-val="TOP 50" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">TOP 50</button>
-        <button class="freq-toggle" data-val="Acima TOP 50" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">Acima TOP 50</button>
-        <button class="freq-toggle" data-val="__none__" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),'Todas as prioridades');renderCronogramaConciliacoes()">Sem prioridade</button>
+        <button class="freq-toggle" data-val="TOP 10" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),t('crono-all-priors'));renderCronogramaConciliacoes()">TOP 10</button>
+        <button class="freq-toggle" data-val="TOP 20" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),t('crono-all-priors'));renderCronogramaConciliacoes()">TOP 20</button>
+        <button class="freq-toggle" data-val="TOP 30" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),t('crono-all-priors'));renderCronogramaConciliacoes()">TOP 30</button>
+        <button class="freq-toggle" data-val="TOP 50" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),t('crono-all-priors'));renderCronogramaConciliacoes()">TOP 50</button>
+        <button class="freq-toggle" data-val="Acima TOP 50" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),t('crono-all-priors'));renderCronogramaConciliacoes()">Acima TOP 50</button>
+        <button class="freq-toggle" data-val="__none__" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),t('crono-all-priors'));renderCronogramaConciliacoes()">Sem prioridade</button>
       </div>
     </div>
     <div class="freq-dd" id="crono-conc-resp-dd">
@@ -1171,9 +1177,9 @@
     <div class="freq-dd" id="crono-conc-f-tipo-dd">
       <button class="freq-dd-btn" id="crono-conc-f-tipo-btn" onclick="_fddToggle(event,'crono-conc-f-tipo-panel')">Todos os tipos</button>
       <div class="freq-dd-panel" id="crono-conc-f-tipo-panel">
-        <button class="freq-toggle" data-val="bancos" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-tipo-btn',_fddVals('crono-conc-f-tipo-panel'),'Todos os tipos');renderCronogramaConciliacoes()">Bancos</button>
-        <button class="freq-toggle" data-val="processadores" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-tipo-btn',_fddVals('crono-conc-f-tipo-panel'),'Todos os tipos');renderCronogramaConciliacoes()">Processadores</button>
-        <button class="freq-toggle" data-val="mista" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-tipo-btn',_fddVals('crono-conc-f-tipo-panel'),'Todos os tipos');renderCronogramaConciliacoes()">Mista</button>
+        <button class="freq-toggle" data-val="bancos" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-tipo-btn',_fddVals('crono-conc-f-tipo-panel'),t('liq-all-tipos'));renderCronogramaConciliacoes()">Bancos</button>
+        <button class="freq-toggle" data-val="processadores" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-tipo-btn',_fddVals('crono-conc-f-tipo-panel'),t('liq-all-tipos'));renderCronogramaConciliacoes()">Processadores</button>
+        <button class="freq-toggle" data-val="mista" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-tipo-btn',_fddVals('crono-conc-f-tipo-panel'),t('liq-all-tipos'));renderCronogramaConciliacoes()">Mista</button>
       </div>
     </div>
     <div class="freq-dd" id="crono-conc-f-freq-dd">
@@ -2256,6 +2262,51 @@ const i18n = {
     'cierre-verificando':'Verificando','status-pendente':'Pendente','status-concluido':'Concluída','status-sem-mov':'Sem Mov.','status-sem-acesso':'Sem Acesso','status-ag-extrato':'Ag. Extrato',
     'status-elaborando':'Em Elaboração','crono-elab-abbr':'Elab','status-encerrada-abbr':'EN',
     'status-pronto-conciliacao':'Pronto p/ Conc.','status-conta-encerrada':'Conta Encerrada',
+    'tipo-bancos':'Bancos','tipo-processadores':'Processadores','tipo-mista':'Mista',
+    'crono-all-tops':'Todos os TOPs','top-acima-50':'Acima TOP 50','crono-sem-top':'Sem TOP','crono-analista':'Analista',
+    'tt-limpar-busca':'Limpar busca','tt-sintaxe-busca':'Sintaxe de busca','tt-baixar-csv':'Baixar CSV com os filtros aplicados','search-help-title':'Operadores de busca',
+    'dd-search-ph':'Pesquisar...','n-selecionados':'{n} selecionados','col-hide':'Ocultar coluna','col-top':'TOP',
+    'crono-all-priors':'Todas as prioridades','crono-sem-prioridade':'Sem prioridade',
+    'conc-vol-aberto':'Volume<br>em Aberto','conc-vol-aberto-sub':'Pend. · Pronto · S/Acesso',
+    'cierre-all-resps':'Todos os responsáveis','cierre-sem-apontamento':'Sem apontamento','cierre-all-apontamentos':'Todos os apontamentos',
+    'cierre-falta-pdf':'Falta PDF','cierre-verificar-saldo':'Verificar Saldo','cierre-search-ph':'Buscar sigla, banco, agente, nº conta...',
+    'cierre-empty-title':'Nenhuma conta encontrada','cierre-empty-sub':'Tente ajustar os filtros.','cierre-comment-ph':'Adicionar comentário...',
+    'col-apontamento':'Apontamento','col-comentario':'Comentário','col-aging':'Aging',
+    'liq-tipo-1':'1 · Processador','liq-tipo-2':'2 · Forjada 1×/mês','liq-tipo-3':'3 · Fatura','liq-tipo-4':'4 · Forjada','liq-tipo-5':'5 · Sem Liquidação',
+    'liq-empty-crono-sub':'Adicione conciliações em Gerencial › Conciliações com tipo Processadores ou Mista.',
+    'liq-stat-total':'Total','liq-stat-pendentes':'Pendentes','liq-aguardando-conc':'Aguardando conciliação','liq-conciliacao-ok':'Conciliação OK','liq-obs-mes-ph':'Observações do mês...',
+    'btn-editar':'Editar','btn-remover':'Remover','btn-adicionar':'Adicionar','btn-incluir':'Incluir','btn-delete':'Excluir','btn-limpar':'Limpar',
+    'confirm-irreversivel':'Esta ação não pode ser desfeita.',
+    'lbl-nao-configurado':'— não configurado —','lbl-pais-sg':'país','lbl-agente-sg':'agente','lbl-banco-sg':'banco','lbl-processador-sg':'processador',
+    'op-cashin':'Cashin','op-cashout':'Cashout',
+    'btn-bulk-freq-label':'Alterar frequência','acc-search-ph':'Buscar país, agente, banco, sigla...',
+    'modal-bulk-freq-title':'Alterar frequência em massa','lbl-nova-freq':'Nova frequência',
+    'btn-incluir-liquidacao':'Incluir liquidação','modal-liq-manual-title':'Incluir liquidação manual',
+    'lbl-conciliacao-vinculada':'Conciliação vinculada','liq-manual-search-ph':'Buscar conciliação...',
+    'lbl-nome-personalizado':'Nome personalizado','lbl-opcional':'(opcional)','liq-manual-nome-ph':'Deixe em branco para usar o nome da conciliação',
+    'cad-pais-search-ph':'Pesquisar país...','cad-agente-search-ph':'Pesquisar agente...','cad-banco-search-ph':'Pesquisar banco...','cad-proc-search-ph':'Pesquisar processador...',
+    'col-resp-conciliacoes':'Responsável Conciliações','col-resp-accounts':'Responsável Accounts','col-resp-exclusivo':'Responsável exclusivo','sel-nenhum':'Nenhum',
+    'modal-editar-acesso-prefix':'Editar acesso — ','btn-salvar-alteracoes':'Salvar alterações','btn-redefinir-senha':'Redefinir senha',
+    'del-title-conta-prefix':'Excluir conta','del-title-acesso-prefix':'Excluir acesso de','del-title-conciliacao-prefix':'Excluir conciliação','del-title-liquidacao':'Excluir liquidação',
+    'del-sub-liquidacao-manual':'Esta liquidação manual será removida permanentemente.','del-sub-liquidacao-auto':'Esta liquidação será ocultada da lista.',
+    'lbl-nome-completo':'Nome completo','lbl-sigla-pessoal':'Sigla pessoal','lbl-perfil-acesso':'Perfil de acesso','lbl-senha-inicial':'Senha inicial',
+    'ph-min-6-chars':'Mínimo 6 caracteres','btn-gerar-senha':'⚡ Gerar senha aleatória','hint-pwd-first-access':'O usuário será obrigado a trocar esta senha no primeiro acesso.','lbl-dar-acesso-em':'Dar acesso em:',
+    'err-email-invalido':'Email inválido.','err-pwd-min-6':'A senha deve ter pelo menos 6 caracteres.','err-select-env':'Selecione ao menos um ambiente.','err-pwd-mismatch':'As senhas não coincidem.',
+    'bulk-apply-desc':'Aplica um status a todos os dias ativos do filtro atual','lbl-status-aplicar':'Status a aplicar',
+    'bulk-desc-concluido':'Marca todos os dias ativos como concluídos','bulk-desc-semmov':'Registra que não houve movimentação',
+    'bulk-desc-semacesso':'Indica impossibilidade de acessar no período','bulk-desc-agextrato':'Conta aguardando extrato bancário — não depende do time de accounts',
+    'bulk-clear':'Limpar','bulk-desc-clear':'Remove todos os registros do período','conc-bulk-apply-title':'Aplicar em massa · Conciliações',
+    'forgot-title':'🔑 Esqueci minha senha','forgot-desc':'Gera um link seguro para redefinir sua senha','btn-enviar-link':'Enviar link','btn-verificando':'Verificando...',
+    'err-email-nao-cadastrado':'Este email não está cadastrado no sistema.','btn-gerando':'Gerando...','err-gerar-link':'Erro ao gerar o link: ','btn-fechar':'Fechar',
+    'btn-salvar-nova-senha':'Salvar nova senha','err-sessao-expirada':'Sessão expirada — reabra o link do email.','btn-salvando':'Salvando...',
+    'err-redefinir-senha':'Erro ao redefinir senha ','err-usuario-nao-encontrado':'Usuário não encontrado: ','msg-senha-alterada':'Senha alterada com sucesso!',
+    'btn-copiar':'Copiar','msg-copiado':'✓ Copiado!',
+    'lbl-usuario-colon':'Usuário: ','lbl-nova-senha-temp':'Nova senha temporária','btn-confirmar-redefinicao':'Confirmar redefinição',
+    'modal-force-pwd-title':'🔐 Defina sua senha','modal-force-pwd-sub':'Obrigatório no primeiro acesso','modal-force-pwd-desc':'Por segurança, você deve criar sua própria senha antes de continuar.',
+    'lbl-nova-senha':'Nova senha','lbl-confirmar-nova-senha':'Confirmar nova senha','lbl-senha-atual':'Senha atual','lbl-senha-temp-colon':'Senha temporária:',
+    'btn-salvar-minha-senha':'Salvar minha senha','modal-change-pwd-title':'Alterar senha',
+    'modal-pwd-gerada-title':'🔑 Senha gerada','modal-pwd-gerada-sub':'Copie e entregue ao usuário','btn-ok-entendido':'OK, entendido',
+    'lbl-seu-email-corp':'Seu email corporativo','lbl-link-enviado':'Link enviado','modal-reset-link-title':'🔐 Redefinir senha',
     'hist-btn':'Histórico','hist-title':'Histórico de Alterações','hist-col-env':'Ambiente','hist-search-ph':'Buscar usuário, módulo, ação...','hist-empty':'Nenhuma ação registrada ainda.',
     'hist-close':'Fechar','hist-download-csv':'Baixar CSV',
     'hist-col-datetime':'Data/Hora','hist-col-user':'Usuário','hist-col-module':'Módulo','hist-col-action':'Ação',
@@ -2370,6 +2421,51 @@ const i18n = {
     'cierre-verificando':'Verifying','status-pendente':'Pending','status-concluido':'Completed','status-sem-mov':'No mov.','status-sem-acesso':'No access','status-ag-extrato':'Aw. stmt',
     'status-elaborando':'In Progress','crono-elab-abbr':'Elab','status-encerrada-abbr':'CL',
     'status-pronto-conciliacao':'Ready to Reconcile','status-conta-encerrada':'Account Closed',
+    'tipo-bancos':'Banks','tipo-processadores':'Processors','tipo-mista':'Mixed',
+    'crono-all-tops':'All TOPs','top-acima-50':'Above TOP 50','crono-sem-top':'No TOP','crono-analista':'Analyst',
+    'tt-limpar-busca':'Clear search','tt-sintaxe-busca':'Search syntax','tt-baixar-csv':'Download CSV with applied filters','search-help-title':'Search operators',
+    'dd-search-ph':'Search...','n-selecionados':'{n} selected','col-hide':'Hide column','col-top':'TOP',
+    'crono-all-priors':'All priorities','crono-sem-prioridade':'No priority',
+    'conc-vol-aberto':'Open<br>Volume','conc-vol-aberto-sub':'Pend. · Ready · No Access',
+    'cierre-all-resps':'All owners','cierre-sem-apontamento':'No note','cierre-all-apontamentos':'All notes',
+    'cierre-falta-pdf':'Missing PDF','cierre-verificar-saldo':'Check Balance','cierre-search-ph':'Search sigla, bank, agent, account #...',
+    'cierre-empty-title':'No account found','cierre-empty-sub':'Try adjusting the filters.','cierre-comment-ph':'Add comment...',
+    'col-apontamento':'Note','col-comentario':'Comment','col-aging':'Aging',
+    'liq-tipo-1':'1 · Processor','liq-tipo-2':'2 · Forced 1×/month','liq-tipo-3':'3 · Invoice','liq-tipo-4':'4 · Forced','liq-tipo-5':'5 · No Settlement',
+    'liq-empty-crono-sub':'Add reconciliations in Management › Reconciliations with type Processors or Mixed.',
+    'liq-stat-total':'Total','liq-stat-pendentes':'Pending','liq-aguardando-conc':'Awaiting reconciliation','liq-conciliacao-ok':'Reconciliation OK','liq-obs-mes-ph':'Notes for the month...',
+    'btn-editar':'Edit','btn-remover':'Remove','btn-adicionar':'Add','btn-incluir':'Add','btn-delete':'Delete','btn-limpar':'Clear',
+    'confirm-irreversivel':'This action cannot be undone.',
+    'lbl-nao-configurado':'— not configured —','lbl-pais-sg':'country','lbl-agente-sg':'agent','lbl-banco-sg':'bank','lbl-processador-sg':'processor',
+    'op-cashin':'Cashin','op-cashout':'Cashout',
+    'btn-bulk-freq-label':'Change frequency','acc-search-ph':'Search country, agent, bank, sigla...',
+    'modal-bulk-freq-title':'Bulk change frequency','lbl-nova-freq':'New frequency',
+    'btn-incluir-liquidacao':'Add settlement','modal-liq-manual-title':'Add manual settlement',
+    'lbl-conciliacao-vinculada':'Linked reconciliation','liq-manual-search-ph':'Search reconciliation...',
+    'lbl-nome-personalizado':'Custom name','lbl-opcional':'(optional)','liq-manual-nome-ph':'Leave blank to use the reconciliation name',
+    'cad-pais-search-ph':'Search country...','cad-agente-search-ph':'Search agent...','cad-banco-search-ph':'Search bank...','cad-proc-search-ph':'Search processor...',
+    'col-resp-conciliacoes':'Reconciliation Owner','col-resp-accounts':'Accounts Owner','col-resp-exclusivo':'Exclusive owner','sel-nenhum':'None',
+    'modal-editar-acesso-prefix':'Edit access — ','btn-salvar-alteracoes':'Save changes','btn-redefinir-senha':'Reset password',
+    'del-title-conta-prefix':'Delete account','del-title-acesso-prefix':'Delete access for','del-title-conciliacao-prefix':'Delete reconciliation','del-title-liquidacao':'Delete settlement',
+    'del-sub-liquidacao-manual':'This manual settlement will be permanently removed.','del-sub-liquidacao-auto':'This settlement will be hidden from the list.',
+    'lbl-nome-completo':'Full name','lbl-sigla-pessoal':'Personal sigla','lbl-perfil-acesso':'Access profile','lbl-senha-inicial':'Initial password',
+    'ph-min-6-chars':'At least 6 characters','btn-gerar-senha':'⚡ Generate random password','hint-pwd-first-access':'The user will be required to change this password on first access.','lbl-dar-acesso-em':'Grant access to:',
+    'err-email-invalido':'Invalid email.','err-pwd-min-6':'Password must be at least 6 characters.','err-select-env':'Select at least one environment.','err-pwd-mismatch':'Passwords do not match.',
+    'bulk-apply-desc':'Applies a status to all active days in the current filter','lbl-status-aplicar':'Status to apply',
+    'bulk-desc-concluido':'Marks all active days as completed','bulk-desc-semmov':'Records that there was no movement',
+    'bulk-desc-semacesso':'Indicates it was not possible to access during the period','bulk-desc-agextrato':'Account awaiting bank statement — not dependent on the accounts team',
+    'bulk-clear':'Clear','bulk-desc-clear':'Removes all entries for the period','conc-bulk-apply-title':'Bulk apply · Reconciliations',
+    'forgot-title':'🔑 Forgot my password','forgot-desc':'Generates a secure link to reset your password','btn-enviar-link':'Send link','btn-verificando':'Checking...',
+    'err-email-nao-cadastrado':'This email is not registered in the system.','btn-gerando':'Generating...','err-gerar-link':'Error generating link: ','btn-fechar':'Close',
+    'btn-salvar-nova-senha':'Save new password','err-sessao-expirada':'Session expired — reopen the link from the email.','btn-salvando':'Saving...',
+    'err-redefinir-senha':'Error resetting password ','err-usuario-nao-encontrado':'User not found: ','msg-senha-alterada':'Password changed successfully!',
+    'btn-copiar':'Copy','msg-copiado':'✓ Copied!',
+    'lbl-usuario-colon':'User: ','lbl-nova-senha-temp':'New temporary password','btn-confirmar-redefinicao':'Confirm reset',
+    'modal-force-pwd-title':'🔐 Set your password','modal-force-pwd-sub':'Required on first access','modal-force-pwd-desc':'For security, you must create your own password before continuing.',
+    'lbl-nova-senha':'New password','lbl-confirmar-nova-senha':'Confirm new password','lbl-senha-atual':'Current password','lbl-senha-temp-colon':'Temporary password:',
+    'btn-salvar-minha-senha':'Save my password','modal-change-pwd-title':'Change password',
+    'modal-pwd-gerada-title':'🔑 Password generated','modal-pwd-gerada-sub':'Copy and hand it to the user','btn-ok-entendido':'OK, got it',
+    'lbl-seu-email-corp':'Your corporate email','lbl-link-enviado':'Link sent','modal-reset-link-title':'🔐 Reset password',
     'hist-btn':'History','hist-title':'Change History','hist-col-env':'Environment','hist-search-ph':'Search user, module, action...','hist-empty':'No actions recorded yet.',
     'hist-close':'Close','hist-download-csv':'Download CSV',
     'hist-col-datetime':'Date/Time','hist-col-user':'User','hist-col-module':'Module','hist-col-action':'Action',
@@ -2485,6 +2581,51 @@ const i18n = {
     'status-pendente':'Pendiente','status-concluido':'Concluida','status-sem-mov':'Sin mov.','status-sem-acesso':'Sin acceso','status-ag-extrato':'Ag. extracto',
     'status-elaborando':'En Elaboración','crono-elab-abbr':'Elab','status-encerrada-abbr':'CE',
     'status-pronto-conciliacao':'Listo p/ Concil.','status-conta-encerrada':'Cuenta Cerrada',
+    'tipo-bancos':'Bancos','tipo-processadores':'Procesadores','tipo-mista':'Mixta',
+    'crono-all-tops':'Todos los TOPs','top-acima-50':'Arriba TOP 50','crono-sem-top':'Sin TOP','crono-analista':'Analista',
+    'tt-limpar-busca':'Limpiar búsqueda','tt-sintaxe-busca':'Sintaxis de búsqueda','tt-baixar-csv':'Descargar CSV con los filtros aplicados','search-help-title':'Operadores de búsqueda',
+    'dd-search-ph':'Buscar...','n-selecionados':'{n} seleccionados','col-hide':'Ocultar columna','col-top':'TOP',
+    'crono-all-priors':'Todas las prioridades','crono-sem-prioridade':'Sin prioridad',
+    'conc-vol-aberto':'Volumen<br>Abierto','conc-vol-aberto-sub':'Pend. · Listo · S/Acceso',
+    'cierre-all-resps':'Todos los responsables','cierre-sem-apontamento':'Sin apunte','cierre-all-apontamentos':'Todos los apuntes',
+    'cierre-falta-pdf':'Falta PDF','cierre-verificar-saldo':'Verificar Saldo','cierre-search-ph':'Buscar sigla, banco, agente, n° cuenta...',
+    'cierre-empty-title':'Ninguna cuenta encontrada','cierre-empty-sub':'Intenta ajustar los filtros.','cierre-comment-ph':'Agregar comentario...',
+    'col-apontamento':'Apunte','col-comentario':'Comentario','col-aging':'Aging',
+    'liq-tipo-1':'1 · Procesador','liq-tipo-2':'2 · Forzada 1×/mes','liq-tipo-3':'3 · Factura','liq-tipo-4':'4 · Forzada','liq-tipo-5':'5 · Sin Liquidación',
+    'liq-empty-crono-sub':'Agrega conciliaciones en Gestión › Conciliaciones con tipo Procesadores o Mixta.',
+    'liq-stat-total':'Total','liq-stat-pendentes':'Pendientes','liq-aguardando-conc':'Esperando conciliación','liq-conciliacao-ok':'Conciliación OK','liq-obs-mes-ph':'Observaciones del mes...',
+    'btn-editar':'Editar','btn-remover':'Quitar','btn-adicionar':'Agregar','btn-incluir':'Agregar','btn-delete':'Eliminar','btn-limpar':'Limpiar',
+    'confirm-irreversivel':'Esta acción no se puede deshacer.',
+    'lbl-nao-configurado':'— no configurado —','lbl-pais-sg':'país','lbl-agente-sg':'agente','lbl-banco-sg':'banco','lbl-processador-sg':'procesador',
+    'op-cashin':'Cashin','op-cashout':'Cashout',
+    'btn-bulk-freq-label':'Cambiar frecuencia','acc-search-ph':'Buscar país, agente, banco, sigla...',
+    'modal-bulk-freq-title':'Cambiar frecuencia en masa','lbl-nova-freq':'Nueva frecuencia',
+    'btn-incluir-liquidacao':'Agregar liquidación','modal-liq-manual-title':'Agregar liquidación manual',
+    'lbl-conciliacao-vinculada':'Conciliación vinculada','liq-manual-search-ph':'Buscar conciliación...',
+    'lbl-nome-personalizado':'Nombre personalizado','lbl-opcional':'(opcional)','liq-manual-nome-ph':'Deja en blanco para usar el nombre de la conciliación',
+    'cad-pais-search-ph':'Buscar país...','cad-agente-search-ph':'Buscar agente...','cad-banco-search-ph':'Buscar banco...','cad-proc-search-ph':'Buscar procesador...',
+    'col-resp-conciliacoes':'Responsable Conciliaciones','col-resp-accounts':'Responsable Accounts','col-resp-exclusivo':'Responsable exclusivo','sel-nenhum':'Ninguno',
+    'modal-editar-acesso-prefix':'Editar acceso — ','btn-salvar-alteracoes':'Guardar cambios','btn-redefinir-senha':'Restablecer contraseña',
+    'del-title-conta-prefix':'Eliminar cuenta','del-title-acesso-prefix':'Eliminar acceso de','del-title-conciliacao-prefix':'Eliminar conciliación','del-title-liquidacao':'Eliminar liquidación',
+    'del-sub-liquidacao-manual':'Esta liquidación manual será eliminada permanentemente.','del-sub-liquidacao-auto':'Esta liquidación será ocultada de la lista.',
+    'lbl-nome-completo':'Nombre completo','lbl-sigla-pessoal':'Sigla personal','lbl-perfil-acesso':'Perfil de acceso','lbl-senha-inicial':'Contraseña inicial',
+    'ph-min-6-chars':'Mínimo 6 caracteres','btn-gerar-senha':'⚡ Generar contraseña aleatoria','hint-pwd-first-access':'El usuario deberá cambiar esta contraseña en el primer acceso.','lbl-dar-acesso-em':'Dar acceso en:',
+    'err-email-invalido':'Email inválido.','err-pwd-min-6':'La contraseña debe tener al menos 6 caracteres.','err-select-env':'Selecciona al menos un entorno.','err-pwd-mismatch':'Las contraseñas no coinciden.',
+    'bulk-apply-desc':'Aplica un estado a todos los días activos del filtro actual','lbl-status-aplicar':'Estado a aplicar',
+    'bulk-desc-concluido':'Marca todos los días activos como concluidos','bulk-desc-semmov':'Registra que no hubo movimiento',
+    'bulk-desc-semacesso':'Indica imposibilidad de acceder en el período','bulk-desc-agextrato':'Cuenta esperando extracto bancario — no depende del equipo de accounts',
+    'bulk-clear':'Limpiar','bulk-desc-clear':'Elimina todos los registros del período','conc-bulk-apply-title':'Aplicar en masa · Conciliaciones',
+    'forgot-title':'🔑 Olvidé mi contraseña','forgot-desc':'Genera un enlace seguro para restablecer tu contraseña','btn-enviar-link':'Enviar enlace','btn-verificando':'Verificando...',
+    'err-email-nao-cadastrado':'Este email no está registrado en el sistema.','btn-gerando':'Generando...','err-gerar-link':'Error al generar el enlace: ','btn-fechar':'Cerrar',
+    'btn-salvar-nova-senha':'Guardar nueva contraseña','err-sessao-expirada':'Sesión expirada — vuelve a abrir el enlace del email.','btn-salvando':'Guardando...',
+    'err-redefinir-senha':'Error al restablecer contraseña ','err-usuario-nao-encontrado':'Usuario no encontrado: ','msg-senha-alterada':'¡Contraseña cambiada con éxito!',
+    'btn-copiar':'Copiar','msg-copiado':'✓ ¡Copiado!',
+    'lbl-usuario-colon':'Usuario: ','lbl-nova-senha-temp':'Nueva contraseña temporal','btn-confirmar-redefinicao':'Confirmar restablecimiento',
+    'modal-force-pwd-title':'🔐 Define tu contraseña','modal-force-pwd-sub':'Obligatorio en el primer acceso','modal-force-pwd-desc':'Por seguridad, debes crear tu propia contraseña antes de continuar.',
+    'lbl-nova-senha':'Nueva contraseña','lbl-confirmar-nova-senha':'Confirmar nueva contraseña','lbl-senha-atual':'Contraseña actual','lbl-senha-temp-colon':'Contraseña temporal:',
+    'btn-salvar-minha-senha':'Guardar mi contraseña','modal-change-pwd-title':'Cambiar contraseña',
+    'modal-pwd-gerada-title':'🔑 Contraseña generada','modal-pwd-gerada-sub':'Copia y entrégala al usuario','btn-ok-entendido':'OK, entendido',
+    'lbl-seu-email-corp':'Tu email corporativo','lbl-link-enviado':'Enlace enviado','modal-reset-link-title':'🔐 Restablecer contraseña',
     'hist-btn':'Historial','hist-title':'Historial de cambios','hist-col-env':'Entorno','hist-search-ph':'Buscar usuario, módulo, acción...','hist-empty':'Aún no hay acciones registradas.',
     'hist-close':'Cerrar','hist-download-csv':'Descargar CSV',
     'hist-col-datetime':'Fecha/Hora','hist-col-user':'Usuario','hist-col-module':'Módulo','hist-col-action':'Acción',
@@ -2558,9 +2699,14 @@ function applyTranslations(){
   document.querySelectorAll('[data-i18n]').forEach(el=>{ const v=t(el.dataset.i18n); if(v) el.textContent=v; });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{ const v=t(el.dataset.i18nPlaceholder); if(v) el.placeholder=v; });
   document.querySelectorAll('[data-i18n-default]').forEach(el=>{ if(!el.classList.contains('has-active')) el.textContent=t(el.dataset.i18nDefault); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el=>{ const v=t(el.dataset.i18nTitle); if(v) el.title=v; });
   updateBreadcrumb();
   updateCounts();
 }
+// Locale usado em toLocaleDateString/toLocaleString/toLocaleTimeString — sem
+// isso, datas (nomes de mês, formato) ficavam sempre em pt-BR mesmo com a UI
+// em EN/ES.
+function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[currentLang]||'pt-BR'; }
 
 // ─── STORE ───────────────────────────────────────────────────────
 const store = {
@@ -3075,7 +3221,7 @@ function renderAccountsTable(){
     const realIdx=store.contas.indexOf(c);
     const rowCls='row-'+c.status;
     const statusChip=c.status==='encerrada'
-      ?`<span class="chip chip-red">${t('status-encerrada')}${c.dataEncerramento?' em '+new Date(c.dataEncerramento).toLocaleDateString('pt-BR'):''}</span>`
+      ?`<span class="chip chip-slate">${t('status-encerrada')}${c.dataEncerramento?' em '+new Date(c.dataEncerramento).toLocaleDateString(_dateLocale()):''}</span>`
       :`<span class="chip chip-green">${t('status-ativa')}</span>`;
     return `<tr class="${rowCls}">
       <td>${countryFlag(c.pais)} ${c.pais}</td>
@@ -3405,7 +3551,7 @@ function _fddLabel(btnId,active,def){
   if(!b) return;
   if(!active.length){b.textContent=def;b.classList.remove('has-active');}
   else if(active.length===1){b.textContent=active[0];b.classList.add('has-active');}
-  else{b.textContent=active.length+' selecionados';b.classList.add('has-active');}
+  else{b.textContent=t('n-selecionados').replace('{n}',active.length);b.classList.add('has-active');}
 }
 function initCronoFilters(){
   const _sf=_pendingFilters.crono;if(_sf)_pendingFilters.crono=null;
@@ -3776,7 +3922,10 @@ function renderCronogramaAccounts(){
     const ck=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
     return activeD1.includes(d1Map[ck]);
   }):listBase;
-  const listSorted=_applySortBy(list,_sortState.crono.col,_sortState.crono.dir);
+  const _sortedByCol=_applySortBy(list,_sortState.crono.col,_sortState.crono.dir);
+  // Contas encerradas (ainda visíveis por causa da data de fechamento) vão
+  // pro final da lista — não devem atrapalhar a visualização das ativas.
+  const listSorted=[..._sortedByCol.filter(c=>c.status!=='encerrada'),..._sortedByCol.filter(c=>c.status==='encerrada')];
   if(countEl) countEl.textContent=listSorted.length+' '+(listSorted.length===1?t('count-conta'):t('count-contas'));
   if(!listSorted.length||!days){
     emptyEl.style.display=''; calWrap.style.display='none'; return;
@@ -3823,8 +3972,8 @@ function renderCronogramaAccounts(){
         const dateStr=fmtDate(d);
         if(_closureDayStart!==null&&d.getTime()>=_closureDayStart){
           const _ck=contaKey.replace(/&/g,'&amp;');
-          return `<td class="day-cell-closed" data-ck="${_ck}" data-dt="${dateStr}" style="text-align:center" title="${t('status-encerrada')}">
-            <div class="day-filled" style="background:#fef2f2;color:#dc2626;font-size:9px" title="${t('status-encerrada')}">${t('status-encerrada-abbr')}</div></td>`;
+          return `<td class="day-cell-closed instant-tip" data-ck="${_ck}" data-dt="${dateStr}" style="text-align:center" data-tip="${t('status-encerrada')}">
+            <div class="day-filled" style="background:#f1f5f9;color:#475569;font-size:9px">${t('status-encerrada-abbr')}</div></td>`;
         }
         const active=isActiveDay(d,c.tipo);
         const storeKey=`${contaKey}_${dateStr}`;
@@ -3924,10 +4073,10 @@ const _pendingFilters={crono:null,'crono-conc':null};
       if(fc.sort?.col){_sortState['crono-conc'].col=fc.sort.col;_sortState['crono-conc'].dir=fc.sort.dir;}
     }
     setTimeout(()=>{
-      if(f?.top?.length) _fddLabel('crono-f-top-btn',f.top,'Todos os TOPs');
+      if(f?.top?.length) _fddLabel('crono-f-top-btn',f.top,t('crono-all-tops'));
       if(f?.freq?.length) _updateFreqLabel();
       if(f?.d1?.length) _updateD1Label();
-      if(fc?.prior?.length) _fddLabel('crono-conc-f-prior-btn',fc.prior,'Todas as prioridades');
+      if(fc?.prior?.length) _fddLabel('crono-conc-f-prior-btn',fc.prior,t('crono-all-priors'));
       if(fc?.d1?.length) _updateConcD1Label();
     },0);
   }catch(e){}
@@ -4058,7 +4207,7 @@ function clearCronoFilters(){
   _fddLabel('crono-f-banco-btn',[],t('crono-all-bancos'));
   if(sel('crono-f-tipo-conta')) sel('crono-f-tipo-conta').value='';
   document.querySelectorAll('#crono-f-top-panel .freq-toggle.active').forEach(b=>b.classList.remove('active'));
-  _fddLabel('crono-f-top-btn',[],'Todos os TOPs');
+  _fddLabel('crono-f-top-btn',[],t('crono-all-tops'));
   document.querySelectorAll('#crono-f-freq-wrap .freq-toggle.active').forEach(b=>b.classList.remove('active'));
   _updateFreqLabel();
   document.querySelectorAll('#crono-d1-filter .d1-toggle.active').forEach(b=>b.classList.remove('active'));
@@ -4142,7 +4291,7 @@ function _updateAnlLabel(){
   const active=[...document.querySelectorAll('#crono-anl-toggles .freq-toggle.active')];
   const btn=document.getElementById('crono-anl-btn');
   if(!btn) return;
-  if(!active.length){btn.textContent='Analista';btn.classList.remove('has-active');}
+  if(!active.length){btn.textContent=t('crono-analista');btn.classList.remove('has-active');}
   else{btn.textContent=active.map(b=>b.dataset.resp).join(', ');btn.classList.add('has-active');}
 }
 function toggleAnlFilter(btn){btn.classList.toggle('active');_updateAnlLabel();renderCronogramaAccounts();}
@@ -4416,7 +4565,7 @@ function submitBulkApply(){
         if(status==='clear'){
           if(existing){delete store.cronogramaData[storeKey];changed++;}
         } else {
-          const entry={status,sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')};
+          const entry={status,sigla,user:window._loggedEmail,ts:new Date().toLocaleString(_dateLocale())};
           if(reportLink) entry.reportLink=reportLink;
           store.cronogramaData[storeKey]=entry;
           changed++;
@@ -4886,7 +5035,7 @@ function togglePerm(itemId,type){
 function logAudit(modulo,acao,detalhes){
   const user=store.responsaveis.find(r=>r.email===window._loggedEmail);
   const envLabel=ENVIRONMENTS[_currentEnv]?.label||_currentEnv;
-  const entry={ts:new Date().toLocaleString('pt-BR'),userName:user?.nome||window._loggedEmail||'Sistema',userSigla:user?.sigla||'?',env:envLabel,modulo,acao,detalhes:JSON.stringify(detalhes)};
+  const entry={ts:new Date().toLocaleString(_dateLocale()),userName:user?.nome||window._loggedEmail||'Sistema',userSigla:user?.sigla||'?',env:envLabel,modulo,acao,detalhes:JSON.stringify(detalhes)};
   store.auditLog.push(entry);
   if(typeof _fbAuditRef!=='undefined'){
     const newRef=_fbAuditRef.push();
@@ -5121,7 +5270,7 @@ function setCronoDayStatus(contaKey, dateStr, status, event){
       logAudit('cronograma','limpar',{conta:contaKey,data:dateStr});
       _fbSetCronoEntry(storeKey,null);
     } else {
-      const entry={status,sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')};
+      const entry={status,sigla,user:window._loggedEmail,ts:new Date().toLocaleString(_dateLocale())};
       if(reportLink) entry.reportLink=reportLink;
       store.cronogramaData[storeKey]=entry;
       logAudit('cronograma',status,{conta:contaKey,data:dateStr,sigla});
@@ -5180,7 +5329,7 @@ function setCronoDayStatus(contaKey, dateStr, status, event){
         const sk=`${contaKey}_${ds}`;
         const ex=store.cronogramaData[sk];
         if(ex&&LOCKED_STATUSES.includes(ex.status)&&!isAdmin()) return;
-        const entry={status:'aguardando_extrato',sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')};
+        const entry={status:'aguardando_extrato',sigla,user:window._loggedEmail,ts:new Date().toLocaleString(_dateLocale())};
         if(reportLink) entry.reportLink=reportLink;
         store.cronogramaData[sk]=entry;
         keys.push(sk);
@@ -5391,7 +5540,7 @@ function initCierreFilters(){
   for(let i=-5;i<=2;i++){
     const d=new Date(now.getFullYear(),now.getMonth()+i,1);
     const val=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    const lbl=d.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+    const lbl=d.toLocaleDateString(_dateLocale(),{month:'long',year:'numeric'});
     const sel=(prevVal?val===prevVal:val===defaultVal)?' selected':'';
     opts+=`<option value="${val}"${sel}>${lbl.charAt(0).toUpperCase()+lbl.slice(1)}</option>`;
   }
@@ -5401,7 +5550,7 @@ function initCierreFilters(){
   const avPaises=[...new Set(baseCon.map(c=>c.pais).filter(Boolean))].sort();
   const activePaises=_fddVals('cierre-f-pais-panel');
   _fddRender('cierre-f-pais-panel',avPaises,activePaises,v=>`${countryFlag(v)} ${v}`,'_updateCierreCascade();renderCierreTable()');
-  _fddLabel('cierre-f-pais-btn',activePaises.filter(p=>avPaises.includes(p)),'Todos os países');
+  _fddLabel('cierre-f-pais-btn',activePaises.filter(p=>avPaises.includes(p)),t('crono-all-paises'));
   _updateCierreCascade();
 }
 function _updateCierreCascade(){
@@ -5413,21 +5562,21 @@ function _updateCierreCascade(){
   const avAgentes=[...new Set(contasPA.map(c=>c.agente).filter(Boolean))].sort();
   const activeAgentes=_fddVals('cierre-f-agente-panel').filter(a=>avAgentes.includes(a));
   _fddRender('cierre-f-agente-panel',avAgentes,activeAgentes,v=>v,'_updateCierreCascade();renderCierreTable()');
-  _fddLabel('cierre-f-agente-btn',activeAgentes,'Todos os agentes');
+  _fddLabel('cierre-f-agente-btn',activeAgentes,t('crono-all-agentes'));
   // Bancos disponíveis = filtrados por país + agente
   let contasPAB=contasPA;
   if(activeAgentes.length) contasPAB=contasPAB.filter(c=>activeAgentes.includes(c.agente));
   const avBancos=[...new Set(contasPAB.map(c=>c.banco).filter(Boolean))].sort();
   const activeBancos=_fddVals('cierre-f-banco-panel').filter(b=>avBancos.includes(b));
   _fddRender('cierre-f-banco-panel',avBancos,activeBancos,v=>v,'renderCierreTable()');
-  _fddLabel('cierre-f-banco-btn',activeBancos,'Todos os bancos');
+  _fddLabel('cierre-f-banco-btn',activeBancos,t('crono-all-bancos'));
   // Responsáveis disponíveis = filtrados por país + agente
   const respEmails=[...new Set(contasPAB.map(c=>{const ag=store.agentes.find(a=>a.nome===c.agente);return ag?.responsavel||'';}).filter(Boolean))];
   const resps=respEmails.map(e=>store.responsaveis.find(r=>r.email===e)).filter(Boolean).sort((a,b)=>a.nome.localeCompare(b.nome));
   const avResps=resps.map(r=>r.email);
   const activeResps=_fddVals('cierre-f-resp-panel').filter(r=>avResps.includes(r));
   _fddRender('cierre-f-resp-panel',avResps,activeResps,v=>{const r=store.responsaveis.find(x=>x.email===v);return r?r.nome:v;},'renderCierreTable()');
-  _fddLabel('cierre-f-resp-btn',activeResps,'Todos os responsáveis');
+  _fddLabel('cierre-f-resp-btn',activeResps,t('cierre-all-resps'));
 }
 function _hasCierreFilters(){
   return _fddVals('cierre-f-pais-panel').length>0||
@@ -5440,12 +5589,12 @@ function _hasCierreFilters(){
 }
 function clearCierreFilters(){
   document.querySelectorAll('#cierre-f-pais-panel .freq-toggle.active,#cierre-f-agente-panel .freq-toggle.active,#cierre-f-banco-panel .freq-toggle.active,#cierre-f-resp-panel .freq-toggle.active,#cierre-f-status-panel .freq-toggle.active,#cierre-f-ap-panel .freq-toggle.active').forEach(b=>b.classList.remove('active'));
-  _fddLabel('cierre-f-pais-btn',[],'Todos os países');
-  _fddLabel('cierre-f-agente-btn',[],'Todos os agentes');
-  _fddLabel('cierre-f-banco-btn',[],'Todos os bancos');
-  _fddLabel('cierre-f-resp-btn',[],'Todos os responsáveis');
-  _fddLabel('cierre-f-status-btn',[],'Todos os status');
-  _fddLabel('cierre-f-ap-btn',[],'Todos os apontamentos');
+  _fddLabel('cierre-f-pais-btn',[],t('crono-all-paises'));
+  _fddLabel('cierre-f-agente-btn',[],t('crono-all-agentes'));
+  _fddLabel('cierre-f-banco-btn',[],t('crono-all-bancos'));
+  _fddLabel('cierre-f-resp-btn',[],t('cierre-all-resps'));
+  _fddLabel('cierre-f-status-btn',[],t('filter-all-status'));
+  _fddLabel('cierre-f-ap-btn',[],t('cierre-all-apontamentos'));
   const inp=document.getElementById('cierre-search');
   if(inp){inp.value='';updateCierreSearchClear();}
   _updateCierreCascade();
@@ -6219,7 +6368,7 @@ function _extrRenderMonths(){
   for(let i=1;i<=5;i++){
     const d=new Date(now.getFullYear(),now.getMonth()-i,1);
     const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    const label=d.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+    const label=d.toLocaleDateString(_dateLocale(),{month:'long',year:'numeric'});
     months.push({key,label});
   }
   sel.innerHTML=`<option value="">Selecionar mês...</option>`+months.map(m=>`<option value="${m.key}" ${_extrPdfMonth===m.key?'selected':''}>${m.label.replace(/^./,c=>c.toUpperCase())}</option>`).join('');
@@ -6277,7 +6426,7 @@ function _createJobCard(jobId,meta,initialStatus){
   if(!wrap||document.getElementById('jm-card-'+jobId)) return;
   const {nContas=0,dateFrom='',dateTo='',createdAt=Date.now()}=meta||{};
   const dateLabel=dateFrom+(dateFrom!==dateTo&&dateTo?' → '+dateTo:'');
-  const timeStr=new Date(createdAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const timeStr=new Date(createdAt).toLocaleTimeString(_dateLocale(),{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   const shortId=jobId.slice(-8);
   const SI=_jobSI(initialStatus||'pending');
   const startCollapsed=initialStatus==='completed'||initialStatus==='failed';
@@ -6921,7 +7070,7 @@ function _renderCredCard(reqId,data){
     let html='';
     if(status==='done'&&data.processed_at){
       const d=new Date(data.processed_at);
-      html=`<span style="font-size:11px;color:#6b7280">${t('cred-st-done-at')} ${d.toLocaleString('pt-BR')}</span>`;
+      html=`<span style="font-size:11px;color:#6b7280">${t('cred-st-done-at')} ${d.toLocaleString(_dateLocale())}</span>`;
     }else if(status==='error'){
       html=`<span style="font-size:11px;color:#dc2626">${_escHtml(data.error||t('cred-st-error'))}</span>`;
     }else{
@@ -8040,7 +8189,7 @@ function renderGerencialConciliacoes(){
     const [tipoCls,tipoLbl]=tipoMap[c.tipo||'bancos']||tipoMap.bancos;
     const tipoChipHtml=`<span class="chip ${tipoCls}" style="font-size:10px">${tipoLbl}</span>`;
     const isEncerrada=c.status==='encerrada';
-    const statusChip=isEncerrada?`<span class="chip chip-red" style="font-size:10px;margin-left:6px">${t('status-encerrada')}${c.dataEncerramento?' em '+new Date(c.dataEncerramento).toLocaleDateString('pt-BR'):''}</span>`:'';
+    const statusChip=isEncerrada?`<span class="chip chip-slate" style="font-size:10px;margin-left:6px">${t('status-encerrada')}${c.dataEncerramento?' em '+new Date(c.dataEncerramento).toLocaleDateString(_dateLocale()):''}</span>`:'';
     const concId2=(c.id||c.nome||'').replace(/['"]/g,'');
     const cvm=(store.concilVolumeMap||{})[concId2]||{};
     const allGwIds=[...new Set([...(cvm.cashinIds||[]),...(cvm.cashoutIds||[]),...(cvm.refundIds||[]),...(cvm.chargebackIds||[])])];
@@ -8359,7 +8508,7 @@ function downloadConcilCSV(){
   const now=new Date();
   const d1=new Date(now.getFullYear(),now.getMonth(),now.getDate()-1);
   const d1Str=`${d1.getFullYear()}-${String(d1.getMonth()+1).padStart(2,'0')}-${String(d1.getDate()).padStart(2,'0')}`;
-  const STATUS_LBL={concluido:'Concluída',pronto_conciliacao:'Pronto p/ Conc.',sem_movimento:'Sem Movimento',sem_acesso:'Sem Acesso',conta_encerrada:'Conta Encerrada',pendente:'Pendente'};
+  const STATUS_LBL={concluido:t('status-concluido'),pronto_conciliacao:t('status-pronto-conciliacao'),sem_movimento:t('d1-sem-mov'),sem_acesso:t('status-sem-acesso'),conta_encerrada:t('status-conta-encerrada'),elaborando:t('status-elaborando'),encerrada:t('status-encerrada'),pendente:t('status-pendente')};
   const TIPO_LBL={bancos:'Bancos',processadores:'Processadores',mista:'Mista'};
   const fmtV=v=>v?Math.round(v).toLocaleString('en-US'):'';
   const headers=['Nome','País','Agente','Volume USD','Resp.','Prioridade','Tipo','Frequência','Acompanhamento'];
@@ -8368,7 +8517,7 @@ function downloadConcilCSV(){
     const rEmail=_getConcilResp(c);
     const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;
     const vol=(store.volumeRankings?.combined||{})[concId]?.usd||0;
-    const d1r=_getConcilStatus(c,d1Str);
+    const d1r=c.status==='encerrada'?{status:'encerrada'}:_getConcilStatus(c,d1Str);
     const prioridade=_computeVolumePrioridade(concId)||'';
     return [c.nome,c.pais||'',c.agente||'',fmtV(vol),rUser?.sigla||'',prioridade,TIPO_LBL[c.tipo]||c.tipo||'',c.frequencia||'',STATUS_LBL[d1r.status]||''];
   })];
@@ -8558,7 +8707,7 @@ function _updateConcAnlLabel(){
   const active=[...document.querySelectorAll('#crono-conc-anl-toggles .freq-toggle.active')];
   const btn=document.getElementById('crono-conc-anl-btn');
   if(!btn) return;
-  if(!active.length){btn.textContent='Analista';btn.classList.remove('has-active');}
+  if(!active.length){btn.textContent=t('crono-analista');btn.classList.remove('has-active');}
   else{btn.textContent=active.map(b=>b.dataset.resp).join(', ');btn.classList.add('has-active');}
 }
 
@@ -8593,12 +8742,12 @@ function clearCronconcFilters(){
   _fddLabel('crono-conc-f-pais-btn',[],t('crono-all-paises'));
   _fddLabel('crono-conc-f-agente-btn',[],t('crono-all-agentes'));
   document.querySelectorAll('#crono-conc-f-prior-panel .freq-toggle.active').forEach(b=>b.classList.remove('active'));
-  _fddLabel('crono-conc-f-prior-btn',[],'Todas as prioridades');
+  _fddLabel('crono-conc-f-prior-btn',[],t('crono-all-priors'));
   document.querySelectorAll('#crono-conc-resp-toggles .freq-toggle.active').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('#crono-conc-anl-toggles .freq-toggle.active').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('#crono-conc-f-tipo-panel .freq-toggle.active').forEach(b=>b.classList.remove('active'));
-  _fddLabel('crono-conc-f-tipo-btn',[],'Todos os tipos');
+  _fddLabel('crono-conc-f-tipo-btn',[],t('liq-all-tipos'));
   document.querySelectorAll('#crono-conc-f-freq-panel .freq-toggle.active').forEach(b=>b.classList.remove('active'));
   _fddLabel('crono-conc-f-freq-btn',[],t('crono-all-freqs'));
   _updateConcRespLabel(); _updateConcAnlLabel(); _updateConcD1Label();
@@ -9071,7 +9220,10 @@ function renderCronogramaConciliacoes(){
     if(_rangeEnd!==null&&c.createdAt&&c.createdAt>_rangeEnd) return false;
     return true;
   }).map(c=>{
-    const d1r=_getConcilStatus(c,d1Str);
+    // Conciliação já encerrada: o "Acompanhamento" reflete isso agora mesmo,
+    // não o status derivado de ontem (não faz sentido mostrar "Pendente"
+    // pra algo que já foi encerrado hoje).
+    const d1r=c.status==='encerrada'?{status:'encerrada'}:_getConcilStatus(c,d1Str);
     return {c,d1Status:d1r.status};
   });
 
@@ -9160,6 +9312,9 @@ function renderCronogramaConciliacoes(){
     }
     return _priorRank(a)-_priorRank(b);
   });
+  // Conciliações encerradas (ainda visíveis pela data de fechamento) vão pro
+  // final da lista — não devem atrapalhar a visualização das ativas.
+  list=[...list.filter(c=>c.status!=='encerrada'),...list.filter(c=>c.status==='encerrada')];
   _lastFilteredConcilList=list;
 
   if(countEl) countEl.textContent=list.length+' conciliação'+(list.length!==1?'s':'');
@@ -9197,6 +9352,7 @@ function renderCronogramaConciliacoes(){
     sem_acesso:{bg:'#fef2f2',color:'#dc2626'},
     conta_encerrada:{bg:'#f1f5f9',color:'#475569'},
     elaborando:{bg:'#cffafe',color:'#0e7490'},
+    encerrada:{bg:'#f1f5f9',color:'#475569'},
     pendente:{bg:'',color:''}
   };
   const chipHtml={
@@ -9206,6 +9362,7 @@ function renderCronogramaConciliacoes(){
     sem_acesso:`<span class="chip chip-red" style="font-size:10px">${t('status-sem-acesso')}</span>`,
     conta_encerrada:`<span class="chip chip-slate" style="font-size:10px">${t('status-conta-encerrada')}</span>`,
     elaborando:`<span class="chip chip-elaborando" style="font-size:10px">${t('status-elaborando')}</span>`,
+    encerrada:`<span class="chip chip-slate" style="font-size:10px">${t('status-encerrada')}</span>`,
     pendente:`<span class="chip chip-amber" style="font-size:10px">${t('status-pendente')}</span>`
   };
 
@@ -9214,7 +9371,7 @@ function renderCronogramaConciliacoes(){
     const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;
     const respCell=rUser?`<span style="font-family:monospace;font-size:10px;font-weight:700;background:rgba(151,111,244,.1);color:var(--e-mid);padding:1px 5px;border-radius:3px">${rUser.sigla}</span>`:'<span style="color:var(--e-muted);font-size:11px">—</span>';
     const concId=(conc.id||conc.nome).replace(/['"]/g,'');
-    const d1Result=_getConcilStatus(conc,d1Str);
+    const d1Result=conc.status==='encerrada'?{status:'encerrada'}:_getConcilStatus(conc,d1Str);
     let d1ChipHtml=chipHtml[d1Result.status]||'<span style="color:var(--e-muted);font-size:11px">—</span>';
     if(d1Result.status==='pronto_conciliacao'){
       const probs=_getConcilProblems(conc,d1Str);
@@ -9234,7 +9391,7 @@ function renderCronogramaConciliacoes(){
       const dateStr=fmtD(d);
       const _ck=concId.replace(/&/g,'&amp;');
       if(_closureDayStart!==null&&d.getTime()>=_closureDayStart){
-        return `<td class="day-cell-closed" data-ck="${_ck}" data-dt="${dateStr}" style="text-align:center" title="${t('status-encerrada')}"><div class="day-filled" style="background:#fef2f2;color:#dc2626;font-size:9px" title="${t('status-encerrada')}">${t('status-encerrada-abbr')}</div></td>`;
+        return `<td class="day-cell-closed instant-tip" data-ck="${_ck}" data-dt="${dateStr}" style="text-align:center" data-tip="${t('status-encerrada')}"><div class="day-filled" style="background:#f1f5f9;color:#475569;font-size:9px">${t('status-encerrada-abbr')}</div></td>`;
       }
       const r=_getConcilStatus(conc,dateStr);
       const cfg=statusCfg[r.status];
@@ -9255,7 +9412,7 @@ function renderCronogramaConciliacoes(){
     const _concNomeInner=conc.obs?`<span data-link="${_esc(conc.obs)}" onmouseenter="showNoteTooltip(event,this)" onmouseleave="scheduleHideNoteTooltip()" style="pointer-events:auto">${_esc(conc.nome)}<sup style="color:var(--e-purple);font-size:7px;margin-left:1px">●</sup></span>`:_esc(conc.nome);
     const _freqCell=conc.frequencia?`<span class="chip" style="font-size:10px;background:var(--e-ghost);color:var(--e-mid);border:1px solid var(--e-pale)">${conc.frequencia}</span>`:`<span style="color:var(--e-muted);font-size:11px">—</span>`;
     const _ctx={respCell,priorCell,concTipoChipHtml,freqCell:_freqCell,d1ChipHtml};
-    return `<tr class="row-ativa"><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:600;white-space:nowrap">${_concNomeInner}</td>${_ord.map((d,i)=>d.c(conc,ri,i+1,_ctx)).join('')}${cells}</tr>`;
+    return `<tr class="row-${conc.status||'ativa'}"><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:600;white-space:nowrap">${_concNomeInner}</td>${_ord.map((d,i)=>d.c(conc,ri,i+1,_ctx)).join('')}${cells}</tr>`;
   }).join('')}</tbody>`;
 
   if(calScrollEl){calScrollEl.scrollLeft=_savedSL;calScrollEl.scrollTop=_savedST;}
@@ -9321,7 +9478,7 @@ function onConcCellClick(evt,ck,dateStr){
   if(conc.tipo==='bancos'){
     const r=_getConcilStatus(conc,dateStr);
     if(r.status==='pronto_conciliacao'){
-      store.cronogramaConciliacoes[manualKey]={status:'concluido',sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')};
+      store.cronogramaConciliacoes[manualKey]={status:'concluido',sigla,user:window._loggedEmail,ts:new Date().toLocaleString(_dateLocale())};
       saveStore(); _fbSync('cronogramaConciliacoes'); renderCronogramaConciliacoes();
     } else if(r.status==='concluido'){
       delete store.cronogramaConciliacoes[manualKey];
@@ -9356,7 +9513,7 @@ function _concChooseSt(evt,ck,dateStr,v){
   if(v==='sem_acesso'){
     _closeConcPop();
     const _doSave=reportLink=>{
-      const entry={status:'sem_acesso',sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')};
+      const entry={status:'sem_acesso',sigla,user:window._loggedEmail,ts:new Date().toLocaleString(_dateLocale())};
       if(reportLink) entry.reportLink=reportLink;
       store.cronogramaConciliacoes[manualKey]=entry;
       saveStore();_fbSync('cronogramaConciliacoes');
@@ -9381,7 +9538,7 @@ function _concChooseSt(evt,ck,dateStr,v){
   }
   _closeConcPop();
   if(!v){ delete store.cronogramaConciliacoes[manualKey]; }
-  else { store.cronogramaConciliacoes[manualKey]={status:v,sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')}; }
+  else { store.cronogramaConciliacoes[manualKey]={status:v,sigla,user:window._loggedEmail,ts:new Date().toLocaleString(_dateLocale())}; }
   saveStore();_fbSync('cronogramaConciliacoes');
   renderCronogramaConciliacoes();
 }
@@ -9432,7 +9589,7 @@ function submitConcBulkApply(){
         const k=`${concId}_${dateStr}`;
         if(status==='clear'){if(store.cronogramaConciliacoes[k]){delete store.cronogramaConciliacoes[k];changed++;}}
         else{
-          const entry={status,sigla,user:window._loggedEmail,ts:new Date().toLocaleString('pt-BR')};
+          const entry={status,sigla,user:window._loggedEmail,ts:new Date().toLocaleString(_dateLocale())};
           if(reportLink) entry.reportLink=reportLink;
           store.cronogramaConciliacoes[k]=entry;changed++;
           if(status==='sem_acesso') appliedKeys.push(k);
@@ -9575,7 +9732,6 @@ async function _initApp(){
   _updateEnvSwitcher();
 }
 // ─── LIQUIDAÇÕES MODULE ──────────────────────────────────────────────
-const MESES_PT=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const LIQ_TIPOS={
   '1':{lbl:'1 - Processador',          short:'1·Proc',   bg:'#ede9fe',color:'#6d28d9',cls:'chip-liq-1'},
   '2':{lbl:'2 - Forjada 1×/mês',       short:'2·Forj1×', bg:'#fce7f3',color:'#9d174d',cls:'chip-liq-2'},
@@ -9756,7 +9912,8 @@ function _liqPopulateMonthSel(){
     while(m>11){m-=12;y++;}
     const val=`${y}-${m}`;
     const selected=(m===_liqMonth&&y===_liqYear)?'selected':'';
-    opts.push(`<option value="${val}" ${selected}>${MESES_PT[m]} ${y}</option>`);
+    const _mesLbl=new Date(y,m,1).toLocaleDateString(_dateLocale(),{month:'long'});
+    opts.push(`<option value="${val}" ${selected}>${_mesLbl.charAt(0).toUpperCase()+_mesLbl.slice(1)} ${y}</option>`);
   }
   sel.innerHTML=opts.join('');
 }
