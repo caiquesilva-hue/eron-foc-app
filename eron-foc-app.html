@@ -6058,7 +6058,7 @@ async function startFirebaseSync(){
         const noModal=!document.querySelector('.modal-overlay.open');
         // Salva referências dos campos protegidos localmente antes de _applyFbData
         const _pre={};
-        ['contas','agentes','paises','bancos','responsaveis'].forEach(f=>{if(_ownWrites[f])_pre[f]=store[f];});
+        ['contas','agentes','paises','bancos','responsaveis','conciliacoes'].forEach(f=>{if(_ownWrites[f])_pre[f]=store[f];});
         _applyFbData(d);
         // Restaura campos protegidos caso _applyFbData os tenha sobrescrito
         Object.keys(_pre).forEach(f=>{store[f]=_pre[f];});
