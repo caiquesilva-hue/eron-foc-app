@@ -413,6 +413,7 @@
   #page-cronograma-conciliacoes.hide-col-6 #crono-conc-cal-table thead th:nth-child(7),#page-cronograma-conciliacoes.hide-col-6 #crono-conc-cal-table tbody td:nth-child(7){display:none!important;}
   #page-cronograma-conciliacoes.hide-col-7 #crono-conc-cal-table thead th:nth-child(8),#page-cronograma-conciliacoes.hide-col-7 #crono-conc-cal-table tbody td:nth-child(8){display:none!important;}
   #page-cronograma-conciliacoes.hide-col-8 #crono-conc-cal-table thead th:nth-child(9),#page-cronograma-conciliacoes.hide-col-8 #crono-conc-cal-table tbody td:nth-child(9){display:none!important;}
+  #page-cronograma-conciliacoes.hide-col-9 #crono-conc-cal-table thead th:nth-child(10),#page-cronograma-conciliacoes.hide-col-9 #crono-conc-cal-table tbody td:nth-child(10){display:none!important;}
   #page-cronograma-custos.hide-col-1 #liq-crono-table thead th:nth-child(2),#page-cronograma-custos.hide-col-1 #liq-crono-table tbody td:nth-child(2){display:none!important;}
   #page-cronograma-custos.hide-col-2 #liq-crono-table thead th:nth-child(3),#page-cronograma-custos.hide-col-2 #liq-crono-table tbody td:nth-child(3){display:none!important;}
   #page-cronograma-custos.hide-col-3 #liq-crono-table thead th:nth-child(4),#page-cronograma-custos.hide-col-3 #liq-crono-table tbody td:nth-child(4){display:none!important;}
@@ -1818,6 +1819,24 @@
   </div>
 </div>
 
+<!-- MODAL: CONCILIAÇÕES COM CONTA ENCERRADA VINCULADA -->
+<div class="modal-overlay" id="modal-closed-acc-concil" onclick="if(event.target===this)closeModal('modal-closed-acc-concil')">
+  <div class="modal-card" style="max-width:520px">
+    <div class="modal-header">
+      <div class="modal-title" data-i18n="closed-acc-modal-title">Conciliações com conta encerrada vinculada</div>
+      <button class="modal-close" onclick="closeModal('modal-closed-acc-concil')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:var(--e-sub);margin-bottom:14px" data-i18n="closed-acc-modal-desc">Estas contas foram encerradas em Accounts e ainda estão vinculadas a conciliações ativas. Selecione as que devem ser encerradas também.</div>
+      <div id="closed-acc-concil-list" style="display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-closed-acc-concil')" data-i18n="btn-cancel">Cancelar</button>
+      <button class="btn-primary" onclick="submitCloseLinkedConcils()" style="background:#976ff4" data-i18n="btn-encerrar-conciliacoes">Encerrar conciliações</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: LINK DO REPORT (sem acesso / aguardando extrato) -->
 <div class="modal-overlay" id="modal-report-link" onclick="if(event.target===this)_skipReportLink()">
   <div class="modal-card" style="width:420px">
@@ -2308,6 +2327,9 @@ const i18n = {
     'btn-salvar-minha-senha':'Salvar minha senha','modal-change-pwd-title':'Alterar senha',
     'modal-pwd-gerada-title':'🔑 Senha gerada','modal-pwd-gerada-sub':'Copie e entregue ao usuário','btn-ok-entendido':'OK, entendido',
     'lbl-seu-email-corp':'Seu email corporativo','lbl-link-enviado':'Link enviado','modal-reset-link-title':'🔐 Redefinir senha',
+    'closed-acc-modal-title':'Conciliações com conta encerrada vinculada','closed-acc-modal-desc':'Estas contas foram encerradas em Accounts e ainda estão vinculadas a conciliações ativas. Selecione as que devem ser encerradas também.','btn-encerrar-conciliacoes':'Encerrar conciliações',
+    'closed-acc-banner-msg':'{n} conciliação(ões) com conta encerrada vinculada em Accounts','closed-acc-banner-btn':'Revisar e encerrar',
+    'closed-acc-linked-label':'Conta(s) encerrada(s):',
     'hist-btn':'Histórico','hist-title':'Histórico de Alterações','hist-col-env':'Ambiente','hist-search-ph':'Buscar usuário, módulo, ação...','hist-empty':'Nenhuma ação registrada ainda.',
     'hist-close':'Fechar','hist-download-csv':'Baixar CSV',
     'hist-col-datetime':'Data/Hora','hist-col-user':'Usuário','hist-col-module':'Módulo','hist-col-action':'Ação',
@@ -2467,6 +2489,9 @@ const i18n = {
     'btn-salvar-minha-senha':'Save my password','modal-change-pwd-title':'Change password',
     'modal-pwd-gerada-title':'🔑 Password generated','modal-pwd-gerada-sub':'Copy and hand it to the user','btn-ok-entendido':'OK, got it',
     'lbl-seu-email-corp':'Your corporate email','lbl-link-enviado':'Link sent','modal-reset-link-title':'🔐 Reset password',
+    'closed-acc-modal-title':'Reconciliations with a closed linked account','closed-acc-modal-desc':'These accounts were closed in Accounts and are still linked to active reconciliations. Select the ones that should be closed too.','btn-encerrar-conciliacoes':'Close reconciliations',
+    'closed-acc-banner-msg':'{n} reconciliation(s) with a closed account linked in Accounts','closed-acc-banner-btn':'Review and close',
+    'closed-acc-linked-label':'Closed account(s):',
     'hist-btn':'History','hist-title':'Change History','hist-col-env':'Environment','hist-search-ph':'Search user, module, action...','hist-empty':'No actions recorded yet.',
     'hist-close':'Close','hist-download-csv':'Download CSV',
     'hist-col-datetime':'Date/Time','hist-col-user':'User','hist-col-module':'Module','hist-col-action':'Action',
@@ -2627,6 +2652,9 @@ const i18n = {
     'btn-salvar-minha-senha':'Guardar mi contraseña','modal-change-pwd-title':'Cambiar contraseña',
     'modal-pwd-gerada-title':'🔑 Contraseña generada','modal-pwd-gerada-sub':'Copia y entrégala al usuario','btn-ok-entendido':'OK, entendido',
     'lbl-seu-email-corp':'Tu email corporativo','lbl-link-enviado':'Enlace enviado','modal-reset-link-title':'🔐 Restablecer contraseña',
+    'closed-acc-modal-title':'Conciliaciones con cuenta cerrada vinculada','closed-acc-modal-desc':'Estas cuentas fueron cerradas en Accounts y siguen vinculadas a conciliaciones activas. Selecciona las que también deben cerrarse.','btn-encerrar-conciliacoes':'Cerrar conciliaciones',
+    'closed-acc-banner-msg':'{n} conciliación(es) con cuenta cerrada vinculada en Accounts','closed-acc-banner-btn':'Revisar y cerrar',
+    'closed-acc-linked-label':'Cuenta(s) cerrada(s):',
     'hist-btn':'Historial','hist-title':'Historial de cambios','hist-col-env':'Entorno','hist-search-ph':'Buscar usuario, módulo, acción...','hist-empty':'Aún no hay acciones registradas.',
     'hist-close':'Cerrar','hist-download-csv':'Descargar CSV',
     'hist-col-datetime':'Fecha/Hora','hist-col-user':'Usuario','hist-col-module':'Módulo','hist-col-action':'Acción',
@@ -9170,6 +9198,75 @@ function _renderCronconcUnlinkedBanner(){
     <span style="font-size:12px;color:#92400e"><strong>${total} gateway${total!==1?'s':''}</strong> pendente${total!==1?'s':''} de cadastro — favor verificar em <strong>Gerencial › Conciliações</strong></span>
   </div>`;
 }
+// Conciliações ATIVAS com pelo menos uma conta vinculada já ENCERRADA em
+// Accounts — candidatas a serem encerradas também (aviso + popup abaixo).
+function _closedAccConcils(){
+  const closedSiglas=new Set(store.contas.filter(c=>c.status==='encerrada').map(c=>c.sigla));
+  if(!closedSiglas.size) return [];
+  return (store.conciliacoes||[]).filter(c=>c.status!=='encerrada').map(c=>{
+    const linked=(c.contas||[]).filter(sig=>closedSiglas.has(sig));
+    return linked.length?{conc:c,linked}:null;
+  }).filter(Boolean);
+}
+let _closedAccConcilSelected=new Set();
+function _renderClosedAccConcilBanner(){
+  const wrap=document.getElementById('crono-conc-closed-acc-banner');
+  if(!wrap) return;
+  const items=_closedAccConcils();
+  if(!items.length){wrap.innerHTML='';return;}
+  const n=items.length;
+  wrap.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin:0 0 10px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span style="font-size:12px;color:#92400e">${t('closed-acc-banner-msg').replace('{n}',n)}</span>
+    </div>
+    <button onclick="openClosedAccConcilModal()" style="font-size:12px;font-weight:600;padding:5px 12px;background:#fff;color:#92400e;border:1px solid #fcd34d;border-radius:6px;cursor:pointer;font-family:inherit;flex-shrink:0">${t('closed-acc-banner-btn')}</button>
+  </div>`;
+}
+function openClosedAccConcilModal(){
+  _closedAccConcilSelected=new Set();
+  _renderClosedAccConcilList();
+  openModal('modal-closed-acc-concil');
+}
+function _renderClosedAccConcilList(){
+  const box=document.getElementById('closed-acc-concil-list');
+  if(!box) return;
+  const items=_closedAccConcils();
+  box.innerHTML=items.map(({conc,linked})=>{
+    const key=(conc.id||conc.nome).replace(/['"]/g,'');
+    const chk=_closedAccConcilSelected.has(key)?'checked':'';
+    return `<label style="display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border:1px solid var(--e-pale);border-radius:8px;cursor:pointer">
+      <input type="checkbox" ${chk} onchange="_toggleClosedAccConcil('${_esc(key)}',this.checked)" style="margin-top:2px;cursor:pointer;accent-color:#976ff4;width:14px;height:14px;flex-shrink:0">
+      <span style="display:flex;flex-direction:column;gap:2px">
+        <span style="font-size:13px;font-weight:600">${_esc(conc.nome)}</span>
+        <span style="font-size:11px;color:var(--e-muted)">${t('closed-acc-linked-label')} <span style="font-family:monospace">${linked.map(_esc).join(', ')}</span></span>
+      </span>
+    </label>`;
+  }).join('');
+}
+function _toggleClosedAccConcil(key,checked){
+  if(checked) _closedAccConcilSelected.add(key);
+  else _closedAccConcilSelected.delete(key);
+}
+function submitCloseLinkedConcils(){
+  if(!_closedAccConcilSelected.size){closeModal('modal-closed-acc-concil');return;}
+  let n=0;
+  store.conciliacoes.forEach(c=>{
+    const key=(c.id||c.nome).replace(/['"]/g,'');
+    if(_closedAccConcilSelected.has(key)&&c.status!=='encerrada'){
+      c.status='encerrada';
+      if(!c.dataEncerramento) c.dataEncerramento=Date.now();
+      n++;
+    }
+  });
+  closeModal('modal-closed-acc-concil');
+  if(n){
+    logAudit('conciliacoes','encerrar-em-massa-conta-fechada',{n});
+    saveStore();_fbSync('conciliacoes');
+    renderCronogramaConciliacoes();
+    _toast(`✓ ${n} conciliação${n!==1?'ões':''} encerrada${n!==1?'s':''}`,3000);
+  }
+}
 function renderCronogramaConciliacoes(){
   const emptyEl=document.getElementById('crono-conc-empty');
   const calWrap=document.getElementById('crono-conc-cal-wrap');
@@ -9178,6 +9275,7 @@ function renderCronogramaConciliacoes(){
   if(!tbl||!emptyEl||!calWrap) return;
 
   _renderCronconcUnlinkedBanner();
+  _renderClosedAccConcilBanner();
   _initConcFilters();
 
   const activePaises=_fddVals('crono-conc-f-pais-panel');
@@ -9335,7 +9433,7 @@ function renderCronogramaConciliacoes(){
   const wd=_wdLabels();
   const dayHdrs=days.map(d=>{const wk=d.getDay()===0||d.getDay()===6;return `<th class="col-day${wk?' weekend':''}">${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}<br><span style="font-size:9px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--e-muted)">${wd[d.getDay()]}</span></th>`;}).join('');
 
-  const INFO_COLS=9;
+  const INFO_COLS=10;
   const _sth=(col,lbl,idx,extra='')=>`<th class="${_sortThCls('crono-conc',col)} col-info${extra?' cal-sticky':''}" ${extra} data-col-key="${col}" onclick="toggleSort('crono-conc','${col}')" style="cursor:pointer;position:relative">${lbl}${_sortArrow('crono-conc',col)}${extra?'':_colBtns('crono-conc',col,idx)}<div class="col-rsz-handle"></div></th>`;
   const _cDefs=[
     {k:'pais',h:()=>_sth('pais',t('col-pais'),1),c:(conc,ri,sc)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="pais" style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td>`},
@@ -9346,6 +9444,7 @@ function renderCronogramaConciliacoes(){
     {k:'tipo',h:()=>`<th class="col-info" data-col-key="tipo" style="position:relative">${t('conc-col-tipo')}${_colBtns('crono-conc','tipo',6)}<div class="col-rsz-handle"></div></th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="tipo" style="padding:4px 8px">${x.concTipoChipHtml}</td>`},
     {k:'frequencia',h:()=>`<th class="col-info" data-col-key="frequencia" style="position:relative">${t('lbl-freq')}${_colBtns('crono-conc','frequencia',7)}<div class="col-rsz-handle"></div></th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="frequencia" style="padding:4px 8px">${x.freqCell}</td>`},
     {k:'acompanhamento',h:()=>`<th class="col-info" data-col-key="acompanhamento" style="white-space:nowrap;position:relative">${t('conc-col-acomp')}${_colBtns('crono-conc','acompanhamento',8)}<div class="col-rsz-handle"></div></th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="acompanhamento" style="white-space:nowrap;padding:4px 8px">${x.d1ChipHtml}</td>`},
+    {k:'status',h:()=>`<th class="col-info" data-col-key="status" style="white-space:nowrap;position:relative">${t('col-status')}${_colBtns('crono-conc','status',9)}<div class="col-rsz-handle"></div></th>`,c:(conc,ri,sc)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="status" style="white-space:nowrap;padding:4px 8px">${conc.status==='encerrada'?`<span class="chip chip-slate">${t('status-encerrada')}${conc.dataEncerramento?' em '+new Date(conc.dataEncerramento).toLocaleDateString(_dateLocale()):''}</span>`:`<span class="chip chip-green">${t('status-ativa')}</span>`}</td>`},
   ];
   const _ccPins=(_pinnedCols['crono-conc']||[]).filter(k=>_cDefs.some(d=>d.k===k));
   const _ord=[..._ccPins.map(k=>_cDefs.find(d=>d.k===k)),..._cDefs.filter(d=>!_ccPins.includes(d.k))];
@@ -9461,7 +9560,7 @@ function renderCronogramaConciliacoes(){
       onConcCellClick(ev,td.dataset.ck,td.dataset.dt);
     });
   }
-  setTimeout(()=>{const _t=document.getElementById('crono-conc-cal-table');if(_ccPins.length){const pg=document.getElementById('page-cronograma-conciliacoes');if(pg)for(let i=1;i<=9;i++)pg.classList.remove('hide-col-'+i);_applyHiddenColsByKey(_t,'crono-conc');_applyPinnedSticky(_t,'crono-conc',calScrollEl);}else{_applyHiddenCols('crono-conc','crono-conc-cal-table',8);}_initLiqColResize(_t);},0);
+  setTimeout(()=>{const _t=document.getElementById('crono-conc-cal-table');if(_ccPins.length){const pg=document.getElementById('page-cronograma-conciliacoes');if(pg)for(let i=1;i<=9;i++)pg.classList.remove('hide-col-'+i);_applyHiddenColsByKey(_t,'crono-conc');_applyPinnedSticky(_t,'crono-conc',calScrollEl);}else{_applyHiddenCols('crono-conc','crono-conc-cal-table',9);}_initLiqColResize(_t);},0);
   _saveFilters('crono-conc');
 }
 
