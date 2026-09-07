@@ -664,7 +664,7 @@
       </div>
       <div class="sb-children collapsed" id="cronograma-children">
         <div class="sb-item" data-page="cronograma-accounts" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-accounts">Accounts</span></div>
-        <div class="sb-item" data-page="cronograma-cierre" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label">Accounts – Cierre</span></div>
+        <div class="sb-item" data-page="cronograma-cierre" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-cierre">Accounts – Cierre</span></div>
         <div class="sb-item" data-page="cronograma-custos" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-custos">Liquidações</span></div>
         <div class="sb-item" data-page="cronograma-conciliacoes" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-conciliacoes">Conciliações</span></div>
       </div>
@@ -984,47 +984,47 @@
     <div class="page" id="page-cronograma-cierre">
       <div class="page-header">
         <div class="page-title-group">
-          <div class="page-title-text">Accounts – Cierre</div>
+          <div class="page-title-text" data-i18n="nav-cierre">Accounts – Cierre</div>
           <div class="page-title-count" id="cierre-count-header"></div>
         </div>
-        <button id="cierre-clear-btn" onclick="clearCierreFilters()" style="display:none;align-items:center;gap:6px;font-size:12px;padding:5px 12px;background:var(--e-ghost);color:var(--e-muted);border:1px solid var(--e-pale);border-radius:8px;cursor:pointer;font-family:inherit" title="Limpar filtros">
+        <button id="cierre-clear-btn" onclick="clearCierreFilters()" style="display:none;align-items:center;gap:6px;font-size:12px;padding:5px 12px;background:var(--e-ghost);color:var(--e-muted);border:1px solid var(--e-pale);border-radius:8px;cursor:pointer;font-family:inherit" data-i18n-title="crono-clear-filters" title="Limpar filtros">
           <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
-          Limpar filtros
+          <span data-i18n="crono-clear-filters">Limpar filtros</span>
         </button>
       </div>
       <div class="crono-filters">
         <select id="cierre-f-mes" onchange="renderCierreTable()" style="height:36px;padding:0 28px 0 12px;border:1px solid var(--e-pale);border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;color:var(--e-text);background:#fff;cursor:pointer;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239898c3' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 10px center"></select>
         <div class="freq-dd" id="cierre-f-pais-dd">
-          <button class="freq-dd-btn" id="cierre-f-pais-btn" onclick="_fddToggle(event,'cierre-f-pais-panel')">Todos os países</button>
+          <button class="freq-dd-btn" id="cierre-f-pais-btn" data-i18n-default="crono-all-paises" onclick="_fddToggle(event,'cierre-f-pais-panel')">Todos os países</button>
           <div class="freq-dd-panel" id="cierre-f-pais-panel" style="max-height:240px;overflow-y:auto"></div>
         </div>
         <div class="freq-dd" id="cierre-f-agente-dd">
-          <button class="freq-dd-btn" id="cierre-f-agente-btn" onclick="_fddToggle(event,'cierre-f-agente-panel')">Todos os agentes</button>
+          <button class="freq-dd-btn" id="cierre-f-agente-btn" data-i18n-default="crono-all-agentes" onclick="_fddToggle(event,'cierre-f-agente-panel')">Todos os agentes</button>
           <div class="freq-dd-panel" id="cierre-f-agente-panel" style="max-height:240px;overflow-y:auto"></div>
         </div>
         <div class="freq-dd" id="cierre-f-banco-dd">
-          <button class="freq-dd-btn" id="cierre-f-banco-btn" onclick="_fddToggle(event,'cierre-f-banco-panel')">Todos os bancos</button>
+          <button class="freq-dd-btn" id="cierre-f-banco-btn" data-i18n-default="crono-all-bancos" onclick="_fddToggle(event,'cierre-f-banco-panel')">Todos os bancos</button>
           <div class="freq-dd-panel" id="cierre-f-banco-panel" style="max-height:240px;overflow-y:auto"></div>
         </div>
         <div class="freq-dd" id="cierre-f-resp-dd">
-          <button class="freq-dd-btn" id="cierre-f-resp-btn" onclick="_fddToggle(event,'cierre-f-resp-panel')">Todos os responsáveis</button>
+          <button class="freq-dd-btn" id="cierre-f-resp-btn" data-i18n-default="cierre-all-resps" onclick="_fddToggle(event,'cierre-f-resp-panel')">Todos os responsáveis</button>
           <div class="freq-dd-panel" id="cierre-f-resp-panel" style="max-height:240px;overflow-y:auto"></div>
         </div>
         <div class="freq-dd" id="cierre-f-status-dd">
-          <button class="freq-dd-btn" id="cierre-f-status-btn" onclick="_fddToggle(event,'cierre-f-status-panel')">Todos os status</button>
+          <button class="freq-dd-btn" id="cierre-f-status-btn" data-i18n-default="filter-all-status" onclick="_fddToggle(event,'cierre-f-status-panel')">Todos os status</button>
           <div class="freq-dd-panel" id="cierre-f-status-panel">
-            <button class="freq-toggle" data-val="sem-apontamento" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),t('filter-all-status'));renderCierreTable()">Sem apontamento</button>
-            <button class="freq-toggle" data-val="pendente" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),t('filter-all-status'));renderCierreTable()">Pendente</button>
-            <button class="freq-toggle" data-val="verificando" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),t('filter-all-status'));renderCierreTable()">Verificando</button>
-            <button class="freq-toggle" data-val="concluido" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),t('filter-all-status'));renderCierreTable()">Concluído</button>
+            <button class="freq-toggle" data-val="sem-apontamento" data-i18n="cierre-sem-apontamento" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),t('filter-all-status'));renderCierreTable()">Sem apontamento</button>
+            <button class="freq-toggle" data-val="pendente" data-i18n="status-pendente" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),t('filter-all-status'));renderCierreTable()">Pendente</button>
+            <button class="freq-toggle" data-val="verificando" data-i18n="cierre-verificando" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),t('filter-all-status'));renderCierreTable()">Verificando</button>
+            <button class="freq-toggle" data-val="concluido" data-i18n="status-concluido" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-status-btn',_fddVals('cierre-f-status-panel'),t('filter-all-status'));renderCierreTable()">Concluído</button>
           </div>
         </div>
         <div class="freq-dd" id="cierre-f-ap-dd">
-          <button class="freq-dd-btn" id="cierre-f-ap-btn" onclick="_fddToggle(event,'cierre-f-ap-panel')">Todos os apontamentos</button>
+          <button class="freq-dd-btn" id="cierre-f-ap-btn" data-i18n-default="cierre-all-apontamentos" onclick="_fddToggle(event,'cierre-f-ap-panel')">Todos os apontamentos</button>
           <div class="freq-dd-panel" id="cierre-f-ap-panel">
-            <button class="freq-toggle" data-val="Falta PDF" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-ap-btn',_fddVals('cierre-f-ap-panel'),t('cierre-all-apontamentos'));renderCierreTable()">Falta PDF</button>
-            <button class="freq-toggle" data-val="Verificar Saldo" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-ap-btn',_fddVals('cierre-f-ap-panel'),t('cierre-all-apontamentos'));renderCierreTable()">Verificar Saldo</button>
-            <button class="freq-toggle" data-val="" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-ap-btn',_fddVals('cierre-f-ap-panel'),t('cierre-all-apontamentos'));renderCierreTable()">Sem apontamento</button>
+            <button class="freq-toggle" data-val="Falta PDF" data-i18n="cierre-falta-pdf" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-ap-btn',_fddVals('cierre-f-ap-panel'),t('cierre-all-apontamentos'));renderCierreTable()">Falta PDF</button>
+            <button class="freq-toggle" data-val="Verificar Saldo" data-i18n="cierre-verificar-saldo" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-ap-btn',_fddVals('cierre-f-ap-panel'),t('cierre-all-apontamentos'));renderCierreTable()">Verificar Saldo</button>
+            <button class="freq-toggle" data-val="" data-i18n="cierre-sem-apontamento" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('cierre-f-ap-btn',_fddVals('cierre-f-ap-panel'),t('cierre-all-apontamentos'));renderCierreTable()">Sem apontamento</button>
           </div>
         </div>
       </div>
@@ -1033,17 +1033,17 @@
         <div class="crono-search-col">
           <div class="crono-search-inner">
             <svg class="crono-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
-            <input type="text" id="cierre-search" class="crono-search-input" placeholder="Buscar sigla, banco, agente, nº conta..."
+            <input type="text" id="cierre-search" class="crono-search-input" data-i18n-placeholder="cierre-search-ph" placeholder="Buscar sigla, banco, agente, nº conta..."
               oninput="renderCierreTable();updateCierreSearchClear()">
-            <button class="crono-search-clear" id="cierre-search-clear" onclick="clearCierreSearch()" style="display:none" title="Limpar busca">×</button>
+            <button class="crono-search-clear" id="cierre-search-clear" onclick="clearCierreSearch()" style="display:none" data-i18n-title="tt-limpar-busca" title="Limpar busca">×</button>
           </div>
         </div>
       </div>
       <div class="cierre-outer">
         <div id="cierre-empty" class="empty-state" style="display:none">
           <div class="empty-icon">📋</div>
-          <div class="empty-title">Nenhuma conta encontrada</div>
-          <div class="empty-sub">Tente ajustar os filtros.</div>
+          <div class="empty-title" data-i18n="cierre-empty-title">Nenhuma conta encontrada</div>
+          <div class="empty-sub" data-i18n="cierre-empty-sub">Tente ajustar os filtros.</div>
         </div>
         <div class="cierre-scroll-wrap" id="cierre-table-wrap" style="display:none">
           <div class="cierre-scroll">
@@ -1131,6 +1131,7 @@
     </button>
   </div>
   <div id="crono-conc-unlinked-banner"></div>
+  <div id="crono-conc-closed-acc-banner"></div>
   <div class="crono-filters">
     <div class="freq-dd" id="crono-conc-f-pais-dd">
       <button class="freq-dd-btn" id="crono-conc-f-pais-btn" onclick="_fddToggle(event,'crono-conc-f-pais-panel')">Todos os países</button>
@@ -3874,6 +3875,10 @@ function renderCronogramaAccounts(){
   const _d1obj=new Date(_nowD.getFullYear(),_nowD.getMonth(),_nowD.getDate()-1);
   const d1Str=_fmtD(_d1obj);
   const _getD1s=(ck,c)=>{
+    // Conta já encerrada: o "Acompanhamento" reflete isso agora mesmo, não
+    // o status derivado de ontem (não faz sentido mostrar "Pendente" pra
+    // uma conta que já foi encerrada).
+    if(c.status==='encerrada') return 'encerrada';
     if(c.tipo==='1 vez ao mês'){
       const prev=new Date(_nowD.getFullYear(),_nowD.getMonth()-1,1);
       const yr=prev.getFullYear(), mo=String(prev.getMonth()+1).padStart(2,'0');
@@ -3964,7 +3969,7 @@ function renderCronogramaAccounts(){
       const topChip=_contaTopChip(c.sigla);
       const dotCls=dayDotClass(c.tipo);
       const _d1s=d1Map[contaKey];
-      const _d1chipHtml={concluido:`<span class="chip chip-green" style="font-size:10px">${t('status-concluido')}</span>`,sem_movimento:`<span class="chip chip-purple" style="font-size:10px">${t('status-sem-mov')}</span>`,sem_acesso:`<span class="chip chip-red" style="font-size:10px">${t('status-sem-acesso')}</span>`,pendente:`<span class="chip chip-amber" style="font-size:10px">${t('status-pendente')}</span>`,aguardando_extrato:`<span class="chip chip-bbpix" style="font-size:10px">${t('status-ag-extrato')}</span>`}[_d1s]||'<span style="color:var(--e-muted);font-size:11px">—</span>';
+      const _d1chipHtml={concluido:`<span class="chip chip-green" style="font-size:10px">${t('status-concluido')}</span>`,sem_movimento:`<span class="chip chip-purple" style="font-size:10px">${t('status-sem-mov')}</span>`,sem_acesso:`<span class="chip chip-red" style="font-size:10px">${t('status-sem-acesso')}</span>`,pendente:`<span class="chip chip-amber" style="font-size:10px">${t('status-pendente')}</span>`,aguardando_extrato:`<span class="chip chip-bbpix" style="font-size:10px">${t('status-ag-extrato')}</span>`,encerrada:`<span class="chip chip-slate" style="font-size:10px">${t('status-encerrada')}</span>`}[_d1s]||'<span style="color:var(--e-muted);font-size:11px">—</span>';
       // Dia do fechamento em diante: mostra "Encerrada" no lugar do status
       // normal (preserva os dias ANTERIORES intactos, com o histórico real).
       const _closureDayStart=(c.status==='encerrada'&&c.dataEncerramento)?(d=>new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime())(new Date(c.dataEncerramento)):null;
@@ -5514,7 +5519,7 @@ function _cierreStatus(entry){
   return 'pendente';
 }
 function _cierreChip(status){
-  const m={pendente:'<span class="chip chip-cierre-pendente">Pendente</span>',verificando:'<span class="chip chip-cierre-verificando">Verificando</span>',concluido:'<span class="chip chip-cierre-concluido">Concluído</span>'};
+  const m={pendente:`<span class="chip chip-cierre-pendente">${t('status-pendente')}</span>`,verificando:`<span class="chip chip-cierre-verificando">${t('cierre-verificando')}</span>`,concluido:`<span class="chip chip-cierre-concluido">${t('status-concluido')}</span>`};
   return m[status]||m.pendente;
 }
 function _cierreStatsHtml(mes,filteredContas){
@@ -5527,7 +5532,7 @@ function _cierreStatsHtml(mes,filteredContas){
     else if(st==='pendente') cts.pendente++;
     else cts[st]++;
   });
-  return `<div class="cierre-stat cierre-stat-sem-ap"><div class="cierre-stat-num">${cts.semAp}</div><div class="cierre-stat-lbl">Sem apontamento</div></div><div class="cierre-stat cierre-stat-pendente"><div class="cierre-stat-num">${cts.pendente}</div><div class="cierre-stat-lbl">${t('status-pendente')||'Pendente'}</div></div><div class="cierre-stat cierre-stat-verificando"><div class="cierre-stat-num">${cts.verificando}</div><div class="cierre-stat-lbl">${t('cierre-verificando')||'Verificando'}</div></div><div class="cierre-stat cierre-stat-concluido"><div class="cierre-stat-num">${cts.concluido}</div><div class="cierre-stat-lbl">${t('status-concluido')||'Concluído'}</div></div>`;
+  return `<div class="cierre-stat cierre-stat-sem-ap"><div class="cierre-stat-num">${cts.semAp}</div><div class="cierre-stat-lbl">${t('cierre-sem-apontamento')}</div></div><div class="cierre-stat cierre-stat-pendente"><div class="cierre-stat-num">${cts.pendente}</div><div class="cierre-stat-lbl">${t('status-pendente')||'Pendente'}</div></div><div class="cierre-stat cierre-stat-verificando"><div class="cierre-stat-num">${cts.verificando}</div><div class="cierre-stat-lbl">${t('cierre-verificando')||'Verificando'}</div></div><div class="cierre-stat cierre-stat-concluido"><div class="cierre-stat-num">${cts.concluido}</div><div class="cierre-stat-lbl">${t('status-concluido')||'Concluído'}</div></div>`;
 }
 function initCierreFilters(){
   const mesEl=document.getElementById('cierre-f-mes');
@@ -5653,8 +5658,8 @@ function renderCierreTable(){
   const dis=edit?'':'disabled';
   const _cth=(col,lbl,extra='')=>`<th class="${_sortThCls('cierre',col)}" style="cursor:pointer${extra?';'+extra:''}" onclick="toggleSort('cierre','${col}')">${lbl}${_sortArrow('cierre',col)}</th>`;
   tbl.innerHTML=`<thead><tr>
-    ${_cth('sigla','Sigla')}${_cth('pais','País')}${_cth('agente','Responsável')}${_cth('banco','Banco')}${_cth('numeroConta','Nº Conta')}
-    <th>Apontamento</th><th>Status</th><th>Comentário</th>${_cth('_aging','Aging','text-align:right')}<th style="text-align:center">✓</th>
+    ${_cth('sigla',t('col-sigla'))}${_cth('pais',t('col-pais'))}${_cth('agente',t('col-responsavel'))}${_cth('banco',t('col-banco'))}${_cth('numeroConta',t('col-num-conta'))}
+    <th>${t('col-apontamento')}</th><th>${t('col-status')}</th><th>${t('col-comentario')}</th>${_cth('_aging',t('col-aging'),'text-align:right')}<th style="text-align:center">✓</th>
   </tr></thead><tbody>${contas.map(c=>{
     const ck=_cierreKey(c,mes);
     const entry=store.cierreData[ck]||{};
@@ -5662,7 +5667,8 @@ function renderCierreTable(){
     const flag=FLAG_MAP[c.pais]||'🏳';
     const hasAp=entry.apontamento?` has-val ap-${entry.apontamento==='Falta PDF'?'faltapdf':'verificarsaldo'}`:'';
     const hasCom=entry.comentario?.trim()?' has-val':'';
-    const aOpts=['','Falta PDF','Verificar Saldo'].map(v=>`<option value="${v}"${entry.apontamento===v?' selected':''}>${v||'— selecione —'}</option>`).join('');
+    const _apLbl={'':t('sel-select'),'Falta PDF':t('cierre-falta-pdf'),'Verificar Saldo':t('cierre-verificar-saldo')};
+    const aOpts=['','Falta PDF','Verificar Saldo'].map(v=>`<option value="${v}"${entry.apontamento===v?' selected':''}>${_apLbl[v]}</option>`).join('');
     const com=(entry.comentario||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     const resp=_cierreResp(c);
     const respCell=resp?`<span class="chip chip-purple" title="${resp.nome}">${resp.sigla}</span>`:`<span style="color:var(--e-muted);font-size:11px">—</span>`;
@@ -5674,7 +5680,7 @@ function renderCierreTable(){
       <td class="sub">${c.banco||''}</td><td class="mono">${c.numeroConta||''}</td>
       <td><select class="cierre-ap-select${hasAp}" ${dis} onchange="updateCierreField('${ck}','apontamento',this.value,this)">${aOpts}</select></td>
       <td id="cs-${ck.replace(/[^a-z0-9]/gi,'_')}">${_cierreChip(status)}</td>
-      <td><input type="text" class="cierre-comment-input${hasCom}" ${dis} value="${com}" placeholder="Adicionar comentário..." onchange="updateCierreField('${ck}','comentario',this.value,this)"></td>
+      <td><input type="text" class="cierre-comment-input${hasCom}" ${dis} value="${com}" placeholder="${t('cierre-comment-ph')}" onchange="updateCierreField('${ck}','comentario',this.value,this)"></td>
       <td style="text-align:right;font-variant-numeric:tabular-nums;font-size:12px" id="ag-${ck.replace(/[^a-z0-9]/gi,'_')}">${_cierreAging(entry)}</td>
       <td class="cierre-check-cell"><input type="checkbox" class="cierre-cb" ${dis} ${entry.concluido?' checked':''} onchange="updateCierreField('${ck}','concluido',this.checked,this)"></td>
     </tr>`;
@@ -9395,7 +9401,9 @@ function renderCronogramaConciliacoes(){
       }
       const r=_getConcilStatus(conc,dateStr);
       const cfg=statusCfg[r.status];
-      if(r.status==='pendente'){
+      // Conta encerrada vinculada: fica sem preencher, como pendente — não é
+      // um status de dia-a-dia, é só um aviso administrativo (banner acima).
+      if(r.status==='pendente'||r.status==='conta_encerrada'){
         return `<td class="day-cell conc-cell" data-ck="${_ck}" data-dt="${dateStr}" style="cursor:pointer"><div class="day-dot" style="background:rgba(151,111,244,.1);font-size:8px;opacity:.6">·</div></td>`;
       }
       const _sig=r.entry?.sigla||'';
