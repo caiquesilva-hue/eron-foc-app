@@ -9261,8 +9261,12 @@ function submitCloseLinkedConcils(){
   });
   closeModal('modal-closed-acc-concil');
   if(n){
-    logAudit('conciliacoes','encerrar-em-massa-conta-fechada',{n});
+    // _fbSync ANTES de logAudit: o SDK Firebase v8 dispara o listener raiz de
+    // forma SÍNCRONA ao escrever em auditLog. Se _pendingWrites=0 nesse
+    // momento, _applyFbData sobrescreveria store.conciliacoes com dados
+    // antigos do Firebase antes da nossa própria escrita ter saído local.
     saveStore();_fbSync('conciliacoes');
+    logAudit('conciliacoes','encerrar-em-massa-conta-fechada',{n});
     renderCronogramaConciliacoes();
     _toast(`✓ ${n} conciliação${n!==1?'ões':''} encerrada${n!==1?'s':''}`,3000);
   }
