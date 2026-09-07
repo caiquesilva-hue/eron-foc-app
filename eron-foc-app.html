@@ -3823,7 +3823,7 @@ function renderCronogramaAccounts(){
         const dateStr=fmtDate(d);
         if(_closureDayStart!==null&&d.getTime()>=_closureDayStart){
           const _ck=contaKey.replace(/&/g,'&amp;');
-          return `<td class="day-cell-closed" data-ck="${_ck}" data-dt="${dateStr}" style="text-align:center">
+          return `<td class="day-cell-closed" data-ck="${_ck}" data-dt="${dateStr}" style="text-align:center" title="${t('status-encerrada')}">
             <div class="day-filled" style="background:#fef2f2;color:#dc2626;font-size:9px" title="${t('status-encerrada')}">${t('status-encerrada-abbr')}</div></td>`;
         }
         const active=isActiveDay(d,c.tipo);
@@ -9234,7 +9234,7 @@ function renderCronogramaConciliacoes(){
       const dateStr=fmtD(d);
       const _ck=concId.replace(/&/g,'&amp;');
       if(_closureDayStart!==null&&d.getTime()>=_closureDayStart){
-        return `<td class="day-cell-closed" data-ck="${_ck}" data-dt="${dateStr}" style="text-align:center"><div class="day-filled" style="background:#fef2f2;color:#dc2626;font-size:9px" title="${t('status-encerrada')}">${t('status-encerrada-abbr')}</div></td>`;
+        return `<td class="day-cell-closed" data-ck="${_ck}" data-dt="${dateStr}" style="text-align:center" title="${t('status-encerrada')}"><div class="day-filled" style="background:#fef2f2;color:#dc2626;font-size:9px" title="${t('status-encerrada')}">${t('status-encerrada-abbr')}</div></td>`;
       }
       const r=_getConcilStatus(conc,dateStr);
       const cfg=statusCfg[r.status];
