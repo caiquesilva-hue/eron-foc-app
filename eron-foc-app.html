@@ -2442,7 +2442,7 @@ const i18n = {
     'cronconc-warnings-summary-1':'{n} aviso, verificar urgente','cronconc-warnings-summary-n':'{n} avisos, verificar urgente',
     'closed-acc-linked-label-1':'Conta encerrada:','closed-acc-linked-label-n':'Contas encerradas:',
     'dup-link-tipo-conta-1':'Conta','dup-link-tipo-conta-n':'Contas','dup-link-tipo-processador-1':'Processador','dup-link-tipo-processador-n':'Processadores','dup-link-tipo-gateway-1':'Gateway','dup-link-tipo-gateway-n':'Gateways',
-    'dup-link-item-1':'{tipo} {ids} já vinculado à conciliação "{nome}"','dup-link-item-n':'{tipo} {ids} já vinculados à conciliação "{nome}"','dup-link-block-suffix':'Remova o vínculo da outra conciliação antes de salvar — cada conta e cada gateway só pode pertencer a uma conciliação.','msg-gateway-duplicado-suffix':'gateway(s) ignorado(s) por já estarem vinculados a outra conciliação (ver console)',
+    'dup-link-item-1':'{tipo} {ids} já vinculado à conciliação "{nome}"','dup-link-item-n':'{tipo} {ids} já vinculados à conciliação "{nome}"','dup-link-block-suffix':'Remova o vínculo da outra conciliação antes de salvar — cada conta só pode pertencer a uma conciliação.','dup-link-confirm-suffix':'Isso pode contar o mesmo volume em dobro se as duas conciliações usarem o mesmo tipo de operação. Deseja prosseguir mesmo assim?','msg-gateway-duplicado-suffix':'gateway(s) ignorado(s) por já estarem vinculados a outra conciliação no mesmo tipo de operação (ver console)',
     'conta-encerrada-frozen-msg':'Conta encerrada — o histórico fica congelado e não pode mais ser alterado.',
     'conc-encerrada-frozen-msg':'Conciliação encerrada — o histórico fica congelado e não pode mais ser alterado.',
     'conc-locked-edit-msg':'Conciliação encerrada — os dados não podem ser editados. Para alterar, desmarque "Encerrar conciliação" e salve para reabrir.',
@@ -2654,7 +2654,7 @@ const i18n = {
     'cronconc-warnings-summary-1':'{n} warning, please review urgently','cronconc-warnings-summary-n':'{n} warnings, please review urgently',
     'closed-acc-linked-label-1':'Closed account:','closed-acc-linked-label-n':'Closed accounts:',
     'dup-link-tipo-conta-1':'Account','dup-link-tipo-conta-n':'Accounts','dup-link-tipo-processador-1':'Processor','dup-link-tipo-processador-n':'Processors','dup-link-tipo-gateway-1':'Gateway','dup-link-tipo-gateway-n':'Gateways',
-    'dup-link-item-1':'{tipo} {ids} already linked to reconciliation "{nome}"','dup-link-item-n':'{tipo} {ids} already linked to reconciliation "{nome}"','dup-link-block-suffix':'Remove the link from the other reconciliation before saving — each account and each gateway can only belong to one reconciliation.','msg-gateway-duplicado-suffix':'gateway(s) skipped because already linked to another reconciliation (see console)',
+    'dup-link-item-1':'{tipo} {ids} already linked to reconciliation "{nome}"','dup-link-item-n':'{tipo} {ids} already linked to reconciliation "{nome}"','dup-link-block-suffix':'Remove the link from the other reconciliation before saving — each account can only belong to one reconciliation.','dup-link-confirm-suffix':'This may double-count the same volume if both reconciliations use the same operation type. Do you want to proceed anyway?','msg-gateway-duplicado-suffix':'gateway(s) skipped because already linked to another reconciliation under the same operation type (see console)',
     'conta-encerrada-frozen-msg':'Closed account — the history is frozen and can no longer be changed.',
     'conc-encerrada-frozen-msg':'Closed reconciliation — the history is frozen and can no longer be changed.',
     'conc-locked-edit-msg':'Closed reconciliation — the data cannot be edited. To change it, uncheck "Close reconciliation" and save to reopen it.',
@@ -2867,7 +2867,7 @@ const i18n = {
     'cronconc-warnings-summary-1':'{n} aviso, verificar con urgencia','cronconc-warnings-summary-n':'{n} avisos, verificar con urgencia',
     'closed-acc-linked-label-1':'Cuenta cerrada:','closed-acc-linked-label-n':'Cuentas cerradas:',
     'dup-link-tipo-conta-1':'Cuenta','dup-link-tipo-conta-n':'Cuentas','dup-link-tipo-processador-1':'Procesador','dup-link-tipo-processador-n':'Procesadores','dup-link-tipo-gateway-1':'Gateway','dup-link-tipo-gateway-n':'Gateways',
-    'dup-link-item-1':'{tipo} {ids} ya vinculado a la conciliación "{nome}"','dup-link-item-n':'{tipo} {ids} ya vinculados a la conciliación "{nome}"','dup-link-block-suffix':'Elimine el vínculo de la otra conciliación antes de guardar — cada cuenta y cada gateway solo puede pertenecer a una conciliación.','msg-gateway-duplicado-suffix':'gateway(s) omitido(s) por ya estar vinculado(s) a otra conciliación (ver consola)',
+    'dup-link-item-1':'{tipo} {ids} ya vinculado a la conciliación "{nome}"','dup-link-item-n':'{tipo} {ids} ya vinculados a la conciliación "{nome}"','dup-link-block-suffix':'Elimine el vínculo de la otra conciliación antes de guardar — cada cuenta solo puede pertenecer a una conciliación.','dup-link-confirm-suffix':'Esto puede contar el mismo volumen por duplicado si ambas conciliaciones usan el mismo tipo de operación. ¿Desea continuar de todos modos?','msg-gateway-duplicado-suffix':'gateway(s) omitido(s) por ya estar vinculado(s) a otra conciliación en el mismo tipo de operación (ver consola)',
     'conta-encerrada-frozen-msg':'Cuenta cerrada — el historial queda congelado y ya no puede modificarse.',
     'conc-encerrada-frozen-msg':'Conciliación cerrada — el historial queda congelado y ya no puede modificarse.',
     'conc-locked-edit-msg':'Conciliación cerrada — los datos no pueden editarse. Para modificarla, desmarque "Cerrar conciliación" y guarde para reabrirla.',
@@ -8681,14 +8681,25 @@ function toggleConcTipo(tipo){
   renderConcVincList(); renderConcVincTags();
 }
 
+const _GW_BUCKET_KEY={cashin:'cashinIds',cashout:'cashoutIds',refunds:'refundIds',chargebacks:'chargebackIds'};
 // Verifica se contas/gateways selecionados já estão vinculados a OUTRA
 // conciliação (exclui a própria, em caso de edição). Processador fica de
 // fora de propósito: é normal o mesmo processador aparecer em várias
-// conciliações (ex.: uma pra cashin, outra pra cashout). Conta e gateway,
-// não — cada um só pode pertencer a uma conciliação, senão o volume
-// pendente é contado em dobro (ver _rebuildCombinedRanking). Retorna uma
-// lista de conflitos {tipo,id,concNome} agrupável para exibir ao usuário.
-function _findDuplicateLinks(contas,gatewayIds){
+// conciliações (ex.: uma pra cashin, outra pra cashout).
+// Gateway: o mesmo ID pode legitimamente aparecer em conciliações
+// diferentes quando são tipos de operação diferentes — ex. gateway 2021
+// como cashin numa conciliação e como chargeback (estorno do mesmo
+// gateway) noutra é normal (visto no Archer/fonte de dados) e não conta
+// em dobro, porque cashin e chargeback vêm de baldes de volume separados
+// (vr.cashin × vr.chargebacks em _rebuildCombinedRanking). Só é conflito
+// de verdade quando o MESMO tipo de operação repete o mesmo ID em duas
+// conciliações — aí sim as duas somam o mesmo balde. Por isso a
+// comparação é feita bucket a bucket (opTypes), não com os 4 arrays
+// misturados.
+// Conta: sempre é conflito de verdade (não tem noção de "tipo de
+// operação" pra segmentar), por isso segue bloqueando.
+// Retorna uma lista de conflitos {tipo,id,concNome} agrupável.
+function _findDuplicateLinks(contas,gatewayIds,opTypes){
   const conflicts=[];
   const selfConcId=_editConcIdx>=0?(store.conciliacoes[_editConcIdx].id||store.conciliacoes[_editConcIdx].nome||'').replace(/['"]/g,''):null;
   store.conciliacoes.forEach((c,idx)=>{
@@ -8696,32 +8707,40 @@ function _findDuplicateLinks(contas,gatewayIds){
     if(c.status==='encerrada') return; // encerradas não contam pra duplicidade
     (c.contas||[]).forEach(sig=>{ if(contas.includes(sig)) conflicts.push({tipo:'conta',id:sig,concNome:c.nome}); });
   });
-  if(gatewayIds.length){
+  if(gatewayIds.length&&(opTypes||[]).length){
     Object.entries(store.concilVolumeMap||{}).forEach(([cId,map])=>{
       if(selfConcId&&cId===selfConcId) return;
       const c=store.conciliacoes.find(x=>(x.id||x.nome).replace(/['"]/g,'')===cId);
       if(c&&c.status==='encerrada') return; // encerradas não contam pra duplicidade
-      const ids=[...(map.cashinIds||[]),...(map.cashoutIds||[]),...(map.refundIds||[]),...(map.chargebackIds||[])];
-      if(!ids.length) return;
-      gatewayIds.forEach(g=>{ if(ids.includes(g)) conflicts.push({tipo:'gateway',id:g,concNome:c?c.nome:cId}); });
+      opTypes.forEach(ot=>{
+        const ids=map[_GW_BUCKET_KEY[ot]]||[];
+        if(!ids.length) return;
+        gatewayIds.forEach(g=>{ if(ids.includes(g)) conflicts.push({tipo:'gateway',id:g,concNome:c?c.nome:cId}); });
+      });
     });
   }
   return conflicts;
 }
-// Bloqueia o salvamento (sem opção de ignorar) quando há conflito de conta
-// ou gateway — diferente do antigo confirm(), que deixava o usuário seguir
-// em frente e corrompia o volume pendente de duas conciliações de uma vez.
-function _blockDuplicateLinks(conflicts){
-  if(!conflicts.length) return true;
+function _dupLinkLines(conflicts){
   const byConc={};
   conflicts.forEach(cf=>{
     const key=cf.concNome+'|'+cf.tipo;
     if(!byConc[key]) byConc[key]={concNome:cf.concNome,tipo:cf.tipo,ids:[]};
     byConc[key].ids.push(cf.id);
   });
-  const lines=Object.values(byConc).map(g=>tn('dup-link-item',g.ids.length).replace('{tipo}',tn('dup-link-tipo-'+g.tipo,g.ids.length)).replace('{ids}',g.ids.join(', ')).replace('{nome}',g.concNome));
-  alert(lines.join('\n')+'\n\n'+t('dup-link-block-suffix'));
+  return Object.values(byConc).map(g=>tn('dup-link-item',g.ids.length).replace('{tipo}',tn('dup-link-tipo-'+g.tipo,g.ids.length)).replace('{ids}',g.ids.join(', ')).replace('{nome}',g.concNome));
+}
+// Conta duplicada bloqueia de vez — não tem cenário legítimo pra isso.
+function _blockDuplicateLinks(conflicts){
+  if(!conflicts.length) return true;
+  alert(_dupLinkLines(conflicts).join('\n')+'\n\n'+t('dup-link-block-suffix'));
   return false;
+}
+// Gateway duplicado (mesmo tipo de operação em duas conciliações) é só
+// aviso — o usuário pode confirmar e prosseguir mesmo assim.
+function _confirmDuplicateLinks(conflicts){
+  if(!conflicts.length) return true;
+  return confirm(_dupLinkLines(conflicts).join('\n')+'\n\n'+t('dup-link-confirm-suffix'));
 }
 function submitConciliacao(){
   // Conciliação encerrada nunca pode ser editada — só permite salvar se o
@@ -8741,7 +8760,9 @@ function submitConciliacao(){
   const tipo=hasProc&&hasBancos?'mista':hasProc?'processadores':'bancos';
   const contas=hasBancos?[..._selectedContas]:[];
   const processadores=hasProc?[..._selectedProcessadores]:[];
-  if(!_blockDuplicateLinks(_findDuplicateLinks(contas,_selectedGatewayIds))) return;
+  const _dupConflicts=_findDuplicateLinks(contas,_selectedGatewayIds,_selectedOpTypes);
+  if(!_blockDuplicateLinks(_dupConflicts.filter(c=>c.tipo==='conta'))) return;
+  if(!_confirmDuplicateLinks(_dupConflicts.filter(c=>c.tipo==='gateway'))) return;
   // Distribute unified gateway selection to all active op-types
   const cashinIds=_selectedOpTypes.includes('cashin')?[..._selectedGatewayIds]:[];
   const cashoutIds=_selectedOpTypes.includes('cashout')?[..._selectedGatewayIds]:[];
@@ -8930,14 +8951,21 @@ function _importUpdateConcilCSV(csvText){
   let updated=0,freqSet=0,freqEmpty=0;const notFound=[];
   // Índice de quem já é dono de cada gateway ANTES deste import, pra barrar
   // linhas do CSV que reusam (por erro de digitação/copy-paste na planilha
-  // de origem) um "ID Gateway" que já pertence a outra conciliação — foi
-  // assim que o volume pendente de produção ficou duplicado entre
-  // conciliações completamente diferentes (ver _rebuildCombinedRanking).
-  const preOwner={};
+  // de origem) um "ID Gateway" que já pertence a outra conciliação NO
+  // MESMO tipo de operação — foi assim que o volume pendente de produção
+  // ficou duplicado entre conciliações completamente diferentes (ver
+  // _rebuildCombinedRanking). Indexado por bucket (cashin/cashout/refunds/
+  // chargebacks) separadamente: o mesmo ID de gateway aparecer como cashin
+  // numa conciliação e como chargeback (estorno) noutra é normal — vêm de
+  // baldes de volume diferentes e não contam em dobro.
+  const preOwner={cashin:{},cashout:{},refunds:{},chargebacks:{}};
   Object.entries(store.concilVolumeMap||{}).forEach(([cid,map])=>{
-    [...(map.cashinIds||[]),...(map.cashoutIds||[]),...(map.refundIds||[]),...(map.chargebackIds||[])].forEach(id=>{preOwner[id]=cid;});
+    (map.cashinIds||[]).forEach(id=>{preOwner.cashin[id]=cid;});
+    (map.cashoutIds||[]).forEach(id=>{preOwner.cashout[id]=cid;});
+    (map.refundIds||[]).forEach(id=>{preOwner.refunds[id]=cid;});
+    (map.chargebackIds||[]).forEach(id=>{preOwner.chargebacks[id]=cid;});
   });
-  const claimedThisRun={}; // gwId -> nome que já reivindicou nesta mesma importação
+  const claimedThisRun={cashin:{},cashout:{},refunds:{},chargebacks:{}}; // [tipo][gwId] -> nome que já reivindicou nesta importação
   const dupConflicts=[]; // {gwId,nome,owner}
   for(const [nome,data] of groups){
     const idx=(store.conciliacoes||[]).findIndex(c=>c.nome===nome);
@@ -8948,34 +8976,35 @@ function _importUpdateConcilCSV(csvText){
     else freqEmpty++;
     if(!store.concilVolumeMap) store.concilVolumeMap={};
     const existing=store.concilVolumeMap[concId]||{};
-    const allNewIds=[...data.gateways.cashin,...data.gateways.cashout,...data.gateways.refunds,...data.gateways.chargebacks];
-    const conflictedIds=new Set();
-    allNewIds.forEach(gwId=>{
-      const ownerConcId=preOwner[gwId];
-      if(ownerConcId&&ownerConcId!==concId){
-        const ownerConc=(store.conciliacoes||[]).find(c=>(c.id||c.nome).replace(/['"]/g,'')===ownerConcId);
-        if(!(ownerConc&&ownerConc.status==='encerrada')){
-          dupConflicts.push({gwId,nome,owner:ownerConc?ownerConc.nome:ownerConcId});
-          conflictedIds.add(gwId);
+    const conflictedByType={cashin:new Set(),cashout:new Set(),refunds:new Set(),chargebacks:new Set()};
+    Object.entries(data.gateways).forEach(([type,ids])=>{
+      ids.forEach(gwId=>{
+        const ownerConcId=preOwner[type][gwId];
+        if(ownerConcId&&ownerConcId!==concId){
+          const ownerConc=(store.conciliacoes||[]).find(c=>(c.id||c.nome).replace(/['"]/g,'')===ownerConcId);
+          if(!(ownerConc&&ownerConc.status==='encerrada')){
+            dupConflicts.push({gwId,tipo:type,nome,owner:ownerConc?ownerConc.nome:ownerConcId});
+            conflictedByType[type].add(gwId);
+            return;
+          }
+        }
+        const claimedBy=claimedThisRun[type][gwId];
+        if(claimedBy&&claimedBy!==nome){
+          dupConflicts.push({gwId,tipo:type,nome,owner:claimedBy});
+          conflictedByType[type].add(gwId);
           return;
         }
-      }
-      const claimedBy=claimedThisRun[gwId];
-      if(claimedBy&&claimedBy!==nome){
-        dupConflicts.push({gwId,nome,owner:claimedBy});
-        conflictedIds.add(gwId);
-        return;
-      }
-      claimedThisRun[gwId]=nome;
+        claimedThisRun[type][gwId]=nome;
+      });
     });
-    const _clean=arr=>[...new Set(arr)].filter(id=>!conflictedIds.has(id));
+    const _clean=(type,arr)=>[...new Set(arr)].filter(id=>!conflictedByType[type].has(id));
     const tiposOperacao=Object.entries(data.gateways).filter(([,ids])=>ids.length>0).map(([tp])=>tp);
     store.concilVolumeMap[concId]={
       tiposOperacao:tiposOperacao.length?tiposOperacao:(existing.tiposOperacao||[]),
-      cashinIds:data.gateways.cashin.length?_clean(data.gateways.cashin):(existing.cashinIds||[]),
-      cashoutIds:data.gateways.cashout.length?_clean(data.gateways.cashout):(existing.cashoutIds||[]),
-      refundIds:data.gateways.refunds.length?_clean(data.gateways.refunds):(existing.refundIds||[]),
-      chargebackIds:data.gateways.chargebacks.length?_clean(data.gateways.chargebacks):(existing.chargebackIds||[])
+      cashinIds:data.gateways.cashin.length?_clean('cashin',data.gateways.cashin):(existing.cashinIds||[]),
+      cashoutIds:data.gateways.cashout.length?_clean('cashout',data.gateways.cashout):(existing.cashoutIds||[]),
+      refundIds:data.gateways.refunds.length?_clean('refunds',data.gateways.refunds):(existing.refundIds||[]),
+      chargebackIds:data.gateways.chargebacks.length?_clean('chargebacks',data.gateways.chargebacks):(existing.chargebackIds||[])
     };
     updated++;
   }
