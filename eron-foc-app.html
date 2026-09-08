@@ -10739,7 +10739,8 @@ function _hasLiqFilters(){
     _fddVals('liq-f-agente-panel').length>0||
     _fddVals('liq-f-tipo-panel').length>0||
     _fddVals('liq-f-status-panel').length>0||
-    (document.getElementById('liq-crono-search')?.value||'').trim()!=='';
+    (document.getElementById('liq-crono-search')?.value||'').trim()!==''||
+    _hiddenCols.liq.size>0;
 }
 function clearLiqFilters(){
   document.querySelectorAll('#liq-f-pais-panel .freq-toggle.active,#liq-f-agente-panel .freq-toggle.active,#liq-f-tipo-panel .freq-toggle.active,#liq-f-status-panel .freq-toggle.active').forEach(b=>b.classList.remove('active'));
@@ -10749,6 +10750,7 @@ function clearLiqFilters(){
   _fddLabel('liq-f-status-btn',[],t('liq-all-status'));
   const inp=document.getElementById('liq-crono-search');
   if(inp) inp.value='';
+  _hiddenCols.liq.clear();_saveHiddenCols();
   renderCronogramaLiquidacoes();
 }
 
