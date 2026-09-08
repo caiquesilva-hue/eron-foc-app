@@ -293,6 +293,7 @@
   .d1-stat-concluida .d1-stat-num{color:#15803d;}
   .d1-stat-sem-mov .d1-stat-num{color:#5b21b6;}
   .d1-stat-sem-acesso .d1-stat-num{color:#dc2626;}
+  .d1-stat-conta-encerrada .d1-stat-num{color:#475569;}
   .d1-stat-pendente .d1-stat-num{color:#d97706;}
   .d1-stat-ag-extrato .d1-stat-num{color:#0369a1;}
   .d1-stat-pronto-conc .d1-stat-num{color:#1d4ed8;}
@@ -339,6 +340,9 @@
   #crono-note-tip{position:fixed;z-index:9999;background:#fefce8;border:1px solid #f59e0b;border-radius:8px;padding:8px 12px;font-size:11px;max-width:300px;box-shadow:0 4px 16px rgba(0,0,0,.15);display:none;}
   #crono-note-tip a{color:#1d4ed8;word-break:break-all;display:block;margin-top:3px;}
   .crono-filters select:focus,.crono-filters input[type=date]:focus{border-color:var(--e-purple);}
+  #crono-conc-f-vol-val{-moz-appearance:textfield;appearance:textfield;}
+  #crono-conc-f-vol-val::-webkit-inner-spin-button,#crono-conc-f-vol-val::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+  #crono-conc-f-vol-op:focus,#crono-conc-f-vol-val:focus{outline:none;box-shadow:none;}
   .liq-stat-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;}
   .liq-stat{background:#fff;border:1px solid var(--e-pale);border-radius:10px;padding:12px 14px;}
   .liq-stat-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--e-muted);margin-bottom:4px;}
@@ -836,7 +840,7 @@
   <div id="slack-cfg-conciliacoes"></div>
   <div class="table-wrap">
     <div id="conciliacoes-empty" class="empty-state"><div class="empty-icon">🔗</div><div class="empty-title" data-i18n="conc-empty-title">Nenhuma conciliação cadastrada</div><div class="empty-sub" data-i18n="conc-empty-sub">Adicione conciliações vinculando contas de Gerencial > Accounts.</div></div>
-    <div class="table-scroll" id="conciliacoes-table-inner" style="display:none"><table style="table-layout:fixed;width:100%"><thead><tr><th style="width:15%" data-i18n="lbl-nome">Nome</th><th style="width:6%" data-i18n="col-pais">País</th><th style="width:10%" data-i18n="col-agente">Agente</th><th style="width:7%" data-i18n="lbl-freq">Frequência</th><th style="width:9%" data-i18n="conc-col-tipo">Tipo</th><th style="width:9%" data-i18n="col-status">Status</th><th style="width:22%" data-i18n="conc-col-contas">Contas vinculadas</th><th style="width:15%" data-i18n="conc-col-gateways">Gateways vinculados</th><th style="width:7%" data-i18n="col-actions">Ações</th></tr></thead><tbody id="conciliacoes-tbody"></tbody></table></div>
+    <div class="table-scroll" id="conciliacoes-table-inner" style="display:none"><table style="table-layout:fixed;width:100%"><thead><tr><th style="width:15%" data-i18n="lbl-nome">Nome</th><th style="width:6%" data-i18n="col-pais">País</th><th style="width:10%" data-i18n="col-agente">Agente</th><th style="width:7%" data-i18n="lbl-freq">Frequência</th><th style="width:9%" data-i18n="conc-col-tipo">Tipo</th><th style="width:15%" data-i18n="col-status">Status</th><th style="width:18%" data-i18n="conc-col-contas">Contas vinculadas</th><th style="width:13%" data-i18n="conc-col-gateways">Gateways vinculados</th><th style="width:7%" data-i18n="col-actions">Ações</th></tr></thead><tbody id="conciliacoes-tbody"></tbody></table></div>
   </div>
 </div>
     <!-- CRONOGRAMA > ACCOUNTS -->
@@ -1131,8 +1135,13 @@
       Limpar filtros
     </button>
   </div>
-  <div id="crono-conc-unlinked-banner"></div>
-  <div id="crono-conc-closed-acc-banner"></div>
+  <div id="crono-conc-warnings-summary"></div>
+  <div id="crono-conc-warnings-detail" style="display:none">
+    <div id="crono-conc-unlinked-banner"></div>
+    <div id="crono-conc-closed-acc-banner"></div>
+    <div id="crono-conc-closed-movement-banner"></div>
+    <div id="crono-conc-no-gateway-banner"></div>
+  </div>
   <div class="crono-filters">
     <div class="freq-dd" id="crono-conc-f-pais-dd">
       <button class="freq-dd-btn" id="crono-conc-f-pais-btn" onclick="_fddToggle(event,'crono-conc-f-pais-panel')">Todos os países</button>
@@ -1152,6 +1161,15 @@
         <button class="freq-toggle" data-val="Acima TOP 50" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),t('crono-all-priors'));renderCronogramaConciliacoes()">Acima TOP 50</button>
         <button class="freq-toggle" data-val="__none__" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-prior-btn',_fddVals('crono-conc-f-prior-panel'),t('crono-all-priors'));renderCronogramaConciliacoes()">Sem prioridade</button>
       </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:4px;border:1px solid var(--e-pale);border-radius:8px;padding:0 10px;background:#fff">
+      <span style="font-size:13px;color:var(--e-text);white-space:nowrap" data-i18n="conc-col-volume-short">Volume</span>
+      <select id="crono-conc-f-vol-op" onchange="renderCronogramaConciliacoes()" style="min-width:0;width:28px;border:none;background:transparent;font-size:13px;font-family:inherit;cursor:pointer;color:var(--e-text);padding:7px 0;text-align:center;text-align-last:center">
+        <option value="=">=</option>
+        <option value=">">&gt;</option>
+        <option value="<">&lt;</option>
+      </select>
+      <input type="number" id="crono-conc-f-vol-val" data-i18n-placeholder="vol-filter-val-ph" placeholder="valor" oninput="renderCronogramaConciliacoes()" style="width:98px;min-width:0;border:none;background:transparent;font-size:13px;font-family:inherit;padding:7px 0;color:var(--e-text)">
     </div>
     <div class="freq-dd" id="crono-conc-resp-dd">
       <button class="freq-dd-btn" id="crono-conc-resp-btn" onclick="toggleConcRespDropdown(event)">Responsável</button>
@@ -1216,6 +1234,7 @@
     <div class="d1-stat-card conc-stat-card d1-stat-pronto-conc"><div class="conc-stat-top"><div class="d1-stat-num" id="conc-d1-pronto">—</div><div class="d1-stat-lbl">Pronto p/ Conc.</div></div><div class="d1-stat-vol" id="conc-d1-pronto-vol"></div></div>
     <div class="d1-stat-card conc-stat-card d1-stat-sem-mov"><div class="conc-stat-top"><div class="d1-stat-num" id="conc-d1-sem-mov">—</div><div class="d1-stat-lbl">Sem Movimento</div></div><div class="d1-stat-vol" id="conc-d1-sem-mov-vol"></div></div>
     <div class="d1-stat-card conc-stat-card d1-stat-sem-acesso"><div class="conc-stat-top"><div class="d1-stat-num" id="conc-d1-sem-acesso">—</div><div class="d1-stat-lbl">Sem Acesso</div></div><div class="d1-stat-vol" id="conc-d1-sem-acesso-vol"></div></div>
+    <div class="d1-stat-card conc-stat-card d1-stat-conta-encerrada"><div class="conc-stat-top"><div class="d1-stat-num" id="conc-d1-conta-encerrada">—</div><div class="d1-stat-lbl" data-i18n="status-conta-encerrada">Conta Encerrada</div></div><div class="d1-stat-vol" id="conc-d1-conta-encerrada-vol"></div></div>
     <div class="d1-stat-card conc-stat-card d1-stat-pendente"><div class="conc-stat-top"><div class="d1-stat-num" id="conc-d1-pendente">—</div><div class="d1-stat-lbl">Pendente</div></div><div class="d1-stat-vol" id="conc-d1-pendente-vol"></div></div>
     <div class="d1-stat-card" style="flex-direction:row;align-items:center;gap:14px;padding:10px 20px;">
       <div style="display:flex;flex-direction:column;gap:3px;text-align:left">
@@ -1837,6 +1856,38 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-closed-concil-movement" onclick="if(event.target===this)closeModal('modal-closed-concil-movement')">
+  <div class="modal-card" style="max-width:520px">
+    <div class="modal-header">
+      <div class="modal-title" data-i18n="closed-movement-modal-title">Conciliações encerradas com movimento detectado</div>
+      <button class="modal-close" onclick="closeModal('modal-closed-concil-movement')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:var(--e-sub);margin-bottom:14px" data-i18n="closed-movement-modal-desc">Estas conciliações estão encerradas, mas um ou mais gateways vinculados registraram volume em datas posteriores ao encerramento. Revise cada uma para decidir se deve ser reaberta.</div>
+      <div id="closed-movement-concil-list" style="display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-closed-concil-movement')" data-i18n="btn-fechar">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-concil-no-gateway" onclick="if(event.target===this)closeModal('modal-concil-no-gateway')">
+  <div class="modal-card" style="max-width:520px">
+    <div class="modal-header">
+      <div class="modal-title" data-i18n="concil-no-gateway-modal-title">Conciliações sem gateway mapeado</div>
+      <button class="modal-close" onclick="closeModal('modal-concil-no-gateway')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:var(--e-sub);margin-bottom:14px" data-i18n="concil-no-gateway-modal-desc">Estas conciliações têm rastreamento de volume ativado, mas nenhum gateway foi selecionado ainda. Edite cada uma para adicionar os gateways correspondentes.</div>
+      <div id="concil-no-gateway-list" style="display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-concil-no-gateway')" data-i18n="btn-fechar">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: LINK DO REPORT (sem acesso / aguardando extrato) -->
 <div class="modal-overlay" id="modal-report-link" onclick="if(event.target===this)_skipReportLink()">
   <div class="modal-card" style="width:420px">
@@ -2134,47 +2185,79 @@
   <div class="modal-card vol-import-modal" style="width:480px">
     <div class="modal-header">
       <div>
-        <div class="modal-title">Importar Dados de Volume</div>
-        <div style="font-size:12px;color:var(--e-muted);margin-top:2px">Alimenta a coluna Prioridade em Cronograma › Conciliações</div>
+        <div class="modal-title" data-i18n="vol-import-title">Importar Dados de Volume</div>
+        <div style="font-size:12px;color:var(--e-muted);margin-top:2px" data-i18n="vol-import-desc">Alimenta a coluna Prioridade em Cronograma › Conciliações</div>
       </div>
       <button class="modal-close" onclick="closeModal('modal-volume-import')">×</button>
     </div>
     <div class="modal-body">
       <div id="vol-import-info" style="font-size:12px;color:var(--e-muted);margin-bottom:12px;padding:8px;background:var(--e-ghost);border-radius:6px"></div>
       <div class="form-field">
-        <label>Volume Cashin Cronograma (CSV)</label>
-        <input type="file" id="vol-cashin-file" accept=".csv">
-        <div style="font-size:11px;color:var(--e-muted);margin-top:3px">Gateways rankeados por soma de USD Amount (col 4=ID, col 7=USD)</div>
+        <label><span data-i18n="vol-field-cashin">Volume Cashin Cronograma (CSV)</span> <span style="font-weight:400;color:var(--e-muted)" data-i18n="vol-col-mapping-suffix">— mapeamento de colunas</span></label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="file" id="vol-cashin-file" accept=".csv" onchange="handleVolFileSelect('cashin',this)" style="flex:1;min-width:0">
+          <button type="button" class="btn-secondary" style="font-size:11px;padding:5px 10px;white-space:nowrap" data-i18n="btn-novo-mapeamento" onclick="startVolRemap('cashin')">Novo Mapeamento</button>
+        </div>
+        <div id="vol-cashin-map-status" style="font-size:11px;color:var(--e-muted);margin-top:3px"></div>
       </div>
       <div class="form-field">
-        <label>Cashout Volume By Payout Processor (CSV)</label>
-        <input type="file" id="vol-cashout-file" accept=".csv">
-        <div style="font-size:11px;color:var(--e-muted);margin-top:3px">Rank pela ordem das linhas (col 1=rank, col 2=ID, col 3=país, col 4=nome)</div>
+        <label><span data-i18n="vol-field-cashout">Cashout Volume By Payout Processor (CSV)</span> <span style="font-weight:400;color:var(--e-muted)" data-i18n="vol-col-mapping-suffix">— mapeamento de colunas</span></label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="file" id="vol-cashout-file" accept=".csv" onchange="handleVolFileSelect('cashout',this)" style="flex:1;min-width:0">
+          <button type="button" class="btn-secondary" style="font-size:11px;padding:5px 10px;white-space:nowrap" data-i18n="btn-novo-mapeamento" onclick="startVolRemap('cashout')">Novo Mapeamento</button>
+        </div>
+        <div id="vol-cashout-map-status" style="font-size:11px;color:var(--e-muted);margin-top:3px"></div>
       </div>
       <div class="form-field">
-        <label>Refunds (CSV)</label>
-        <input type="file" id="vol-refunds-file" accept=".csv">
-        <div style="font-size:11px;color:var(--e-muted);margin-top:3px">Mesmo formato do Cashout (rank pela ordem das linhas)</div>
+        <label><span data-i18n="vol-field-refunds">Refunds (CSV)</span> <span style="font-weight:400;color:var(--e-muted)" data-i18n="vol-col-mapping-suffix">— mapeamento de colunas</span></label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="file" id="vol-refunds-file" accept=".csv" onchange="handleVolFileSelect('refunds',this)" style="flex:1;min-width:0">
+          <button type="button" class="btn-secondary" style="font-size:11px;padding:5px 10px;white-space:nowrap" data-i18n="btn-novo-mapeamento" onclick="startVolRemap('refunds')">Novo Mapeamento</button>
+        </div>
+        <div id="vol-refunds-map-status" style="font-size:11px;color:var(--e-muted);margin-top:3px"></div>
       </div>
       <div class="form-field">
-        <label>Chargebacks (CSV)</label>
-        <input type="file" id="vol-chargebacks-file" accept=".csv">
-        <div style="font-size:11px;color:var(--e-muted);margin-top:3px">Mesmo formato do Cashout (rank pela ordem das linhas)</div>
+        <label><span data-i18n="vol-field-chargebacks">Chargebacks (CSV)</span> <span style="font-weight:400;color:var(--e-muted)" data-i18n="vol-col-mapping-suffix">— mapeamento de colunas</span></label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="file" id="vol-chargebacks-file" accept=".csv" onchange="handleVolFileSelect('chargebacks',this)" style="flex:1;min-width:0">
+          <button type="button" class="btn-secondary" style="font-size:11px;padding:5px 10px;white-space:nowrap" data-i18n="btn-novo-mapeamento" onclick="startVolRemap('chargebacks')">Novo Mapeamento</button>
+        </div>
+        <div id="vol-chargebacks-map-status" style="font-size:11px;color:var(--e-muted);margin-top:3px"></div>
       </div>
       <div style="background:var(--e-ghost);border-radius:6px;padding:10px;font-size:11px;color:var(--e-mid);line-height:1.5">
-        <strong>Fórmula:</strong> USD total da conciliação rankeado por posição entre todas as conciliações configuradas → TOP N<br>
-        Após importar, edite cada conciliação, selecione os tipos de operação e os gateways correspondentes.
+        <strong data-i18n="vol-formula-label">Fórmula:</strong> <span data-i18n="vol-formula-text">USD total da conciliação rankeado por posição entre todas as conciliações configuradas → TOP N</span><br>
+        <span data-i18n="vol-mapping-explain">Ao selecionar um arquivo, ele é processado e salvo imediatamente com o mapeamento já fixado (ou pede um novo mapeamento na primeira vez / após "Novo Mapeamento"). Este mesmo mapeamento é usado pelo ingestor automático diário.</span><br>
+        <span data-i18n="vol-formula-after">Após importar, edite cada conciliação, selecione os tipos de operação e os gateways correspondentes.</span>
       </div>
       <div id="vol-import-result"></div>
       <div id="vol-ranking-section" style="display:none;margin-top:12px">
-        <div style="font-size:11px;font-weight:600;color:var(--e-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Ranking Atual (combinado)</div>
+        <div style="font-size:11px;font-weight:600;color:var(--e-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px" data-i18n="vol-ranking-title">Ranking Atual (combinado)</div>
         <div id="vol-ranking-table" style="max-height:260px;overflow-y:auto;border:1px solid var(--e-border);border-radius:6px;font-size:11px"></div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('modal-volume-import')">Fechar</button>
-      <button class="btn-secondary" onclick="_toggleVolRanking()" id="vol-ranking-btn">Ver Ranking</button>
-      <button class="btn-primary" onclick="processVolumeImport()">Processar e Salvar</button>
+      <button class="btn-secondary" data-i18n="btn-fechar" onclick="closeModal('modal-volume-import')">Fechar</button>
+      <button class="btn-secondary" data-i18n="btn-ver-ranking" onclick="_toggleVolRanking()" id="vol-ranking-btn">Ver Ranking</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-vol-mapping" onclick="if(event.target===this)closeModal('modal-vol-mapping')">
+  <div class="modal-card" style="width:520px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="vol-map-title" data-i18n="vol-map-modal-title">Mapear Colunas</div>
+        <div style="font-size:12px;color:var(--e-muted);margin-top:2px" data-i18n="vol-map-modal-desc">Selecione em qual coluna do arquivo está cada informação</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-vol-mapping')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="vol-map-fields"></div>
+      <div id="vol-map-preview" style="margin-top:12px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" data-i18n="btn-cancel" onclick="closeModal('modal-vol-mapping')">Cancelar</button>
+      <button class="btn-primary" data-i18n="btn-confirmar-processar" onclick="confirmVolMapping()">Confirmar e Processar</button>
     </div>
   </div>
 </div>
@@ -2198,12 +2281,12 @@ const i18n = {
     'login-desc':'Faça login com sua conta corporativa Eron para continuar.',
     'login-btn':'Continuar com Google','login-note':'',
     'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Cadastro','nav-automacoes':'Automações','nav-dl-extratos':'Download Extratos','nav-cred-bancos':'Credenciais Bancos','nav-baixa-auto':'Baixa automática','baixa-sec-extr':'Download Extratos','baixa-sec-cred':'Atualização de Credenciais','cred-no-perm':'Acesso restrito — apenas Analista ou superior pode criar, editar ou excluir credenciais.',
-    'extr-accounts-label':'Contas','extr-sel-ph':'Selecionar contas...','extr-search-ph':'Buscar banco ou agente...','extr-sel-all':'Tudo','extr-date-label':'Data','extr-date-yesterday':'Ontem','extr-date-custom':'Personalizado','extr-date-from':'De','extr-date-to':'Até','extr-run':'Executar','extr-n-sel':'{n} selecionada(s)','extr-drive-link':'Pasta dos extratos baixados',
+    'extr-accounts-label':'Contas','extr-sel-ph':'Selecionar contas...','extr-search-ph':'Buscar banco ou agente...','extr-sel-all':'Tudo','extr-date-label':'Data','extr-date-yesterday':'Ontem','extr-date-custom':'Personalizado','extr-date-from':'De','extr-date-to':'Até','extr-run':'Executar','extr-n-sel-1':'{n} selecionada','extr-n-sel-n':'{n} selecionadas','extr-drive-link':'Pasta dos extratos baixados',
     'baixa-tipo-dl':'Tipo de download','baixa-tipo-extrato':'Extrato Cru','baixa-enviar-imp':'Enviar ao importador','baixa-enviar-imp-desc':'Move os extratos para a pasta do importador; acione-o após a finalização da baixa',
     'baixa-enviar-pdf':'Enviar para a pasta de PDFs','baixa-enviar-pdf-desc':'Move os PDFs baixados para a pasta compartilhada',
     'extr-drive-pdf-link':'Pasta dos PDFs baixados',
     'job-status-pending':'Aguardando','job-status-running':'Executando','job-status-completed':'Concluído','job-status-failed':'Falhou',
-    'job-card-concluir':'Concluir','job-card-excluir':'Excluir','job-card-aguard-logs':'Aguardando logs...','job-card-contas':'conta(s)','job-sum-erros':'erro(s)',
+    'job-card-concluir':'Concluir','job-card-excluir':'Excluir','job-card-aguard-logs':'Aguardando logs...','job-card-contas-1':'conta','job-card-contas-n':'contas','job-sum-erros-1':'erro','job-sum-erros-n':'erros',
     'cred-mode-upd':'Atualizar existente','cred-mode-new':'Criar nova','cred-mode-del-l1':'Excluir conta','cred-mode-del-l2':'da rotina','cred-bank-lbl':'Banco','cred-agent-lbl':'Agente','cred-bank-ph':'Selecionar banco...','cred-agent-ph':'Selecionar agente...','cred-f-empresa':'Empresa','cred-f-usuario':'Usuário','cred-f-senha':'Senha','cred-f-operador':'Operador','cred-f-referencia':'Referência','cred-f-nit':'NIT','cred-f-tipo':'Tipo','cred-f-totp':'TOTP Secret','cred-f-rut':'RUT','cred-f-pasta':'Pasta','cred-f-token-num':'Nº Token','cred-save':'Salvar','cred-save-del':'Excluir selecionadas','cred-bcp-note':'Usuário = {agente} (calculado localmente)','cred-gmail-note':'Conta de e-mail para 2FA de outros bancos',
     'cred-del-loading':'⏳ Carregando contas dinâmicas...','cred-del-empty':'Nenhuma conta cadastrada em dynamic_tasks.','cred-del-select':'Selecione as contas a excluir:','cred-del-err':'❌ Erro ao carregar:','cred-del-saving':'⏳ Excluindo...','cred-del-co':'🇨🇴 Colômbia','cred-del-pe':'🇵🇪 Peru','cred-del-ar':'🇦🇷 Argentina','cred-del-cl':'🇨🇱 Chile','cred-del-bo':'🇧🇴 Bolívia','cred-del-ve':'🇻🇪 Venezuela',
     'cred-st-pending':'⏳ Aguardando VM...','cred-st-processing':'⚙️ Processando...','cred-st-done':'✅ Aplicado','cred-st-error':'❌ Erro','cred-st-done-at':'Aplicado em','cred-st-waiting-detail':'Aguardando próximo ciclo do listener (pode demorar até 1 min)...',
@@ -2328,8 +2411,19 @@ const i18n = {
     'modal-pwd-gerada-title':'🔑 Senha gerada','modal-pwd-gerada-sub':'Copie e entregue ao usuário','btn-ok-entendido':'OK, entendido',
     'lbl-seu-email-corp':'Seu email corporativo','lbl-link-enviado':'Link enviado','modal-reset-link-title':'🔐 Redefinir senha',
     'closed-acc-modal-title':'Conciliações com conta encerrada vinculada','closed-acc-modal-desc':'Estas contas foram encerradas em Accounts e ainda estão vinculadas a conciliações ativas. Selecione as que devem ser encerradas também.','btn-encerrar-conciliacoes':'Encerrar conciliações',
-    'closed-acc-banner-msg':'{n} conciliação(ões) com conta encerrada vinculada em Accounts','closed-acc-banner-btn':'Revisar e encerrar',
-    'closed-acc-linked-label':'Conta(s) encerrada(s):',
+    'closed-acc-banner-msg-1':'{n} conciliação com conta encerrada vinculada em Accounts','closed-acc-banner-msg-n':'{n} conciliações com conta encerrada vinculada em Accounts','closed-acc-banner-btn':'Revisar e encerrar',
+    'closed-movement-modal-title':'Conciliações encerradas com movimento detectado','closed-movement-modal-desc':'Estas conciliações estão encerradas, mas um ou mais gateways vinculados registraram volume em datas posteriores ao encerramento. Revise cada uma para decidir se deve ser reaberta.',
+    'closed-movement-banner-msg-1':'{n} conciliação encerrada com movimento detectado em gateway vinculado','closed-movement-banner-msg-n':'{n} conciliações encerradas com movimento detectado em gateway vinculado','closed-movement-banner-btn':'Revisar','closed-movement-gw-label-1':'Gateway com movimento:','closed-movement-gw-label-n':'Gateways com movimento:',
+    'concil-no-gateway-msg-1':'{n} conciliação sem gateway mapeado','concil-no-gateway-msg-n':'{n} conciliações sem gateway mapeado',
+    'concil-no-gateway-modal-title':'Conciliações sem gateway mapeado','concil-no-gateway-modal-desc':'Estas conciliações têm rastreamento de volume ativado, mas nenhum gateway foi selecionado ainda. Edite cada uma para adicionar os gateways correspondentes.',
+    'cronconc-warnings-summary-1':'{n} aviso, verificar urgente','cronconc-warnings-summary-n':'{n} avisos, verificar urgente',
+    'closed-acc-linked-label-1':'Conta encerrada:','closed-acc-linked-label-n':'Contas encerradas:',
+    'dup-link-tipo-conta-1':'Conta','dup-link-tipo-conta-n':'Contas','dup-link-tipo-processador-1':'Processador','dup-link-tipo-processador-n':'Processadores','dup-link-tipo-gateway-1':'Gateway','dup-link-tipo-gateway-n':'Gateways',
+    'dup-link-item-1':'{tipo} {ids} já vinculado à conciliação "{nome}"','dup-link-item-n':'{tipo} {ids} já vinculados à conciliação "{nome}"','dup-link-confirm-suffix':'Deseja prosseguir mesmo assim?',
+    'conta-encerrada-frozen-msg':'Conta encerrada — o histórico fica congelado e não pode mais ser alterado.',
+    'conc-encerrada-frozen-msg':'Conciliação encerrada — o histórico fica congelado e não pode mais ser alterado.',
+    'conc-locked-edit-msg':'Conciliação encerrada — os dados não podem ser editados. Para alterar, desmarque "Encerrar conciliação" e salve para reabrir.',
+    'conc-locked-cannot-edit':'Conciliação encerrada não pode ser editada. Desmarque "Encerrar conciliação" para reabrir.',
     'hist-btn':'Histórico','hist-title':'Histórico de Alterações','hist-col-env':'Ambiente','hist-search-ph':'Buscar usuário, módulo, ação...','hist-empty':'Nenhuma ação registrada ainda.',
     'hist-close':'Fechar','hist-download-csv':'Baixar CSV',
     'hist-col-datetime':'Data/Hora','hist-col-user':'Usuário','hist-col-module':'Módulo','hist-col-action':'Ação',
@@ -2338,9 +2432,10 @@ const i18n = {
     'liq-col-estado-concil':'Estado Concil.','liq-col-ult-elab':'Última Elab.','liq-col-data-ult':'Data Última','liq-col-obs':'Observações','liq-col-custo-info':'Informações de custo','liq-col-status':'Status',
     'liq-all-paises':'Todos os países','liq-all-agentes':'Todos os agentes','liq-all-tipos':'Todos os tipos','liq-all-status':'Todos os status',
     'liq-st-nao-iniciado':'Não iniciado','liq-st-em-elab':'Em Elaboração','liq-st-concluida':'Concluída','liq-st-sem-mov':'Sem Movimento','liq-st-pendente':'Pendente',
-    'liq-search-ph':'Buscar nome, país, agente...','conc-search-ph':'Buscar nome, país, agente...','liq-empty-ger-title':'Nenhuma conciliação de Processadores ou Mista','liq-empty-crono-title':'Nenhuma conciliação encontrada',
+    'liq-search-ph':'Buscar nome, país, agente...','conc-search-ph':'Buscar nome, país, agente...','vol-filter-val-ph':'valor','liq-empty-ger-title':'Nenhuma conciliação de Processadores ou Mista','liq-empty-crono-title':'Nenhuma conciliação encontrada',
     'conc-col-tipo':'Tipo','conc-col-contas':'Contas vinculadas','conc-col-gateways':'Gateways vinculados',
-    'conc-col-resp':'Resp.','conc-col-prioridade':'Prioridade','conc-col-acomp':'Acompanhamento','conc-col-volume':'Volume','conc-col-volume-sub':'últimos 6 dias',
+    'conc-col-resp':'Resp.','conc-col-prioridade':'Prioridade','conc-col-acomp':'Acompanhamento','conc-col-volume':'Volume Pendente','conc-col-volume-short':'Volume','conc-sem-volume-pendente':'Sem volume pendente','conc-sem-volume-mapeado':'Sem volume mapeado',
+    'gw-pendente-cadastro-1':'pendente de cadastro','gw-pendente-cadastro-n':'pendentes de cadastro','gw-pendente-verificar':'favor verificar em','gw-pendente-vol-label':'em volume pendente',
     'conc-empty-title':'Nenhuma conciliação cadastrada','conc-empty-sub':'Adicione conciliações vinculando contas de Gerencial > Accounts.',
     'conc-unlinked-sem':'sem conciliação ativa','conc-unlinked-refunds':'Reembolsos','conc-unlinked-cbk':'Contestações',
     'slack-report-q':'Reportar no Slack?','slack-yes':'Sim, reportar','slack-no':'Não',
@@ -2349,6 +2444,20 @@ const i18n = {
     'ph-buscar':'Buscar...','ph-buscar-gateway':'Buscar por ID, nome ou país...',
     'vol-gw-sem-volume':'Gateway sem volume importado','vol-import-first':'Importe os dados primeiro em Gerencial › Conciliações → Importar Volume',
     'vol-add-by-id-ph':'Adicionar por ID (ex: 1410)','vol-add-by-id-btn':'+ Adicionar',
+    'vol-import-title':'Importar Dados de Volume','vol-import-desc':'Alimenta a coluna Prioridade em Cronograma › Conciliações',
+    'vol-field-cashin':'Volume Cashin Cronograma (CSV)','vol-field-cashout':'Cashout Volume By Payout Processor (CSV)',
+    'vol-field-refunds':'Refunds (CSV)','vol-field-chargebacks':'Chargebacks (CSV)','vol-col-mapping-suffix':'— mapeamento de colunas',
+    'btn-novo-mapeamento':'Novo Mapeamento',
+    'vol-formula-label':'Fórmula:','vol-formula-text':'USD total da conciliação rankeado por posição entre todas as conciliações configuradas → TOP N',
+    'vol-mapping-explain':'Ao selecionar um arquivo, ele é processado e salvo imediatamente com o mapeamento já fixado (ou pede um novo mapeamento na primeira vez / após "Novo Mapeamento"). Este mesmo mapeamento é usado pelo ingestor automático diário.',
+    'vol-formula-after':'Após importar, edite cada conciliação, selecione os tipos de operação e os gateways correspondentes.',
+    'vol-ranking-title':'Ranking Atual (combinado)','btn-ver-ranking':'Ver Ranking',
+    'vol-map-modal-title':'Mapear Colunas','vol-map-modal-desc':'Selecione em qual coluna do arquivo está cada informação',
+    'vol-map-select-placeholder':'— selecione —','vol-map-preview-title':'Amostra do arquivo','btn-confirmar-processar':'Confirmar e Processar',
+    'vol-map-field-data':'Data','vol-map-field-gateway-id':'Gateway ID','vol-map-field-gateway-name':'Gateway Name','vol-map-field-pais':'País','vol-map-field-usd':'Volume USD',
+    'vol-map-status-none':'Nenhum mapeamento definido ainda — selecione um arquivo para configurar.','vol-map-status-fixed':'Mapeamento fixado — {parts}',
+    'vol-map-select-col-err':'Selecione a coluna de {label}.','vol-map-empty-file':'Arquivo vazio ou sem linhas de dados.',
+    'vol-map-result-processed':'{type}: {count} entradas processadas.','vol-map-toast-imported':'✓ {type} importado: {count} entradas',
     'job-banner-title':'Job iniciado – chamando o robô.','job-banner-desc':'Pode demorar até 1 min para iniciar (o robot verifica o Firebase a cada ~1 min). Pode usar sua máquina normalmente.',
     'lbl-prioridade-volume':'Prioridade por Volume','lbl-tipos-operacao':'Tipos de operação',
     'lbl-encerrar-concil':'Encerrar conciliação','encerrar-concil-desc':'Marca a conciliação como inativa permanentemente.',
@@ -2368,12 +2477,12 @@ const i18n = {
     'login-desc':'Sign in with your Eron corporate account to continue.',
     'login-btn':'Continue with Google','login-note':'',
     'nav-gerencial':'Management','nav-cronograma':'Schedule','nav-cadastro':'Registry','nav-automacoes':'Automations','nav-dl-extratos':'Download Statements','nav-cred-bancos':'Bank Credentials','nav-baixa-auto':'Automatic download','baixa-sec-extr':'Download Statements','baixa-sec-cred':'Credential Update','cred-no-perm':'Restricted access — only Analyst role or higher can create, edit, or delete credentials.',
-    'extr-accounts-label':'Accounts','extr-sel-ph':'Select accounts...','extr-search-ph':'Search bank or agent...','extr-sel-all':'All','extr-date-label':'Date','extr-date-yesterday':'Yesterday','extr-date-custom':'Custom','extr-date-from':'From','extr-date-to':'To','extr-run':'Run','extr-n-sel':'{n} selected','extr-drive-link':'Downloaded statements folder',
+    'extr-accounts-label':'Accounts','extr-sel-ph':'Select accounts...','extr-search-ph':'Search bank or agent...','extr-sel-all':'All','extr-date-label':'Date','extr-date-yesterday':'Yesterday','extr-date-custom':'Custom','extr-date-from':'From','extr-date-to':'To','extr-run':'Run','extr-n-sel-1':'{n} selected','extr-n-sel-n':'{n} selected','extr-drive-link':'Downloaded statements folder',
     'baixa-tipo-dl':'Download type','baixa-tipo-extrato':'Raw Statement','baixa-enviar-imp':'Send to importer','baixa-enviar-imp-desc':'Moves statements to the importer folder; trigger it after the download completes',
     'baixa-enviar-pdf':'Send to PDFs folder','baixa-enviar-pdf-desc':'Moves downloaded PDFs to the shared folder',
     'extr-drive-pdf-link':'Downloaded PDFs folder',
     'job-status-pending':'Waiting','job-status-running':'Running','job-status-completed':'Completed','job-status-failed':'Failed',
-    'job-card-concluir':'Complete','job-card-excluir':'Delete','job-card-aguard-logs':'Waiting for logs...','job-card-contas':'account(s)','job-sum-erros':'error(s)',
+    'job-card-concluir':'Complete','job-card-excluir':'Delete','job-card-aguard-logs':'Waiting for logs...','job-card-contas-1':'account','job-card-contas-n':'accounts','job-sum-erros-1':'error','job-sum-erros-n':'errors',
     'cred-mode-upd':'Update existing','cred-mode-new':'Create new','cred-mode-del-l1':'Remove account','cred-mode-del-l2':'from routine','cred-bank-lbl':'Bank','cred-agent-lbl':'Agent','cred-bank-ph':'Select bank...','cred-agent-ph':'Select agent...','cred-f-empresa':'Company','cred-f-usuario':'User','cred-f-senha':'Password','cred-f-operador':'Operator','cred-f-referencia':'Reference','cred-f-nit':'NIT','cred-f-tipo':'Type','cred-f-totp':'TOTP Secret','cred-f-rut':'RUT','cred-f-pasta':'Folder','cred-f-token-num':'Token No.','cred-save':'Save','cred-save-del':'Delete selected','cred-bcp-note':'User = {agente} (calculated locally)','cred-gmail-note':'Email account for 2FA on other banks',
     'cred-del-loading':'⏳ Loading dynamic accounts...','cred-del-empty':'No accounts registered in dynamic_tasks.','cred-del-select':'Select accounts to remove:','cred-del-err':'❌ Load error:','cred-del-saving':'⏳ Deleting...','cred-del-co':'🇨🇴 Colombia','cred-del-pe':'🇵🇪 Peru','cred-del-ar':'🇦🇷 Argentina','cred-del-cl':'🇨🇱 Chile','cred-del-bo':'🇧🇴 Bolivia','cred-del-ve':'🇻🇪 Venezuela',
     'cred-st-pending':'⏳ Waiting for VM...','cred-st-processing':'⚙️ Processing...','cred-st-done':'✅ Applied','cred-st-error':'❌ Error','cred-st-done-at':'Applied on','cred-st-waiting-detail':'Waiting for next listener cycle (may take up to 1 min)...',
@@ -2490,8 +2599,19 @@ const i18n = {
     'modal-pwd-gerada-title':'🔑 Password generated','modal-pwd-gerada-sub':'Copy and hand it to the user','btn-ok-entendido':'OK, got it',
     'lbl-seu-email-corp':'Your corporate email','lbl-link-enviado':'Link sent','modal-reset-link-title':'🔐 Reset password',
     'closed-acc-modal-title':'Reconciliations with a closed linked account','closed-acc-modal-desc':'These accounts were closed in Accounts and are still linked to active reconciliations. Select the ones that should be closed too.','btn-encerrar-conciliacoes':'Close reconciliations',
-    'closed-acc-banner-msg':'{n} reconciliation(s) with a closed account linked in Accounts','closed-acc-banner-btn':'Review and close',
-    'closed-acc-linked-label':'Closed account(s):',
+    'closed-acc-banner-msg-1':'{n} reconciliation with a closed account linked in Accounts','closed-acc-banner-msg-n':'{n} reconciliations with a closed account linked in Accounts','closed-acc-banner-btn':'Review and close',
+    'closed-movement-modal-title':'Closed reconciliations with detected movement','closed-movement-modal-desc':'These reconciliations are closed, but one or more linked gateways recorded volume on dates after the closure. Review each one to decide whether it should be reopened.',
+    'closed-movement-banner-msg-1':'{n} closed reconciliation with movement detected on a linked gateway','closed-movement-banner-msg-n':'{n} closed reconciliations with movement detected on a linked gateway','closed-movement-banner-btn':'Review','closed-movement-gw-label-1':'Gateway with movement:','closed-movement-gw-label-n':'Gateways with movement:',
+    'concil-no-gateway-msg-1':'{n} reconciliation without a mapped gateway','concil-no-gateway-msg-n':'{n} reconciliations without a mapped gateway',
+    'concil-no-gateway-modal-title':'Reconciliations without a mapped gateway','concil-no-gateway-modal-desc':'These reconciliations have volume tracking enabled, but no gateway has been selected yet. Edit each one to add the matching gateways.',
+    'cronconc-warnings-summary-1':'{n} warning, please review urgently','cronconc-warnings-summary-n':'{n} warnings, please review urgently',
+    'closed-acc-linked-label-1':'Closed account:','closed-acc-linked-label-n':'Closed accounts:',
+    'dup-link-tipo-conta-1':'Account','dup-link-tipo-conta-n':'Accounts','dup-link-tipo-processador-1':'Processor','dup-link-tipo-processador-n':'Processors','dup-link-tipo-gateway-1':'Gateway','dup-link-tipo-gateway-n':'Gateways',
+    'dup-link-item-1':'{tipo} {ids} already linked to reconciliation "{nome}"','dup-link-item-n':'{tipo} {ids} already linked to reconciliation "{nome}"','dup-link-confirm-suffix':'Do you want to proceed anyway?',
+    'conta-encerrada-frozen-msg':'Closed account — the history is frozen and can no longer be changed.',
+    'conc-encerrada-frozen-msg':'Closed reconciliation — the history is frozen and can no longer be changed.',
+    'conc-locked-edit-msg':'Closed reconciliation — the data cannot be edited. To change it, uncheck "Close reconciliation" and save to reopen it.',
+    'conc-locked-cannot-edit':'Closed reconciliations cannot be edited. Uncheck "Close reconciliation" to reopen it.',
     'hist-btn':'History','hist-title':'Change History','hist-col-env':'Environment','hist-search-ph':'Search user, module, action...','hist-empty':'No actions recorded yet.',
     'hist-close':'Close','hist-download-csv':'Download CSV',
     'hist-col-datetime':'Date/Time','hist-col-user':'User','hist-col-module':'Module','hist-col-action':'Action',
@@ -2501,9 +2621,10 @@ const i18n = {
     'liq-col-estado-concil':'Reconcil. Status','liq-col-ult-elab':'Last Elab.','liq-col-data-ult':'Last Date','liq-col-obs':'Notes','liq-col-custo-info':'Cost information','liq-col-status':'Status',
     'liq-all-paises':'All countries','liq-all-agentes':'All agents','liq-all-tipos':'All types','liq-all-status':'All statuses',
     'liq-st-nao-iniciado':'Not started','liq-st-em-elab':'In Progress','liq-st-concluida':'Completed','liq-st-sem-mov':'No Movement','liq-st-pendente':'Pending',
-    'liq-search-ph':'Search name, country, agent...','conc-search-ph':'Search name, country, agent...','liq-empty-ger-title':'No Processor or Mixed reconciliations','liq-empty-crono-title':'No reconciliation found',
+    'liq-search-ph':'Search name, country, agent...','conc-search-ph':'Search name, country, agent...','vol-filter-val-ph':'value','liq-empty-ger-title':'No Processor or Mixed reconciliations','liq-empty-crono-title':'No reconciliation found',
     'conc-col-tipo':'Type','conc-col-contas':'Linked accounts','conc-col-gateways':'Linked gateways',
-    'conc-col-resp':'Resp.','conc-col-prioridade':'Priority','conc-col-acomp':'Status','conc-col-volume':'Volume','conc-col-volume-sub':'last 6 days',
+    'conc-col-resp':'Resp.','conc-col-prioridade':'Priority','conc-col-acomp':'Status','conc-col-volume':'Pending Volume','conc-col-volume-short':'Volume','conc-sem-volume-pendente':'No pending volume','conc-sem-volume-mapeado':'No volume mapped',
+    'gw-pendente-cadastro-1':'pending registration','gw-pendente-cadastro-n':'pending registration','gw-pendente-verificar':'please check in','gw-pendente-vol-label':'in pending volume',
     'conc-empty-title':'No reconciliations registered','conc-empty-sub':'Add reconciliations linking accounts from Management > Accounts.',
     'conc-unlinked-sem':'with no active reconciliation','conc-unlinked-refunds':'Refunds','conc-unlinked-cbk':'Chargebacks',
     'slack-report-q':'Report on Slack?','slack-yes':'Yes, report','slack-no':'No',
@@ -2512,6 +2633,20 @@ const i18n = {
     'ph-buscar':'Search...','ph-buscar-gateway':'Search by ID, name or country...',
     'vol-gw-sem-volume':'Gateway without volume data','vol-import-first':'Import data first in Gerencial › Reconciliations → Import Volume',
     'vol-add-by-id-ph':'Add by ID (e.g. 1410)','vol-add-by-id-btn':'+ Add',
+    'vol-import-title':'Import Volume Data','vol-import-desc':'Feeds the Priority column in Schedule › Reconciliations',
+    'vol-field-cashin':'Cashin Schedule Volume (CSV)','vol-field-cashout':'Cashout Volume By Payout Processor (CSV)',
+    'vol-field-refunds':'Refunds (CSV)','vol-field-chargebacks':'Chargebacks (CSV)','vol-col-mapping-suffix':'— column mapping',
+    'btn-novo-mapeamento':'New Mapping',
+    'vol-formula-label':'Formula:','vol-formula-text':'Total USD of the reconciliation ranked by position among all configured reconciliations → TOP N',
+    'vol-mapping-explain':'When you select a file, it is processed and saved immediately using the mapping already set (or asks for a new mapping the first time / after "New Mapping"). This same mapping is used by the daily automatic ingestion.',
+    'vol-formula-after':'After importing, edit each reconciliation and select the operation types and matching gateways.',
+    'vol-ranking-title':'Current Ranking (combined)','btn-ver-ranking':'View Ranking',
+    'vol-map-modal-title':'Map Columns','vol-map-modal-desc':'Select which column in the file holds each piece of information',
+    'vol-map-select-placeholder':'— select —','vol-map-preview-title':'File sample','btn-confirmar-processar':'Confirm and Process',
+    'vol-map-field-data':'Date','vol-map-field-gateway-id':'Gateway ID','vol-map-field-gateway-name':'Gateway Name','vol-map-field-pais':'Country','vol-map-field-usd':'USD Volume',
+    'vol-map-status-none':'No mapping defined yet — select a file to configure it.','vol-map-status-fixed':'Mapping fixed — {parts}',
+    'vol-map-select-col-err':'Select the {label} column.','vol-map-empty-file':'File is empty or has no data rows.',
+    'vol-map-result-processed':'{type}: {count} entries processed.','vol-map-toast-imported':'✓ {type} imported: {count} entries',
     'job-banner-title':'Job started – calling the robot.','job-banner-desc':'May take up to 1 min to start (the robot checks Firebase every ~1 min). You can use your machine normally.',
     'lbl-prioridade-volume':'Volume Priority','lbl-tipos-operacao':'Operation Types',
     'lbl-encerrar-concil':'Close reconciliation','encerrar-concil-desc':'Permanently marks this reconciliation as inactive.',
@@ -2531,12 +2666,12 @@ const i18n = {
     'login-desc':'Inicia sesión con tu cuenta corporativa Eron para continuar.',
     'login-btn':'Continuar con Google','login-note':'',
     'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Registro','nav-automacoes':'Automatizaciones','nav-dl-extratos':'Descargar Extractos','nav-cred-bancos':'Credenciales Bancos','nav-baixa-auto':'Descarga automática','baixa-sec-extr':'Descargar Extractos','baixa-sec-cred':'Actualización de Credenciales','cred-no-perm':'Acceso restringido — solo el rol Analista o superior puede crear, editar o eliminar credenciales.',
-    'extr-accounts-label':'Cuentas','extr-sel-ph':'Seleccionar cuentas...','extr-search-ph':'Buscar banco o agente...','extr-sel-all':'Todo','extr-date-label':'Fecha','extr-date-yesterday':'Ayer','extr-date-custom':'Personalizado','extr-date-from':'Desde','extr-date-to':'Hasta','extr-run':'Ejecutar','extr-n-sel':'{n} seleccionada(s)','extr-drive-link':'Carpeta de extractos descargados',
+    'extr-accounts-label':'Cuentas','extr-sel-ph':'Seleccionar cuentas...','extr-search-ph':'Buscar banco o agente...','extr-sel-all':'Todo','extr-date-label':'Fecha','extr-date-yesterday':'Ayer','extr-date-custom':'Personalizado','extr-date-from':'Desde','extr-date-to':'Hasta','extr-run':'Ejecutar','extr-n-sel-1':'{n} seleccionada','extr-n-sel-n':'{n} seleccionadas','extr-drive-link':'Carpeta de extractos descargados',
     'baixa-tipo-dl':'Tipo de descarga','baixa-tipo-extrato':'Extracto Bruto','baixa-enviar-imp':'Enviar al importador','baixa-enviar-imp-desc':'Mueve los extractos a la carpeta del importador; acciónelo tras finalizar la descarga',
     'baixa-enviar-pdf':'Enviar a la carpeta de PDFs','baixa-enviar-pdf-desc':'Mueve los PDFs descargados a la carpeta compartida',
     'extr-drive-pdf-link':'Carpeta de PDFs descargados',
     'job-status-pending':'Esperando','job-status-running':'Ejecutando','job-status-completed':'Completado','job-status-failed':'Falló',
-    'job-card-concluir':'Completar','job-card-excluir':'Eliminar','job-card-aguard-logs':'Esperando logs...','job-card-contas':'cuenta(s)','job-sum-erros':'error(es)',
+    'job-card-concluir':'Completar','job-card-excluir':'Eliminar','job-card-aguard-logs':'Esperando logs...','job-card-contas-1':'cuenta','job-card-contas-n':'cuentas','job-sum-erros-1':'error','job-sum-erros-n':'errores',
     'cred-mode-upd':'Actualizar existente','cred-mode-new':'Crear nueva','cred-mode-del-l1':'Eliminar cuenta','cred-mode-del-l2':'de la rutina','cred-bank-lbl':'Banco','cred-agent-lbl':'Agente','cred-bank-ph':'Seleccionar banco...','cred-agent-ph':'Seleccionar agente...','cred-f-empresa':'Empresa','cred-f-usuario':'Usuario','cred-f-senha':'Contraseña','cred-f-operador':'Operador','cred-f-referencia':'Referencia','cred-f-nit':'NIT','cred-f-tipo':'Tipo','cred-f-totp':'TOTP Secret','cred-f-rut':'RUT','cred-f-pasta':'Carpeta','cred-f-token-num':'Nº Token','cred-save':'Guardar','cred-save-del':'Eliminar seleccionadas','cred-bcp-note':'Usuario = {agente} (calculado localmente)','cred-gmail-note':'Cuenta de email para 2FA de otros bancos',
     'cred-del-loading':'⏳ Cargando cuentas dinámicas...','cred-del-empty':'No hay cuentas registradas en dynamic_tasks.','cred-del-select':'Seleccione las cuentas a eliminar:','cred-del-err':'❌ Error al cargar:','cred-del-saving':'⏳ Eliminando...','cred-del-co':'🇨🇴 Colombia','cred-del-pe':'🇵🇪 Perú','cred-del-ar':'🇦🇷 Argentina','cred-del-cl':'🇨🇱 Chile','cred-del-bo':'🇧🇴 Bolivia','cred-del-ve':'🇻🇪 Venezuela',
     'cred-st-pending':'⏳ Esperando VM...','cred-st-processing':'⚙️ Procesando...','cred-st-done':'✅ Aplicado','cred-st-error':'❌ Error','cred-st-done-at':'Aplicado el','cred-st-waiting-detail':'Esperando próximo ciclo del listener (puede tardar hasta 1 min)...',
@@ -2653,8 +2788,19 @@ const i18n = {
     'modal-pwd-gerada-title':'🔑 Contraseña generada','modal-pwd-gerada-sub':'Copia y entrégala al usuario','btn-ok-entendido':'OK, entendido',
     'lbl-seu-email-corp':'Tu email corporativo','lbl-link-enviado':'Enlace enviado','modal-reset-link-title':'🔐 Restablecer contraseña',
     'closed-acc-modal-title':'Conciliaciones con cuenta cerrada vinculada','closed-acc-modal-desc':'Estas cuentas fueron cerradas en Accounts y siguen vinculadas a conciliaciones activas. Selecciona las que también deben cerrarse.','btn-encerrar-conciliacoes':'Cerrar conciliaciones',
-    'closed-acc-banner-msg':'{n} conciliación(es) con cuenta cerrada vinculada en Accounts','closed-acc-banner-btn':'Revisar y cerrar',
-    'closed-acc-linked-label':'Cuenta(s) cerrada(s):',
+    'closed-acc-banner-msg-1':'{n} conciliación con cuenta cerrada vinculada en Accounts','closed-acc-banner-msg-n':'{n} conciliaciones con cuenta cerrada vinculada en Accounts','closed-acc-banner-btn':'Revisar y cerrar',
+    'closed-movement-modal-title':'Conciliaciones cerradas con movimiento detectado','closed-movement-modal-desc':'Estas conciliaciones están cerradas, pero uno o más gateways vinculados registraron volumen en fechas posteriores al cierre. Revise cada una para decidir si debe reabrirse.',
+    'closed-movement-banner-msg-1':'{n} conciliación cerrada con movimiento detectado en gateway vinculado','closed-movement-banner-msg-n':'{n} conciliaciones cerradas con movimiento detectado en gateway vinculado','closed-movement-banner-btn':'Revisar','closed-movement-gw-label-1':'Gateway con movimiento:','closed-movement-gw-label-n':'Gateways con movimiento:',
+    'concil-no-gateway-msg-1':'{n} conciliación sin gateway mapeado','concil-no-gateway-msg-n':'{n} conciliaciones sin gateway mapeado',
+    'concil-no-gateway-modal-title':'Conciliaciones sin gateway mapeado','concil-no-gateway-modal-desc':'Estas conciliaciones tienen el rastreo de volumen activado, pero aún no se ha seleccionado ningún gateway. Edite cada una para agregar los gateways correspondientes.',
+    'cronconc-warnings-summary-1':'{n} aviso, verificar con urgencia','cronconc-warnings-summary-n':'{n} avisos, verificar con urgencia',
+    'closed-acc-linked-label-1':'Cuenta cerrada:','closed-acc-linked-label-n':'Cuentas cerradas:',
+    'dup-link-tipo-conta-1':'Cuenta','dup-link-tipo-conta-n':'Cuentas','dup-link-tipo-processador-1':'Procesador','dup-link-tipo-processador-n':'Procesadores','dup-link-tipo-gateway-1':'Gateway','dup-link-tipo-gateway-n':'Gateways',
+    'dup-link-item-1':'{tipo} {ids} ya vinculado a la conciliación "{nome}"','dup-link-item-n':'{tipo} {ids} ya vinculados a la conciliación "{nome}"','dup-link-confirm-suffix':'¿Desea continuar de todos modos?',
+    'conta-encerrada-frozen-msg':'Cuenta cerrada — el historial queda congelado y ya no puede modificarse.',
+    'conc-encerrada-frozen-msg':'Conciliación cerrada — el historial queda congelado y ya no puede modificarse.',
+    'conc-locked-edit-msg':'Conciliación cerrada — los datos no pueden editarse. Para modificarla, desmarque "Cerrar conciliación" y guarde para reabrirla.',
+    'conc-locked-cannot-edit':'Las conciliaciones cerradas no pueden editarse. Desmarque "Cerrar conciliación" para reabrirla.',
     'hist-btn':'Historial','hist-title':'Historial de cambios','hist-col-env':'Entorno','hist-search-ph':'Buscar usuario, módulo, acción...','hist-empty':'Aún no hay acciones registradas.',
     'hist-close':'Cerrar','hist-download-csv':'Descargar CSV',
     'hist-col-datetime':'Fecha/Hora','hist-col-user':'Usuario','hist-col-module':'Módulo','hist-col-action':'Acción',
@@ -2664,9 +2810,10 @@ const i18n = {
     'liq-col-estado-concil':'Estado Concil.','liq-col-ult-elab':'Última Elab.','liq-col-data-ult':'Última Fecha','liq-col-obs':'Observaciones','liq-col-custo-info':'Información de costos','liq-col-status':'Estado',
     'liq-all-paises':'Todos los países','liq-all-agentes':'Todos los agentes','liq-all-tipos':'Todos los tipos','liq-all-status':'Todos los estados',
     'liq-st-nao-iniciado':'No iniciado','liq-st-em-elab':'En Elaboración','liq-st-concluida':'Concluida','liq-st-sem-mov':'Sin Movimiento','liq-st-pendente':'Pendiente',
-    'liq-search-ph':'Buscar nombre, país, agente...','conc-search-ph':'Buscar nombre, país, agente...','liq-empty-ger-title':'Sin conciliaciones de Procesadores o Mixtas','liq-empty-crono-title':'No se encontraron conciliaciones',
+    'liq-search-ph':'Buscar nombre, país, agente...','conc-search-ph':'Buscar nombre, país, agente...','vol-filter-val-ph':'valor','liq-empty-ger-title':'Sin conciliaciones de Procesadores o Mixtas','liq-empty-crono-title':'No se encontraron conciliaciones',
     'conc-col-tipo':'Tipo','conc-col-contas':'Cuentas vinculadas','conc-col-gateways':'Gateways vinculados',
-    'conc-col-resp':'Resp.','conc-col-prioridade':'Prioridad','conc-col-acomp':'Seguimiento','conc-col-volume':'Volumen','conc-col-volume-sub':'últimos 6 días',
+    'conc-col-resp':'Resp.','conc-col-prioridade':'Prioridad','conc-col-acomp':'Seguimiento','conc-col-volume':'Volumen Pendiente','conc-col-volume-short':'Volumen','conc-sem-volume-pendente':'Sin volumen pendiente','conc-sem-volume-mapeado':'Sin volumen mapeado',
+    'gw-pendente-cadastro-1':'pendiente de registro','gw-pendente-cadastro-n':'pendientes de registro','gw-pendente-verificar':'favor verificar en','gw-pendente-vol-label':'en volumen pendiente',
     'conc-empty-title':'Sin conciliaciones registradas','conc-empty-sub':'Agrega conciliaciones vinculando cuentas desde Gerencial > Accounts.',
     'conc-unlinked-sem':'sin conciliación activa','conc-unlinked-refunds':'Devoluciones','conc-unlinked-cbk':'Contracargos',
     'slack-report-q':'¿Reportar en Slack?','slack-yes':'Sí, reportar','slack-no':'No',
@@ -2676,6 +2823,20 @@ const i18n = {
     'ph-buscar':'Buscar...','ph-buscar-gateway':'Buscar por ID, nombre o país...',
     'vol-gw-sem-volume':'Gateway sin datos de volumen','vol-import-first':'Importe los datos primero en Gerencial › Conciliaciones → Importar Volumen',
     'vol-add-by-id-ph':'Agregar por ID (ej: 1410)','vol-add-by-id-btn':'+ Agregar',
+    'vol-import-title':'Importar Datos de Volumen','vol-import-desc':'Alimenta la columna Prioridad en Cronograma › Conciliaciones',
+    'vol-field-cashin':'Volumen Cashin Cronograma (CSV)','vol-field-cashout':'Cashout Volume By Payout Processor (CSV)',
+    'vol-field-refunds':'Refunds (CSV)','vol-field-chargebacks':'Chargebacks (CSV)','vol-col-mapping-suffix':'— mapeo de columnas',
+    'btn-novo-mapeamento':'Nuevo Mapeo',
+    'vol-formula-label':'Fórmula:','vol-formula-text':'USD total de la conciliación rankeado por posición entre todas las conciliaciones configuradas → TOP N',
+    'vol-mapping-explain':'Al seleccionar un archivo, se procesa y guarda de inmediato con el mapeo ya fijado (o pide un nuevo mapeo la primera vez / tras "Nuevo Mapeo"). Este mismo mapeo lo usa el ingestor automático diario.',
+    'vol-formula-after':'Después de importar, edite cada conciliación y seleccione los tipos de operación y los gateways correspondientes.',
+    'vol-ranking-title':'Ranking Actual (combinado)','btn-ver-ranking':'Ver Ranking',
+    'vol-map-modal-title':'Mapear Columnas','vol-map-modal-desc':'Seleccione en qué columna del archivo está cada información',
+    'vol-map-select-placeholder':'— seleccione —','vol-map-preview-title':'Muestra del archivo','btn-confirmar-processar':'Confirmar y Procesar',
+    'vol-map-field-data':'Fecha','vol-map-field-gateway-id':'Gateway ID','vol-map-field-gateway-name':'Gateway Name','vol-map-field-pais':'País','vol-map-field-usd':'Volumen USD',
+    'vol-map-status-none':'Aún no hay mapeo definido — seleccione un archivo para configurarlo.','vol-map-status-fixed':'Mapeo fijado — {parts}',
+    'vol-map-select-col-err':'Seleccione la columna de {label}.','vol-map-empty-file':'Archivo vacío o sin filas de datos.',
+    'vol-map-result-processed':'{type}: {count} entradas procesadas.','vol-map-toast-imported':'✓ {type} importado: {count} entradas',
     'job-banner-title':'Job iniciado – llamando al robot.','job-banner-desc':'Puede tardar hasta 1 min en iniciar (el robot verifica Firebase cada ~1 min). Puede usar su máquina normalmente.',
     'lbl-prioridade-volume':'Prioridad por Volumen','lbl-tipos-operacao':'Tipos de operación',
     'lbl-encerrar-concil':'Cerrar conciliación','encerrar-concil-desc':'Marca la conciliación como inactiva permanentemente.',
@@ -2712,6 +2873,10 @@ let currentPageId = 'home';
 let editingIdx = -1;
 
 function t(k){ return (i18n[currentLang]||i18n['pt-BR'])[k]||k; }
+// Pluralização real: usa a chave "{key}-1" quando n===1, senão "{key}-n" —
+// evita o hack "(s)"/"(ões)" que mostrava o sufixo de plural sempre, mesmo
+// com n=1. Ainda substitui {n} pelo valor numérico no resultado.
+function tn(key,n){ return t(`${key}-${n===1?'1':'n'}`).replace('{n}',n); }
 function setLang(lang){
   currentLang=lang;
   document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));
@@ -2768,6 +2933,7 @@ const store = {
   paisesResp:{},bancosResp:{},processadoresResp:{},
   conciliacoesPrioridade:{},
   volumeRankings:{cashin:{},cashout:{},refunds:{},chargebacks:{},combined:{}},
+  volumeColumnMapping:{},
   ignoredGatewayIds:{cashin:[],cashout:[],refunds:[],chargebacks:[]},
   concilVolumeMap:{},
   auditLog:[],
@@ -4487,9 +4653,9 @@ function importContasFromSheet(){
   });
   saveStore(); _fbSync('paises'); _fbSync('agentes'); _fbSync('bancos'); _fbSync('contas');
   renderAll();updateCounts();
-  const fixMsg=fixedSiglas?`\n• ${fixedSiglas} sigla(s) normalizadas (agente adicionado)`:'';
-  const dupMsg=removedDups?`\n• ${removedDups} duplicata(s) removida(s)`:'';
-  alert(`Importação concluída!\n\nAdicionados:\n• ${addedP} país(es)\n• ${addedA} agente(s)\n• ${addedB} banco(s)\n• ${addedC} conta(s)${dupMsg}${fixMsg}\n\nJá existentes foram ignorados.`);
+  const fixMsg=fixedSiglas?`\n• ${fixedSiglas} sigla${fixedSiglas!==1?'s':''} normalizada${fixedSiglas!==1?'s':''} (agente adicionado)`:'';
+  const dupMsg=removedDups?`\n• ${removedDups} duplicata${removedDups!==1?'s':''} removida${removedDups!==1?'s':''}`:'';
+  alert(`Importação concluída!\n\nAdicionados:\n• ${addedP} país${addedP!==1?'es':''}\n• ${addedA} agente${addedA!==1?'s':''}\n• ${addedB} banco${addedB!==1?'s':''}\n• ${addedC} conta${addedC!==1?'s':''}${dupMsg}${fixMsg}\n\nJá existentes foram ignorados.`);
 }
 
 // ─── APLICAR EM MASSA ────────────────────────────────────────────
@@ -5213,6 +5379,7 @@ function onDayCellClick(event, contaKey, dateStr, active, tdEl){
   closeCalDropdown();
   _calOpenCell=cell;
   if(!canEdit()){ _calOpenCell=null; event.stopPropagation(); return; }
+  const conta=store.contas.find(c=>`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'')===contaKey);
   const user=store.responsaveis.find(r=>r.email===window._loggedEmail);
   const sigla=user?.sigla||(user?.nome?.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase())||'??';
   const storeKey=`${contaKey}_${dateStr}`;
@@ -5224,6 +5391,18 @@ function onDayCellClick(event, contaKey, dateStr, active, tdEl){
   const left=Math.min(rect.left, window.innerWidth-200);
   const top=rect.bottom+4>window.innerHeight-160?rect.top-164:rect.bottom+4;
   dd.style.cssText=`left:${left}px;top:${top}px;`;
+  // Conta encerrada: histórico fica congelado por completo, mesmo em dias
+  // anteriores ao fechamento (day-cell-closed já bloqueia os dias >= fechamento;
+  // isso aqui cobre os dias ANTERIORES, que continuavam clicáveis).
+  if(conta&&conta.status==='encerrada'){
+    dd.innerHTML=`<div style="padding:10px 14px;max-width:200px">
+      <div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:4px">🔒 ${t('status-encerrada')}</div>
+      <div style="font-size:11px;color:var(--e-sub)">${t('conta-encerrada-frozen-msg')}</div>
+    </div>`;
+    document.body.appendChild(dd);
+    event.stopPropagation();
+    return;
+  }
   if(isLocked){
     const statusLabel={concluido:'Concluído',sem_movimento:'Sem movimento'}[existing.status]||existing.status;
     dd.innerHTML=`<div style="padding:10px 14px;max-width:200px">
@@ -5676,7 +5855,7 @@ function renderCierreTable(){
   const g3=_ciSort(contas.filter(c=>_isConcluido(c)));
   contas=[...g0,...g1,...g2,...g3];
   document.getElementById('cierre-stats').innerHTML=_cierreStatsHtml(mes,contas);
-  document.getElementById('cierre-count-header').textContent=`${contas.length} conta(s)`;
+  document.getElementById('cierre-count-header').textContent=`${contas.length} conta${contas.length!==1?'s':''}`;
   const empty=document.getElementById('cierre-empty');
   const wrap=document.getElementById('cierre-table-wrap');
   const tbl=document.getElementById('cierre-table');
@@ -5759,7 +5938,7 @@ function saveStore(){
     cronogramaData:store.cronogramaData,cierreData:store.cierreData,
     conciliacoes:store.conciliacoes,cronogramaConciliacoes:store.cronogramaConciliacoes,
     paisesResp:store.paisesResp,bancosResp:store.bancosResp,processadoresResp:store.processadoresResp,conciliacoesPrioridade:store.conciliacoesPrioridade,
-    volumeRankings:store.volumeRankings,concilVolumeMap:store.concilVolumeMap,
+    volumeRankings:store.volumeRankings,volumeColumnMapping:store.volumeColumnMapping,concilVolumeMap:store.concilVolumeMap,
     liquidacoesConfig:store.liquidacoesConfig,liquidacoesStatus:store.liquidacoesStatus,liquidacoesManual:store.liquidacoesManual,liquidacoesExcluidos:store.liquidacoesExcluidos,
     auditLog:store.auditLog,
     permissions:store.permissions,credentials:store.credentials,
@@ -5791,6 +5970,7 @@ function loadStore(){
     if(saved.processadoresResp) store.processadoresResp=saved.processadoresResp;
     if(saved.conciliacoesPrioridade) store.conciliacoesPrioridade=saved.conciliacoesPrioridade;
     if(saved.volumeRankings) store.volumeRankings=saved.volumeRankings;
+    if(saved.volumeColumnMapping) store.volumeColumnMapping=saved.volumeColumnMapping;
     if(saved.concilVolumeMap) store.concilVolumeMap=saved.concilVolumeMap;
     if(saved.liquidacoesConfig) store.liquidacoesConfig=saved.liquidacoesConfig||{};
     if(saved.liquidacoesStatus) store.liquidacoesStatus=saved.liquidacoesStatus||{};
@@ -5972,6 +6152,7 @@ function _applyFbData(saved){
   if(saved.processadoresResp&&!_ownWrites.processadoresResp)store.processadoresResp=saved.processadoresResp;
   if(saved.conciliacoesPrioridade&&!_ownWrites.conciliacoesPrioridade)store.conciliacoesPrioridade=saved.conciliacoesPrioridade;
   if(saved.volumeRankings&&!_ownWrites.volumeRankings)store.volumeRankings=saved.volumeRankings;
+  if(saved.volumeColumnMapping&&!_ownWrites.volumeColumnMapping)store.volumeColumnMapping=saved.volumeColumnMapping;
   if(saved.concilVolumeMap&&!_ownWrites.concilVolumeMap){
     const _cvm={};
     const _validMapKeys=new Set(['tiposOperacao','cashinIds','cashoutIds','refundIds','chargebackIds']);
@@ -6144,9 +6325,14 @@ async function switchEnvironment(envKey){
   _acessosTabEnv=null; _acessosOtherStore=null;
   if(_acessosOtherApp){try{_acessosOtherApp.delete();}catch(e){} _acessosOtherApp=null;}
   // Reset store to defaults for the new environment
-  Object.assign(store,{paises:[],agentes:[],bancos:[],processadores:[],responsaveis:[],contas:[],cronogramaData:{},cierreData:{},conciliacoes:[],cronogramaConciliacoes:{},paisesResp:{},bancosResp:{},processadoresResp:{},conciliacoesPrioridade:{},volumeRankings:{cashin:{},cashout:{},refunds:{},chargebacks:{},combined:{}},concilVolumeMap:{},ignoredGatewayIds:{cashin:[],cashout:[],refunds:[],chargebacks:[]},liquidacoesConfig:{},liquidacoesStatus:{},liquidacoesManual:[],liquidacoesExcluidos:{},auditLog:[],permissions:{},credentials:{}});
+  Object.assign(store,{paises:[],agentes:[],bancos:[],processadores:[],responsaveis:[],contas:[],cronogramaData:{},cierreData:{},conciliacoes:[],cronogramaConciliacoes:{},paisesResp:{},bancosResp:{},processadoresResp:{},conciliacoesPrioridade:{},volumeRankings:{cashin:{},cashout:{},refunds:{},chargebacks:{},combined:{}},volumeColumnMapping:{},concilVolumeMap:{},ignoredGatewayIds:{cashin:[],cashout:[],refunds:[],chargebacks:[]},liquidacoesConfig:{},liquidacoesStatus:{},liquidacoesManual:[],liquidacoesExcluidos:{},auditLog:[],permissions:{},credentials:{}});
   loadStore();
   _updateEnvSwitcher();
+  // A aba Automações só existe no ambiente "eron" — navigate() já bloqueia
+  // entrar nela vindo de outro ambiente, mas se o usuário já estava nela e
+  // trocou de ambiente sem sair da tela, ela ficava com os controles ainda
+  // visíveis e "funcionando" (só que sem efeito real), confundindo o usuário.
+  if(currentPageId==='automacoes-baixa'&&envKey!=='eron') navigate('cadastro-pais');
   document.getElementById('env-dd').style.display='none';
   document.getElementById('env-btn').classList.remove('open');
   _toast('Ambiente: '+env.label,3000);
@@ -6350,7 +6536,7 @@ function _extrUpdateUI(){
   const label=document.getElementById('extr-ms-label');
   if(label){
     if(n===0){label.textContent=t('extr-sel-ph');label.style.color='var(--e-muted)';}
-    else{label.textContent=t('extr-n-sel').replace('{n}',n);label.style.color='var(--e-text)';}
+    else{label.textContent=tn('extr-n-sel',n);label.style.color='var(--e-text)';}
   }
   // Chips
   const chips=document.getElementById('extr-chips');
@@ -6474,7 +6660,7 @@ function _createJobCard(jobId,meta,initialStatus){
   <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0">
     <span id="jm-badge-${jobId}" style="background:${SI.bg};color:${SI.c};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;flex-shrink:0">${SI.label}</span>
     <span style="font-size:12px;font-weight:600;color:var(--e-text)">Job ${shortId}</span>
-    <span style="font-size:11px;color:var(--e-muted)">${nContas} ${t('job-card-contas')} · ${_escHtml(dateLabel)}</span>
+    <span style="font-size:11px;color:var(--e-muted)">${nContas} ${tn('job-card-contas',nContas)} · ${_escHtml(dateLabel)}</span>
   </div>
   <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
     <span style="font-size:11px;color:var(--e-muted);margin-right:4px">${timeStr}</span>
@@ -6588,7 +6774,7 @@ function _renderJobCard(jobId,job){
     return `<div style="display:flex;gap:8px;line-height:1.6;min-width:0"><span style="color:#64748b;flex-shrink:0">${_escHtml(l.ts||'')}</span><span style="color:${lc};word-break:break-word;min-width:0">${_escHtml(l.msg||'')}</span></div>`;
   }).join('');
   const _bannerHtml=(status==='pending'||status==='running')?`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:12px;color:#92400e;line-height:1.5;margin-bottom:10px"><strong>${t('job-banner-title')}</strong><br>⚠️ ${t('job-banner-desc')}</div>`:'';
-  const _summaryHtml=sum?`<div style="margin-bottom:8px;font-size:12px;color:#6b7280">${sum.concluidos}/${sum.total} ${t('job-card-contas')} · ${sum.erros} ${t('job-sum-erros')}</div>`:'';
+  const _summaryHtml=sum?`<div style="margin-bottom:8px;font-size:12px;color:#6b7280">${sum.concluidos}/${sum.total} ${tn('job-card-contas',sum.total)} · ${sum.erros} ${tn('job-sum-erros',sum.erros)}</div>`:'';
   const _logSection=logs.length?`<div id="jm-log-${jobId}" style="background:#0f172a;border-radius:8px;padding:12px 14px;max-height:240px;overflow-y:auto;font-family:'SFMono-Regular',Consolas,monospace;font-size:12px">${logsHtml}</div>`:`<span style="font-size:12px;color:var(--e-muted)">${t('job-card-aguard-logs')}</span>`;
   let _termSummaryHtml='';
   if((status==='completed'||status==='failed')&&logs.length){
@@ -7310,7 +7496,7 @@ function _credDelUpdateLabel(){
   const label=document.getElementById('cred-del-label');
   if(label){
     if(n===0){label.textContent=t('extr-sel-ph');label.style.color='var(--e-muted)';}
-    else{label.textContent=t('extr-n-sel').replace('{n}',n);label.style.color='var(--e-text)';}
+    else{label.textContent=tn('extr-n-sel',n);label.style.color='var(--e-text)';}
   }
 }
 
@@ -8124,9 +8310,11 @@ function _renderUnlinkedGateways(){
     const label=useKey?(name||id):(name&&name!==id?`${id} ${name}`:id);
     const key=`${type}::${id}`;
     const chk=_unlinkedGwSelected.has(key)?'checked':'';
+    const volLbl=e.usd?'$'+Math.round(e.usd).toLocaleString('en-US'):'';
     return `<label style="padding:3px 12px;font-size:12px;color:var(--e-text);border-bottom:1px solid #fef3c7;line-height:1.8;display:flex;align-items:center;gap:8px;cursor:pointer">
       <input type="checkbox" ${chk} onchange="_toggleUnlinkedGwSelect('${_esc(type)}','${_esc(id)}',this.checked)" style="cursor:pointer;accent-color:#d97706;flex-shrink:0;width:13px;height:13px">
-      <span>${_esc(label)}</span>
+      <span style="flex:1">${_esc(label)}</span>
+      ${volLbl?`<span style="font-size:11px;font-weight:600;color:#92400e;font-variant-numeric:tabular-nums;flex-shrink:0">${volLbl}</span>`:''}
     </label>`;
   }).join('');
   const mkBlock=(title,ids,type,dataMap,useKey)=>ids.length?`
@@ -8264,7 +8452,10 @@ function openConciliacaoModal(editIdx=-1){
   document.getElementById('cad-modal-title').textContent=isEdit?(t('conc-modal-edit-prefix')+conc.nome):t('conc-modal-new');
   const body=document.getElementById('cad-modal-body');
   const tipoAtual=conc.tipo||'bancos';
+  const isLocked=isEdit&&conc.status==='encerrada';
   body.innerHTML=`
+    ${isLocked?`<div style="display:flex;align-items:center;gap:8px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#475569">🔒 ${t('conc-locked-edit-msg')}</div>`:''}
+    <div id="conc-form-fields" style="${isLocked?'pointer-events:none;opacity:.55':''}">
     <div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="conc-nome" placeholder="Ex: Payout Mono Colprocesa" value="${conc.nome||''}"></div>
     <div class="form-field"><label class="form-label">${t('lbl-pais')}</label><select class="form-select" id="conc-pais" onchange="onConcPaisChange()"><option value="">${t('sel-select')}</option>${paisOpts}</select></div>
     <div class="form-field"><label class="form-label">${t('lbl-agente')}</label><select class="form-select" id="conc-agente" onchange="renderContasMSList()"><option value="">${t('sel-select')}</option>${agenteOpts}</select></div>
@@ -8316,6 +8507,7 @@ function openConciliacaoModal(editIdx=-1){
     <div class="form-field" style="border-top:1px solid var(--e-pale);padding-top:12px;margin-top:4px">
       <label class="form-label">${t('lbl-obs')}</label>
       <textarea class="form-input" id="conc-obs" rows="1" style="resize:none;overflow:hidden;font-size:13px;transition:height .1s" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${_esc(conc.obs||'')}</textarea>
+    </div>
     </div>
     ${isEdit?`<div id="conc-encerrar-section" style="border-top:1px solid var(--e-pale);padding-top:12px;margin-top:4px">
       <div class="toggle-row">
@@ -8414,7 +8606,50 @@ function toggleConcTipo(tipo){
   renderConcVincList(); renderConcVincTags();
 }
 
+// Verifica se contas/processadores/gateways selecionados já estão vinculados
+// a OUTRA conciliação (exclui a própria, em caso de edição). Retorna uma
+// lista de conflitos {tipo,id,concNome} agrupável para exibir ao usuário.
+function _findDuplicateLinks(contas,processadores,gatewayIds){
+  const conflicts=[];
+  const selfConcId=_editConcIdx>=0?(store.conciliacoes[_editConcIdx].id||store.conciliacoes[_editConcIdx].nome||'').replace(/['"]/g,''):null;
+  store.conciliacoes.forEach((c,idx)=>{
+    if(_editConcIdx>=0&&idx===_editConcIdx) return;
+    if(c.status==='encerrada') return; // encerradas não contam pra duplicidade
+    (c.contas||[]).forEach(sig=>{ if(contas.includes(sig)) conflicts.push({tipo:'conta',id:sig,concNome:c.nome}); });
+    (c.processadores||[]).forEach(p=>{ if(processadores.includes(p)) conflicts.push({tipo:'processador',id:p,concNome:c.nome}); });
+  });
+  if(gatewayIds.length){
+    Object.entries(store.concilVolumeMap||{}).forEach(([cId,map])=>{
+      if(selfConcId&&cId===selfConcId) return;
+      const c=store.conciliacoes.find(x=>(x.id||x.nome).replace(/['"]/g,'')===cId);
+      if(c&&c.status==='encerrada') return; // encerradas não contam pra duplicidade
+      const ids=[...(map.cashinIds||[]),...(map.cashoutIds||[]),...(map.refundIds||[]),...(map.chargebackIds||[])];
+      if(!ids.length) return;
+      gatewayIds.forEach(g=>{ if(ids.includes(g)) conflicts.push({tipo:'gateway',id:g,concNome:c?c.nome:cId}); });
+    });
+  }
+  return conflicts;
+}
+function _confirmDuplicateLinks(conflicts){
+  if(!conflicts.length) return true;
+  const byConc={};
+  conflicts.forEach(cf=>{
+    const key=cf.concNome+'|'+cf.tipo;
+    if(!byConc[key]) byConc[key]={concNome:cf.concNome,tipo:cf.tipo,ids:[]};
+    byConc[key].ids.push(cf.id);
+  });
+  const lines=Object.values(byConc).map(g=>tn('dup-link-item',g.ids.length).replace('{tipo}',tn('dup-link-tipo-'+g.tipo,g.ids.length)).replace('{ids}',g.ids.join(', ')).replace('{nome}',g.concNome));
+  return confirm(lines.join('\n')+'\n\n'+t('dup-link-confirm-suffix'));
+}
 function submitConciliacao(){
+  // Conciliação encerrada nunca pode ser editada — só permite salvar se o
+  // usuário estiver reabrindo (desmarcou "Encerrada"). Os campos já ficam
+  // travados na UI (pointer-events:none), isso é a defesa em profundidade.
+  if(_editConcIdx>=0&&store.conciliacoes[_editConcIdx]?.status==='encerrada'&&document.getElementById('conc-encerrar')?.checked){
+    _toast(t('conc-locked-cannot-edit'),3000);
+    closeModal('modal-cadastro');
+    return;
+  }
   const nome=(document.getElementById('conc-nome')?.value||'').trim();
   if(!nome){document.getElementById('conc-nome')?.classList.add('err');return;}
   const pais=document.getElementById('conc-pais')?.value||'';
@@ -8424,6 +8659,7 @@ function submitConciliacao(){
   const tipo=hasProc&&hasBancos?'mista':hasProc?'processadores':'bancos';
   const contas=hasBancos?[..._selectedContas]:[];
   const processadores=hasProc?[..._selectedProcessadores]:[];
+  if(!_confirmDuplicateLinks(_findDuplicateLinks(contas,processadores,_selectedGatewayIds))) return;
   // Distribute unified gateway selection to all active op-types
   const cashinIds=_selectedOpTypes.includes('cashin')?[..._selectedGatewayIds]:[];
   const cashoutIds=_selectedOpTypes.includes('cashout')?[..._selectedGatewayIds]:[];
@@ -8474,6 +8710,7 @@ function submitConciliacao(){
   logAudit('gerencial-conciliacoes',isEdit?'edit':'add',{nome});
   closeModal('modal-cadastro');
   renderGerencialConciliacoes();
+  renderCronogramaConciliacoes();
   updateCounts();
 }
 
@@ -8482,9 +8719,20 @@ function deleteConciliacao(idx){
   if(!c) return;
   showDeleteConfirm(`Excluir conciliação "${c.nome}"`,`Esta ação não pode ser desfeita.`,()=>{
     logAudit('gerencial-conciliacoes','delete',{nome:c.nome});
+    const concId=(c.id||c.nome).replace(/['"]/g,'');
     store.conciliacoes.splice(idx,1);
-    saveStore(); _fbSync('conciliacoes');
-    renderGerencialConciliacoes(); updateCounts();
+    // Sem isso, a entrada em concilVolumeMap ficava "fantasma" pra sempre:
+    // continuava sendo somada e ranqueada em _rebuildCombinedRanking mesmo
+    // sem nenhuma conciliação real por trás, ocupando posição no TOP N
+    // silenciosamente (foi o que causava "TOP 10" com só 5 conciliações
+    // visíveis — 5 das 10 posições eram fantasmas de exclusões antigas).
+    let _hadMap=false;
+    if(store.concilVolumeMap&&store.concilVolumeMap[concId]){ delete store.concilVolumeMap[concId]; _hadMap=true; }
+    Object.keys(store.cronogramaConciliacoes||{}).filter(k=>k.startsWith(concId+'_')).forEach(k=>delete store.cronogramaConciliacoes[k]);
+    if(_hadMap) _rebuildCombinedRanking();
+    saveStore(); _fbSync('conciliacoes'); _fbSync('concilVolumeMap'); _fbSync('cronogramaConciliacoes');
+    if(_hadMap) _fbSync('volumeRankings');
+    renderGerencialConciliacoes(); renderCronogramaConciliacoes(); updateCounts();
   });
 }
 
@@ -8528,9 +8776,9 @@ function _crossCheckConciliacoes(showToast=false){
   }
   if(!showToast) return;
   const parts=[];
-  if(addedPaises.length) parts.push(`${addedPaises.length} país(es) adicionado(s): ${addedPaises.join(', ')}`);
-  if(addedAgentes.length) parts.push(`${addedAgentes.length} agente(s) adicionado(s): ${addedAgentes.join(', ')}`);
-  if(addedProc.length) parts.push(`${addedProc.length} processador(es) adicionado(s): ${addedProc.join(', ')}`);
+  if(addedPaises.length) parts.push(`${addedPaises.length} país${addedPaises.length!==1?'es':''} adicionado${addedPaises.length!==1?'s':''}: ${addedPaises.join(', ')}`);
+  if(addedAgentes.length) parts.push(`${addedAgentes.length} agente${addedAgentes.length!==1?'s':''} adicionado${addedAgentes.length!==1?'s':''}: ${addedAgentes.join(', ')}`);
+  if(addedProc.length) parts.push(`${addedProc.length} processador${addedProc.length!==1?'es':''} adicionado${addedProc.length!==1?'s':''}: ${addedProc.join(', ')}`);
   if(missingContas.length) parts.push(`⚠ Contas sem cadastro completo (requerem banco): ${[...new Set(missingContas)].join('; ')}`);
   _toast(parts.length?parts.join(' | '):'✓ Tudo consistente — nenhum dado faltando.',7000);
 }
@@ -8622,7 +8870,7 @@ function _importUpdateConcilCSV(csvText){
     _rebuildCombinedRanking();_renderUnlinkedGateways();
     renderGerencialConciliacoes();renderCronogramaConciliacoes();
   }
-  const parts=[`✓ ${updated} conciliação(ões) atualizadas`];
+  const parts=[`✓ ${updated} conciliação${updated!==1?'ões':''} atualizada${updated!==1?'s':''}`];
   if(freqSet>0) parts.push(`${freqSet} com frequência preenchida`);
   if(freqEmpty>0) parts.push(`${freqEmpty} sem "Regra de Cronograma" no CSV (frequência mantida)`);
   if(notFound.length) parts.push(`⚠ Não encontradas (${notFound.length}): ${notFound.slice(0,4).join(', ')}${notFound.length>4?'…':''}`);
@@ -8784,6 +9032,8 @@ function clearCronconcFilters(){
   _fddLabel('crono-conc-f-tipo-btn',[],t('liq-all-tipos'));
   document.querySelectorAll('#crono-conc-f-freq-panel .freq-toggle.active').forEach(b=>b.classList.remove('active'));
   _fddLabel('crono-conc-f-freq-btn',[],t('crono-all-freqs'));
+  const volOpEl=document.getElementById('crono-conc-f-vol-op'); if(volOpEl) volOpEl.value='=';
+  const volValEl=document.getElementById('crono-conc-f-vol-val'); if(volValEl) volValEl.value='';
   _updateConcRespLabel(); _updateConcAnlLabel(); _updateConcD1Label();
   const inp=document.getElementById('crono-conc-search');
   if(inp) inp.value='';
@@ -8834,11 +9084,32 @@ function _applyPriorFormula(r1,r2){
 }
 function _computeVolumePrioridade(concId){
   if(!(store.concilVolumeMap||{})[concId]) return null;
-  const entry=(store.volumeRankings?.combined||{})[concId];
+  // Prioridade é fixada no momento da ingestão (ver _snapshotFixedPriority) —
+  // não muda quando o volume pendente cai a 0 por conclusão de dias. Cai em
+  // "combined" só como fallback pra dados antigos que ainda não têm snapshot.
+  const entry=(store.volumeRankings?.priorityFixed||{})[concId]||(store.volumeRankings?.combined||{})[concId];
   if(!entry) return null;
   const rank=typeof entry==='object'?entry.rank:entry;
   if(!rank) return null;
   return _applyPriorFormula(rank,rank);
+}
+// Deriva o que a coluna "Volume Pendente" mostra pra uma conciliação: o valor
+// em $ (kind:'valor'), ou um dos dois pills quando não há valor (kind:'mapeado'
+// quando o(s) gateway(s) vinculado(s) nem aparecem na última ingestão, ou
+// kind:'pendente' quando aparecem mas o pendente calculado é 0). Usado tanto
+// pra renderizar a coluna quanto pra deixar esse texto pesquisável na busca.
+function _concVolumeStatus(conc){
+  const _cid=(conc.id||conc.nome).replace(/['"]/g,'');
+  const _vol=(store.volumeRankings?.combined||{})[_cid]?.usd||0;
+  if(_vol) return {kind:'valor',text:'$'+Math.round(_vol).toLocaleString('en-US')};
+  const _map=store.concilVolumeMap?.[_cid];
+  const _vr=store.volumeRankings||{};
+  const _inData=(ids,src)=>(ids||[]).some(id=>!!(src||{})[id]);
+  const _hasGw=!!(_map&&[...(_map.cashinIds||[]),...(_map.cashoutIds||[]),...(_map.refundIds||[]),...(_map.chargebackIds||[])].length);
+  const _hasMappedData=_hasGw&&(_inData(_map.cashinIds,_vr.cashin)||_inData(_map.cashoutIds,_vr.cashout)||_inData(_map.refundIds,_vr.refunds)||_inData(_map.chargebackIds,_vr.chargebacks));
+  if(_hasGw&&!_hasMappedData) return {kind:'mapeado',text:t('conc-sem-volume-mapeado')};
+  if(_hasGw) return {kind:'pendente',text:t('conc-sem-volume-pendente')};
+  return {kind:null,text:''};
 }
 function _priorTierClass(tier){
   if(tier==='TOP 10') return 'prior-top10';
@@ -8873,84 +9144,244 @@ function _parseCSVLine(line){
   result.push(cur.trim());
   return result;
 }
-function _parseCashinCSV(text){
-  // CSV cols: rank(0), GatewayID(1), PayMethod(2), Name(3), [Country(4)?,] USD, Count
-  // Two formats: 7-col (with Country at col4, USD at col5) or 6-col (no Country, USD at col4)
-  const lines=text.trim().split('\n');
-  const agg={};
-  for(let i=1;i<lines.length;i++){
-    const cols=_parseCSVLine(lines[i]);
-    if(cols.length<6) continue;
-    const gatewayId=cols[1]?.trim();
-    if(!gatewayId||isNaN(+gatewayId)) continue;
-    const name=cols[3]?.trim()||'';
-    // Detect format: if col[4] is non-numeric → it's a Country name (7-col format)
-    const hasCountry=cols.length>=7&&isNaN(+(cols[4]||'').replace(/,/g,''));
-    const usd=parseFloat(((hasCountry?cols[5]:cols[4])||'0').replace(/,/g,''))||0;
-    if(!agg[gatewayId]) agg[gatewayId]={id:gatewayId,name,usd:0};
-    agg[gatewayId].usd+=usd;
+const VOL_TYPE_LABELS={cashin:'Cashin',cashout:'Cashout',refunds:'Refunds',chargebacks:'Chargebacks'};
+const VOL_TYPE_FIELDS={
+  cashin:[
+    {key:'dateCol',labelKey:'vol-map-field-data'},
+    {key:'idCol',labelKey:'vol-map-field-gateway-id'},
+    {key:'nameCol',labelKey:'vol-map-field-gateway-name'},
+    {key:'usdCol',labelKey:'vol-map-field-usd'},
+  ],
+  cashout:[
+    {key:'dateCol',labelKey:'vol-map-field-data'},
+    {key:'idCol',labelKey:'vol-map-field-gateway-id'},
+    {key:'nameCol',labelKey:'vol-map-field-gateway-name'},
+    {key:'countryCol',labelKey:'vol-map-field-pais'},
+    {key:'usdCol',labelKey:'vol-map-field-usd'},
+  ],
+  refunds:[
+    {key:'dateCol',labelKey:'vol-map-field-data'},
+    {key:'idCol',labelKey:'vol-map-field-gateway-id'},
+    {key:'nameCol',labelKey:'vol-map-field-gateway-name'},
+    {key:'countryCol',labelKey:'vol-map-field-pais'},
+    {key:'usdCol',labelKey:'vol-map-field-usd'},
+  ],
+  chargebacks:[
+    {key:'dateCol',labelKey:'vol-map-field-data'},
+    {key:'idCol',labelKey:'vol-map-field-gateway-id'},
+    {key:'nameCol',labelKey:'vol-map-field-gateway-name'},
+    {key:'countryCol',labelKey:'vol-map-field-pais'},
+    {key:'usdCol',labelKey:'vol-map-field-usd'},
+  ],
+};
+// Normaliza datas de formatos comuns (ISO, DD/MM/YYYY, MM/DD/YYYY, YYYY/MM/DD)
+// para 'YYYY-MM-DD'. Retorna null se não conseguir interpretar (linha cai no
+// bucket "_unknown", sempre somado independente do corte por conclusão).
+function _normalizeVolDate(raw){
+  if(!raw) return null;
+  const s=String(raw).trim();
+  let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m=s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})/);
+  if(m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if(m){
+    let d=+m[1],mo=+m[2];
+    if(d>12&&mo<=12){ /* DD/MM/YYYY */ }
+    else if(mo>12&&d<=12){ const t=d;d=mo;mo=t; /* era MM/DD/YYYY */ }
+    // ambíguo (ambos <=12): assume DD/MM/YYYY (padrão regional Latam)
+    if(d<1||d>31||mo<1||mo>12) return null;
+    return `${m[3]}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
   }
-  const sorted=Object.values(agg).sort((a,b)=>b.usd-a.usd);
-  const cashin={};
-  sorted.forEach((e,i)=>{cashin[e.id]={rank:i+1,name:e.name,usd:e.usd};});
-  return {cashin,count:sorted.length};
+  const dt=new Date(s);
+  if(!isNaN(dt.getTime())) return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  return null;
 }
-// Cashout: row(0), id(1), country(2), name(3), usd(4)
-function _parseCashoutCSV(text){
+let _volMapType=null,_volMapText=null,_volMapHeader=null,_volMapSample=[];
+const _volForceRemap={};
+function startVolRemap(type){
+  _volForceRemap[type]=true;
+  document.getElementById(`vol-${type}-file`).click();
+}
+function _renderVolMapStatus(type){
+  const el=document.getElementById(`vol-${type}-map-status`);
+  if(!el) return;
+  const m=store.volumeColumnMapping?.[type];
+  if(!m){ el.textContent=t('vol-map-status-none'); return; }
+  const labels=m.headerLabels||[];
+  const lbl=i=>i==null?null:(labels[i]!=null&&labels[i]!==''?`"${labels[i]}"`:`col ${(+i)+1}`);
+  const parts=VOL_TYPE_FIELDS[type].map(f=>`${t(f.labelKey)}=${lbl(m[f.key])}`);
+  el.textContent=t('vol-map-status-fixed').replace('{parts}',parts.join(' · '));
+}
+async function handleVolFileSelect(type,input){
+  const file=input.files[0];
+  if(!file) return;
+  const text=await file.text();
   const lines=text.trim().split('\n');
-  const agg={};
-  for(let i=1;i<lines.length;i++){
-    const cols=_parseCSVLine(lines[i]);
-    if(cols.length<5) continue;
-    const id=cols[1]?.trim();
-    const country=cols[2]?.trim();
-    const name=cols[3]?.trim();
-    const usd=parseFloat((cols[4]||'0').replace(/,/g,''))||0;
-    if(!id||!name) continue;
-    if(!agg[id]) agg[id]={id,name,country,usd:0};
-    agg[id].usd+=usd;
+  if(lines.length<2){_toast(t('vol-map-empty-file'),3000);input.value='';return;}
+  const saved=store.volumeColumnMapping?.[type];
+  if(saved&&!_volForceRemap[type]){
+    const {data,count}=_parseVolCSVWithMapping(text,saved);
+    _applyVolResult(type,data,count,saved);
+    return;
   }
-  const sorted=Object.values(agg).sort((a,b)=>b.usd-a.usd);
-  const data={};
-  sorted.forEach((e,i)=>{data[e.id]={rank:i+1,name:e.name,country:e.country,usd:e.usd};});
-  return {data,count:sorted.length};
+  _volForceRemap[type]=false;
+  _volMapType=type;
+  _volMapText=text;
+  _volMapHeader=_parseCSVLine(lines[0]);
+  _volMapSample=lines.slice(1,4).map(l=>_parseCSVLine(l));
+  _renderVolMapping();
+  openModal('modal-vol-mapping');
 }
-// Refunds/Chargebacks: row(0), country(1), name(2), gatewayId(3), usd(4)
-// Auto-detects if col[2]/col[3] are swapped (gatewayId first, name second)
-function _parseRefundsCbCSV(text){
+function _guessVolCol(key){
+  return _volMapHeader.findIndex(h=>{
+    const hl=(h||'').toLowerCase();
+    if(key==='dateCol') return /data|date/.test(hl);
+    if(key==='idCol') return /gateway.*id|processor.*id|^id$/.test(hl);
+    if(key==='nameCol') return /name|nome/.test(hl);
+    if(key==='usdCol') return /usd/.test(hl);
+    if(key==='countryCol') return /country|pa[ií]s/.test(hl);
+    return false;
+  });
+}
+function _defaultVolCol(key){
+  const saved=store.volumeColumnMapping?.[_volMapType];
+  if(saved&&saved[key]!=null&&saved[key]<_volMapHeader.length) return saved[key];
+  return _guessVolCol(key);
+}
+function _renderVolMapping(){
+  const titleEl=document.getElementById('vol-map-title');
+  if(titleEl) titleEl.textContent=`${t('vol-map-modal-title')} — ${VOL_TYPE_LABELS[_volMapType]}`;
+  const fieldsEl=document.getElementById('vol-map-fields');
+  fieldsEl.innerHTML=VOL_TYPE_FIELDS[_volMapType].map(f=>{
+    const def=_defaultVolCol(f.key);
+    const opts=_volMapHeader.map((h,i)=>`<option value="${i}" ${i===def?'selected':''}>${i+1}. ${(h||'(vazio)').replace(/</g,'&lt;')}</option>`).join('');
+    return `<div class="form-field" style="margin-bottom:8px">
+      <label style="font-size:12px">${t(f.labelKey)}</label>
+      <select id="vol-map-${f.key}" style="width:100%">
+        <option value="">${t('vol-map-select-placeholder')}</option>
+        ${opts}
+      </select>
+    </div>`;
+  }).join('');
+  const previewEl=document.getElementById('vol-map-preview');
+  const rows=[_volMapHeader,..._volMapSample];
+  previewEl.innerHTML=`<div style="font-size:11px;font-weight:600;color:var(--e-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em">${t('vol-map-preview-title')}</div>
+    <div style="overflow-x:auto;border:1px solid var(--e-border);border-radius:6px;max-width:100%">
+      <table style="font-size:11px;border-collapse:collapse;width:100%">
+        ${rows.map((r,ri)=>`<tr>${r.map(c=>`<td style="padding:3px 6px;border-bottom:1px solid var(--e-border);white-space:nowrap;${ri===0?'font-weight:600;background:var(--e-ghost)':''}">${(c||'').toString().replace(/</g,'&lt;')}</td>`).join('')}</tr>`).join('')}
+      </table>
+    </div>`;
+}
+function _parseVolCSVWithMapping(text,mapping){
   const lines=text.trim().split('\n');
   const agg={};
+  const hasCountry=mapping.countryCol!=null;
   for(let i=1;i<lines.length;i++){
     const cols=_parseCSVLine(lines[i]);
-    if(cols.length<5) continue;
-    const country=cols[1]?.trim();
-    const c2=cols[2]?.trim()||'';
-    const c3=cols[3]?.trim()||'';
-    let id,name;
-    if(/^\d+$/.test(c3)){id=c3;name=c2;}      // expected: col[3]=ID, col[2]=name
-    else if(/^\d+$/.test(c2)){id=c2;name=c3;} // swapped:  col[2]=ID, col[3]=name
-    else{id=c3||c2;name=c2;}                   // fallback: use col[3] as id
-    const usd=parseFloat((cols[4]||'0').replace(/,/g,''))||0;
+    const id=(cols[mapping.idCol]||'').trim();
     if(!id) continue;
-    if(!agg[id]) agg[id]={id,name,country,usd:0};
+    const name=(cols[mapping.nameCol]||'').trim();
+    const usd=parseFloat((cols[mapping.usdCol]||'0').replace(/,/g,''))||0;
+    const country=hasCountry?(cols[mapping.countryCol]||'').trim():'';
+    const dk=mapping.dateCol!=null?_normalizeVolDate(cols[mapping.dateCol]):null;
+    const bucket=dk||'_unknown';
+    if(!agg[id]) agg[id]={id,name,country,usd:0,byDate:{}};
     agg[id].usd+=usd;
+    agg[id].byDate[bucket]=(agg[id].byDate[bucket]||0)+usd;
   }
   const sorted=Object.values(agg).sort((a,b)=>b.usd-a.usd);
   const data={};
-  sorted.forEach((e,i)=>{data[e.id]={rank:i+1,name:e.name,country:e.country,usd:e.usd};});
+  sorted.forEach((e,i)=>{data[e.id]=hasCountry?{rank:i+1,name:e.name,country:e.country,usd:e.usd,byDate:e.byDate}:{rank:i+1,name:e.name,usd:e.usd,byDate:e.byDate};});
   return {data,count:sorted.length};
+}
+function confirmVolMapping(){
+  const type=_volMapType;
+  const mapping={};
+  for(const f of VOL_TYPE_FIELDS[type]){
+    const v=document.getElementById(`vol-map-${f.key}`).value;
+    if(v===''){_toast(t('vol-map-select-col-err').replace('{label}',t(f.labelKey)),3000);return;}
+    mapping[f.key]=+v;
+  }
+  mapping.headerLabels=_volMapHeader;
+  const {data,count}=_parseVolCSVWithMapping(_volMapText,mapping);
+  closeModal('modal-vol-mapping');
+  _applyVolResult(type,data,count,mapping);
+}
+function _applyVolResult(type,data,count,mapping){
+  const vr=store.volumeRankings||{};
+  store.volumeRankings={...vr,[type]:data,lastImport:new Date().toISOString()};
+  store.volumeColumnMapping=store.volumeColumnMapping||{};
+  store.volumeColumnMapping[type]=mapping;
+  _rebuildCombinedRanking();
+  _snapshotFixedPriority();
+  saveStore();_fbSync('volumeRankings');_fbSync('volumeColumnMapping');
+  logAudit('volumeRankings',`importar-${type}-mapeado`,{count});
+  const fileInput=document.getElementById(`vol-${type}-file`);
+  if(fileInput) fileInput.value='';
+  _renderVolLastImport();
+  _renderUnlinkedGateways();
+  _renderVolMapStatus(type);
+  const resultEl=document.getElementById('vol-import-result');
+  if(resultEl) resultEl.textContent=t('vol-map-result-processed').replace('{type}',VOL_TYPE_LABELS[type]).replace('{count}',count);
+  renderCronogramaConciliacoes();
+  _toast(t('vol-map-toast-imported').replace('{type}',VOL_TYPE_LABELS[type]).replace('{count}',count),3000);
+}
+// Última data (YYYY-MM-DD) em que a conciliação foi marcada "concluído" no
+// calendário do Cronograma. As chaves de store.cronogramaConciliacoes usam
+// ora o id/nome cru (onConcCellClick/_concChooseSt) ora a versão sem aspas
+// (_doConcBulk) — testa os dois prefixos pra não perder registros.
+function _lastConcluidoDate(conc){
+  const rawId=conc.id||conc.nome;
+  const strippedId=rawId.replace(/['"]/g,'');
+  const prefixes=strippedId===rawId?[`${rawId}_`]:[`${rawId}_`,`${strippedId}_`];
+  let max=null;
+  for(const k in store.cronogramaConciliacoes){
+    const pfx=prefixes.find(p=>k.indexOf(p)===0);
+    if(!pfx) continue;
+    const v=store.cronogramaConciliacoes[k];
+    if(v&&v.status==='concluido'){
+      const d=k.slice(pfx.length);
+      if(!max||d>max) max=d;
+    }
+  }
+  return max;
 }
 function _rebuildCombinedRanking(){
   const vr=store.volumeRankings||{};
   const cvm=store.concilVolumeMap||{};
-  const _sum=(ids,src)=>ids.reduce((s,id)=>s+((src[id]?.usd)||0),0);
+  // Soma apenas o volume de dias posteriores à última conclusão registrada
+  // (volume "pendente de conciliar"), sempre desconsiderando hoje E qualquer
+  // data futura (o volume de hoje ainda está sendo formado/ingerido, não é
+  // definitivo; datas futuras só aparecem por artefato de fuso/teste).
+  // Sem data de corte, ou em entradas antigas sem breakdown por data, soma
+  // o total do gateway (comportamento anterior, usado como fallback seguro).
+  const _today=new Date();
+  const todayStr=`${_today.getFullYear()}-${String(_today.getMonth()+1).padStart(2,'0')}-${String(_today.getDate()).padStart(2,'0')}`;
+  const _sumSince=(ids,src,sinceDate)=>ids.reduce((s,id)=>{
+    const e=src[id];
+    if(!e) return s;
+    if(!e.byDate) return s+(e.usd||0);
+    let sub=0;
+    for(const dk in e.byDate){
+      if(dk!=='_unknown'&&dk>=todayStr) continue;
+      if(dk==='_unknown'||!sinceDate||dk>sinceDate) sub+=e.byDate[dk];
+    }
+    return s+sub;
+  },0);
   const scores=[];
   for(const [concId,map] of Object.entries(cvm)){
+    const conc=(store.conciliacoes||[]).find(c=>(c.id||c.nome).replace(/['"]/g,'')===concId);
+    // Entrada "fantasma": concilVolumeMap referenciando uma conciliação que já
+    // foi excluída (não deveria mais existir depois do fix em deleteConciliacao,
+    // mas serve de proteção contra dado corrompido/editado direto no Firebase).
+    if(!conc) continue;
+    const sinceDate=_lastConcluidoDate(conc);
     const cashinIds=map.cashinIds||(map.cashinId?[map.cashinId]:[]);
     const cashoutIds=map.cashoutIds||(map.cashoutId?[map.cashoutId]:[]);
     const refundIds=map.refundIds||[];
     const chargebackIds=map.chargebackIds||[];
-    const totalUSD=_sum(cashinIds,vr.cashin||{})+_sum(cashoutIds,vr.cashout||{})+_sum(refundIds,vr.refunds||{})+_sum(chargebackIds,vr.chargebacks||{});
+    const totalUSD=_sumSince(cashinIds,vr.cashin||{},sinceDate)+_sumSince(cashoutIds,vr.cashout||{},sinceDate)+_sumSince(refundIds,vr.refunds||{},sinceDate)+_sumSince(chargebackIds,vr.chargebacks||{},sinceDate);
     if(totalUSD>0) scores.push({concId,totalUSD});
   }
   scores.sort((a,b)=>b.totalUSD-a.totalUSD);
@@ -8958,6 +9389,16 @@ function _rebuildCombinedRanking(){
   scores.forEach(({concId,totalUSD},i)=>{combined[concId]={rank:i+1,usd:totalUSD};});
   if(!store.volumeRankings) store.volumeRankings={cashin:{},cashout:{},refunds:{},chargebacks:{},combined:{}};
   store.volumeRankings.combined=combined;
+}
+// Congela a Prioridade (TOP N) no estado de "combined" logo após uma
+// ingestão de volume — chamado só em _applyVolResult, nunca ao marcar dias
+// como concluído. Assim a Prioridade não recua só porque o volume pendente
+// caiu a 0 por conciliação; só muda na PRÓXIMA ingestão.
+function _snapshotFixedPriority(){
+  const combined=store.volumeRankings.combined||{};
+  const fixed={};
+  for(const concId in combined) fixed[concId]={rank:combined[concId].rank,usd:combined[concId].usd};
+  store.volumeRankings.priorityFixed=fixed;
 }
 function _renderVolLastImport(){
   const lbl=document.getElementById('vol-last-import-lbl');
@@ -9037,31 +9478,8 @@ function openVolumeImportModal(){
   if(info) info.textContent=parts.length?`Dados atuais: ${parts.join(', ')}.`:'Nenhum dado importado ainda.';
   ['vol-cashin-file','vol-cashout-file','vol-refunds-file','vol-chargebacks-file'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const re=document.getElementById('vol-import-result');if(re)re.textContent='';
+  Object.keys(VOL_TYPE_LABELS).forEach(_renderVolMapStatus);
   openModal('modal-volume-import');
-}
-async function processVolumeImport(){
-  const cashinFile=document.getElementById('vol-cashin-file').files[0];
-  const cashoutFile=document.getElementById('vol-cashout-file').files[0];
-  const refundsFile=document.getElementById('vol-refunds-file').files[0];
-  const chargebacksFile=document.getElementById('vol-chargebacks-file').files[0];
-  const resultEl=document.getElementById('vol-import-result');
-  if(!cashinFile&&!cashoutFile&&!refundsFile&&!chargebacksFile){resultEl.textContent='Selecione ao menos um arquivo CSV.';return;}
-  resultEl.textContent='Processando...';
-  const msgs=[];
-  const vr=store.volumeRankings||{};
-  const newR={cashin:{...vr.cashin||{}},cashout:{...vr.cashout||{}},refunds:{...vr.refunds||{}},chargebacks:{...vr.chargebacks||{}}};
-  if(cashinFile){const text=await cashinFile.text();const {cashin,count}=_parseCashinCSV(text);newR.cashin=cashin;msgs.push(`Cashin: ${count} gateways.`);}
-  if(cashoutFile){const text=await cashoutFile.text();const {data,count}=_parseCashoutCSV(text);newR.cashout=data;msgs.push(`Cashout: ${count} processadores.`);}
-  if(refundsFile){const text=await refundsFile.text();const {data,count}=_parseRefundsCbCSV(text);newR.refunds=data;msgs.push(`Refunds: ${count} entradas.`);}
-  if(chargebacksFile){const text=await chargebacksFile.text();const {data,count}=_parseRefundsCbCSV(text);newR.chargebacks=data;msgs.push(`Chargebacks: ${count} entradas.`);}
-  newR.lastImport=new Date().toISOString();
-  store.volumeRankings=newR;
-  _rebuildCombinedRanking();
-  saveStore(); _fbSync('volumeRankings');
-  _renderVolLastImport();
-  _renderUnlinkedGateways();
-  resultEl.textContent=msgs.join(' ')+' Dados salvos.';
-  renderCronogramaConciliacoes();
 }
 function _volSelectedArr(type){
   if(type==='cashin') return _selectedCashinIds;
@@ -9165,19 +9583,10 @@ function _getConcilProblems(conc,dateStr){
   return {semAcesso,aguardandoExtrato};
 }
 
-function _renderCronconcUnlinkedBanner(){
-  const wrap=document.getElementById('crono-conc-unlinked-banner');
-  if(!wrap) return;
+function _unlinkedGatewaysInfo(){
   const vr=store.volumeRankings||{};
   const ignored=store.ignoredGatewayIds||{};
   const ignCI=new Set((ignored.cashin||[]).map(String)),ignCO=new Set((ignored.cashout||[]).map(String)),ignRF=new Set((ignored.refunds||[]).map(String)),ignCB=new Set((ignored.chargebacks||[]).map(String));
-  const allIds=[
-    ...Object.keys(vr.cashin||{}),
-    ...Object.keys(vr.cashout||{}),
-    ...Object.keys(vr.refunds||{}),
-    ...Object.keys(vr.chargebacks||{}),
-  ];
-  if(!allIds.length){wrap.innerHTML='';return;}
   const actCI=new Set(),actCO=new Set(),actRF=new Set(),actCB=new Set();
   (store.conciliacoes||[]).forEach(c=>{
     if(c.status==='encerrada') return;
@@ -9187,15 +9596,27 @@ function _renderCronconcUnlinkedBanner(){
     (cvm.refundIds||[]).forEach(id=>actRF.add(String(id)));
     (cvm.chargebackIds||[]).forEach(id=>actCB.add(String(id)));
   });
-  const total=
-    Object.keys(vr.cashin||{}).filter(id=>!actCI.has(id)&&!ignCI.has(id)).length+
-    Object.keys(vr.cashout||{}).filter(id=>!actCO.has(id)&&!ignCO.has(id)).length+
-    Object.keys(vr.refunds||{}).filter(n=>!actRF.has(n)&&!ignRF.has(n)).length+
-    Object.keys(vr.chargebacks||{}).filter(n=>!actCB.has(n)&&!ignCB.has(n)).length;
+  const uCI2=Object.keys(vr.cashin||{}).filter(id=>!actCI.has(id)&&!ignCI.has(id));
+  const uCO2=Object.keys(vr.cashout||{}).filter(id=>!actCO.has(id)&&!ignCO.has(id));
+  const uRF2=Object.keys(vr.refunds||{}).filter(n=>!actRF.has(n)&&!ignRF.has(n));
+  const uCB2=Object.keys(vr.chargebacks||{}).filter(n=>!actCB.has(n)&&!ignCB.has(n));
+  const total=uCI2.length+uCO2.length+uRF2.length+uCB2.length;
+  const totalUSD=
+    uCI2.reduce((s,id)=>s+((vr.cashin||{})[id]?.usd||0),0)+
+    uCO2.reduce((s,id)=>s+((vr.cashout||{})[id]?.usd||0),0)+
+    uRF2.reduce((s,id)=>s+((vr.refunds||{})[id]?.usd||0),0)+
+    uCB2.reduce((s,id)=>s+((vr.chargebacks||{})[id]?.usd||0),0);
+  return {total,totalUSD};
+}
+function _renderCronconcUnlinkedBanner(){
+  const wrap=document.getElementById('crono-conc-unlinked-banner');
+  if(!wrap) return;
+  const {total,totalUSD}=_unlinkedGatewaysInfo();
   if(!total){wrap.innerHTML='';return;}
+  const volSuffix=totalUSD?` · $${Math.round(totalUSD).toLocaleString('en-US')} ${t('gw-pendente-vol-label')}`:'';
   wrap.innerHTML=`<div style="display:flex;align-items:center;gap:8px;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin:0 0 10px">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    <span style="font-size:12px;color:#92400e"><strong>${total} gateway${total!==1?'s':''}</strong> pendente${total!==1?'s':''} de cadastro — favor verificar em <strong>Gerencial › Conciliações</strong></span>
+    <span style="font-size:12px;color:#92400e"><strong>${total} gateway${total!==1?'s':''}</strong> ${tn('gw-pendente-cadastro',total)}${volSuffix} — ${t('gw-pendente-verificar')} <strong>${t('nav-gerencial')} › ${t('nav-conciliacoes')}</strong></span>
   </div>`;
 }
 // Conciliações ATIVAS com pelo menos uma conta vinculada já ENCERRADA em
@@ -9218,7 +9639,7 @@ function _renderClosedAccConcilBanner(){
   wrap.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin:0 0 10px">
     <div style="display:flex;align-items:center;gap:8px">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      <span style="font-size:12px;color:#92400e">${t('closed-acc-banner-msg').replace('{n}',n)}</span>
+      <span style="font-size:12px;color:#92400e">${tn('closed-acc-banner-msg',n)}</span>
     </div>
     <button onclick="openClosedAccConcilModal()" style="font-size:12px;font-weight:600;padding:5px 12px;background:#fff;color:#92400e;border:1px solid #fcd34d;border-radius:6px;cursor:pointer;font-family:inherit;flex-shrink:0">${t('closed-acc-banner-btn')}</button>
   </div>`;
@@ -9239,7 +9660,7 @@ function _renderClosedAccConcilList(){
       <input type="checkbox" ${chk} onchange="_toggleClosedAccConcil('${_esc(key)}',this.checked)" style="margin-top:2px;cursor:pointer;accent-color:#976ff4;width:14px;height:14px;flex-shrink:0">
       <span style="display:flex;flex-direction:column;gap:2px">
         <span style="font-size:13px;font-weight:600">${_esc(conc.nome)}</span>
-        <span style="font-size:11px;color:var(--e-muted)">${t('closed-acc-linked-label')} <span style="font-family:monospace">${linked.map(_esc).join(', ')}</span></span>
+        <span style="font-size:11px;color:var(--e-muted)">${tn('closed-acc-linked-label',linked.length)} <span style="font-family:monospace">${linked.map(_esc).join(', ')}</span></span>
       </span>
     </label>`;
   }).join('');
@@ -9271,6 +9692,148 @@ function submitCloseLinkedConcils(){
     _toast(`✓ ${n} conciliação${n!==1?'ões':''} encerrada${n!==1?'s':''}`,3000);
   }
 }
+// Conciliações ENCERRADAS cujos gateways vinculados registraram volume em
+// datas POSTERIORES ao encerramento — indica movimento continuando depois
+// de a conciliação ter sido dada como encerrada.
+function _closureDateStr(conc){
+  if(!conc.dataEncerramento) return null;
+  const d=new Date(conc.dataEncerramento);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function _closedConcilsWithMovement(){
+  const vr=store.volumeRankings||{};
+  const results=[];
+  (store.conciliacoes||[]).forEach(conc=>{
+    if(conc.status!=='encerrada') return;
+    const closureDate=_closureDateStr(conc);
+    if(!closureDate) return;
+    const concId=(conc.id||conc.nome).replace(/['"]/g,'');
+    const map=(store.concilVolumeMap||{})[concId];
+    if(!map) return;
+    const types=[['cashinIds',vr.cashin],['cashoutIds',vr.cashout],['refundIds',vr.refunds],['chargebackIds',vr.chargebacks]];
+    const movedGws=[];
+    types.forEach(([mkey,src])=>{
+      (map[mkey]||[]).forEach(id=>{
+        const e=(src||{})[id];
+        if(!e||!e.byDate) return;
+        const hasPostClosure=Object.keys(e.byDate).some(dk=>dk!=='_unknown'&&dk>=closureDate);
+        if(hasPostClosure&&!movedGws.includes(id)) movedGws.push(id);
+      });
+    });
+    if(!movedGws.length) return;
+    // Só sinaliza se ainda houver volume pendente de fato (não só uma data
+    // com movimento no passado) — senão o aviso nunca some mesmo já resolvido.
+    const usd=(store.volumeRankings?.combined||{})[concId]?.usd||0;
+    if(usd<=0) return;
+    results.push({conc,gateways:movedGws});
+  });
+  return results;
+}
+function _renderClosedConcilMovementBanner(){
+  const wrap=document.getElementById('crono-conc-closed-movement-banner');
+  if(!wrap) return;
+  const items=_closedConcilsWithMovement();
+  if(!items.length){wrap.innerHTML='';return;}
+  const n=items.length;
+  wrap.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:8px 12px;margin:0 0 10px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span style="font-size:12px;color:#991b1b">${tn('closed-movement-banner-msg',n)}</span>
+    </div>
+    <button onclick="openClosedConcilMovementModal()" style="font-size:12px;font-weight:600;padding:5px 12px;background:#fff;color:#991b1b;border:1px solid #fca5a5;border-radius:6px;cursor:pointer;font-family:inherit;flex-shrink:0">${t('closed-movement-banner-btn')}</button>
+  </div>`;
+}
+function openClosedConcilMovementModal(){
+  _renderClosedConcilMovementList();
+  openModal('modal-closed-concil-movement');
+}
+function _renderClosedConcilMovementList(){
+  const box=document.getElementById('closed-movement-concil-list');
+  if(!box) return;
+  const items=_closedConcilsWithMovement();
+  box.innerHTML=items.map(({conc,gateways})=>{
+    const idx=store.conciliacoes.indexOf(conc);
+    return `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid var(--e-pale);border-radius:8px">
+      <span style="display:flex;flex-direction:column;gap:2px">
+        <span style="font-size:13px;font-weight:600">${_esc(conc.nome)}</span>
+        <span style="font-size:11px;color:var(--e-muted)">${tn('closed-movement-gw-label',gateways.length)} <span style="font-family:monospace">${gateways.map(_esc).join(', ')}</span></span>
+      </span>
+      <button onclick="closeModal('modal-closed-concil-movement');openConciliacaoModal(${idx})" style="font-size:11px;font-weight:600;padding:4px 10px;background:#fff;color:var(--e-mid);border:1px solid var(--e-pale);border-radius:6px;cursor:pointer;font-family:inherit;flex-shrink:0">${t('btn-editar')}</button>
+    </div>`;
+  }).join('');
+}
+// Conciliações ATIVAS sem NENHUM gateway vinculado — vale pra qualquer
+// tipo (processadores, mista ou bancos: todas dependem de gateway pra
+// calcular volume/prioridade), inclusive as que nunca chegaram a abrir a
+// seção de volume (sem entrada nem em concilVolumeMap).
+function _concilsWithoutGateway(){
+  return (store.conciliacoes||[]).filter(c=>{
+    if(c.status==='encerrada') return false;
+    const concId=(c.id||c.nome).replace(/['"]/g,'');
+    const map=(store.concilVolumeMap||{})[concId];
+    const hasAnyGw=!!(map&&[...(map.cashinIds||[]),...(map.cashoutIds||[]),...(map.refundIds||[]),...(map.chargebackIds||[])].length);
+    return !hasAnyGw;
+  });
+}
+function _renderConcilNoGatewayBanner(){
+  const wrap=document.getElementById('crono-conc-no-gateway-banner');
+  if(!wrap) return;
+  const items=_concilsWithoutGateway();
+  if(!items.length){wrap.innerHTML='';return;}
+  const n=items.length;
+  wrap.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin:0 0 10px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span style="font-size:12px;color:#92400e">${tn('concil-no-gateway-msg',n)}</span>
+    </div>
+    <button onclick="openConcilNoGatewayModal()" style="font-size:12px;font-weight:600;padding:5px 12px;background:#fff;color:#92400e;border:1px solid #fcd34d;border-radius:6px;cursor:pointer;font-family:inherit;flex-shrink:0">${t('closed-movement-banner-btn')}</button>
+  </div>`;
+}
+function openConcilNoGatewayModal(){
+  _renderConcilNoGatewayList();
+  openModal('modal-concil-no-gateway');
+}
+function _renderConcilNoGatewayList(){
+  const box=document.getElementById('concil-no-gateway-list');
+  if(!box) return;
+  const items=_concilsWithoutGateway();
+  box.innerHTML=items.map(conc=>{
+    const idx=store.conciliacoes.indexOf(conc);
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid var(--e-pale);border-radius:8px">
+      <span style="font-size:13px;font-weight:600">${_esc(conc.nome)}</span>
+      <button onclick="closeModal('modal-concil-no-gateway');openConciliacaoModal(${idx})" style="font-size:11px;font-weight:600;padding:4px 10px;background:#fff;color:var(--e-mid);border:1px solid var(--e-pale);border-radius:6px;cursor:pointer;font-family:inherit;flex-shrink:0">${t('btn-editar')}</button>
+    </div>`;
+  }).join('');
+}
+// Os 4 avisos (gateways pendentes de cadastro, conta encerrada vinculada,
+// movimento pós-encerramento, conciliação sem gateway mapeado) ficam
+// resumidos num único banner colapsado — só expande sob demanda, pra não
+// poluir a tela com vários avisos abertos ao mesmo tempo.
+let _cronconcWarningsExpanded=false;
+function _toggleCronconcWarnings(){
+  _cronconcWarningsExpanded=!_cronconcWarningsExpanded;
+  _renderCronconcWarningsSummary();
+}
+function _renderCronconcWarningsSummary(){
+  const wrap=document.getElementById('crono-conc-warnings-summary');
+  const detail=document.getElementById('crono-conc-warnings-detail');
+  if(!wrap||!detail) return;
+  const nUnlinkedGw=_unlinkedGatewaysInfo().total;
+  const nClosedAcc=_closedAccConcils().length;
+  const nClosedMove=_closedConcilsWithMovement().length;
+  const nNoGw=_concilsWithoutGateway().length;
+  const activeCategories=[nUnlinkedGw,nClosedAcc,nClosedMove,nNoGw].filter(n=>n>0).length;
+  if(!activeCategories){ wrap.innerHTML=''; detail.style.display='none'; return; }
+  const arrow=_cronconcWarningsExpanded?'▲':'▼';
+  wrap.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:9px 14px;margin:0 0 10px;cursor:pointer" onclick="_toggleCronconcWarnings()">
+    <div style="display:flex;align-items:center;gap:8px">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span style="font-size:13px;font-weight:700;color:#991b1b">${tn('cronconc-warnings-summary',activeCategories)}</span>
+    </div>
+    <span style="font-size:16px;color:#991b1b">${arrow}</span>
+  </div>`;
+  detail.style.display=_cronconcWarningsExpanded?'':'none';
+}
 function renderCronogramaConciliacoes(){
   const emptyEl=document.getElementById('crono-conc-empty');
   const calWrap=document.getElementById('crono-conc-cal-wrap');
@@ -9280,6 +9843,9 @@ function renderCronogramaConciliacoes(){
 
   _renderCronconcUnlinkedBanner();
   _renderClosedAccConcilBanner();
+  _renderClosedConcilMovementBanner();
+  _renderConcilNoGatewayBanner();
+  _renderCronconcWarningsSummary();
   _initConcFilters();
 
   const activePaises=_fddVals('crono-conc-f-pais-panel');
@@ -9291,6 +9857,18 @@ function renderCronogramaConciliacoes(){
   const activeAnlts=[...document.querySelectorAll('#crono-conc-anl-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
   const activeD1=[...document.querySelectorAll('#crono-conc-d1-filter .d1-toggle.active')].map(b=>b.dataset.d1);
   const searchQ=(document.getElementById('crono-conc-search')?.value||'').toLowerCase().trim();
+  const volOp=document.getElementById('crono-conc-f-vol-op')?.value||'';
+  const volVal=parseFloat(document.getElementById('crono-conc-f-vol-val')?.value);
+  const _volMatch=c=>{
+    if(!volOp||isNaN(volVal)) return true;
+    if(c.status==='encerrada') return false;
+    const usd=(store.volumeRankings?.combined||{})[(c.id||c.nome).replace(/['"]/g,'')]?.usd||0;
+    if(volOp==='>') return usd>volVal;
+    if(volOp==='<') return usd<volVal;
+    if(volOp==='='&&Math.round(volVal)===0) return Math.round(usd)===0&&!_concVolumeStatus(c).kind;
+    if(volOp==='=') return Math.round(usd)===Math.round(volVal);
+    return true;
+  };
 
   const dsEl=document.getElementById('crono-conc-date-start');
   const deEl=document.getElementById('crono-conc-date-end');
@@ -9338,6 +9916,7 @@ function renderCronogramaConciliacoes(){
   // stat counters over unfiltered-by-d1 list (matching país/agente/resp/search/prior)
   const d1C={concluido:0,pronto_conciliacao:0,sem_movimento:0,sem_acesso:0,conta_encerrada:0,elaborando:0,encerrada:0,pendente:0};
   const d1V={concluido:0,pronto_conciliacao:0,sem_movimento:0,sem_acesso:0,conta_encerrada:0,elaborando:0,encerrada:0,pendente:0};
+  let _contaEncCount=0,_contaEncVol=0;
   listWithD1.forEach(({c,d1Status})=>{
     if(activePaises.length&&!activePaises.includes(c.pais)) return;
     if(activeAgentes.length&&!activeAgentes.includes(c.agente)) return;
@@ -9356,11 +9935,18 @@ function renderCronogramaConciliacoes(){
       else if(activePriors.includes('__none__')){if(vol&&!activePriors.includes(vol)) return;}
       else{if(!vol||!activePriors.includes(vol)) return;}
     }
-    if(searchQ&&!_matchesInSearch([c.nome,c.pais,c.agente].map(v=>(v||'').toLowerCase()),searchQ)) return;
+    if(!_volMatch(c)) return;
+    if(searchQ&&!_matchesInSearch([c.nome,c.pais,c.agente,_concVolumeStatus(c).text].map(v=>(v||'').toLowerCase()),searchQ)) return;
     const _bucket=Object.prototype.hasOwnProperty.call(d1C,d1Status)?d1Status:'pendente';
     d1C[_bucket]++;
     const _cid=(c.id||c.nome||'').replace(/['"]/g,'');
-    d1V[_bucket]+=((store.volumeRankings?.combined||{})[_cid]?.usd)||0;
+    const _cUsd=((store.volumeRankings?.combined||{})[_cid]?.usd)||0;
+    d1V[_bucket]+=_cUsd;
+    // Tile "Conta Encerrada": só entra quem tem volume pendente de verdade —
+    // conta/conciliação encerrada sem volume pendente fica de fora da conta.
+    if((_bucket==='conta_encerrada'||_bucket==='encerrada')&&_cUsd>0){
+      _contaEncCount++; _contaEncVol+=_cUsd;
+    }
   });
   const _upd=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
   const _fmtV=v=>v>0?'$'+Math.round(v).toLocaleString('en-US'):'';
@@ -9370,7 +9956,8 @@ function renderCronogramaConciliacoes(){
   _upd('conc-d1-sem-mov',d1C.sem_movimento);_upd('conc-d1-sem-mov-vol',_fmtV(d1V.sem_movimento));
   _upd('conc-d1-sem-acesso',d1C.sem_acesso);_upd('conc-d1-sem-acesso-vol',_fmtV(d1V.sem_acesso));
   _upd('conc-d1-pendente',d1C.pendente);_upd('conc-d1-pendente-vol',_fmtV(d1V.pendente));
-  const _totalRisk=d1V.pendente+d1V.pronto_conciliacao+d1V.sem_acesso;
+  _upd('conc-d1-conta-encerrada',_contaEncCount);_upd('conc-d1-conta-encerrada-vol',_fmtV(_contaEncVol));
+  const _totalRisk=d1V.pendente+d1V.pronto_conciliacao+d1V.sem_acesso+_contaEncVol;
   const _riskT=Math.min(1,_totalRisk/1_000_000);
   const _riskEl=document.getElementById('conc-risk-vol');
   if(_riskEl){
@@ -9398,7 +9985,8 @@ function renderCronogramaConciliacoes(){
       else{if(!vol||!activePriors.includes(vol)) return false;}
     }
     if(activeD1.length&&!activeD1.includes(d1Status)) return false;
-    if(searchQ&&!_matchesInSearch([c.nome,c.pais,c.agente].map(v=>(v||'').toLowerCase()),searchQ)) return false;
+    if(!_volMatch(c)) return false;
+    if(searchQ&&!_matchesInSearch([c.nome,c.pais,c.agente,_concVolumeStatus(c).text].map(v=>(v||'').toLowerCase()),searchQ)) return false;
     return true;
   }).map(({c})=>c);
 
@@ -9442,7 +10030,14 @@ function renderCronogramaConciliacoes(){
   const _cDefs=[
     {k:'pais',h:()=>_sth('pais',t('col-pais'),1),c:(conc,ri,sc)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="pais" style="font-size:12px">${conc.pais?`${countryFlag(conc.pais)} ${conc.pais}`:'—'}</td>`},
     {k:'agente',h:()=>`<th class="${_sortThCls('crono-conc','agente')} col-info" data-col-key="agente" onclick="toggleSort('crono-conc','agente')" style="cursor:pointer;position:relative;width:120px;max-width:120px">${t('col-agente')}${_sortArrow('crono-conc','agente')}${_colBtns('crono-conc','agente',2)}<div class="col-rsz-handle"></div></th>`,c:(conc,ri,sc)=>`<td class="sub sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="agente" style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${conc.agente||'—'}</td>`},
-    {k:'volume',h:()=>_sth('volume',`${t('conc-col-volume')}<br><span style="font-weight:400;font-size:9px;color:var(--e-muted)">${t('conc-col-volume-sub')}</span>`,3),c:(conc,ri,sc)=>{const _cid=(conc.id||conc.nome).replace(/['"]/g,'');const _vol=(store.volumeRankings?.combined||{})[_cid]?.usd||0;const _fmtV=v=>v?'$'+Math.round(v).toLocaleString('en-US'):'<span style="color:var(--e-muted);font-size:11px">—</span>';return `<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="volume" style="font-size:11px;font-weight:600;color:var(--e-mid);white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right;padding-right:10px">${_fmtV(_vol)}</td>`;}},
+    {k:'volume',h:()=>_sth('volume',t('conc-col-volume'),3),c:(conc,ri,sc)=>{
+      const _st=_concVolumeStatus(conc);
+      const _html=_st.kind==='valor'?_st.text
+        :_st.kind==='mapeado'?`<span class="chip chip-purple" style="font-size:10px">${_st.text}</span>`
+        :_st.kind==='pendente'?`<span class="chip chip-slate" style="font-size:10px">${_st.text}</span>`
+        :'<span style="color:var(--e-muted);font-size:11px">—</span>';
+      return `<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="volume" style="font-size:11px;font-weight:600;color:var(--e-mid);white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right;padding-right:10px">${_html}</td>`;
+    }},
     {k:'resp',h:()=>`<th class="col-info" data-col-key="resp" style="position:relative">${t('conc-col-resp')}${_colBtns('crono-conc','resp',4)}<div class="col-rsz-handle"></div></th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="resp">${x.respCell}</td>`},
     {k:'prioridade',h:()=>`<th class="col-info" data-col-key="prioridade" style="position:relative">${t('conc-col-prioridade')}${_colBtns('crono-conc','prioridade',5)}<div class="col-rsz-handle"></div></th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="prioridade" style="padding:4px 8px">${x.priorCell}</td>`},
     {k:'tipo',h:()=>`<th class="col-info" data-col-key="tipo" style="position:relative">${t('conc-col-tipo')}${_colBtns('crono-conc','tipo',6)}<div class="col-rsz-handle"></div></th>`,c:(conc,ri,sc,x)=>`<td class="sel-cell" data-sr="${ri}" data-sc="${sc}" data-col-key="tipo" style="padding:4px 8px">${x.concTipoChipHtml}</td>`},
@@ -9569,7 +10164,19 @@ function renderCronogramaConciliacoes(){
 
 let _concPop=null;
 function _closeConcPop(){
-  if(_concPop){_concPop.pop.remove();if(_concPop.td&&_concPop.td.style.position==='relative')_concPop.td.style.position='';_concPop=null;}
+  if(_concPop){_concPop.pop.remove();_concPop=null;}
+}
+// Posiciona um dropdown como position:fixed ancorado no rect da célula —
+// sempre logo abaixo dela (sem "virar" pra cima como o de Accounts, que
+// distanciava demais o aviso da célula clicada). Usar position:absolute
+// dentro da própria <td> (como era antes) fazia o popup ser cortado pelo
+// overflow do container com scroll da tabela do calendário, criando o
+// efeito "fantasma" (texto cortado/sobreposto) perto da borda visível.
+function _placeFixedDropdown(dd,rect){
+  const left=Math.min(rect.left, window.innerWidth-200);
+  const top=rect.bottom+4;
+  dd.style.left=left+'px';
+  dd.style.top=top+'px';
 }
 function onConcCellClick(evt,ck,dateStr){
   if(!canEdit()) return;
@@ -9580,19 +10187,46 @@ function onConcCellClick(evt,ck,dateStr){
   _closeConcPop();
   const conc=store.conciliacoes.find(c=>(c.id||c.nome).replace(/['"]/g,'')===ck);
   if(!conc) return;
+  const rect=td.getBoundingClientRect();
+  // Conciliação encerrada: histórico fica congelado por completo, mesmo em
+  // dias anteriores ao fechamento (day-cell-closed já bloqueia os dias >=
+  // fechamento; isso aqui cobre os dias ANTERIORES, que continuavam clicáveis).
+  if(conc.status==='encerrada'){
+    const pop=document.createElement('div');
+    pop.className='cal-dropdown';
+    _placeFixedDropdown(pop,rect);
+    pop.innerHTML=`<div style="padding:10px 14px;max-width:200px">
+      <div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:4px">🔒 ${t('status-encerrada')}</div>
+      <div style="font-size:11px;color:var(--e-sub)">${t('conc-encerrada-frozen-msg')}</div>
+    </div>`;
+    document.body.appendChild(pop);
+    _concPop={pop,td};
+    setTimeout(()=>document.addEventListener('click',_closeConcPop,{once:true}),0);
+    return;
+  }
   const manualKey=`${conc.id||conc.nome}_${dateStr}`;
   const existing=store.cronogramaConciliacoes[manualKey];
   const user=store.responsaveis.find(r=>r.email===window._loggedEmail);
   const sigla=user?.sigla||(user?.nome?.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase())||'?';
-  // Bancos: sem popup — clique no check confirma/desfaz concluido
+  // Bancos: popup restrito (Concluído/Sem Acesso a partir de "pronto p/
+  // conciliar", ou Limpar pra desfazer) — antes só dava pra ir direto pra
+  // Concluído; agora também dá pra marcar Sem Acesso, reaproveitando o
+  // mesmo fluxo de link/comentário do Slack já usado pelo tipo Processadores.
   if(conc.tipo==='bancos'){
     const r=_getConcilStatus(conc,dateStr);
     if(r.status==='pronto_conciliacao'){
-      store.cronogramaConciliacoes[manualKey]={status:'concluido',sigla,user:window._loggedEmail,ts:new Date().toLocaleString(_dateLocale())};
-      saveStore(); _fbSync('cronogramaConciliacoes'); renderCronogramaConciliacoes();
-    } else if(r.status==='concluido'){
-      delete store.cronogramaConciliacoes[manualKey];
-      saveStore(); _fbSync('cronogramaConciliacoes'); renderCronogramaConciliacoes();
+      _openConcStPopup(td,rect,ck,dateStr,[
+        {v:'elaborando',lbl:t('status-elaborando'),sub:t('crono-elab-abbr')+' '+sigla,bg:'#cffafe',color:'#0e7490'},
+        {v:'concluido', lbl:t('status-concluido'), sub:sigla,       bg:'#dcfce7',color:'#15803d'},
+        {v:'sem_acesso',lbl:t('status-sem-acesso'),sub:sigla+' s/a',bg:'#fef2f2',color:'#dc2626'},
+      ]);
+    } else if(r.status==='elaborando'){
+      _openConcStPopup(td,rect,ck,dateStr,[
+        {v:'concluido',lbl:t('status-concluido'),sub:sigla,bg:'#dcfce7',color:'#15803d'},
+        {v:null,        lbl:t('btn-limpar'),      sub:'',   bg:'#e5e7eb',color:'#6b7280'},
+      ]);
+    } else if(r.status==='concluido'||r.status==='sem_acesso'){
+      _openConcStPopup(td,rect,ck,dateStr,[{v:null,lbl:t('btn-limpar'),sub:'',bg:'#e5e7eb',color:'#6b7280'}]);
     }
     return;
   }
@@ -9601,16 +10235,19 @@ function onConcCellClick(evt,ck,dateStr){
     {v:'concluido',    lbl:t('status-concluido'), sub:sigla,        bg:'#dcfce7',color:'#15803d'},
     {v:'sem_movimento',lbl:t('d1-sem-mov'),       sub:sigla+' s/m', bg:'#ede9fe',color:'#5b21b6'},
     {v:'sem_acesso',   lbl:t('status-sem-acesso'),sub:sigla+' s/a', bg:'#fef2f2',color:'#dc2626'},
-    {v:null,           lbl:'Limpar',       sub:'',           bg:'#e5e7eb',color:'#6b7280'},
+    {v:null,           lbl:t('btn-limpar'),       sub:'',           bg:'#e5e7eb',color:'#6b7280'},
   ];
+  _openConcStPopup(td,rect,ck,dateStr,opts);
+}
+function _openConcStPopup(td,rect,ck,dateStr,opts){
   const pop=document.createElement('div');
-  pop.style.cssText='position:absolute;top:calc(100% + 2px);left:0;border:1px solid var(--e-pale);border-radius:10px;box-shadow:0 8px 24px rgba(27,19,60,.13);z-index:600;min-width:180px;overflow:hidden;text-align:left;';
+  pop.className='cal-dropdown';
+  _placeFixedDropdown(pop,rect);
   pop.innerHTML=opts.map(o=>`<div class="cal-dd-item" style="color:${o.color};background:${o.bg}"
       onclick="_concChooseSt(event,'${ck}','${dateStr}',${o.v===null?'null':"'"+o.v+"'"})">
       <div style="font-weight:600">${o.lbl}</div>${o.sub?`<div style="font-size:11px;font-family:monospace;margin-top:1px">${o.sub}</div>`:''}
     </div>`).join('');
-  td.style.position='relative';
-  td.appendChild(pop);
+  document.body.appendChild(pop);
   _concPop={pop,td};
   setTimeout(()=>document.addEventListener('click',_closeConcPop,{once:true}),0);
 }
@@ -9649,7 +10286,7 @@ function _concChooseSt(evt,ck,dateStr,v){
   _closeConcPop();
   if(!v){ delete store.cronogramaConciliacoes[manualKey]; }
   else { store.cronogramaConciliacoes[manualKey]={status:v,sigla,user:window._loggedEmail,ts:new Date().toLocaleString(_dateLocale())}; }
-  saveStore();_fbSync('cronogramaConciliacoes');
+  saveStore();_fbSync('cronogramaConciliacoes');_rebuildCombinedRanking();
   renderCronogramaConciliacoes();
 }
 
@@ -9707,6 +10344,7 @@ function submitConcBulkApply(){
       });
     });
     saveStore(); if(changed) _fbSync('cronogramaConciliacoes');
+    if(changed) _rebuildCombinedRanking();
     logAudit('cronograma-conciliacoes','bulk-apply',{status,changed,conciliacoes:list.length,dias:days.length});
     closeModal('modal-conc-bulk-apply');
     renderCronogramaConciliacoes();
