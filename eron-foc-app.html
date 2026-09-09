@@ -337,6 +337,7 @@
   .chip-tipo-bancos{background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;}
   .chip-tipo-proc{background:#f3e8ff;color:#7c3aed;border:1px solid #c4b5fd;}
   .chip-tipo-mista{background:#fef3c7;color:#92400e;border:1px solid #fcd34d;}
+  .chip-tipo-controle{background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;}
   /* CRONOGRAMA NOTE (hover link) */
   .day-filled.has-note{position:relative;overflow:visible;}
   .day-filled.has-note::after{content:'';position:absolute;top:0;right:0;width:0;height:0;border-style:solid;border-width:0 6px 6px 0;border-color:transparent #f59e0b transparent transparent;pointer-events:none;}
@@ -1216,6 +1217,7 @@
         <button class="freq-toggle" data-val="bancos" data-i18n="tipo-bancos" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-tipo-btn',_fddVals('crono-conc-f-tipo-panel'),t('liq-all-tipos'));renderCronogramaConciliacoes()">Bancos</button>
         <button class="freq-toggle" data-val="processadores" data-i18n="tipo-processadores" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-tipo-btn',_fddVals('crono-conc-f-tipo-panel'),t('liq-all-tipos'));renderCronogramaConciliacoes()">Processadores</button>
         <button class="freq-toggle" data-val="mista" data-i18n="tipo-mista" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-tipo-btn',_fddVals('crono-conc-f-tipo-panel'),t('liq-all-tipos'));renderCronogramaConciliacoes()">Mista</button>
+        <button class="freq-toggle" data-val="controle" data-i18n="tipo-controle" onclick="event.stopPropagation();this.classList.toggle('active');_fddLabel('crono-conc-f-tipo-btn',_fddVals('crono-conc-f-tipo-panel'),t('liq-all-tipos'));renderCronogramaConciliacoes()">Somente controle</button>
       </div>
     </div>
     <div class="freq-dd" id="crono-conc-f-freq-dd">
@@ -2462,7 +2464,7 @@ const i18n = {
     'cierre-verificando':'Verificando','status-pendente':'Pendente','status-concluido':'Concluída','status-sem-mov':'Sem Mov.','status-sem-acesso':'Sem Acesso','status-ag-extrato':'Ag. Extrato',
     'status-elaborando':'Em Elaboração','crono-elab-abbr':'Elab','status-encerrada-abbr':'EN',
     'status-pronto-conciliacao':'Pronto p/ Conc.','status-conta-encerrada':'Conta Encerrada',
-    'tipo-bancos':'Bancos','tipo-processadores':'Processadores','tipo-mista':'Mista',
+    'tipo-bancos':'Bancos','tipo-processadores':'Processadores','tipo-mista':'Mista','tipo-controle':'Somente controle',
     'crono-all-tops':'Todos os TOPs','top-acima-50':'Acima TOP 50','crono-sem-top':'Sem TOP','crono-analista':'Analista',
     'tt-limpar-busca':'Limpar busca','tt-sintaxe-busca':'Sintaxe de busca','tt-baixar-csv':'Baixar CSV com os filtros aplicados','search-help-title':'Operadores de busca',
     'dd-search-ph':'Pesquisar...','n-selecionados':'{n} selecionados','col-hide':'Ocultar coluna','col-top':'TOP',
@@ -2677,7 +2679,7 @@ const i18n = {
     'cierre-verificando':'Verifying','status-pendente':'Pending','status-concluido':'Completed','status-sem-mov':'No mov.','status-sem-acesso':'No access','status-ag-extrato':'Aw. stmt',
     'status-elaborando':'In Progress','crono-elab-abbr':'Elab','status-encerrada-abbr':'CL',
     'status-pronto-conciliacao':'Ready to Reconcile','status-conta-encerrada':'Account Closed',
-    'tipo-bancos':'Banks','tipo-processadores':'Processors','tipo-mista':'Mixed',
+    'tipo-bancos':'Banks','tipo-processadores':'Processors','tipo-mista':'Mixed','tipo-controle':'Control only',
     'crono-all-tops':'All TOPs','top-acima-50':'Above TOP 50','crono-sem-top':'No TOP','crono-analista':'Analyst',
     'tt-limpar-busca':'Clear search','tt-sintaxe-busca':'Search syntax','tt-baixar-csv':'Download CSV with applied filters','search-help-title':'Search operators',
     'dd-search-ph':'Search...','n-selecionados':'{n} selected','col-hide':'Hide column','col-top':'TOP',
@@ -2893,7 +2895,7 @@ const i18n = {
     'status-pendente':'Pendiente','status-concluido':'Concluida','status-sem-mov':'Sin mov.','status-sem-acesso':'Sin acceso','status-ag-extrato':'Ag. extracto',
     'status-elaborando':'En Elaboración','crono-elab-abbr':'Elab','status-encerrada-abbr':'CE',
     'status-pronto-conciliacao':'Listo p/ Concil.','status-conta-encerrada':'Cuenta Cerrada',
-    'tipo-bancos':'Bancos','tipo-processadores':'Procesadores','tipo-mista':'Mixta',
+    'tipo-bancos':'Bancos','tipo-processadores':'Procesadores','tipo-mista':'Mixta','tipo-controle':'Solo control',
     'crono-all-tops':'Todos los TOPs','top-acima-50':'Arriba TOP 50','crono-sem-top':'Sin TOP','crono-analista':'Analista',
     'tt-limpar-busca':'Limpiar búsqueda','tt-sintaxe-busca':'Sintaxis de búsqueda','tt-baixar-csv':'Descargar CSV con los filtros aplicados','search-help-title':'Operadores de búsqueda',
     'dd-search-ph':'Buscar...','n-selecionados':'{n} seleccionados','col-hide':'Ocultar columna','col-top':'TOP',
@@ -9319,7 +9321,7 @@ function renderGerencialConciliacoes(){
   tb.innerHTML=list.map((c,ci)=>{
     const origIdx=store.conciliacoes.indexOf(c);
     const tags=c.contas&&c.contas.length?c.contas.map(s=>`<span style="font-family:monospace;font-size:10px;background:var(--e-ghost);padding:1px 5px;border-radius:3px;margin-right:3px;display:inline-block;white-space:nowrap;margin-bottom:2px">${s}</span>`).join(''):`<span style="color:var(--e-muted);font-size:11px">—</span>`;
-    const tipoMap={bancos:['chip-tipo-bancos',t('tipo-bancos')],mista:['chip-tipo-mista',t('tipo-mista')],processadores:['chip-tipo-proc',t('tipo-processadores')]};
+    const tipoMap={bancos:['chip-tipo-bancos',t('tipo-bancos')],mista:['chip-tipo-mista',t('tipo-mista')],processadores:['chip-tipo-proc',t('tipo-processadores')],controle:['chip-tipo-controle',t('tipo-controle')]};
     const [tipoCls,tipoLbl]=tipoMap[c.tipo||'bancos']||tipoMap.bancos;
     const tipoChipHtml=`<span class="chip ${tipoCls}" style="font-size:10px">${tipoLbl}</span>`;
     const isEncerrada=c.status==='encerrada';
@@ -9341,7 +9343,7 @@ function openConciliacaoModal(editIdx=-1){
   _selectedContas=isEdit&&conc.contas?[...conc.contas]:[];
   _selectedProcessadores=isEdit&&conc.processadores?[...conc.processadores]:[];
   const tipoAtualInit=conc.tipo||'bancos';
-  _tipoAtivosConc=tipoAtualInit==='mista'?['processadores','bancos']:tipoAtualInit==='processadores'?['processadores']:['bancos'];
+  _tipoAtivosConc=tipoAtualInit==='controle'?['controle']:tipoAtualInit==='mista'?['processadores','bancos']:tipoAtualInit==='processadores'?['processadores']:['bancos'];
   const concId=isEdit?(conc.id||conc.nome).replace(/['"]/g,''):'';
   const concMap=(store.concilVolumeMap||{})[concId]||{};
   const _toSA=v=>!v?[]:Array.isArray(v)?v.map(String):Object.values(v).map(String);
@@ -9384,6 +9386,7 @@ function openConciliacaoModal(editIdx=-1){
       <div style="display:flex;gap:6px">
         <button type="button" id="tipo-proc-btn" class="op-type-toggle" onclick="toggleConcTipo('processadores')">${t('cad-proc-title')}</button>
         <button type="button" id="tipo-bancos-btn" class="op-type-toggle" onclick="toggleConcTipo('bancos')">${t('cad-banco-title')}</button>
+        <button type="button" id="tipo-controle-btn" class="op-type-toggle" onclick="toggleConcTipo('controle')">${t('tipo-controle')}</button>
       </div>
     </div>
     <div id="conc-vinc-wrap" class="form-field">
@@ -9394,7 +9397,7 @@ function openConciliacaoModal(editIdx=-1){
         <div class="contas-ms-tags" id="conc-vinc-tags"></div>
       </div>
     </div>
-    <div class="form-field" style="border-top:1px solid var(--e-pale);padding-top:12px;margin-top:4px">
+    <div id="conc-vol-section" class="form-field" style="border-top:1px solid var(--e-pale);padding-top:12px;margin-top:4px">
       <label class="form-label" style="color:var(--e-muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em">${t('lbl-prioridade-volume')}</label>
       <div style="font-size:11px;font-weight:600;color:var(--e-mid);margin-bottom:6px">${t('lbl-tipos-operacao')}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
@@ -9438,8 +9441,7 @@ function openConciliacaoModal(editIdx=-1){
   if(isEdit){const ec=document.getElementById('conc-encerrar');if(ec)ec.checked=conc.status==='encerrada';}
   setTimeout(()=>{
     // Tipo toggles
-    document.getElementById('tipo-proc-btn')?.classList.toggle('active',_tipoAtivosConc.includes('processadores'));
-    document.getElementById('tipo-bancos-btn')?.classList.toggle('active',_tipoAtivosConc.includes('bancos'));
+    _syncConcTipoUI();
     const _concObsEl=document.getElementById('conc-obs');
     if(_concObsEl){_concObsEl.style.height='auto';_concObsEl.style.height=_concObsEl.scrollHeight+'px';}
     renderConcVincList(); renderConcVincTags();
@@ -9507,12 +9509,40 @@ function renderConcVincTags(){
 function renderContasMSList(){ renderConcVincList(); }
 function renderContasMSTags(){ renderConcVincTags(); }
 
-function toggleConcTipo(tipo){
-  const idx=_tipoAtivosConc.indexOf(tipo);
-  if(idx>=0){ if(_tipoAtivosConc.length>1) _tipoAtivosConc.splice(idx,1); }
-  else _tipoAtivosConc.push(tipo);
+// Sincroniza os 3 botões de tipo e mostra/esconde as seções de vínculo
+// (contas/processadores) e de volume (tipos de operação/gateways) — "Somente
+// controle" não tem nenhuma das duas, é isso que a mantém fora do cálculo
+// de Prioridade/TOP (ver skip por tipo em _rebuildCombinedRanking).
+function _syncConcTipoUI(){
+  const isControle=_tipoAtivosConc.includes('controle');
   document.getElementById('tipo-proc-btn')?.classList.toggle('active',_tipoAtivosConc.includes('processadores'));
   document.getElementById('tipo-bancos-btn')?.classList.toggle('active',_tipoAtivosConc.includes('bancos'));
+  document.getElementById('tipo-controle-btn')?.classList.toggle('active',isControle);
+  const vincWrap=document.getElementById('conc-vinc-wrap');
+  const volSection=document.getElementById('conc-vol-section');
+  if(vincWrap) vincWrap.style.display=isControle?'none':'';
+  if(volSection) volSection.style.display=isControle?'none':'';
+}
+function toggleConcTipo(tipo){
+  if(tipo==='controle'){
+    // Exclusivo: "Somente controle" não combina com Bancos/Processadores —
+    // zera qualquer vínculo e mapeamento de gateway já selecionado.
+    _tipoAtivosConc=['controle'];
+    _selectedContas=[];_selectedProcessadores=[];
+    _selectedOpTypes=[];_selectedGatewayIds=[];
+    _selectedCashinIds=[];_selectedCashoutIds=[];_selectedRefundIds=[];_selectedChargebackIds=[];
+    _gatewayModified=true;
+    document.querySelectorAll('.op-type-toggle[data-type]').forEach(b=>b.classList.remove('active'));
+    const volCombinedWrap=document.getElementById('vol-combined-wrap');
+    if(volCombinedWrap) volCombinedWrap.style.display='none';
+  } else {
+    if(_tipoAtivosConc.includes('controle')) _tipoAtivosConc=[];
+    const idx=_tipoAtivosConc.indexOf(tipo);
+    if(idx>=0){ if(_tipoAtivosConc.length>1) _tipoAtivosConc.splice(idx,1); }
+    else _tipoAtivosConc.push(tipo);
+    if(!_tipoAtivosConc.length) _tipoAtivosConc=[tipo];
+  }
+  _syncConcTipoUI();
   if(!_tipoAtivosConc.includes('bancos')) _selectedContas=[];
   if(!_tipoAtivosConc.includes('processadores')) _selectedProcessadores=[];
   renderConcVincList(); renderConcVincTags();
@@ -9592,9 +9622,10 @@ function submitConciliacao(){
   if(!nome){document.getElementById('conc-nome')?.classList.add('err');return;}
   const pais=document.getElementById('conc-pais')?.value||'';
   const agente=document.getElementById('conc-agente')?.value||'';
+  const isControle=_tipoAtivosConc.includes('controle');
   const hasProc=_tipoAtivosConc.includes('processadores');
   const hasBancos=_tipoAtivosConc.includes('bancos');
-  const tipo=hasProc&&hasBancos?'mista':hasProc?'processadores':'bancos';
+  const tipo=isControle?'controle':hasProc&&hasBancos?'mista':hasProc?'processadores':'bancos';
   const contas=hasBancos?[..._selectedContas]:[];
   const processadores=hasProc?[..._selectedProcessadores]:[];
   const _dupConflicts=_findDuplicateLinks(contas,_selectedGatewayIds,_selectedOpTypes);
@@ -9731,7 +9762,7 @@ function downloadConcilCSV(){
   const d1=new Date(now.getFullYear(),now.getMonth(),now.getDate()-1);
   const d1Str=`${d1.getFullYear()}-${String(d1.getMonth()+1).padStart(2,'0')}-${String(d1.getDate()).padStart(2,'0')}`;
   const STATUS_LBL={concluido:t('status-concluido'),pronto_conciliacao:t('status-pronto-conciliacao'),sem_movimento:t('d1-sem-mov'),sem_acesso:t('status-sem-acesso'),conta_encerrada:t('status-conta-encerrada'),elaborando:t('status-elaborando'),encerrada:t('status-encerrada'),pendente:t('status-pendente')};
-  const TIPO_LBL={bancos:t('tipo-bancos'),processadores:t('tipo-processadores'),mista:t('tipo-mista')};
+  const TIPO_LBL={bancos:t('tipo-bancos'),processadores:t('tipo-processadores'),mista:t('tipo-mista'),controle:t('tipo-controle')};
   const fmtV=v=>v?Math.round(v).toLocaleString('en-US'):'';
   const headers=[t('lbl-nome'),t('col-pais'),t('col-agente'),t('vol-map-field-usd'),t('conc-col-resp'),t('conc-col-prioridade'),t('conc-col-tipo'),t('liq-col-freq'),t('conc-col-acomp')];
   const rows=[headers,...list.map(c=>{
@@ -10393,6 +10424,11 @@ function _rebuildCombinedRanking(){
     // foi excluída (não deveria mais existir depois do fix em deleteConciliacao,
     // mas serve de proteção contra dado corrompido/editado direto no Firebase).
     if(!conc) continue;
+    // "Somente controle": fica de fora das regras de cálculo de TOP/Prioridade
+    // por definição — mesmo que algum mapeamento de gateway tenha sobrado de
+    // antes de o tipo virar controle (defesa em profundidade; a UI já impede
+    // configurar volume pra esse tipo, ver _syncConcTipoUI).
+    if(conc.tipo==='controle') continue;
     const sinceDate=_lastConcluidoDate(conc);
     const cashinIds=map.cashinIds||(map.cashinId?[map.cashinId]:[]);
     const cashoutIds=map.cashoutIds||(map.cashoutId?[map.cashoutId]:[]);
@@ -11141,7 +11177,7 @@ function renderCronogramaConciliacoes(){
       const _noteData=_hasLink?` data-link="${r.entry.reportLink.replace(/"/g,'&quot;')}"` :'';
       return `<td class="day-cell conc-cell" data-ck="${_ck}" data-dt="${dateStr}" style="cursor:pointer"><div class="day-filled${_noteClass}" style="background:${cfg.bg};color:${cfg.color}"${_noteEvts}${_noteData}>${lbl}</div></td>`;
     }).join('');
-    const _concTipoMap={bancos:['chip-tipo-bancos','Bancos'],processadores:['chip-tipo-proc','Processadores'],mista:['chip-tipo-mista','Mista']};
+    const _concTipoMap={bancos:['chip-tipo-bancos','Bancos'],processadores:['chip-tipo-proc','Processadores'],mista:['chip-tipo-mista','Mista'],controle:['chip-tipo-controle',t('tipo-controle')]};
     const _ct=_concTipoMap[conc.tipo]||['chip-grey',conc.tipo||'—'];
     const concTipoChipHtml=`<span class="chip ${_ct[0]}" style="font-size:10px">${_ct[1]}</span>`;
     const _concNomeInner=conc.obs?`<span data-link="${_esc(conc.obs)}" onmouseenter="showNoteTooltip(event,this)" onmouseleave="scheduleHideNoteTooltip()" style="pointer-events:auto">${_esc(conc.nome)}<sup style="color:var(--e-purple);font-size:7px;margin-left:1px">●</sup></span>`:_esc(conc.nome);
@@ -11850,7 +11886,7 @@ function renderCronogramaLiquidacoes(){
   if(tblInner)tblInner.style.display='';
   _refreshStaticSortHeader('liq-crono-thead','liq');
   _applyHiddenCols('liq','liq-crono-table',10);
-  const tipoMap={bancos:['chip-tipo-bancos',t('tipo-bancos')],mista:['chip-tipo-mista',t('tipo-mista')],processadores:['chip-tipo-proc',t('tipo-processadores')]};
+  const tipoMap={bancos:['chip-tipo-bancos',t('tipo-bancos')],mista:['chip-tipo-mista',t('tipo-mista')],processadores:['chip-tipo-proc',t('tipo-processadores')],controle:['chip-tipo-controle',t('tipo-controle')]};
   tb.innerHTML=list.map(c=>{
     const id=_liqConcId(c);
     const cfg=_liqGetConfig(id);
@@ -11980,7 +12016,7 @@ function renderGerencialLiquidacoes(){
   if(emptyEl)emptyEl.style.display='none';
   if(tblInner)tblInner.style.display='';
   const selStyle='height:30px;padding:0 24px 0 8px;border:1px solid var(--e-pale);border-radius:6px;font-size:12px;font-family:inherit;color:var(--e-text);background:#fff;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'10\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%239898c3\' stroke-width=\'2.5\'%3E%3Cpath d=\'M6 9l6 6 6-6\'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 7px center;width:100%';
-  const tipoMap={bancos:['chip-tipo-bancos',t('tipo-bancos')],mista:['chip-tipo-mista',t('tipo-mista')],processadores:['chip-tipo-proc',t('tipo-processadores')]};
+  const tipoMap={bancos:['chip-tipo-bancos',t('tipo-bancos')],mista:['chip-tipo-mista',t('tipo-mista')],processadores:['chip-tipo-proc',t('tipo-processadores')],controle:['chip-tipo-controle',t('tipo-controle')]};
   tb.innerHTML=filtered.map(c=>{
     const id=_liqConcId(c);
     const cfg=_liqGetConfig(id);
