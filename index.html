@@ -10065,14 +10065,40 @@ function _applyPriorFormula(r1,r2){
   if(r<=50) return 'TOP 50';
   return 'Acima TOP 50';
 }
+// Cache do ranking global de Prioridade — invalidado em toda mudança de
+// combined/priorityFixed (ver _invalidatePriorityRankCache, chamado no fim de
+// _rebuildCombinedRanking e _snapshotFixedPriority). Sem cache, recalcular a
+// lista inteira a cada linha da tabela (centenas de conciliações) seria
+// bem mais lento à toa.
+let _priorityRankCache=null;
+function _invalidatePriorityRankCache(){_priorityRankCache=null;}
+// Rank global e único por conciliação, unificando quem tem volume AO VIVO
+// (combined) com quem só tem volume CONGELADO (priorityFixed, concluído).
+// Precisa ser um ranking único e recalculado do zero a cada vez — dar um
+// "rank local" a cada conta no momento em que ela é congelada (como era
+// antes) faz duas contas congeladas em momentos diferentes, dentro de
+// conjuntos "combined" de tamanhos diferentes, acabarem com o mesmo número
+// de rank — e por isso mais de 10 contas apareciam como "TOP 10" ao mesmo
+// tempo.
+function _effectivePriorityRanking(){
+  if(_priorityRankCache) return _priorityRankCache;
+  const combined=store.volumeRankings?.combined||{};
+  const fixed=store.volumeRankings?.priorityFixed||{};
+  const ids=new Set([...Object.keys(combined),...Object.keys(fixed)]);
+  const rows=[];
+  ids.forEach(id=>{
+    const usd=combined[id]?.usd??fixed[id]?.usd??0;
+    if(usd>0) rows.push({id,usd});
+  });
+  rows.sort((a,b)=>b.usd-a.usd);
+  const ranks={};
+  rows.forEach((r,i)=>{ranks[r.id]=i+1;});
+  _priorityRankCache=ranks;
+  return ranks;
+}
 function _computeVolumePrioridade(concId){
   if(!(store.concilVolumeMap||{})[concId]) return null;
-  // Prioridade é fixada no momento da ingestão (ver _snapshotFixedPriority) —
-  // não muda quando o volume pendente cai a 0 por conclusão de dias. Cai em
-  // "combined" só como fallback pra dados antigos que ainda não têm snapshot.
-  const entry=(store.volumeRankings?.priorityFixed||{})[concId]||(store.volumeRankings?.combined||{})[concId];
-  if(!entry) return null;
-  const rank=typeof entry==='object'?entry.rank:entry;
+  const rank=_effectivePriorityRanking()[concId];
   if(!rank) return null;
   return _applyPriorFormula(rank,rank);
 }
@@ -10380,23 +10406,24 @@ function _rebuildCombinedRanking(){
   scores.forEach(({concId,totalUSD},i)=>{combined[concId]={rank:i+1,usd:totalUSD};});
   if(!store.volumeRankings) store.volumeRankings={cashin:{},cashout:{},refunds:{},chargebacks:{},combined:{}};
   store.volumeRankings.combined=combined;
+  _invalidatePriorityRankCache();
 }
-// Congela a Prioridade (TOP N) no estado de "combined" logo após uma
-// ingestão de volume — chamado só em _applyVolResult, nunca ao marcar dias
-// como concluído. Assim a Prioridade não recua só porque o volume pendente
-// caiu a 0 por conciliação; só muda na PRÓXIMA ingestão.
+// Congela o volume (não mais o "rank") de quem está com pendência ao vivo em
+// "combined". Guardar só o $ — e recalcular o rank global sempre junto de
+// todo mundo (ver _effectivePriorityRanking) — é o que evita duas contas
+// congeladas em momentos diferentes brigando pelo mesmo número de rank
+// (era o que fazia mais de 10 contas aparecerem como "TOP 10" ao mesmo
+// tempo). Mescla em cima do congelado anterior — NÃO substitui do zero. Uma
+// conciliação que já foi concluída (volume pendente = 0) some do "combined"
+// ao vivo, mas seu volume precisa continuar congelado pra sempre (até ela
+// voltar a ter volume pendente de verdade). Sobrescrever do zero aqui é o
+// que causava a Prioridade virar "—" quando a conta ficava em dia.
 function _snapshotFixedPriority(){
   const combined=store.volumeRankings.combined||{};
-  // Mescla em cima do congelado anterior — NÃO substitui do zero. Uma
-  // conciliação que já foi concluída (volume pendente = 0) some do "combined"
-  // ao vivo, mas seu TOP e volume precisam continuar congelados pra sempre
-  // (até ela voltar a ter volume pendente de verdade numa importação futura,
-  // quando aí sim é atualizada abaixo). Sobrescrever do zero aqui é o que
-  // causava tanto a Prioridade virar "—" quanto contas menores serem
-  // "promovidas" de volta ao TOP 10 assim que as grandes eram concluídas.
   const fixed={...(store.volumeRankings.priorityFixed||{})};
-  for(const concId in combined) fixed[concId]={rank:combined[concId].rank,usd:combined[concId].usd};
+  for(const concId in combined) fixed[concId]={usd:combined[concId].usd};
   store.volumeRankings.priorityFixed=fixed;
+  _invalidatePriorityRankCache();
 }
 function _renderVolLastImport(){
   const lbl=document.getElementById('vol-last-import-lbl');
