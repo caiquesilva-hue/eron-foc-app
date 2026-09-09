@@ -8598,7 +8598,7 @@ function openConciliacaoModal(editIdx=-1){
         <option value="Diário" ${conc.frequencia==='Diário'?'selected':''}>Diário</option>
       </select>
     </div>
-    <div class="form-field"><label class="form-label">${t('lbl-tipo')}<span class="req">*</span></label>
+    <div class="form-field"><label class="form-label">${t('conc-col-tipo')}<span class="req">*</span></label>
       <div style="display:flex;gap:6px">
         <button type="button" id="tipo-proc-btn" class="op-type-toggle" onclick="toggleConcTipo('processadores')">${t('cad-proc-title')}</button>
         <button type="button" id="tipo-bancos-btn" class="op-type-toggle" onclick="toggleConcTipo('bancos')">${t('cad-banco-title')}</button>
