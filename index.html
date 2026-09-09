@@ -11293,7 +11293,14 @@ function _concChooseSt(evt,ck,dateStr,v){
   _closeConcPop();
   if(!v){ delete store.cronogramaConciliacoes[manualKey]; }
   else { store.cronogramaConciliacoes[manualKey]={status:v,sigla,user:window._loggedEmail,ts:new Date().toLocaleString(_dateLocale())}; }
-  saveStore();_fbSync('cronogramaConciliacoes');_rebuildCombinedRanking();
+  saveStore();_fbSync('cronogramaConciliacoes');
+  // Congela o combined ATUAL antes de recalcular — captura o volume/rank de
+  // qualquer conta com pendência real bem no instante antes dela ser
+  // concluída (some do combined no rebuild a seguir). Sem isso, uma conta que
+  // nunca foi congelada numa importação cai pro fallback "ao vivo", cujo rank
+  // se reordena sozinho a cada conclusão, promovendo a próxima pro TOP 10
+  // pra sempre (o "TOP 10 eterno").
+  _snapshotFixedPriority();_rebuildCombinedRanking();
   renderCronogramaConciliacoes();
 }
 
@@ -11351,7 +11358,10 @@ function submitConcBulkApply(){
       });
     });
     saveStore(); if(changed) _fbSync('cronogramaConciliacoes');
-    if(changed) _rebuildCombinedRanking();
+    // Mesmo motivo do clique único em onConcCellClick: congela antes de
+    // recalcular, senão contas nunca capturadas numa importação ficam reféns
+    // do rank "ao vivo" e mantêm o TOP 10 sempre cheio.
+    if(changed){_snapshotFixedPriority();_rebuildCombinedRanking();}
     logAudit('cronograma-conciliacoes','bulk-apply',{status,changed,conciliacoes:list.length,dias:days.length});
     closeModal('modal-conc-bulk-apply');
     renderCronogramaConciliacoes();
