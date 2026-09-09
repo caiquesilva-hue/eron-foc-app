@@ -1550,7 +1550,7 @@
           <div style="text-align:center;margin:auto 0">
             <a href="https://drive.google.com/drive/folders/1nuE104GqZtATJnjgf6cbuqBrdB_-8AwA?hl=pt-br" target="_blank" rel="noopener noreferrer" style="font-size:12px;font-weight:600;color:#5b21b6;text-decoration:none;display:inline-flex;align-items:center;gap:7px;background:#ede9fe;border:1.5px solid #c4b5fd;border-radius:20px;padding:7px 16px">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-              Pasta padrão dos extratos STP vindos de Archer/Clearyn
+              <span data-i18n="fech-stp-drive-link">Pasta padrão dos extratos STP vindos de Archer/Clearyn</span>
             </a>
           </div>
           <button class="btn-primary" id="fech-stp-run-btn" onclick="runFechamentoSTP()" style="width:100%;padding:12px 20px;font-size:14px;justify-content:center;margin-top:auto">
@@ -2376,7 +2376,8 @@ const i18n = {
     'login-desc':'Faça login com sua conta corporativa Eron para continuar.',
     'login-btn':'Continuar com Google','login-note':'',
     'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Cadastro','nav-automacoes':'Automações','nav-dl-extratos':'Download Extratos','nav-cred-bancos':'Credenciais Bancos','nav-baixa-auto':'Baixa automática','baixa-sec-extr':'Download Extratos','baixa-sec-cred':'Atualização de Credenciais','cred-no-perm':'Acesso restrito — apenas Analista ou superior pode criar, editar ou excluir credenciais.',
-    'nav-fechamentos':'Fechamentos','nav-fechamento-stp':'Fechamento STP','nav-fechamento-mono':'Fechamento Mono','fech-sec-arquivos':'Arquivos','fech-sec-progresso':'Progresso','fech-escolher':'Escolher arquivo','fech-nenhum':'Nenhum arquivo selecionado','fech-processar':'Processar','fech-stp-extrato':'Extrato STP (Excel)','fech-stp-archer':'Extrato Archer/Clearyn (CSV)','fech-mono-pdf':'PDF de créditos','fech-mono-extrato':'Extrato Mono (Excel)','fech-mono-clearyn':'Extrato Clearyn (CSV)','fech-err-campos':'Selecione todos os arquivos antes de processar.','fech-sem-divergencias':'Todas as transações estão conciliadas — nenhum CSV foi gerado.',
+    'nav-fechamentos':'Fechamentos','nav-fechamento-stp':'Fechamento STP','nav-fechamento-mono':'Fechamento Mono','fech-sec-arquivos':'Arquivos','fech-sec-progresso':'Progresso','fech-escolher':'Escolher arquivo','fech-nenhum':'Nenhum arquivo selecionado','fech-processar':'Processar','fech-stp-extrato':'Extrato STP (Excel)','fech-stp-archer':'Extrato Archer/Clearyn (CSV)','fech-mono-pdf':'PDF de créditos','fech-mono-extrato':'Extrato Mono (Excel)','fech-mono-clearyn':'Extrato Clearyn (CSV)','fech-err-campos':'Selecione todos os arquivos antes de processar.','fech-sem-divergencias':'Todas as transações estão conciliadas — nenhum CSV foi gerado.','fech-stp-drive-link':'Pasta padrão dos extratos STP vindos de Archer/Clearyn',
+    'fech-err-clave-rastreo':"CRÍTICO: A coluna 'Clave de Rastreo' não existe neste arquivo STP!",'fech-log-linhas-1':'{n} linha','fech-log-linhas-n':'{n} linhas','fech-log-iniciando-stp':'Iniciando processo STP...','fech-log-lendo-excel-stp':'Lendo arquivo Excel (STP)...','fech-log-excel-lido-stp':'Excel lido: {n} linha(s) com conteúdo.','fech-log-lendo-csv-clearyn':'Lendo arquivo CSV (Clearyn/Archer)...','fech-log-validacao-titulo':'INICIANDO VALIDAÇÃO DE DIVERGÊNCIAS (STP vs CLEARYN/ARCHER)','fech-log-somente-clearyn-titulo':'--------------- IDs Somente no Clearyn/Archer ---------------','fech-log-nenhuma-div-clearyn':'Nenhuma divergência isolada no Clearyn.','fech-log-somente-stp-titulo':'--------------- IDs Somente no Extrato STP (GERANDO CSV) ---------------','fech-log-tudo-conciliado-com-saldo':'Todas as transações estão conciliadas e o saldo já existe no Clearyn. Nenhum CSV será gerado.','fech-log-conciliado-mas-saldo':'Transações conciliadas, mas o Saldo Final será gerado pois não consta no Clearyn.','fech-log-saldo-adicionado':'⚠️ Saldo Final adicionado ao CSV (não foi encontrado no Clearyn).','fech-log-saldo-ignorado':'A linha de Saldo Final foi ignorada pois já existe no arquivo Clearyn.','fech-log-csv-sucesso':'✅ CSV gerado com sucesso! ({linhas})','fech-log-erro-critico':'❌ [ERRO CRÍTICO] {msg}','fech-log-iniciando-mono':'Iniciando processo MONO...','fech-log-extraindo-pdf':'Extraindo texto do PDF de créditos...','fech-log-lendo-mono-excel':'Lendo extrato Mono (Excel)...','fech-log-excel-lido-mono':'Excel lido: {n} linha(s).','fech-log-lendo-clearyn-csv':'Lendo extrato Clearyn (CSV)...','fech-log-pipeline-inicio':'🚀 INICIANDO PIPELINE DE FECHAMENTO...','fech-log-etapa1':'>>> [1/3] EXTRAÇÃO DO PDF DE CRÉDITOS...','fech-log-extrato-convertido':'✅ Extrato convertido salvo em: {filename}','fech-log-filtro-mes-ano':'📅 Filtro automático aplicado baseado no PDF: Mês {mes} / Ano {ano}','fech-log-etapa2':'>>> [2/3] MOTOR DE CONCILIAÇÃO (DÉBITOS CLEARYN VS MONO)...','fech-log-relatorio-debitos':'================== RELATÓRIO DE CONCILIAÇÃO (DÉBITOS) ==================','fech-log-sem-transacoes':'[{categoria}] -> Sem transações no período.','fech-log-categoria-header':'--- {categoria} ---','fech-log-conciliadas-perfeitas':'✅ Conciliadas Perfeitas: {n}','fech-log-conciliadas-flutuacao':'✅ Conciliadas (Flutuação de Dia): {n}','fech-log-faltam-clearyn':'⚠️ Faltam no Clearyn (Add): {n}','fech-log-alteracoes-reais':'🔄 Alterações Reais (Mês/Status): {n}','fech-log-sobram-clearyn':'❌ Sobram no Clearyn (Excluir): {n}','fech-log-arquivo-adicionar':'✅ Arquivo de ADICIONAR (Débitos) gerado: {filename}','fech-log-arquivo-excluir':'✅ Arquivo de EXCLUIR gerado: {filename}','fech-log-arquivo-alteracoes':'✅ Arquivo de ALTERAÇÕES gerado: {filename}','fech-log-motor-debitos-concluido':'✅ Motor de Débitos Concluído.','fech-log-etapa3':'>>> [3/3] CONCILIAÇÃO DE DEVOLUÇÕES (CRÉDITOS)...','fech-log-arquivo-creditos':'✅ Arquivo de CRÉDITOS gerado: {filename}','fech-log-pipeline-sucesso':'🎉 PIPELINE FINALIZADO COM SUCESSO!',
     'extr-accounts-label':'Contas','extr-sel-ph':'Selecionar contas...','extr-search-ph':'Buscar banco ou agente...','extr-sel-all':'Tudo','extr-date-label':'Data','extr-date-yesterday':'Ontem','extr-date-custom':'Personalizado','extr-date-from':'De','extr-date-to':'Até','extr-run':'Executar','extr-n-sel-1':'{n} selecionada','extr-n-sel-n':'{n} selecionadas','extr-drive-link':'Pasta dos extratos baixados',
     'baixa-tipo-dl':'Tipo de download','baixa-tipo-extrato':'Extrato Cru','baixa-enviar-imp':'Enviar ao importador','baixa-enviar-imp-desc':'Move os extratos para a pasta do importador; acione-o após a finalização da baixa',
     'baixa-enviar-pdf':'Enviar para a pasta de PDFs','baixa-enviar-pdf-desc':'Move os PDFs baixados para a pasta compartilhada',
@@ -2598,7 +2599,8 @@ const i18n = {
     'login-desc':'Sign in with your Eron corporate account to continue.',
     'login-btn':'Continue with Google','login-note':'',
     'nav-gerencial':'Management','nav-cronograma':'Schedule','nav-cadastro':'Registry','nav-automacoes':'Automations','nav-dl-extratos':'Download Statements','nav-cred-bancos':'Bank Credentials','nav-baixa-auto':'Automatic download','baixa-sec-extr':'Download Statements','baixa-sec-cred':'Credential Update','cred-no-perm':'Restricted access — only Analyst role or higher can create, edit, or delete credentials.',
-    'nav-fechamentos':'Closings','nav-fechamento-stp':'STP Closing','nav-fechamento-mono':'Mono Closing','fech-sec-arquivos':'Files','fech-sec-progresso':'Progress','fech-escolher':'Choose file','fech-nenhum':'No file selected','fech-processar':'Process','fech-stp-extrato':'STP statement (Excel)','fech-stp-archer':'Archer/Clearyn statement (CSV)','fech-mono-pdf':'Credits PDF','fech-mono-extrato':'Mono statement (Excel)','fech-mono-clearyn':'Clearyn statement (CSV)','fech-err-campos':'Select all files before processing.','fech-sem-divergencias':'All transactions are reconciled — no CSV was generated.',
+    'nav-fechamentos':'Closings','nav-fechamento-stp':'STP Closing','nav-fechamento-mono':'Mono Closing','fech-sec-arquivos':'Files','fech-sec-progresso':'Progress','fech-escolher':'Choose file','fech-nenhum':'No file selected','fech-processar':'Process','fech-stp-extrato':'STP statement (Excel)','fech-stp-archer':'Archer/Clearyn statement (CSV)','fech-mono-pdf':'Credits PDF','fech-mono-extrato':'Mono statement (Excel)','fech-mono-clearyn':'Clearyn statement (CSV)','fech-err-campos':'Select all files before processing.','fech-sem-divergencias':'All transactions are reconciled — no CSV was generated.','fech-stp-drive-link':'Default folder for STP statements from Archer/Clearyn',
+    'fech-err-clave-rastreo':"CRITICAL: The 'Clave de Rastreo' column doesn't exist in this STP file!",'fech-log-linhas-1':'{n} line','fech-log-linhas-n':'{n} lines','fech-log-iniciando-stp':'Starting STP process...','fech-log-lendo-excel-stp':'Reading Excel file (STP)...','fech-log-excel-lido-stp':'Excel read: {n} line(s) with content.','fech-log-lendo-csv-clearyn':'Reading CSV file (Clearyn/Archer)...','fech-log-validacao-titulo':'STARTING DIVERGENCE VALIDATION (STP vs CLEARYN/ARCHER)','fech-log-somente-clearyn-titulo':'--------------- IDs Only in Clearyn/Archer ---------------','fech-log-nenhuma-div-clearyn':'No isolated divergence in Clearyn.','fech-log-somente-stp-titulo':'--------------- IDs Only in STP Statement (GENERATING CSV) ---------------','fech-log-tudo-conciliado-com-saldo':'All transactions are reconciled and the balance already exists in Clearyn. No CSV will be generated.','fech-log-conciliado-mas-saldo':'Transactions reconciled, but the Final Balance will be generated since it is not in Clearyn.','fech-log-saldo-adicionado':'⚠️ Final Balance added to the CSV (not found in Clearyn).','fech-log-saldo-ignorado':'The Final Balance line was ignored since it already exists in the Clearyn file.','fech-log-csv-sucesso':'✅ CSV generated successfully! ({linhas})','fech-log-erro-critico':'❌ [CRITICAL ERROR] {msg}','fech-log-iniciando-mono':'Starting MONO process...','fech-log-extraindo-pdf':'Extracting text from credits PDF...','fech-log-lendo-mono-excel':'Reading Mono statement (Excel)...','fech-log-excel-lido-mono':'Excel read: {n} line(s).','fech-log-lendo-clearyn-csv':'Reading Clearyn statement (CSV)...','fech-log-pipeline-inicio':'🚀 STARTING CLOSING PIPELINE...','fech-log-etapa1':'>>> [1/3] CREDITS PDF EXTRACTION...','fech-log-extrato-convertido':'✅ Converted statement saved to: {filename}','fech-log-filtro-mes-ano':'📅 Automatic filter applied based on the PDF: Month {mes} / Year {ano}','fech-log-etapa2':'>>> [2/3] RECONCILIATION ENGINE (CLEARYN vs MONO DEBITS)...','fech-log-relatorio-debitos':'================== RECONCILIATION REPORT (DEBITS) ==================','fech-log-sem-transacoes':'[{categoria}] -> No transactions in the period.','fech-log-categoria-header':'--- {categoria} ---','fech-log-conciliadas-perfeitas':'✅ Perfect Matches: {n}','fech-log-conciliadas-flutuacao':'✅ Reconciled (Day Shift): {n}','fech-log-faltam-clearyn':'⚠️ Missing in Clearyn (Add): {n}','fech-log-alteracoes-reais':'🔄 Real Changes (Month/Status): {n}','fech-log-sobram-clearyn':'❌ Extra in Clearyn (Remove): {n}','fech-log-arquivo-adicionar':'✅ ADD file (Debits) generated: {filename}','fech-log-arquivo-excluir':'✅ REMOVE file generated: {filename}','fech-log-arquivo-alteracoes':'✅ CHANGES file generated: {filename}','fech-log-motor-debitos-concluido':'✅ Debits Engine Completed.','fech-log-etapa3':'>>> [3/3] REFUND RECONCILIATION (CREDITS)...','fech-log-arquivo-creditos':'✅ CREDITS file generated: {filename}','fech-log-pipeline-sucesso':'🎉 PIPELINE COMPLETED SUCCESSFULLY!',
     'extr-accounts-label':'Accounts','extr-sel-ph':'Select accounts...','extr-search-ph':'Search bank or agent...','extr-sel-all':'All','extr-date-label':'Date','extr-date-yesterday':'Yesterday','extr-date-custom':'Custom','extr-date-from':'From','extr-date-to':'To','extr-run':'Run','extr-n-sel-1':'{n} selected','extr-n-sel-n':'{n} selected','extr-drive-link':'Downloaded statements folder',
     'baixa-tipo-dl':'Download type','baixa-tipo-extrato':'Raw Statement','baixa-enviar-imp':'Send to importer','baixa-enviar-imp-desc':'Moves statements to the importer folder; trigger it after the download completes',
     'baixa-enviar-pdf':'Send to PDFs folder','baixa-enviar-pdf-desc':'Moves downloaded PDFs to the shared folder',
@@ -2813,7 +2815,8 @@ const i18n = {
     'login-desc':'Inicia sesión con tu cuenta corporativa Eron para continuar.',
     'login-btn':'Continuar con Google','login-note':'',
     'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Registro','nav-automacoes':'Automatizaciones','nav-dl-extratos':'Descargar Extractos','nav-cred-bancos':'Credenciales Bancos','nav-baixa-auto':'Descarga automática','baixa-sec-extr':'Descargar Extractos','baixa-sec-cred':'Actualización de Credenciales','cred-no-perm':'Acceso restringido — solo el rol Analista o superior puede crear, editar o eliminar credenciales.',
-    'nav-fechamentos':'Cierres','nav-fechamento-stp':'Cierre STP','nav-fechamento-mono':'Cierre Mono','fech-sec-arquivos':'Archivos','fech-sec-progresso':'Progreso','fech-escolher':'Elegir archivo','fech-nenhum':'Ningún archivo seleccionado','fech-processar':'Procesar','fech-stp-extrato':'Extracto STP (Excel)','fech-stp-archer':'Extracto Archer/Clearyn (CSV)','fech-mono-pdf':'PDF de créditos','fech-mono-extrato':'Extracto Mono (Excel)','fech-mono-clearyn':'Extracto Clearyn (CSV)','fech-err-campos':'Seleccione todos los archivos antes de procesar.','fech-sem-divergencias':'Todas las transacciones están conciliadas — no se generó ningún CSV.',
+    'nav-fechamentos':'Cierres','nav-fechamento-stp':'Cierre STP','nav-fechamento-mono':'Cierre Mono','fech-sec-arquivos':'Archivos','fech-sec-progresso':'Progreso','fech-escolher':'Elegir archivo','fech-nenhum':'Ningún archivo seleccionado','fech-processar':'Procesar','fech-stp-extrato':'Extracto STP (Excel)','fech-stp-archer':'Extracto Archer/Clearyn (CSV)','fech-mono-pdf':'PDF de créditos','fech-mono-extrato':'Extracto Mono (Excel)','fech-mono-clearyn':'Extracto Clearyn (CSV)','fech-err-campos':'Seleccione todos los archivos antes de procesar.','fech-sem-divergencias':'Todas las transacciones están conciliadas — no se generó ningún CSV.','fech-stp-drive-link':'Carpeta predeterminada de extractos STP desde Archer/Clearyn',
+    'fech-err-clave-rastreo':"CRÍTICO: ¡La columna 'Clave de Rastreo' no existe en este archivo STP!",'fech-log-linhas-1':'{n} línea','fech-log-linhas-n':'{n} líneas','fech-log-iniciando-stp':'Iniciando proceso STP...','fech-log-lendo-excel-stp':'Leyendo archivo Excel (STP)...','fech-log-excel-lido-stp':'Excel leído: {n} línea(s) con contenido.','fech-log-lendo-csv-clearyn':'Leyendo archivo CSV (Clearyn/Archer)...','fech-log-validacao-titulo':'INICIANDO VALIDACIÓN DE DIVERGENCIAS (STP vs CLEARYN/ARCHER)','fech-log-somente-clearyn-titulo':'--------------- IDs Solo en Clearyn/Archer ---------------','fech-log-nenhuma-div-clearyn':'Ninguna divergencia aislada en Clearyn.','fech-log-somente-stp-titulo':'--------------- IDs Solo en el Extracto STP (GENERANDO CSV) ---------------','fech-log-tudo-conciliado-com-saldo':'Todas las transacciones están conciliadas y el saldo ya existe en Clearyn. No se generará ningún CSV.','fech-log-conciliado-mas-saldo':'Transacciones conciliadas, pero se generará el Saldo Final porque no consta en Clearyn.','fech-log-saldo-adicionado':'⚠️ Saldo Final añadido al CSV (no se encontró en Clearyn).','fech-log-saldo-ignorado':'La línea de Saldo Final fue ignorada porque ya existe en el archivo Clearyn.','fech-log-csv-sucesso':'✅ ¡CSV generado con éxito! ({linhas})','fech-log-erro-critico':'❌ [ERROR CRÍTICO] {msg}','fech-log-iniciando-mono':'Iniciando proceso MONO...','fech-log-extraindo-pdf':'Extrayendo texto del PDF de créditos...','fech-log-lendo-mono-excel':'Leyendo extracto Mono (Excel)...','fech-log-excel-lido-mono':'Excel leído: {n} línea(s).','fech-log-lendo-clearyn-csv':'Leyendo extracto Clearyn (CSV)...','fech-log-pipeline-inicio':'🚀 INICIANDO PIPELINE DE CIERRE...','fech-log-etapa1':'>>> [1/3] EXTRACCIÓN DEL PDF DE CRÉDITOS...','fech-log-extrato-convertido':'✅ Extracto convertido guardado en: {filename}','fech-log-filtro-mes-ano':'📅 Filtro automático aplicado según el PDF: Mes {mes} / Año {ano}','fech-log-etapa2':'>>> [2/3] MOTOR DE CONCILIACIÓN (DÉBITOS CLEARYN VS MONO)...','fech-log-relatorio-debitos':'================== INFORME DE CONCILIACIÓN (DÉBITOS) ==================','fech-log-sem-transacoes':'[{categoria}] -> Sin transacciones en el período.','fech-log-categoria-header':'--- {categoria} ---','fech-log-conciliadas-perfeitas':'✅ Conciliadas Perfectas: {n}','fech-log-conciliadas-flutuacao':'✅ Conciliadas (Fluctuación de Día): {n}','fech-log-faltam-clearyn':'⚠️ Faltan en Clearyn (Agregar): {n}','fech-log-alteracoes-reais':'🔄 Cambios Reales (Mes/Estado): {n}','fech-log-sobram-clearyn':'❌ Sobran en Clearyn (Eliminar): {n}','fech-log-arquivo-adicionar':'✅ Archivo de AGREGAR (Débitos) generado: {filename}','fech-log-arquivo-excluir':'✅ Archivo de ELIMINAR generado: {filename}','fech-log-arquivo-alteracoes':'✅ Archivo de CAMBIOS generado: {filename}','fech-log-motor-debitos-concluido':'✅ Motor de Débitos Completado.','fech-log-etapa3':'>>> [3/3] CONCILIACIÓN DE DEVOLUCIONES (CRÉDITOS)...','fech-log-arquivo-creditos':'✅ Archivo de CRÉDITOS generado: {filename}','fech-log-pipeline-sucesso':'🎉 ¡PIPELINE FINALIZADO CON ÉXITO!',
     'extr-accounts-label':'Cuentas','extr-sel-ph':'Seleccionar cuentas...','extr-search-ph':'Buscar banco o agente...','extr-sel-all':'Todo','extr-date-label':'Fecha','extr-date-yesterday':'Ayer','extr-date-custom':'Personalizado','extr-date-from':'Desde','extr-date-to':'Hasta','extr-run':'Ejecutar','extr-n-sel-1':'{n} seleccionada','extr-n-sel-n':'{n} seleccionadas','extr-drive-link':'Carpeta de extractos descargados',
     'baixa-tipo-dl':'Tipo de descarga','baixa-tipo-extrato':'Extracto Bruto','baixa-enviar-imp':'Enviar al importador','baixa-enviar-imp-desc':'Mueve los extractos a la carpeta del importador; acciónelo tras finalizar la descarga',
     'baixa-enviar-pdf':'Enviar a la carpeta de PDFs','baixa-enviar-pdf-desc':'Mueve los PDFs descargados a la carpeta compartida',
@@ -6699,6 +6702,15 @@ function _downloadCSVFechamento(csvString,filename){
   a.href=url;a.download=filename;document.body.appendChild(a);a.click();
   setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
 }
+// Traduz uma mensagem de log com placeholders {nome} -> valor. Os nomes de
+// categoria (cobro/otros/transferencia de salida/transferencia entrante) são
+// valores de dado reais (coluna "Método"/"Livre 2"), não texto de UI — ficam
+// sempre em espanhol, do jeito que vêm do Mono/Clearyn, em qualquer idioma.
+function _fechT(key,params){
+  let s=t(key);
+  if(params) Object.entries(params).forEach(([k,v])=>{ s=s.split('{'+k+'}').join(v); });
+  return s;
+}
 function _fechLogColor(l){
   const msg=l.msg;
   if(l.level==='ERROR'||/❌/.test(msg)) return '#f87171';
@@ -6789,9 +6801,9 @@ async function _fechExtractPdfText(buf){
 // ── Motor STP (replica processar_divergencias_stp_clearyn) ──
 function _fechProcessarSTP(rawRows,archerRows,nomeArquivoBase){
   const logs=[]; const log=(msg,level='INFO')=>logs.push({level,msg});
-  log('Lendo arquivo Excel (STP)...');
+  log(_fechT('fech-log-lendo-excel-stp'));
   const headerIdx=rawRows.findIndex(row=>row.some(c=>String(c??'').toLowerCase().includes('clave de rastreo')));
-  if(headerIdx<0) throw new Error("CRÍTICO: A coluna 'Clave de Rastreo' não existe neste arquivo STP!");
+  if(headerIdx<0) throw new Error(_fechT('fech-err-clave-rastreo'));
   const headerRow=rawRows[headerIdx].map(c=>String(c??'').trim());
   const nCols=rawRows.reduce((m,r)=>Math.max(m,r.length),0);
   const col=name=>headerRow.indexOf(name);
@@ -6813,7 +6825,7 @@ function _fechProcessarSTP(rawRows,archerRows,nomeArquivoBase){
   const cntStp=_fechGroupCounter();
   stp.forEach(row=>{ row.Tipo=row.Cargos>0?'D':'C'; row.Contagem=cntStp(row.Clave+'|'+row.Tipo); row.Key=`${row.Clave}_${row.Tipo}_${row.Contagem}`; });
 
-  log('Lendo arquivo CSV (Clearyn/Archer)...');
+  log(_fechT('fech-log-lendo-csv-clearyn'));
   const temSaldoClearyn=archerRows.some(r=>String(r['Descrição']??'').trim().toLowerCase()==='saldo final');
   let clearyn=archerRows.filter(r=>String(r['Descrição']??'').trim().toLowerCase()!=='saldo final')
     .map(r=>({ Doc:_fechPadronizarIds(r['Número do Documento']), Valor:String(r['Valor']??'') }));
@@ -6830,11 +6842,11 @@ function _fechProcessarSTP(rawRows,archerRows,nomeArquivoBase){
   // banco), que o .exe só mostra no console/relatório, não gera CSV pra
   // isso, mas é informação real que não pode ficar de fora.
   log('='.repeat(60));
-  log('INICIANDO VALIDAÇÃO DE DIVERGÊNCIAS (STP vs CLEARYN/ARCHER)');
+  log(_fechT('fech-log-validacao-titulo'));
   log('='.repeat(60));
-  log('--------------- IDs Somente no Clearyn/Archer ---------------');
+  log(_fechT('fech-log-somente-clearyn-titulo'));
   if(!somenteClearyn.length){
-    log('Nenhuma divergência isolada no Clearyn.');
+    log(_fechT('fech-log-nenhuma-div-clearyn'));
   } else {
     const seen=new Set();
     somenteClearyn.forEach(r=>{
@@ -6845,9 +6857,9 @@ function _fechProcessarSTP(rawRows,archerRows,nomeArquivoBase){
     });
   }
 
-  log('--------------- IDs Somente no Extrato STP (GERANDO CSV) ---------------');
+  log(_fechT('fech-log-somente-stp-titulo'));
   if(!somenteStp.length&&temSaldoClearyn){
-    log('Todas as transações estão conciliadas e o saldo já existe no Clearyn. Nenhum CSV será gerado.');
+    log(_fechT('fech-log-tudo-conciliado-com-saldo'));
     return { csv:null, filename:null, logs };
   } else if(somenteStp.length){
     const seen=new Set();
@@ -6858,7 +6870,7 @@ function _fechProcessarSTP(rawRows,archerRows,nomeArquivoBase){
       log(`${r.Clave}  —  ${r.Key}`,'WARNING');
     });
   } else {
-    log('Transações conciliadas, mas o Saldo Final será gerado pois não consta no Clearyn.');
+    log(_fechT('fech-log-conciliado-mas-saldo'));
   }
 
   const outRows=somenteStp.map(r=>{
@@ -6876,10 +6888,10 @@ function _fechProcessarSTP(rawRows,archerRows,nomeArquivoBase){
       const fimMesAnterior=new Date(hoje.getFullYear(),hoje.getMonth(),0);
       outRows.push({ DATA:_fechFmtDMY(fimMesAnterior), DESCRICAO:'Saldo Final', 'NUM DOCTO':'',
         VALOR:null, 'C / D':'C', SALDO:_fechRound2(_fechToNum(val)), 'GENERICO 3':'Saldo Final', _sortDate:fimMesAnterior });
-      log('⚠️ Saldo Final adicionado ao CSV (não foi encontrado no Clearyn).','WARNING');
+      log(_fechT('fech-log-saldo-adicionado'),'WARNING');
     }
   } else {
-    log('A linha de Saldo Final foi ignorada pois já existe no arquivo Clearyn.');
+    log(_fechT('fech-log-saldo-ignorado'));
   }
 
   const validDates=outRows.map(r=>r._sortDate).filter(d=>d instanceof Date&&!isNaN(d));
@@ -6891,7 +6903,7 @@ function _fechProcessarSTP(rawRows,archerRows,nomeArquivoBase){
   outRows.forEach(r=>delete r._sortDate);
   const qtd=outRows.length;
   const filename=`${nomeArquivoBase} - DIVERGENCIAS - ${dataIni} a ${dataFim} (${String(qtd).padStart(2,'0')} linha${qtd===1?'':'s'}).csv`;
-  log(`✅ CSV gerado com sucesso! (${qtd} linha${qtd===1?'':'s'})`);
+  log(_fechT('fech-log-csv-sucesso',{linhas:tn('fech-log-linhas',qtd)}));
   return { csv:_fechCsvSemicolon(FECH_COLUNAS_FINAIS,outRows), filename, logs };
 }
 
@@ -6961,21 +6973,21 @@ function _fechModa(arr){
 }
 function _fechProcessarMono(textoCompletoPdf,monoRows,clearynRows,nomeArquivoBase){
   const logs=[]; const log=(msg,level='INFO')=>logs.push({level,msg});
-  log('🚀 INICIANDO PIPELINE DE FECHAMENTO...');
-  log('>>> [1/3] EXTRAÇÃO DO PDF DE CRÉDITOS...');
+  log(_fechT('fech-log-pipeline-inicio'));
+  log(_fechT('fech-log-etapa1'));
   const dfPdf=_fechProcessarPdf(textoCompletoPdf);
   const outputs={};
   outputs.creditosConvertidos={
     rows:dfPdf.map(r=>({linha:r.linha,DATA:r.DATA,DESCRICAO:r.DESCRICAO,'C / D':r['C / D'],VALOR:r.VALOR})),
     filename:'extrato_creditos_convertido.csv',
   };
-  log(`✅ Extrato convertido salvo em: ${outputs.creditosConvertidos.filename}`);
+  log(_fechT('fech-log-extrato-convertido',{filename:outputs.creditosConvertidos.filename}));
   const datasPdf=dfPdf.map(r=>_fechParseAnyDate(r.DATA)).filter(Boolean);
   const mesFiltro=_fechModa(datasPdf.map(d=>d.getMonth()+1));
   const anoFiltro=_fechModa(datasPdf.map(d=>d.getFullYear()));
-  log(`📅 Filtro automático aplicado baseado no PDF: Mês ${mesFiltro} / Ano ${anoFiltro}`);
+  log(_fechT('fech-log-filtro-mes-ano',{mes:mesFiltro,ano:anoFiltro}));
 
-  log('>>> [2/3] MOTOR DE CONCILIAÇÃO (DÉBITOS CLEARYN VS MONO)...');
+  log(_fechT('fech-log-etapa2'));
   let mono=monoRows.map(r=>({...r,_fecha:_fechParseAnyDate(r['Fecha de aplicación'])})).filter(r=>r._fecha);
   let clearyn=clearynRows.map(r=>({...r,_dataBanco:_fechParseAnyDate(r['Data do Banco'])})).filter(r=>r._dataBanco);
   const clearynMes=clearyn.filter(r=>r._dataBanco.getMonth()+1===mesFiltro&&r._dataBanco.getFullYear()===anoFiltro);
@@ -7005,12 +7017,12 @@ function _fechProcessarMono(textoCompletoPdf,monoRows,clearynRows,nomeArquivoBas
   const monoOutrosMeses=monoDebitos.filter(r=>!(r._fecha.getMonth()+1===mesFiltro&&r._fecha.getFullYear()===anoFiltro));
 
   let listaAdicionar=[],listaExcluir=[],listaAlteracoes=[];
-  log('================== RELATÓRIO DE CONCILIAÇÃO (DÉBITOS) ==================');
+  log(_fechT('fech-log-relatorio-debitos'));
   FECH_CATEGORIAS.forEach(categoria=>{
     const mCat=monoMesAtual.filter(r=>r.MetodoStr===categoria);
     const mOutrosCat=monoOutrosMeses.filter(r=>r.MetodoStr===categoria);
     const cCat=clearynDebitos.filter(r=>r.Livre2Str===categoria);
-    if(!mCat.length&&!cCat.length){ log(`[${categoria.toUpperCase()}] -> Sem transações no período.`); return; }
+    if(!mCat.length&&!cCat.length){ log(_fechT('fech-log-sem-transacoes',{categoria:categoria.toUpperCase()})); return; }
     const isSaida=categoria==='transferencia de salida';
     const cntM1=_fechGroupCounter(),cntC1=_fechGroupCounter();
     mCat.forEach(r=>{
@@ -7058,12 +7070,12 @@ function _fechProcessarMono(textoCompletoPdf,monoRows,clearynRows,nomeArquivoBas
     listaExcluir=listaExcluir.concat(excluirCat);
     listaAlteracoes=listaAlteracoes.concat(alteracoesCat);
 
-    log(`--- ${categoria.toUpperCase()} ---`);
-    log(`✅ Conciliadas Perfeitas: ${sucessoExato.length}`);
-    if(qtdIgnoradas>0) log(`✅ Conciliadas (Flutuação de Dia): ${qtdIgnoradas}`);
-    log(`⚠️ Faltam no Clearyn (Add): ${adicionarCat.length}`);
-    log(`🔄 Alterações Reais (Mês/Status): ${alteracoesCat.length}`);
-    log(`❌ Sobram no Clearyn (Excluir): ${excluirCat.length}`);
+    log(_fechT('fech-log-categoria-header',{categoria:categoria.toUpperCase()}));
+    log(_fechT('fech-log-conciliadas-perfeitas',{n:sucessoExato.length}));
+    if(qtdIgnoradas>0) log(_fechT('fech-log-conciliadas-flutuacao',{n:qtdIgnoradas}));
+    log(_fechT('fech-log-faltam-clearyn',{n:adicionarCat.length}));
+    log(_fechT('fech-log-alteracoes-reais',{n:alteracoesCat.length}));
+    log(_fechT('fech-log-sobram-clearyn',{n:excluirCat.length}));
   });
 
   if(listaAdicionar.length){
@@ -7075,19 +7087,19 @@ function _fechProcessarMono(textoCompletoPdf,monoRows,clearynRows,nomeArquivoBas
     }));
     const filename=_fechFilenameTemplate(nomeArquivoBase,' (Faltam no Clearyn)',rows);
     outputs.adicionar={rows,filename};
-    log(`✅ Arquivo de ADICIONAR (Débitos) gerado: ${filename}`);
+    log(_fechT('fech-log-arquivo-adicionar',{filename}));
   }
   if(listaExcluir.length){
     outputs.excluir={rows:listaExcluir,filename:'2_Para_Excluir_Clearyn.csv'};
-    log(`✅ Arquivo de EXCLUIR gerado: ${outputs.excluir.filename}`);
+    log(_fechT('fech-log-arquivo-excluir',{filename:outputs.excluir.filename}));
   }
   if(listaAlteracoes.length){
     outputs.alteracoes={rows:listaAlteracoes,filename:'3_Alteracoes_Clearyn.csv'};
-    log(`✅ Arquivo de ALTERAÇÕES gerado: ${outputs.alteracoes.filename}`);
+    log(_fechT('fech-log-arquivo-alteracoes',{filename:outputs.alteracoes.filename}));
   }
-  log('✅ Motor de Débitos Concluído.');
+  log(_fechT('fech-log-motor-debitos-concluido'));
 
-  log('>>> [3/3] CONCILIAÇÃO DE DEVOLUÇÕES (CRÉDITOS)...');
+  log(_fechT('fech-log-etapa3'));
   mono.forEach(r=>{ r.EstadoStr2=_fechLimpaTexto(r['Estado']); r.MontoNum2=_fechLimpaValor(r['Monto']); });
   mono.sort((a,b)=>a._fecha-b._fecha);
   const ultimoDia=new Date(anoFiltro,mesFiltro,0).getDate();
@@ -7123,9 +7135,9 @@ function _fechProcessarMono(textoCompletoPdf,monoRows,clearynRows,nomeArquivoBas
     });
     const filename=_fechFilenameTemplate(nomeArquivoBase,' (Devolucoes PDF)',rows);
     outputs.devolucoes={rows,filename};
-    log(`✅ Arquivo de CRÉDITOS gerado: ${filename}`);
+    log(_fechT('fech-log-arquivo-creditos',{filename}));
   }
-  log('🎉 PIPELINE FINALIZADO COM SUCESSO!');
+  log(_fechT('fech-log-pipeline-sucesso'));
   return { outputs, logs };
 }
 
@@ -7141,16 +7153,16 @@ async function runFechamentoSTP(){
   if(!fExtrato||!fArcher){ log('❌ '+t('fech-err-campos'),'ERROR'); return; }
   _fechStpBusy=true;
   btn.disabled=true; btn.style.opacity='.55'; btn.style.cursor='not-allowed';
-  log('Iniciando processo STP...');
+  log(_fechT('fech-log-iniciando-stp'));
   try{
     await _fechYield();
-    log('Lendo arquivo Excel (STP)...');
+    log(_fechT('fech-log-lendo-excel-stp'));
     const buf=await _fechReadArrayBuffer(fExtrato);
     await _fechYield();
     const rawRows=_fechXlsxRaw(buf);
-    log(`Excel lido: ${rawRows.length} linha(s) com conteúdo.`);
+    log(_fechT('fech-log-excel-lido-stp',{n:rawRows.length}));
     await _fechYield();
-    log('Lendo arquivo CSV (Clearyn/Archer)...');
+    log(_fechT('fech-log-lendo-csv-clearyn'));
     const archerText=await _fechReadText(fArcher);
     const archerRows=_fechArcherToObjects(archerText);
     await _fechYield();
@@ -7160,7 +7172,7 @@ async function runFechamentoSTP(){
     if(result.csv) _downloadCSVFechamento(result.csv,result.filename);
   }catch(e){
     console.error(e);
-    log('❌ [ERRO CRÍTICO] '+(e&&e.message?e.message:String(e)),'ERROR');
+    log(_fechT('fech-log-erro-critico',{msg:e&&e.message?e.message:String(e)}),'ERROR');
   }finally{
     _fechStpBusy=false;
     btn.disabled=false; btn.style.opacity=''; btn.style.cursor='';
@@ -7178,19 +7190,19 @@ async function runFechamentoMono(){
   if(!fPdf||!fExtrato||!fClearyn){ log('❌ '+t('fech-err-campos'),'ERROR'); return; }
   _fechMonoBusy=true;
   btn.disabled=true; btn.style.opacity='.55'; btn.style.cursor='not-allowed';
-  log('Iniciando processo MONO...');
+  log(_fechT('fech-log-iniciando-mono'));
   try{
     await _fechYield();
-    log('Extraindo texto do PDF de créditos...');
+    log(_fechT('fech-log-extraindo-pdf'));
     const pdfBuf=await _fechReadArrayBuffer(fPdf);
     const pdfText=await _fechExtractPdfText(pdfBuf);
     await _fechYield();
-    log('Lendo extrato Mono (Excel)...');
+    log(_fechT('fech-log-lendo-mono-excel'));
     const monoBuf=await _fechReadArrayBuffer(fExtrato);
     const monoRows=_fechXlsxObjects(monoBuf);
-    log(`Excel lido: ${monoRows.length} linha(s).`);
+    log(_fechT('fech-log-excel-lido-mono',{n:monoRows.length}));
     await _fechYield();
-    log('Lendo extrato Clearyn (CSV)...');
+    log(_fechT('fech-log-lendo-clearyn-csv'));
     const clearynText=await _fechReadText(fClearyn);
     const clearynRows=_fechCsvToObjects(clearynText);
     await _fechYield();
@@ -7219,7 +7231,7 @@ async function runFechamentoMono(){
     }
   }catch(e){
     console.error(e);
-    log('❌ [ERRO CRÍTICO] '+(e&&e.message?e.message:String(e)),'ERROR');
+    log(_fechT('fech-log-erro-critico',{msg:e&&e.message?e.message:String(e)}),'ERROR');
   }finally{
     _fechMonoBusy=false;
     btn.disabled=false; btn.style.opacity=''; btn.style.cursor='';
@@ -7670,7 +7682,18 @@ function _startJobMonitor(jobId,meta){
   });
 }
 
+// _extrInit() roda de novo toda vez que a página "Baixa automática" é
+// aberta — inclusive se o usuário sair e voltar rápido o bastante pra essa
+// função assíncrona anterior ainda estar em voo. Sem esse token, as duas
+// chamadas concorrentes disputam _jobMonitors: uma cria o monitor (Map),
+// a outra vê "já existe" e pula o _createJobCard — mas a innerHTML='' da
+// SEGUNDA _extrInit() já tinha limpado o card que a primeira criou,
+// sobrando um card vazio até um refresh. Só a chamada mais recente (token
+// mais alto) tem permissão de criar cards; qualquer uma mais antiga aborta
+// assim que percebe que não é mais a atual.
+let _extrLoadToken=0;
 async function _loadUserJobs(){
+  const myToken=++_extrLoadToken;
   const email=window._loggedEmail||'';
   if(!email) return;
   const today=_jobDateKey(Date.now());
@@ -7679,14 +7702,17 @@ async function _loadUserJobs(){
     const db=(await _getEronFbReady()).database();
     // Load all jobs from retention window
     const snap=await db.ref('jobRequests').orderByChild('created_at').startAt(retainCutoff).once('value');
+    if(myToken!==_extrLoadToken) return; // uma chamada mais nova já assumiu
     const all=snap.val()||{};
     // Delete jobs older than retention
     const snapOld=await db.ref('jobRequests').orderByChild('created_at').endAt(retainCutoff-1).once('value');
+    if(myToken!==_extrLoadToken) return;
     const old=snapOld.val()||{};
     const toDelete=Object.keys(old);
     if(toDelete.length){
       const upd={};toDelete.forEach(jid=>upd['jobRequests/'+jid]=null);
       await db.ref().update(upd);
+      if(myToken!==_extrLoadToken) return;
     }
     // Render today's jobs for this user (oldest first → card prepend puts newest at top)
     const todayJobs=Object.entries(all)
@@ -11928,13 +11954,18 @@ _initApp();
 
 // Força repaint ao voltar para a aba — Chrome descarta tiles de GPU em
 // containers overflow:hidden + overflow-y:auto quando a aba fica em background.
+// Antes só reflowava a página de conteúdo ativa — a sidebar (nav#sidebar,
+// com seu próprio scroll e seções expand/collapse) ficava de fora e podia
+// continuar mostrando um tile congelado (ex.: seção errada expandida) até
+// um refresh manual. Reflow também no topbar por completude — é barato.
+function _forceRepaintOnReturn(){
+  [document.querySelector('.page.active'), document.getElementById('sidebar'), document.querySelector('.topbar')]
+    .filter(Boolean)
+    .forEach(el=>{ el.style.display='none'; el.offsetHeight; el.style.display=''; });
+}
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
-  const p = document.querySelector('.page.active');
-  if (!p) return;
-  p.style.display = 'none';
-  p.offsetHeight; // força reflow
-  p.style.display = '';
+  _forceRepaintOnReturn();
 });
 </script>
 </body>
