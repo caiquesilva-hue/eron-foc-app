@@ -6943,9 +6943,10 @@ function _fechProcessarPdf(textoCompletoPdf){
     const dataM=linha.match(/\d{2}\/\d{2}\/\d{4}/);
     const DATA=dataM?dataM[0]:null;
     const DESCRICAO=_fechExtrairDescricaoPdf(linha);
+    const linhaLower=linha.toLowerCase();
     let CD='';
-    if(/cr[eé]dito/i.test(linha)) CD='crédito';
-    else if(/d[eé]bito/i.test(linha)) CD='débito';
+    if(linhaLower.includes('crédito')) CD='crédito';
+    else if(linhaLower.includes('débito')) CD='débito';
     const VALOR=_fechExtrairValorPdf(linha)/100;
     return { linha, DATA, DESCRICAO, 'C / D':CD, VALOR };
   });
@@ -6963,6 +6964,12 @@ function _fechProcessarMono(textoCompletoPdf,monoRows,clearynRows,nomeArquivoBas
   log('🚀 INICIANDO PIPELINE DE FECHAMENTO...');
   log('>>> [1/3] EXTRAÇÃO DO PDF DE CRÉDITOS...');
   const dfPdf=_fechProcessarPdf(textoCompletoPdf);
+  const outputs={};
+  outputs.creditosConvertidos={
+    rows:dfPdf.map(r=>({linha:r.linha,DATA:r.DATA,DESCRICAO:r.DESCRICAO,'C / D':r['C / D'],VALOR:r.VALOR})),
+    filename:'extrato_creditos_convertido.csv',
+  };
+  log(`✅ Extrato convertido salvo em: ${outputs.creditosConvertidos.filename}`);
   const datasPdf=dfPdf.map(r=>_fechParseAnyDate(r.DATA)).filter(Boolean);
   const mesFiltro=_fechModa(datasPdf.map(d=>d.getMonth()+1));
   const anoFiltro=_fechModa(datasPdf.map(d=>d.getFullYear()));
@@ -6998,6 +7005,7 @@ function _fechProcessarMono(textoCompletoPdf,monoRows,clearynRows,nomeArquivoBas
   const monoOutrosMeses=monoDebitos.filter(r=>!(r._fecha.getMonth()+1===mesFiltro&&r._fecha.getFullYear()===anoFiltro));
 
   let listaAdicionar=[],listaExcluir=[],listaAlteracoes=[];
+  log('================== RELATÓRIO DE CONCILIAÇÃO (DÉBITOS) ==================');
   FECH_CATEGORIAS.forEach(categoria=>{
     const mCat=monoMesAtual.filter(r=>r.MetodoStr===categoria);
     const mOutrosCat=monoOutrosMeses.filter(r=>r.MetodoStr===categoria);
@@ -7058,18 +7066,25 @@ function _fechProcessarMono(textoCompletoPdf,monoRows,clearynRows,nomeArquivoBas
     log(`❌ Sobram no Clearyn (Excluir): ${excluirCat.length}`);
   });
 
-  const outputs={};
   if(listaAdicionar.length){
-    outputs.adicionar=listaAdicionar.map(r=>({
+    const rows=listaAdicionar.map(r=>({
       DATA:_fechFmtDMY(r._fecha), DESCRICAO:r['Descripción'],
       'NUM DOCTO':r.RefLowered.replace('.0',''),
       VALOR:r.MontoNum,'C / D':'D',CONTA:'Principal',
       'GENERICO 1':r['Estado'],'GENERICO 2':r['Método'],
     }));
-    log(`✅ Arquivo de ADICIONAR (Débitos) gerado: ${listaAdicionar.length} linha(s).`);
+    const filename=_fechFilenameTemplate(nomeArquivoBase,' (Faltam no Clearyn)',rows);
+    outputs.adicionar={rows,filename};
+    log(`✅ Arquivo de ADICIONAR (Débitos) gerado: ${filename}`);
   }
-  if(listaExcluir.length){ outputs.excluir=listaExcluir; log(`✅ Arquivo de EXCLUIR gerado: ${listaExcluir.length} linha(s).`); }
-  if(listaAlteracoes.length){ outputs.alteracoes=listaAlteracoes; log(`✅ Arquivo de ALTERAÇÕES gerado: ${listaAlteracoes.length} linha(s).`); }
+  if(listaExcluir.length){
+    outputs.excluir={rows:listaExcluir,filename:'2_Para_Excluir_Clearyn.csv'};
+    log(`✅ Arquivo de EXCLUIR gerado: ${outputs.excluir.filename}`);
+  }
+  if(listaAlteracoes.length){
+    outputs.alteracoes={rows:listaAlteracoes,filename:'3_Alteracoes_Clearyn.csv'};
+    log(`✅ Arquivo de ALTERAÇÕES gerado: ${outputs.alteracoes.filename}`);
+  }
   log('✅ Motor de Débitos Concluído.');
 
   log('>>> [3/3] CONCILIAÇÃO DE DEVOLUÇÕES (CRÉDITOS)...');
@@ -7097,7 +7112,7 @@ function _fechProcessarMono(textoCompletoPdf,monoRows,clearynRows,nomeArquivoBas
   pdfCreditos.forEach(p=>{ const matches=monoByChave.get(p.ChaveDevolucao); if(matches) matches.forEach(m=>pares.push({pdf:p,mono:m})); });
 
   if(pares.length){
-    outputs.devolucoes=pares.map(({pdf,mono:m})=>{
+    const rows=pares.map(({pdf,mono:m})=>{
       const mesPdf=_fechParseAnyDate(pdf.DATA).getMonth();
       const mesMono=m._fecha.getMonth();
       return { DATA:pdf.DATA, DESCRICAO:pdf.DESCRICAO,
@@ -7106,7 +7121,9 @@ function _fechProcessarMono(textoCompletoPdf,monoRows,clearynRows,nomeArquivoBas
         'GENERICO 1':m['Estado'],'GENERICO 2':m['Método'],
         'GENERICO 4':mesPdf===mesMono?'DOC/TED Dev':'Reembolso (mov. dif.)' };
     });
-    log(`✅ Arquivo de CRÉDITOS gerado: ${outputs.devolucoes.length} linha(s).`);
+    const filename=_fechFilenameTemplate(nomeArquivoBase,' (Devolucoes PDF)',rows);
+    outputs.devolucoes={rows,filename};
+    log(`✅ Arquivo de CRÉDITOS gerado: ${filename}`);
   }
   log('🎉 PIPELINE FINALIZADO COM SUCESSO!');
   return { outputs, logs };
@@ -7181,22 +7198,24 @@ async function runFechamentoMono(){
     const result=_fechProcessarMono(pdfText,monoRows,clearynRows,nomeBase);
     result.logs.forEach(l=>logs.push(l)); render();
 
+    if(result.outputs.creditosConvertidos){
+      _downloadCSVFechamento(_fechCsvComma(['linha','DATA','DESCRICAO','C / D','VALOR'],result.outputs.creditosConvertidos.rows),
+        result.outputs.creditosConvertidos.filename);
+    }
     if(result.outputs.adicionar){
-      _downloadCSVFechamento(_fechCsvSemicolon(FECH_COLUNAS_FINAIS,result.outputs.adicionar),
-        _fechFilenameTemplate(nomeBase,' (Faltam no Clearyn)',result.outputs.adicionar));
+      _downloadCSVFechamento(_fechCsvSemicolon(FECH_COLUNAS_FINAIS,result.outputs.adicionar.rows), result.outputs.adicionar.filename);
     }
     const colunasClearyn=clearynRows.length?Object.keys(clearynRows[0]):[];
     if(result.outputs.excluir){
-      _downloadCSVFechamento(_fechCsvComma(colunasClearyn,result.outputs.excluir), '2_Para_Excluir_Clearyn.csv');
+      _downloadCSVFechamento(_fechCsvComma(colunasClearyn,result.outputs.excluir.rows), result.outputs.excluir.filename);
     }
     if(result.outputs.alteracoes){
       const header=[...colunasClearyn,'Data_Nova_Mono','Status_Novo_Mono','Motivo_Alteracao'];
-      const rows=result.outputs.alteracoes.map(r=>({...r,Data_Nova_Mono:r.DataNovaMono,Status_Novo_Mono:r.StatusNovoMono,Motivo_Alteracao:r.MotivoAlteracao}));
-      _downloadCSVFechamento(_fechCsvComma(header,rows), '3_Alteracoes_Clearyn.csv');
+      const rows=result.outputs.alteracoes.rows.map(r=>({...r,Data_Nova_Mono:r.DataNovaMono,Status_Novo_Mono:r.StatusNovoMono,Motivo_Alteracao:r.MotivoAlteracao}));
+      _downloadCSVFechamento(_fechCsvComma(header,rows), result.outputs.alteracoes.filename);
     }
     if(result.outputs.devolucoes){
-      _downloadCSVFechamento(_fechCsvSemicolon(FECH_COLUNAS_FINAIS,result.outputs.devolucoes),
-        _fechFilenameTemplate(nomeBase,' (Devolucoes PDF)',result.outputs.devolucoes));
+      _downloadCSVFechamento(_fechCsvSemicolon(FECH_COLUNAS_FINAIS,result.outputs.devolucoes.rows), result.outputs.devolucoes.filename);
     }
   }catch(e){
     console.error(e);
