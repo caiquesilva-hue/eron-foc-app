@@ -371,6 +371,9 @@
   .sel-cell.c-sel{background:rgba(124,58,237,.1)!important;box-shadow:inset 0 0 0 1.5px rgba(124,58,237,.55);}
   .cal-sticky.sel-cell.c-sel{background:#f2ebfd!important;}
   .sel-cell{cursor:default;}
+  #sel-sum-bar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(0);display:none;align-items:center;gap:16px;background:#1e1b4b;color:#fff;padding:9px 20px;border-radius:10px;font-size:13px;font-family:inherit;box-shadow:0 8px 24px rgba(0,0,0,.22);z-index:9998;white-space:nowrap;}
+  #sel-sum-bar b{font-weight:700;}
+  #sel-sum-bar .sel-sum-sep{opacity:.35;}
   .day-dot{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin:0 auto;}
   .day-dot.active-t1{background:rgba(111,115,244,.2);color:var(--e-violet);}
   .day-dot.active-t2{background:rgba(151,111,244,.2);color:var(--e-mid);}
@@ -2443,6 +2446,7 @@ const i18n = {
     'closed-acc-linked-label-1':'Conta encerrada:','closed-acc-linked-label-n':'Contas encerradas:',
     'dup-link-tipo-conta-1':'Conta','dup-link-tipo-conta-n':'Contas','dup-link-tipo-processador-1':'Processador','dup-link-tipo-processador-n':'Processadores','dup-link-tipo-gateway-1':'Gateway','dup-link-tipo-gateway-n':'Gateways',
     'dup-link-item-1':'{tipo} {ids} já vinculado à conciliação "{nome}"','dup-link-item-n':'{tipo} {ids} já vinculados à conciliação "{nome}"','dup-link-block-suffix':'Remova o vínculo da outra conciliação antes de salvar — cada conta só pode pertencer a uma conciliação.','dup-link-confirm-suffix':'Isso pode contar o mesmo volume em dobro se as duas conciliações usarem o mesmo tipo de operação. Deseja prosseguir mesmo assim?','msg-gateway-duplicado-suffix':'gateway(s) ignorado(s) por já estarem vinculados a outra conciliação no mesmo tipo de operação (ver console)',
+    'sel-sum-cells-1':'{n} célula selecionada','sel-sum-cells-n':'{n} células selecionadas','sel-sum-soma':'Soma','sel-sum-media':'Média',
     'conta-encerrada-frozen-msg':'Conta encerrada — o histórico fica congelado e não pode mais ser alterado.',
     'conc-encerrada-frozen-msg':'Conciliação encerrada — o histórico fica congelado e não pode mais ser alterado.',
     'conc-locked-edit-msg':'Conciliação encerrada — os dados não podem ser editados. Para alterar, desmarque "Encerrar conciliação" e salve para reabrir.',
@@ -2655,6 +2659,7 @@ const i18n = {
     'closed-acc-linked-label-1':'Closed account:','closed-acc-linked-label-n':'Closed accounts:',
     'dup-link-tipo-conta-1':'Account','dup-link-tipo-conta-n':'Accounts','dup-link-tipo-processador-1':'Processor','dup-link-tipo-processador-n':'Processors','dup-link-tipo-gateway-1':'Gateway','dup-link-tipo-gateway-n':'Gateways',
     'dup-link-item-1':'{tipo} {ids} already linked to reconciliation "{nome}"','dup-link-item-n':'{tipo} {ids} already linked to reconciliation "{nome}"','dup-link-block-suffix':'Remove the link from the other reconciliation before saving — each account can only belong to one reconciliation.','dup-link-confirm-suffix':'This may double-count the same volume if both reconciliations use the same operation type. Do you want to proceed anyway?','msg-gateway-duplicado-suffix':'gateway(s) skipped because already linked to another reconciliation under the same operation type (see console)',
+    'sel-sum-cells-1':'{n} cell selected','sel-sum-cells-n':'{n} cells selected','sel-sum-soma':'Sum','sel-sum-media':'Average',
     'conta-encerrada-frozen-msg':'Closed account — the history is frozen and can no longer be changed.',
     'conc-encerrada-frozen-msg':'Closed reconciliation — the history is frozen and can no longer be changed.',
     'conc-locked-edit-msg':'Closed reconciliation — the data cannot be edited. To change it, uncheck "Close reconciliation" and save to reopen it.',
@@ -2868,6 +2873,7 @@ const i18n = {
     'closed-acc-linked-label-1':'Cuenta cerrada:','closed-acc-linked-label-n':'Cuentas cerradas:',
     'dup-link-tipo-conta-1':'Cuenta','dup-link-tipo-conta-n':'Cuentas','dup-link-tipo-processador-1':'Procesador','dup-link-tipo-processador-n':'Procesadores','dup-link-tipo-gateway-1':'Gateway','dup-link-tipo-gateway-n':'Gateways',
     'dup-link-item-1':'{tipo} {ids} ya vinculado a la conciliación "{nome}"','dup-link-item-n':'{tipo} {ids} ya vinculados a la conciliación "{nome}"','dup-link-block-suffix':'Elimine el vínculo de la otra conciliación antes de guardar — cada cuenta solo puede pertenecer a una conciliación.','dup-link-confirm-suffix':'Esto puede contar el mismo volumen por duplicado si ambas conciliaciones usan el mismo tipo de operación. ¿Desea continuar de todos modos?','msg-gateway-duplicado-suffix':'gateway(s) omitido(s) por ya estar vinculado(s) a otra conciliación en el mismo tipo de operación (ver consola)',
+    'sel-sum-cells-1':'{n} celda seleccionada','sel-sum-cells-n':'{n} celdas seleccionadas','sel-sum-soma':'Suma','sel-sum-media':'Promedio',
     'conta-encerrada-frozen-msg':'Cuenta cerrada — el historial queda congelado y ya no puede modificarse.',
     'conc-encerrada-frozen-msg':'Conciliación cerrada — el historial queda congelado y ya no puede modificarse.',
     'conc-locked-edit-msg':'Conciliación cerrada — los datos no pueden editarse. Para modificarla, desmarque "Cerrar conciliación" y guarde para reabrirla.',
@@ -3893,6 +3899,7 @@ function _clearSel(tbl){
   if(tbl) tbl.querySelectorAll('td.sel-cell.c-sel').forEach(t=>t.classList.remove('c-sel'));
   _selExtra.clear();
   _selR0=_selC0=_selR1=_selC1=-1;
+  _updateSelSum(null);
 }
 function _applySel(tbl){
   if(!tbl) return;
@@ -3903,6 +3910,47 @@ function _applySel(tbl){
     const inRect=r0>=0&&r>=r0&&r<=r1&&c>=c0&&c<=c1;
     td.classList.toggle('c-sel',inRect||_selExtra.has(r+','+c));
   });
+  _updateSelSum(tbl);
+}
+// Antes de começar um novo retângulo com Shift pressionado, "commita" o
+// retângulo atualmente ativo (r0..r1,c0..c1) dentro de _selExtra — assim
+// ele permanece marcado enquanto o usuário arrasta um segundo intervalo,
+// e os dois somam juntos na barra inferior (_updateSelSum soma tudo que
+// estiver com a classe c-sel, não só o retângulo ativo).
+function _commitActiveRectToExtra(){
+  if(_selR0<0) return;
+  const r0=Math.min(_selR0,_selR1),r1=Math.max(_selR0,_selR1);
+  const c0=Math.min(_selC0,_selC1),c1=Math.max(_selC0,_selC1);
+  for(let r=r0;r<=r1;r++) for(let c=c0;c<=c1;c++) _selExtra.add(r+','+c);
+}
+// Extrai um número de uma célula selecionada (ex.: "$28,614" → 28614).
+// Células que não são puramente numéricas depois de tirar "$"/"," (chips,
+// país, sigla, texto) retornam null e ficam de fora da soma — mesmo
+// comportamento de uma planilha ao somar uma seleção mista.
+function _selCellNum(td){
+  const raw=(td.textContent||'').trim();
+  if(!raw) return null;
+  const cleaned=raw.replace(/[$\s]/g,'').replace(/,/g,'');
+  if(!/^-?\d+(\.\d+)?$/.test(cleaned)) return null;
+  return parseFloat(cleaned);
+}
+function _updateSelSum(tbl){
+  let bar=document.getElementById('sel-sum-bar');
+  const cells=tbl?[...tbl.querySelectorAll('td.sel-cell.c-sel')]:[];
+  if(!cells.length){ if(bar) bar.style.display='none'; return; }
+  let sum=0,numCount=0;
+  cells.forEach(td=>{ const n=_selCellNum(td); if(n!==null){ sum+=n; numCount++; } });
+  if(!bar){
+    bar=document.createElement('div');
+    bar.id='sel-sum-bar';
+    document.body.appendChild(bar);
+  }
+  const fmt=v=>Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:v%1?2:0,maximumFractionDigits:2});
+  const parts=[tn('sel-sum-cells',cells.length)];
+  if(numCount) parts.push(`<span class="sel-sum-sep">·</span> ${t('sel-sum-soma')}: <b>${sum<0?'-':''}$${fmt(sum)}</b>`);
+  if(numCount>1) parts.push(`<span class="sel-sum-sep">·</span> ${t('sel-sum-media')}: <b>$${fmt(sum/numCount)}</b>`);
+  bar.innerHTML=parts.join(' ');
+  bar.style.display='flex';
 }
 function _copySelData(tbl){
   if(!tbl) return;
@@ -4297,7 +4345,14 @@ function renderCronogramaAccounts(){
         _applySel(tbl);
         return;
       }
-      _selExtra.clear();
+      if(e.shiftKey){
+        // Shift+arrastar: preserva o(s) intervalo(s) já selecionado(s) e
+        // começa um novo intervalo a partir daqui — a soma na barra
+        // inferior passa a considerar todos juntos.
+        _commitActiveRectToExtra();
+      } else {
+        _selExtra.clear();
+      }
       _selOn=true;_selDrag=false;
       _selR0=_selR1=+td.dataset.sr;
       _selC0=_selC1=+td.dataset.sc;
@@ -10287,7 +10342,11 @@ function renderCronogramaConciliacoes(){
         _applySel(tbl);
         return;
       }
-      _selExtra.clear();
+      if(e.shiftKey){
+        _commitActiveRectToExtra();
+      } else {
+        _selExtra.clear();
+      }
       _selOn=true;_selDrag=false;
       _selR0=_selR1=+td.dataset.sr;
       _selC0=_selC1=+td.dataset.sc;
