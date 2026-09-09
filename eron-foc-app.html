@@ -10091,7 +10091,15 @@ function _concVolumeStatus(conc){
   const _hasGw=!!(_map&&[...(_map.cashinIds||[]),...(_map.cashoutIds||[]),...(_map.refundIds||[]),...(_map.chargebackIds||[])].length);
   const _hasMappedData=_hasGw&&(_inData(_map.cashinIds,_vr.cashin)||_inData(_map.cashoutIds,_vr.cashout)||_inData(_map.refundIds,_vr.refunds)||_inData(_map.chargebackIds,_vr.chargebacks));
   if(_hasGw&&!_hasMappedData) return {kind:'mapeado',text:t('conc-sem-volume-mapeado')};
-  if(_hasGw) return {kind:'pendente',text:t('conc-sem-volume-pendente')};
+  if(_hasGw){
+    // Volume ao vivo zerado por conciliação concluída: mostra o volume
+    // congelado na última ingestão (mesmo padrão do tile "Concluída", ver
+    // _concluidoVol acima) em vez do pill "sem volume pendente" — a conta
+    // não deixou de ter volume, só foi conciliada.
+    const _frozen=(_vr.priorityFixed||{})[_cid]?.usd;
+    if(_frozen>0) return {kind:'valor',text:'$'+Math.round(_frozen).toLocaleString('en-US')};
+    return {kind:'pendente',text:t('conc-sem-volume-pendente')};
+  }
   return {kind:null,text:''};
 }
 function _priorTierClass(tier){
@@ -10379,7 +10387,14 @@ function _rebuildCombinedRanking(){
 // caiu a 0 por conciliação; só muda na PRÓXIMA ingestão.
 function _snapshotFixedPriority(){
   const combined=store.volumeRankings.combined||{};
-  const fixed={};
+  // Mescla em cima do congelado anterior — NÃO substitui do zero. Uma
+  // conciliação que já foi concluída (volume pendente = 0) some do "combined"
+  // ao vivo, mas seu TOP e volume precisam continuar congelados pra sempre
+  // (até ela voltar a ter volume pendente de verdade numa importação futura,
+  // quando aí sim é atualizada abaixo). Sobrescrever do zero aqui é o que
+  // causava tanto a Prioridade virar "—" quanto contas menores serem
+  // "promovidas" de volta ao TOP 10 assim que as grandes eram concluídas.
+  const fixed={...(store.volumeRankings.priorityFixed||{})};
   for(const concId in combined) fixed[concId]={rank:combined[concId].rank,usd:combined[concId].usd};
   store.volumeRankings.priorityFixed=fixed;
 }
