@@ -377,6 +377,13 @@
   #sel-sum-bar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(0);display:none;align-items:center;gap:16px;background:#1e1b4b;color:#fff;padding:9px 20px;border-radius:10px;font-size:13px;font-family:inherit;box-shadow:0 8px 24px rgba(0,0,0,.22);z-index:9998;white-space:nowrap;}
   #sel-sum-bar b{font-weight:700;}
   #sel-sum-bar .sel-sum-sep{opacity:.35;}
+  /* ─── Automações: Fechamento STP / Mono ─── */
+  .fech-file-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .fech-file-label{font-size:13px;font-weight:600;color:var(--e-text);min-width:190px;}
+  .fech-file-picker{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
+  .fech-file-name{font-size:12px;color:var(--e-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;}
+  .fech-console{background:#0f172a;border-radius:8px;padding:12px 14px;min-height:160px;max-height:340px;overflow-y:auto;font-family:'SFMono-Regular',Consolas,monospace;font-size:12px;color:#94a3b8;}
+  .fech-console div{line-height:1.7;word-break:break-word;}
   .day-dot{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin:0 auto;}
   .day-dot.active-t1{background:rgba(111,115,244,.2);color:var(--e-violet);}
   .day-dot.active-t2{background:rgba(151,111,244,.2);color:var(--e-mid);}
@@ -689,6 +696,7 @@
       </div>
       <div class="sb-children collapsed" id="automacoes-children">
         <div class="sb-item" data-page="automacoes-baixa" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-baixa-auto">Baixa automática</span></div>
+        <div class="sb-item" data-page="automacoes-fechamentos" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-fechamentos">Fechamentos</span></div>
       </div>
     </div>
     <div class="sb-footer">
@@ -1511,6 +1519,74 @@
 
       </div>
     </div>
+    <!-- ── AUTOMAÇÕES: FECHAMENTOS (STP + MONO lado a lado) ────────── -->
+    <div class="page" id="page-automacoes-fechamentos">
+      <div class="page-header">
+        <div class="page-title-group"><div class="page-title-text" data-i18n="nav-fechamentos">Fechamentos</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 24px;padding-bottom:40px">
+
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#5b21b6" data-i18n="nav-fechamento-stp">Fechamento STP</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#5b21b6" data-i18n="nav-fechamento-mono">Fechamento Mono</div>
+
+        <!-- Cards — mesma linha do grid, então ficam sempre com a mesma altura -->
+        <div style="background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:20px 24px;display:flex;flex-direction:column;justify-content:center;gap:16px">
+          <div class="fech-file-row">
+            <label class="fech-file-label" data-i18n="fech-stp-extrato">Extrato STP (Excel)</label>
+            <div class="fech-file-picker">
+              <button type="button" class="btn-secondary" onclick="document.getElementById('fech-stp-file-extrato').click()" data-i18n="fech-escolher">Escolher arquivo</button>
+              <span class="fech-file-name" id="fech-stp-extrato-name" data-i18n="fech-nenhum">Nenhum arquivo selecionado</span>
+              <input type="file" id="fech-stp-file-extrato" accept=".xlsx,.xls" style="display:none" onchange="_fechFileChosen(this,'fech-stp-extrato-name')">
+            </div>
+          </div>
+          <div class="fech-file-row">
+            <label class="fech-file-label" data-i18n="fech-stp-archer">Extrato Archer/Clearyn (CSV)</label>
+            <div class="fech-file-picker">
+              <button type="button" class="btn-secondary" onclick="document.getElementById('fech-stp-file-archer').click()" data-i18n="fech-escolher">Escolher arquivo</button>
+              <span class="fech-file-name" id="fech-stp-archer-name" data-i18n="fech-nenhum">Nenhum arquivo selecionado</span>
+              <input type="file" id="fech-stp-file-archer" accept=".csv" style="display:none" onchange="_fechFileChosen(this,'fech-stp-archer-name')">
+            </div>
+          </div>
+          <button class="btn-primary" id="fech-stp-run-btn" onclick="runFechamentoSTP()" style="width:100%;padding:12px 20px;font-size:14px;justify-content:center">
+            <span data-i18n="fech-processar">Processar</span>
+          </button>
+        </div>
+        <div style="background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:20px 24px;display:flex;flex-direction:column;justify-content:center;gap:16px">
+          <div class="fech-file-row">
+            <label class="fech-file-label" data-i18n="fech-mono-pdf">PDF de créditos</label>
+            <div class="fech-file-picker">
+              <button type="button" class="btn-secondary" onclick="document.getElementById('fech-mono-file-pdf').click()" data-i18n="fech-escolher">Escolher arquivo</button>
+              <span class="fech-file-name" id="fech-mono-pdf-name" data-i18n="fech-nenhum">Nenhum arquivo selecionado</span>
+              <input type="file" id="fech-mono-file-pdf" accept=".pdf" style="display:none" onchange="_fechFileChosen(this,'fech-mono-pdf-name')">
+            </div>
+          </div>
+          <div class="fech-file-row">
+            <label class="fech-file-label" data-i18n="fech-mono-extrato">Extrato Mono (Excel)</label>
+            <div class="fech-file-picker">
+              <button type="button" class="btn-secondary" onclick="document.getElementById('fech-mono-file-extrato').click()" data-i18n="fech-escolher">Escolher arquivo</button>
+              <span class="fech-file-name" id="fech-mono-extrato-name" data-i18n="fech-nenhum">Nenhum arquivo selecionado</span>
+              <input type="file" id="fech-mono-file-extrato" accept=".xlsx,.xls" style="display:none" onchange="_fechFileChosen(this,'fech-mono-extrato-name')">
+            </div>
+          </div>
+          <div class="fech-file-row">
+            <label class="fech-file-label" data-i18n="fech-mono-clearyn">Extrato Clearyn (CSV)</label>
+            <div class="fech-file-picker">
+              <button type="button" class="btn-secondary" onclick="document.getElementById('fech-mono-file-clearyn').click()" data-i18n="fech-escolher">Escolher arquivo</button>
+              <span class="fech-file-name" id="fech-mono-clearyn-name" data-i18n="fech-nenhum">Nenhum arquivo selecionado</span>
+              <input type="file" id="fech-mono-file-clearyn" accept=".csv" style="display:none" onchange="_fechFileChosen(this,'fech-mono-clearyn-name')">
+            </div>
+          </div>
+          <button class="btn-primary" id="fech-mono-run-btn" onclick="runFechamentoMono()" style="width:100%;padding:12px 20px;font-size:14px;justify-content:center">
+            <span data-i18n="fech-processar">Processar</span>
+          </button>
+        </div>
+
+        <!-- Consoles — também na mesma linha do grid -->
+        <div id="fech-stp-console" class="fech-console"></div>
+        <div id="fech-mono-console" class="fech-console"></div>
+
+      </div>
+    </div>
   </div>
 </div>
 <!-- ── MODAL: ADD / EDIT ACCOUNT ──────────────────────────────── -->
@@ -2275,6 +2351,11 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 
+<!-- SheetJS (leitura de .xlsx) e PDF.js (extração de texto de PDF) — usados
+     pelos motores de Fechamento STP e Fechamento Mono em Automações -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
 <!-- Loading overlay while Firebase connects -->
 <div id="_fb-loading" style="position:fixed;inset:0;background:#1b133c;display:flex;align-items:center;justify-content:center;z-index:99999;flex-direction:column;gap:14px;">
   <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="20" stroke="rgba(151,111,244,.3)" stroke-width="4"/><path d="M24 4a20 20 0 0 1 20 20" stroke="#976ff4" stroke-width="4" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 24 24" to="360 24 24" dur="0.9s" repeatCount="indefinite"/></path></svg>
@@ -2289,6 +2370,7 @@ const i18n = {
     'login-desc':'Faça login com sua conta corporativa Eron para continuar.',
     'login-btn':'Continuar com Google','login-note':'',
     'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Cadastro','nav-automacoes':'Automações','nav-dl-extratos':'Download Extratos','nav-cred-bancos':'Credenciais Bancos','nav-baixa-auto':'Baixa automática','baixa-sec-extr':'Download Extratos','baixa-sec-cred':'Atualização de Credenciais','cred-no-perm':'Acesso restrito — apenas Analista ou superior pode criar, editar ou excluir credenciais.',
+    'nav-fechamentos':'Fechamentos','nav-fechamento-stp':'Fechamento STP','nav-fechamento-mono':'Fechamento Mono','fech-sec-arquivos':'Arquivos','fech-sec-progresso':'Progresso','fech-escolher':'Escolher arquivo','fech-nenhum':'Nenhum arquivo selecionado','fech-processar':'Processar','fech-stp-extrato':'Extrato STP (Excel)','fech-stp-archer':'Extrato Archer/Clearyn (CSV)','fech-mono-pdf':'PDF de créditos','fech-mono-extrato':'Extrato Mono (Excel)','fech-mono-clearyn':'Extrato Clearyn (CSV)','fech-err-campos':'Selecione todos os arquivos antes de processar.','fech-sem-divergencias':'Todas as transações estão conciliadas — nenhum CSV foi gerado.',
     'extr-accounts-label':'Contas','extr-sel-ph':'Selecionar contas...','extr-search-ph':'Buscar banco ou agente...','extr-sel-all':'Tudo','extr-date-label':'Data','extr-date-yesterday':'Ontem','extr-date-custom':'Personalizado','extr-date-from':'De','extr-date-to':'Até','extr-run':'Executar','extr-n-sel-1':'{n} selecionada','extr-n-sel-n':'{n} selecionadas','extr-drive-link':'Pasta dos extratos baixados',
     'baixa-tipo-dl':'Tipo de download','baixa-tipo-extrato':'Extrato Cru','baixa-enviar-imp':'Enviar ao importador','baixa-enviar-imp-desc':'Move os extratos para a pasta do importador; acione-o após a finalização da baixa',
     'baixa-enviar-pdf':'Enviar para a pasta de PDFs','baixa-enviar-pdf-desc':'Move os PDFs baixados para a pasta compartilhada',
@@ -2510,6 +2592,7 @@ const i18n = {
     'login-desc':'Sign in with your Eron corporate account to continue.',
     'login-btn':'Continue with Google','login-note':'',
     'nav-gerencial':'Management','nav-cronograma':'Schedule','nav-cadastro':'Registry','nav-automacoes':'Automations','nav-dl-extratos':'Download Statements','nav-cred-bancos':'Bank Credentials','nav-baixa-auto':'Automatic download','baixa-sec-extr':'Download Statements','baixa-sec-cred':'Credential Update','cred-no-perm':'Restricted access — only Analyst role or higher can create, edit, or delete credentials.',
+    'nav-fechamentos':'Closings','nav-fechamento-stp':'STP Closing','nav-fechamento-mono':'Mono Closing','fech-sec-arquivos':'Files','fech-sec-progresso':'Progress','fech-escolher':'Choose file','fech-nenhum':'No file selected','fech-processar':'Process','fech-stp-extrato':'STP statement (Excel)','fech-stp-archer':'Archer/Clearyn statement (CSV)','fech-mono-pdf':'Credits PDF','fech-mono-extrato':'Mono statement (Excel)','fech-mono-clearyn':'Clearyn statement (CSV)','fech-err-campos':'Select all files before processing.','fech-sem-divergencias':'All transactions are reconciled — no CSV was generated.',
     'extr-accounts-label':'Accounts','extr-sel-ph':'Select accounts...','extr-search-ph':'Search bank or agent...','extr-sel-all':'All','extr-date-label':'Date','extr-date-yesterday':'Yesterday','extr-date-custom':'Custom','extr-date-from':'From','extr-date-to':'To','extr-run':'Run','extr-n-sel-1':'{n} selected','extr-n-sel-n':'{n} selected','extr-drive-link':'Downloaded statements folder',
     'baixa-tipo-dl':'Download type','baixa-tipo-extrato':'Raw Statement','baixa-enviar-imp':'Send to importer','baixa-enviar-imp-desc':'Moves statements to the importer folder; trigger it after the download completes',
     'baixa-enviar-pdf':'Send to PDFs folder','baixa-enviar-pdf-desc':'Moves downloaded PDFs to the shared folder',
@@ -2724,6 +2807,7 @@ const i18n = {
     'login-desc':'Inicia sesión con tu cuenta corporativa Eron para continuar.',
     'login-btn':'Continuar con Google','login-note':'',
     'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Registro','nav-automacoes':'Automatizaciones','nav-dl-extratos':'Descargar Extractos','nav-cred-bancos':'Credenciales Bancos','nav-baixa-auto':'Descarga automática','baixa-sec-extr':'Descargar Extractos','baixa-sec-cred':'Actualización de Credenciales','cred-no-perm':'Acceso restringido — solo el rol Analista o superior puede crear, editar o eliminar credenciales.',
+    'nav-fechamentos':'Cierres','nav-fechamento-stp':'Cierre STP','nav-fechamento-mono':'Cierre Mono','fech-sec-arquivos':'Archivos','fech-sec-progresso':'Progreso','fech-escolher':'Elegir archivo','fech-nenhum':'Ningún archivo seleccionado','fech-processar':'Procesar','fech-stp-extrato':'Extracto STP (Excel)','fech-stp-archer':'Extracto Archer/Clearyn (CSV)','fech-mono-pdf':'PDF de créditos','fech-mono-extrato':'Extracto Mono (Excel)','fech-mono-clearyn':'Extracto Clearyn (CSV)','fech-err-campos':'Seleccione todos los archivos antes de procesar.','fech-sem-divergencias':'Todas las transacciones están conciliadas — no se generó ningún CSV.',
     'extr-accounts-label':'Cuentas','extr-sel-ph':'Seleccionar cuentas...','extr-search-ph':'Buscar banco o agente...','extr-sel-all':'Todo','extr-date-label':'Fecha','extr-date-yesterday':'Ayer','extr-date-custom':'Personalizado','extr-date-from':'Desde','extr-date-to':'Hasta','extr-run':'Ejecutar','extr-n-sel-1':'{n} seleccionada','extr-n-sel-n':'{n} seleccionadas','extr-drive-link':'Carpeta de extractos descargados',
     'baixa-tipo-dl':'Tipo de descarga','baixa-tipo-extrato':'Extracto Bruto','baixa-enviar-imp':'Enviar al importador','baixa-enviar-imp-desc':'Mueve los extractos a la carpeta del importador; acciónelo tras finalizar la descarga',
     'baixa-enviar-pdf':'Enviar a la carpeta de PDFs','baixa-enviar-pdf-desc':'Mueve los PDFs descargados a la carpeta compartida',
@@ -3042,6 +3126,7 @@ const pagesMeta = {
   'cronograma-conciliacoes':{parentKey:'nav-cronograma',labelKey:'nav-conciliacoes'},
   'cronograma-cierre':{parentKey:'nav-cronograma',labelKey:'nav-cierre'},
   'automacoes-baixa':{parentKey:'nav-automacoes',labelKey:'nav-baixa-auto'},
+  'automacoes-fechamentos':{parentKey:'nav-automacoes',labelKey:'nav-fechamentos'},
   'cadastro-pais':{parentKey:'nav-cadastro',labelKey:'nav-pais'},
   'cadastro-agente':{parentKey:'nav-cadastro',labelKey:'nav-agente'},
   'cadastro-banco':{parentKey:'nav-cadastro',labelKey:'nav-banco'},
@@ -3051,6 +3136,7 @@ const pagesMeta = {
 function navigate(pageId){
   if(pageId==='cadastro-acessos'&&!canViewAcessos()) return;
   if(pageId==='automacoes-baixa'&&_currentEnv!=='eron') return;
+  if(pageId==='automacoes-fechamentos'&&_currentEnv!=='eron') return;
   document.querySelectorAll('.page').forEach(el=>{el.classList.remove('active');el.style.display='';});
   document.querySelectorAll('.sb-item[data-page]').forEach(el=>el.classList.remove('active'));
   document.getElementById('page-'+pageId).classList.add('active');
@@ -6507,6 +6593,569 @@ async function switchEnvironment(envKey){
     }
   }
 }
+// ─── AUTOMAÇÕES: FECHAMENTO STP / MONO ────────────────────────────────────────
+// Porte JS dos motores de fechamento_stp_v2.py e fechamento_mono.py
+// (cofre_de_automacoes) — mesma lógica de match/classificação, linha a linha,
+// só trocando pandas por arrays/Map. Validado rodando os scripts Python
+// originais contra fixtures sintéticas e comparando a saída, byte a byte
+// (só o separador decimal de um campo raríssimo — Saldo Final do STP — sai
+// diferente: aqui sempre com vírgula, no Python sai com ponto naquele caso
+// específico por um efeito colateral de dtype do pandas, não regra de
+// negócio).
+if(typeof pdfjsLib!=='undefined') pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const FECH_COLUNAS_FINAIS=['DATA','DESCRICAO','NUM DOCTO','MOEDA','VALOR','C / D',
+  'SALDO','NOME','CONTA','AGENCIA','DOCTO CLIENTE','GENERICO 1','GENERICO 2','GENERICO 3','GENERICO 4'];
+
+function _fechPadronizarIds(v){
+  let s=(v===null||v===undefined)?'':String(v).trim().toLowerCase();
+  s=s.replace(/\.0$/,'');
+  s=s.replace(/^d24/,'');
+  if(s==='nan') s='';
+  return s;
+}
+function _fechRound2(n){ return Math.round((n+Number.EPSILON)*100)/100; }
+function _fechToNum(v){ if(v===null||v===undefined||v==='') return 0; const n=parseFloat(String(v).replace(',','.')); return Number.isFinite(n)?n:0; }
+function _fechPad2(n){ return String(n).padStart(2,'0'); }
+function _fechFmtDMY(d){ if(!(d instanceof Date)||isNaN(d)) return ''; return `${_fechPad2(d.getDate())}/${_fechPad2(d.getMonth()+1)}/${d.getFullYear()}`; }
+function _fechExcelSerialToDate(n){
+  const utcDays=Math.floor(n-25569);
+  const frac=n-Math.floor(n);
+  return new Date(utcDays*86400*1000 + Math.round(frac*86400*1000));
+}
+function _fechParseAnyDate(v){
+  if(v instanceof Date) return v;
+  if(typeof v==='number') return _fechExcelSerialToDate(v);
+  if(v==null||v==='') return null;
+  const s=String(v).trim();
+  let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return new Date(+m[1],+m[2]-1,+m[3]);
+  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m) return new Date(+m[3],+m[2]-1,+m[1]);
+  const d=new Date(s);
+  return isNaN(d)?null:d;
+}
+function _fechParseDMY(s){
+  if(!s||s==='nan') return null;
+  const m=String(s).match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  return m ? new Date(+m[3],+m[2]-1,+m[1]) : null;
+}
+function _fechGroupCounter(){
+  const seen=new Map();
+  return key=>{ const n=(seen.get(key)||0)+1; seen.set(key,n); return n; };
+}
+function _fechCsvSemicolon(header,rows){
+  const fmtVal=v=>{
+    if(v===null||v===undefined) return '';
+    if(typeof v==='number'){
+      const r=_fechRound2(v);
+      return (Number.isInteger(r)?String(r):r.toFixed(2)).replace('.',',');
+    }
+    return String(v);
+  };
+  const esc=s=>{ s=String(s==null?'':s); return /[;"\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; };
+  const lines=[header.map(esc).join(';')];
+  rows.forEach(r=>lines.push(header.map(h=>esc(fmtVal(r[h]))).join(';')));
+  return '﻿'+lines.join('\r\n');
+}
+function _fechCsvComma(header,rows){
+  const esc=v=>{ const s=String(v==null?'':v); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; };
+  const lines=[header.map(esc).join(',')];
+  rows.forEach(r=>lines.push(header.map(h=>esc(r[h])).join(',')));
+  return '﻿'+lines.join('\r\n');
+}
+function _fechFilenameTemplate(baseName,prefixo,rows){
+  const datas=rows.map(r=>_fechParseDMY(r.DATA)).filter(Boolean);
+  let minD='00.00.0000',maxD='00.00.0000';
+  if(datas.length){
+    minD=_fechFmtDMY(new Date(Math.min(...datas))).replace(/\//g,'.');
+    maxD=_fechFmtDMY(new Date(Math.max(...datas))).replace(/\//g,'.');
+  }
+  return `${baseName}${prefixo} - ${minD} - ${maxD} (${rows.length} linhas).csv`;
+}
+function _downloadCSVFechamento(csvString,filename){
+  const blob=new Blob([csvString],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=filename;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
+}
+function _fechLogColor(l){
+  const msg=l.msg;
+  if(l.level==='ERROR'||/❌/.test(msg)) return '#f87171';
+  if(l.level==='WARNING'||/⚠️/.test(msg)) return '#fbbf24';
+  if(/✅|🎉/.test(msg)) return '#4ade80';
+  return '#94a3b8';
+}
+function _fechRenderLog(containerId,logs){
+  const el=document.getElementById(containerId);
+  if(!el) return;
+  el.innerHTML=logs.map(l=>`<div style="color:${_fechLogColor(l)}">${_escHtml(l.msg)}</div>`).join('');
+  el.scrollTop=el.scrollHeight;
+}
+function _fechFileChosen(input,labelId){
+  const label=document.getElementById(labelId);
+  if(label) label.textContent=input.files[0]?input.files[0].name:t('fech-nenhum');
+}
+function _fechReadArrayBuffer(file){
+  return new Promise((resolve,reject)=>{ const r=new FileReader(); r.onload=()=>resolve(r.result); r.onerror=reject; r.readAsArrayBuffer(file); });
+}
+function _fechReadText(file){
+  return new Promise((resolve,reject)=>{ const r=new FileReader(); r.onload=()=>resolve(r.result); r.onerror=reject; r.readAsText(file,'UTF-8'); });
+}
+// Exportações de banco costumam declarar um "range" da planilha muito maior
+// que os dados reais (ex.: formatação aplicada à coluna inteira faz o Excel
+// gravar a dimensão como indo até a linha 1048576). Sem isso, sheet_to_json
+// tenta materializar milhões de linhas vazias e trava a aba por minutos —
+// foi exatamente o travamento visto no Fechamento STP com arquivo real.
+// Aqui a gente recalcula o range de verdade a partir das células que
+// realmente têm conteúdo (só essas existem como chave no objeto da planilha,
+// não importa o quão grande seja a dimensão declarada).
+function _fechShrinkRange(ws){
+  let maxR=0,maxC=0,minR=Infinity,minC=Infinity;
+  for(const addr in ws){
+    if(addr[0]==='!') continue;
+    const cell=ws[addr];
+    if(cell==null||cell.v===undefined||cell.v==='') continue;
+    const dec=XLSX.utils.decode_cell(addr);
+    if(dec.r>maxR) maxR=dec.r; if(dec.c>maxC) maxC=dec.c;
+    if(dec.r<minR) minR=dec.r; if(dec.c<minC) minC=dec.c;
+  }
+  if(minR===Infinity) return;
+  ws['!ref']=XLSX.utils.encode_range({s:{r:minR,c:minC},e:{r:maxR,c:maxC}});
+}
+function _fechXlsxRaw(buf){
+  const wb=XLSX.read(buf,{type:'array',cellDates:true});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  _fechShrinkRange(ws);
+  return XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:undefined});
+}
+function _fechXlsxObjects(buf){
+  const wb=XLSX.read(buf,{type:'array',cellDates:true});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  _fechShrinkRange(ws);
+  return XLSX.utils.sheet_to_json(ws,{raw:true,defval:undefined});
+}
+function _fechYield(){ return new Promise(r=>setTimeout(r,0)); }
+function _fechCsvToObjects(text){
+  const lines=text.replace(/^﻿/,'').replace(/\r\n/g,'\n').split('\n').filter(l=>l.length);
+  if(!lines.length) return [];
+  const headers=_parseCSVLine(lines[0]);
+  return lines.slice(1).map(l=>{ const cols=_parseCSVLine(l); const o={}; headers.forEach((h,i)=>o[h]=cols[i]); return o; });
+}
+// Réplica do try/except do Python: tenta vírgula, cai pra ';' se a coluna
+// esperada não aparecer no cabeçalho.
+function _fechArcherToObjects(text){
+  const clean=text.replace(/^﻿/,'').replace(/\r\n/g,'\n');
+  const lines=clean.split('\n').filter(l=>l.length);
+  if(!lines.length) return [];
+  const headersComma=_parseCSVLine(lines[0]);
+  if(headersComma.includes('Número do Documento')){
+    return lines.slice(1).map(l=>{ const cols=_parseCSVLine(l); const o={}; headersComma.forEach((h,i)=>o[h]=cols[i]); return o; });
+  }
+  const headersSemi=lines[0].split(';').map(s=>s.trim());
+  return lines.slice(1).map(l=>{ const cols=l.split(';'); const o={}; headersSemi.forEach((h,i)=>o[h]=cols[i]); return o; });
+}
+async function _fechExtractPdfText(buf){
+  const pdf=await pdfjsLib.getDocument({data:new Uint8Array(buf)}).promise;
+  let full='';
+  for(let p=1;p<=pdf.numPages;p++){
+    const page=await pdf.getPage(p);
+    const content=await page.getTextContent();
+    content.items.forEach(item=>{ full+=item.str; if(item.hasEOL) full+=' '; });
+  }
+  return full;
+}
+
+// ── Motor STP (replica processar_divergencias_stp_clearyn) ──
+function _fechProcessarSTP(rawRows,archerRows,nomeArquivoBase){
+  const logs=[]; const log=(msg,level='INFO')=>logs.push({level,msg});
+  log('Lendo arquivo Excel (STP)...');
+  const headerIdx=rawRows.findIndex(row=>row.some(c=>String(c??'').toLowerCase().includes('clave de rastreo')));
+  if(headerIdx<0) throw new Error("CRÍTICO: A coluna 'Clave de Rastreo' não existe neste arquivo STP!");
+  const headerRow=rawRows[headerIdx].map(c=>String(c??'').trim());
+  const nCols=rawRows.reduce((m,r)=>Math.max(m,r.length),0);
+  const col=name=>headerRow.indexOf(name);
+  const iClave=col('Clave de Rastreo'),iConcepto=col('Concepto'),iCargos=col('Cargos'),iAbonos=col('Abonos'),iFecha=col('Fecha Operación');
+
+  const dataRows=rawRows.slice(headerIdx+1).filter(r=>r.length&&r.some(c=>c!==undefined&&c!==''));
+  let stp=dataRows.map(r=>{
+    const concepto=r[iConcepto];
+    const conceptoLower=String(concepto??'').trim().toLowerCase();
+    let clave=_fechPadronizarIds(r[iClave]);
+    if(conceptoLower==='traspaso'&&clave==='') clave='traspaso';
+    return { Clave:clave, Original_Concepto:concepto, ConceptoLower:conceptoLower,
+      Cargos:_fechRound2(_fechToNum(r[iCargos])), Abonos:_fechRound2(_fechToNum(r[iAbonos])),
+      Fecha:_fechParseAnyDate(r[iFecha]) };
+  });
+  const extra=[];
+  stp.forEach(row=>{ if(row.Cargos!==0&&row.Abonos!==0){ extra.push({...row,Cargos:0}); row.Abonos=0; } });
+  stp=stp.concat(extra);
+  const cntStp=_fechGroupCounter();
+  stp.forEach(row=>{ row.Tipo=row.Cargos>0?'D':'C'; row.Contagem=cntStp(row.Clave+'|'+row.Tipo); row.Key=`${row.Clave}_${row.Tipo}_${row.Contagem}`; });
+
+  log('Lendo arquivo CSV (Clearyn/Archer)...');
+  const temSaldoClearyn=archerRows.some(r=>String(r['Descrição']??'').trim().toLowerCase()==='saldo final');
+  let clearyn=archerRows.filter(r=>String(r['Descrição']??'').trim().toLowerCase()!=='saldo final')
+    .map(r=>({ Doc:_fechPadronizarIds(r['Número do Documento']), Valor:String(r['Valor']??'') }));
+  const cntCl=_fechGroupCounter();
+  clearyn.forEach(row=>{ row.Tipo=row.Valor.includes('-')?'D':'C'; row.Contagem=cntCl(row.Doc+'|'+row.Tipo); row.Key=`${row.Doc}_${row.Tipo}_${row.Contagem}`; });
+  const clearynKeys=new Set(clearyn.map(r=>r.Key));
+
+  const somenteStp=stp.filter(r=>!clearynKeys.has(r.Key));
+
+  if(!somenteStp.length&&temSaldoClearyn){
+    log('Todas as transações estão conciliadas e o saldo já existe no Clearyn. Nenhum CSV será gerado.');
+    return { csv:null, filename:null, logs };
+  }
+  log(somenteStp.length?`⚠️ ${somenteStp.length} transação(ões) só no extrato STP.`:'Transações conciliadas, mas o Saldo Final será gerado pois não consta no Clearyn.');
+
+  const outRows=somenteStp.map(r=>{
+    const valor=r.Cargos!==0?_fechRound2(r.Cargos)*-1:_fechRound2(r.Abonos);
+    return { DATA:_fechFmtDMY(r.Fecha), DESCRICAO:r.Original_Concepto,
+      'NUM DOCTO':r.ConceptoLower==='traspaso'?'traspaso':r.Clave,
+      VALOR:valor, 'C / D':valor>0?'C':'D', 'GENERICO 3':r.Original_Concepto, _sortDate:r.Fecha };
+  });
+
+  if(!temSaldoClearyn){
+    const saldoRowRaw=rawRows.find(row=>row.some(c=>String(c??'').toLowerCase().includes('saldo final')));
+    if(saldoRowRaw){
+      const val=nCols>3?saldoRowRaw[saldoRowRaw.length-1]:saldoRowRaw[3];
+      const hoje=new Date();
+      const fimMesAnterior=new Date(hoje.getFullYear(),hoje.getMonth(),0);
+      outRows.push({ DATA:_fechFmtDMY(fimMesAnterior), DESCRICAO:'Saldo Final', 'NUM DOCTO':'',
+        VALOR:null, 'C / D':'C', SALDO:_fechRound2(_fechToNum(val)), 'GENERICO 3':'Saldo Final', _sortDate:fimMesAnterior });
+      log('⚠️ Saldo Final adicionado ao CSV (não foi encontrado no Clearyn).','WARNING');
+    }
+  } else {
+    log('A linha de Saldo Final foi ignorada pois já existe no arquivo Clearyn.');
+  }
+
+  const validDates=outRows.map(r=>r._sortDate).filter(d=>d instanceof Date&&!isNaN(d));
+  let dataIni='NA',dataFim='NA';
+  if(validDates.length){
+    dataIni=_fechFmtDMY(new Date(Math.min(...validDates))).replace(/\//g,'.');
+    dataFim=_fechFmtDMY(new Date(Math.max(...validDates))).replace(/\//g,'.');
+  }
+  outRows.forEach(r=>delete r._sortDate);
+  const qtd=outRows.length;
+  const filename=`${nomeArquivoBase} - DIVERGENCIAS - ${dataIni} a ${dataFim} (${String(qtd).padStart(2,'0')} linha${qtd===1?'':'s'}).csv`;
+  log(`✅ CSV gerado com sucesso! (${qtd} linha${qtd===1?'':'s'})`);
+  return { csv:_fechCsvSemicolon(FECH_COLUNAS_FINAIS,outRows), filename, logs };
+}
+
+// ── Motor Mono (replica processar_fechamento_mono) ──
+const FECH_CATEGORIAS=['cobro','otros','transferencia de salida','transferencia entrante'];
+function _fechLimpaTexto(v){ let s=(v===null||v===undefined)?'nan':String(v); return s.replace(/\.0$/,'').trim().toLowerCase(); }
+function _fechLimpaValor(v){
+  if(v===null||v===undefined||v==='') return null;
+  let s=String(v).trim();
+  if(s.includes('.')&&s.includes(',')) s=s.replace(/\./g,'').replace(',', '.');
+  else if(s.includes(',')) s=s.replace(',', '.');
+  const n=parseFloat(s);
+  return Number.isFinite(n)?n:null;
+}
+function _fechExtrairContaFinal(texto){ const m=String(texto??'').match(/(\d+)\s*$/); return m?m[1]:'00000'; }
+function _fechExtrairDescricaoPdf(texto){
+  texto=String(texto);
+  if(texto.includes('Hecho por Monit@s')){
+    const pos=texto.indexOf('SALDO');
+    if(pos!==-1){ const desc=texto.slice(pos+5).trim(); if(desc) return desc; }
+  }
+  const m=texto.match(/\d{2}\/\d{2}\/\d{4}(.*?)(?=\s?d[eé]bito|d[eé]bito|cr[eé]dito)/i);
+  return m?m[1].trim():null;
+}
+function _fechExtrairValorPdf(texto){
+  texto=String(texto).toLowerCase();
+  if(texto.includes('crédito')){
+    const m=texto.match(/\$\s*([\d.,]+)\s*\$/);
+    if(!m) return NaN;
+    const n=parseFloat(m[1].replace(/\./g,'').replace(',', '.'));
+    return Number.isFinite(n)?n:NaN;
+  }
+  if(texto.includes('débito')){
+    const m=texto.match(/-\$\s*([\d.,]+)\s*\$/);
+    if(!m) return NaN;
+    const n=parseFloat(m[1].replace(/\./g,'').replace(',', '.'));
+    return Number.isFinite(n)?-n:NaN;
+  }
+  return NaN;
+}
+function _fechProcessarPdf(textoCompletoPdf){
+  let conteudo=textoCompletoPdf.replace(/[\r\n]/g,'');
+  conteudo=conteudo.replace(/^[\s\S]*?Movimientos y transacciones/,'');
+  const formatado=conteudo.replace(/(?=\d{2}\/\d{2}\/\d{4})/g,'\n');
+  let linhas=formatado.trim().split('\n')
+    .filter(l=>l.trim()!=='FECHA TRANSACCIÓN TIPO DE OPERACIÓN VALOR SALDO')
+    .map(l=>l.replace(/\./g,'').replace(/,/g,'.'));
+  const rows=linhas.map(linha=>{
+    const dataM=linha.match(/\d{2}\/\d{2}\/\d{4}/);
+    const DATA=dataM?dataM[0]:null;
+    const DESCRICAO=_fechExtrairDescricaoPdf(linha);
+    let CD='';
+    if(/cr[eé]dito/i.test(linha)) CD='crédito';
+    else if(/d[eé]bito/i.test(linha)) CD='débito';
+    const VALOR=_fechExtrairValorPdf(linha)/100;
+    return { linha, DATA, DESCRICAO, 'C / D':CD, VALOR };
+  });
+  return rows.filter(r=>r.DATA);
+}
+function _fechModa(arr){
+  const cnt=new Map();
+  arr.forEach(v=>cnt.set(v,(cnt.get(v)||0)+1));
+  let best=null,bestN=-1;
+  for(const v of arr){ const n=cnt.get(v); if(n>bestN){bestN=n;best=v;} }
+  return best;
+}
+function _fechProcessarMono(textoCompletoPdf,monoRows,clearynRows,nomeArquivoBase){
+  const logs=[]; const log=(msg,level='INFO')=>logs.push({level,msg});
+  log('🚀 INICIANDO PIPELINE DE FECHAMENTO...');
+  log('>>> [1/3] EXTRAÇÃO DO PDF DE CRÉDITOS...');
+  const dfPdf=_fechProcessarPdf(textoCompletoPdf);
+  const datasPdf=dfPdf.map(r=>_fechParseAnyDate(r.DATA)).filter(Boolean);
+  const mesFiltro=_fechModa(datasPdf.map(d=>d.getMonth()+1));
+  const anoFiltro=_fechModa(datasPdf.map(d=>d.getFullYear()));
+  log(`📅 Filtro automático aplicado baseado no PDF: Mês ${mesFiltro} / Ano ${anoFiltro}`);
+
+  log('>>> [2/3] MOTOR DE CONCILIAÇÃO (DÉBITOS CLEARYN VS MONO)...');
+  let mono=monoRows.map(r=>({...r,_fecha:_fechParseAnyDate(r['Fecha de aplicación'])})).filter(r=>r._fecha);
+  let clearyn=clearynRows.map(r=>({...r,_dataBanco:_fechParseAnyDate(r['Data do Banco'])})).filter(r=>r._dataBanco);
+  const clearynMes=clearyn.filter(r=>r._dataBanco.getMonth()+1===mesFiltro&&r._dataBanco.getFullYear()===anoFiltro);
+
+  mono.forEach(r=>{ r.MetodoStr=_fechLimpaTexto(r['Método']); r.MontoNum=_fechLimpaValor(r['Monto']); });
+  let monoDebitos=mono.filter(r=>r.MontoNum!==null&&r.MontoNum<0);
+  monoDebitos.forEach(r=>{
+    r.MontoStr=Math.abs(r.MontoNum).toFixed(2);
+    const refRaw=String(r['Referencia de transferencia bancaria']??'').toLowerCase().replace('settlement','');
+    r.RefLowered=refRaw;
+    r.RefStr=_fechLimpaTexto(refRaw);
+    r.EstadoStr=_fechLimpaTexto(r['Estado']);
+    r.DataStr=r._fecha?_fechFmtDMY(r._fecha):'nan';
+    r.DescStr=_fechLimpaTexto(r['Descripción']);
+  });
+  clearynMes.forEach(r=>{ r.Livre2Str=_fechLimpaTexto(r['Livre 2']); r.ValorNum=_fechLimpaValor(r['Valor']); });
+  let clearynDebitos=clearynMes.filter(r=>r.ValorNum!==null&&r.ValorNum<0);
+  clearynDebitos.forEach(r=>{
+    r.ValorStr=Math.abs(r.ValorNum).toFixed(2);
+    r.DocStr=_fechLimpaTexto(r['Número do Documento']);
+    r.Livre1Str=_fechLimpaTexto(r['Livre 1']);
+    r.DataStr=r._dataBanco?_fechFmtDMY(r._dataBanco):'nan';
+    r.DescStr=_fechLimpaTexto(r['Descrição']);
+  });
+
+  const monoMesAtual=monoDebitos.filter(r=>r._fecha.getMonth()+1===mesFiltro&&r._fecha.getFullYear()===anoFiltro);
+  const monoOutrosMeses=monoDebitos.filter(r=>!(r._fecha.getMonth()+1===mesFiltro&&r._fecha.getFullYear()===anoFiltro));
+
+  let listaAdicionar=[],listaExcluir=[],listaAlteracoes=[];
+  FECH_CATEGORIAS.forEach(categoria=>{
+    const mCat=monoMesAtual.filter(r=>r.MetodoStr===categoria);
+    const mOutrosCat=monoOutrosMeses.filter(r=>r.MetodoStr===categoria);
+    const cCat=clearynDebitos.filter(r=>r.Livre2Str===categoria);
+    if(!mCat.length&&!cCat.length){ log(`[${categoria.toUpperCase()}] -> Sem transações no período.`); return; }
+    const isSaida=categoria==='transferencia de salida';
+    const cntM1=_fechGroupCounter(),cntC1=_fechGroupCounter();
+    mCat.forEach(r=>{
+      r.Rep1=isSaida?cntM1(r.RefStr+'|'+r.EstadoStr):cntM1(r.DataStr+'|'+r.DescStr+'|'+r.MontoStr+'|'+r.EstadoStr);
+      r.Chave1=isSaida?`${r.MontoStr}_${r.RefStr}_${r.EstadoStr}_${r.Rep1}`:`${r.DataStr}_${r.DescStr}_${r.MontoStr}_${r.EstadoStr}_${r.Rep1}`;
+    });
+    cCat.forEach(r=>{
+      r.Rep1=isSaida?cntC1(r.DocStr+'|'+r.Livre1Str):cntC1(r.DataStr+'|'+r.DescStr+'|'+r.ValorStr+'|'+r.Livre1Str);
+      r.Chave1=isSaida?`${r.ValorStr}_${r.DocStr}_${r.Livre1Str}_${r.Rep1}`:`${r.DataStr}_${r.DescStr}_${r.ValorStr}_${r.Livre1Str}_${r.Rep1}`;
+    });
+    const mChaves=new Set(mCat.map(r=>r.Chave1));
+    const cChaves=new Set(cCat.map(r=>r.Chave1));
+    const sucessoExato=[...mChaves].filter(k=>cChaves.has(k));
+    let cSobras=cCat.filter(r=>!mChaves.has(r.Chave1));
+    let mReserva=mCat.filter(r=>!cChaves.has(r.Chave1)).concat(mOutrosCat);
+
+    let qtdIgnoradas=0,alteracoesCat=[],excluirCat=[],adicionarCat;
+    if(cSobras.length&&mReserva.length){
+      const cntMR=_fechGroupCounter(),cntCS=_fechGroupCounter();
+      mReserva.forEach(r=>{ r.ChaveRelax=isSaida?`${r.MontoStr}_${r.RefStr}_${cntMR(r.RefStr+'|'+r.MontoStr)}`:`${r.DescStr}_${r.MontoStr}_${cntMR(r.DescStr+'|'+r.MontoStr)}`; });
+      cSobras.forEach(r=>{ r.ChaveRelax=isSaida?`${r.ValorStr}_${r.DocStr}_${cntCS(r.DocStr+'|'+r.ValorStr)}`:`${r.DescStr}_${r.ValorStr}_${cntCS(r.DescStr+'|'+r.ValorStr)}`; });
+      const mByRelax=new Map();
+      mReserva.forEach(r=>{ if(!mByRelax.has(r.ChaveRelax)) mByRelax.set(r.ChaveRelax,r); });
+      const mRelaxSet=new Set(mReserva.map(r=>r.ChaveRelax));
+      const candidatas=cSobras.filter(r=>mRelaxSet.has(r.ChaveRelax));
+      candidatas.forEach(r=>{
+        const mMatch=mByRelax.get(r.ChaveRelax);
+        r.DataNovaMono=mMatch.DataStr; r.StatusNovoMono=mMatch.EstadoStr;
+        const dataOrig=_fechParseDMY(r.DataStr),dataNova=_fechParseDMY(r.DataNovaMono);
+        let mudouMes=false;
+        if(dataOrig&&dataNova) mudouMes=(dataOrig.getMonth()!==dataNova.getMonth())||(dataOrig.getFullYear()!==dataNova.getFullYear());
+        const mudouStatus=String(r.Livre1Str).trim()!==String(r.StatusNovoMono).trim();
+        r.MotivoAlteracao=mudouMes&&mudouStatus?'Mês e Status':mudouMes?'Mudança de Mês':mudouStatus?'Mudança de Status':'Ignorar';
+      });
+      qtdIgnoradas=candidatas.filter(r=>r.MotivoAlteracao==='Ignorar').length;
+      alteracoesCat=candidatas.filter(r=>r.MotivoAlteracao!=='Ignorar');
+      excluirCat=cSobras.filter(r=>!mRelaxSet.has(r.ChaveRelax));
+      const explainedRelax=new Set(mReserva.filter(r=>cSobras.some(cs=>cs.ChaveRelax===r.ChaveRelax)));
+      adicionarCat=mCat.filter(r=>!cChaves.has(r.Chave1)&&!explainedRelax.has(r));
+    } else {
+      excluirCat=cSobras;
+      adicionarCat=mCat.filter(r=>!cChaves.has(r.Chave1));
+    }
+    listaAdicionar=listaAdicionar.concat(adicionarCat);
+    listaExcluir=listaExcluir.concat(excluirCat);
+    listaAlteracoes=listaAlteracoes.concat(alteracoesCat);
+
+    log(`--- ${categoria.toUpperCase()} ---`);
+    log(`✅ Conciliadas Perfeitas: ${sucessoExato.length}`);
+    if(qtdIgnoradas>0) log(`✅ Conciliadas (Flutuação de Dia): ${qtdIgnoradas}`);
+    log(`⚠️ Faltam no Clearyn (Add): ${adicionarCat.length}`);
+    log(`🔄 Alterações Reais (Mês/Status): ${alteracoesCat.length}`);
+    log(`❌ Sobram no Clearyn (Excluir): ${excluirCat.length}`);
+  });
+
+  const outputs={};
+  if(listaAdicionar.length){
+    outputs.adicionar=listaAdicionar.map(r=>({
+      DATA:_fechFmtDMY(r._fecha), DESCRICAO:r['Descripción'],
+      'NUM DOCTO':r.RefLowered.replace('.0',''),
+      VALOR:r.MontoNum,'C / D':'D',CONTA:'Principal',
+      'GENERICO 1':r['Estado'],'GENERICO 2':r['Método'],
+    }));
+    log(`✅ Arquivo de ADICIONAR (Débitos) gerado: ${listaAdicionar.length} linha(s).`);
+  }
+  if(listaExcluir.length){ outputs.excluir=listaExcluir; log(`✅ Arquivo de EXCLUIR gerado: ${listaExcluir.length} linha(s).`); }
+  if(listaAlteracoes.length){ outputs.alteracoes=listaAlteracoes; log(`✅ Arquivo de ALTERAÇÕES gerado: ${listaAlteracoes.length} linha(s).`); }
+  log('✅ Motor de Débitos Concluído.');
+
+  log('>>> [3/3] CONCILIAÇÃO DE DEVOLUÇÕES (CRÉDITOS)...');
+  mono.forEach(r=>{ r.EstadoStr2=_fechLimpaTexto(r['Estado']); r.MontoNum2=_fechLimpaValor(r['Monto']); });
+  mono.sort((a,b)=>a._fecha-b._fecha);
+  const ultimoDia=new Date(anoFiltro,mesFiltro,0).getDate();
+  const dataLimite=new Date(anoFiltro,mesFiltro-1,ultimoDia,23,59,59);
+  const monoRechazadas=mono.filter(r=>r.EstadoStr2.includes('rechazada')&&r._fecha<=dataLimite);
+  const cntMR2=_fechGroupCounter();
+  monoRechazadas.forEach(r=>{
+    r.ValorChave=Math.abs(r.MontoNum2).toFixed(2);
+    r.ContaChave=_fechExtrairContaFinal(r['Descripción']);
+    r.ChaveDevolucao=`${r.ValorChave}_${r.ContaChave}_${cntMR2(r.ValorChave+'|'+r.ContaChave)}`;
+  });
+  const pdfCreditos=dfPdf.filter(r=>r['C / D']==='crédito');
+  const cntPC=_fechGroupCounter();
+  pdfCreditos.forEach(r=>{
+    r.ValorChave=r.VALOR.toFixed(2);
+    r.ContaChave=_fechExtrairContaFinal(r.DESCRICAO);
+    r.ChaveDevolucao=`${r.ValorChave}_${r.ContaChave}_${cntPC(r.ValorChave+'|'+r.ContaChave)}`;
+  });
+  const monoByChave=new Map();
+  monoRechazadas.forEach(r=>{ if(!monoByChave.has(r.ChaveDevolucao)) monoByChave.set(r.ChaveDevolucao,[]); monoByChave.get(r.ChaveDevolucao).push(r); });
+  const pares=[];
+  pdfCreditos.forEach(p=>{ const matches=monoByChave.get(p.ChaveDevolucao); if(matches) matches.forEach(m=>pares.push({pdf:p,mono:m})); });
+
+  if(pares.length){
+    outputs.devolucoes=pares.map(({pdf,mono:m})=>{
+      const mesPdf=_fechParseAnyDate(pdf.DATA).getMonth();
+      const mesMono=m._fecha.getMonth();
+      return { DATA:pdf.DATA, DESCRICAO:pdf.DESCRICAO,
+        'NUM DOCTO':String(m['Referencia de transferencia bancaria']??'').replace(/\.0$/,''),
+        VALOR:pdf.VALOR,'C / D':'C',CONTA:'Principal',
+        'GENERICO 1':m['Estado'],'GENERICO 2':m['Método'],
+        'GENERICO 4':mesPdf===mesMono?'DOC/TED Dev':'Reembolso (mov. dif.)' };
+    });
+    log(`✅ Arquivo de CRÉDITOS gerado: ${outputs.devolucoes.length} linha(s).`);
+  }
+  log('🎉 PIPELINE FINALIZADO COM SUCESSO!');
+  return { outputs, logs };
+}
+
+// ── Handlers de UI ──
+let _fechStpBusy=false;
+async function runFechamentoSTP(){
+  if(_fechStpBusy) return; // só deixa pedir outro depois que este terminar
+  const fExtrato=document.getElementById('fech-stp-file-extrato').files[0];
+  const fArcher=document.getElementById('fech-stp-file-archer').files[0];
+  const logs=[]; const render=()=>_fechRenderLog('fech-stp-console',logs);
+  const log=(msg,level)=>{ logs.push({level,msg}); render(); };
+  const btn=document.getElementById('fech-stp-run-btn');
+  if(!fExtrato||!fArcher){ log('❌ '+t('fech-err-campos'),'ERROR'); return; }
+  _fechStpBusy=true;
+  btn.disabled=true; btn.style.opacity='.55'; btn.style.cursor='not-allowed';
+  log('Iniciando processo STP...');
+  try{
+    await _fechYield();
+    log('Lendo arquivo Excel (STP)...');
+    const buf=await _fechReadArrayBuffer(fExtrato);
+    await _fechYield();
+    const rawRows=_fechXlsxRaw(buf);
+    log(`Excel lido: ${rawRows.length} linha(s) com conteúdo.`);
+    await _fechYield();
+    log('Lendo arquivo CSV (Clearyn/Archer)...');
+    const archerText=await _fechReadText(fArcher);
+    const archerRows=_fechArcherToObjects(archerText);
+    await _fechYield();
+    const nomeBase=fExtrato.name.replace(/\.[^.]+$/,'');
+    const result=_fechProcessarSTP(rawRows,archerRows,nomeBase);
+    result.logs.forEach(l=>logs.push(l)); render();
+    if(result.csv) _downloadCSVFechamento(result.csv,result.filename);
+  }catch(e){
+    console.error(e);
+    log('❌ [ERRO CRÍTICO] '+(e&&e.message?e.message:String(e)),'ERROR');
+  }finally{
+    _fechStpBusy=false;
+    btn.disabled=false; btn.style.opacity=''; btn.style.cursor='';
+  }
+}
+let _fechMonoBusy=false;
+async function runFechamentoMono(){
+  if(_fechMonoBusy) return; // só deixa pedir outro depois que este terminar
+  const fPdf=document.getElementById('fech-mono-file-pdf').files[0];
+  const fExtrato=document.getElementById('fech-mono-file-extrato').files[0];
+  const fClearyn=document.getElementById('fech-mono-file-clearyn').files[0];
+  const logs=[]; const render=()=>_fechRenderLog('fech-mono-console',logs);
+  const log=(msg,level)=>{ logs.push({level,msg}); render(); };
+  const btn=document.getElementById('fech-mono-run-btn');
+  if(!fPdf||!fExtrato||!fClearyn){ log('❌ '+t('fech-err-campos'),'ERROR'); return; }
+  _fechMonoBusy=true;
+  btn.disabled=true; btn.style.opacity='.55'; btn.style.cursor='not-allowed';
+  log('Iniciando processo MONO...');
+  try{
+    await _fechYield();
+    log('Extraindo texto do PDF de créditos...');
+    const pdfBuf=await _fechReadArrayBuffer(fPdf);
+    const pdfText=await _fechExtractPdfText(pdfBuf);
+    await _fechYield();
+    log('Lendo extrato Mono (Excel)...');
+    const monoBuf=await _fechReadArrayBuffer(fExtrato);
+    const monoRows=_fechXlsxObjects(monoBuf);
+    log(`Excel lido: ${monoRows.length} linha(s).`);
+    await _fechYield();
+    log('Lendo extrato Clearyn (CSV)...');
+    const clearynText=await _fechReadText(fClearyn);
+    const clearynRows=_fechCsvToObjects(clearynText);
+    await _fechYield();
+    const nomeBase=fExtrato.name.replace(/\.[^.]+$/,'');
+    const result=_fechProcessarMono(pdfText,monoRows,clearynRows,nomeBase);
+    result.logs.forEach(l=>logs.push(l)); render();
+
+    if(result.outputs.adicionar){
+      _downloadCSVFechamento(_fechCsvSemicolon(FECH_COLUNAS_FINAIS,result.outputs.adicionar),
+        _fechFilenameTemplate(nomeBase,' (Faltam no Clearyn)',result.outputs.adicionar));
+    }
+    const colunasClearyn=clearynRows.length?Object.keys(clearynRows[0]):[];
+    if(result.outputs.excluir){
+      _downloadCSVFechamento(_fechCsvComma(colunasClearyn,result.outputs.excluir), '2_Para_Excluir_Clearyn.csv');
+    }
+    if(result.outputs.alteracoes){
+      const header=[...colunasClearyn,'Data_Nova_Mono','Status_Novo_Mono','Motivo_Alteracao'];
+      const rows=result.outputs.alteracoes.map(r=>({...r,Data_Nova_Mono:r.DataNovaMono,Status_Novo_Mono:r.StatusNovoMono,Motivo_Alteracao:r.MotivoAlteracao}));
+      _downloadCSVFechamento(_fechCsvComma(header,rows), '3_Alteracoes_Clearyn.csv');
+    }
+    if(result.outputs.devolucoes){
+      _downloadCSVFechamento(_fechCsvSemicolon(FECH_COLUNAS_FINAIS,result.outputs.devolucoes),
+        _fechFilenameTemplate(nomeBase,' (Devolucoes PDF)',result.outputs.devolucoes));
+    }
+  }catch(e){
+    console.error(e);
+    log('❌ [ERRO CRÍTICO] '+(e&&e.message?e.message:String(e)),'ERROR');
+  }finally{
+    _fechMonoBusy=false;
+    btn.disabled=false; btn.style.opacity=''; btn.style.cursor='';
+  }
+}
+
 // ─── AUTOMAÇÕES: DOWNLOAD EXTRATOS ───────────────────────────────────────────
 let EXTR_TAREFAS=[
   {pais:'CO',banco:'Bancolombia',agente:'COLPROCESA'},{pais:'CO',banco:'Bancolombia',agente:'COGREPOS'},
