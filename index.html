@@ -1530,7 +1530,7 @@
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#5b21b6" data-i18n="nav-fechamento-mono">Fechamento Mono</div>
 
         <!-- Cards — mesma linha do grid, então ficam sempre com a mesma altura -->
-        <div style="background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:20px 24px;display:flex;flex-direction:column;justify-content:center;gap:16px">
+        <div style="background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:20px 24px;display:flex;flex-direction:column;gap:16px">
           <div class="fech-file-row">
             <label class="fech-file-label" data-i18n="fech-stp-extrato">Extrato STP (Excel)</label>
             <div class="fech-file-picker">
@@ -1547,11 +1547,11 @@
               <input type="file" id="fech-stp-file-archer" accept=".csv" style="display:none" onchange="_fechFileChosen(this,'fech-stp-archer-name')">
             </div>
           </div>
-          <button class="btn-primary" id="fech-stp-run-btn" onclick="runFechamentoSTP()" style="width:100%;padding:12px 20px;font-size:14px;justify-content:center">
+          <button class="btn-primary" id="fech-stp-run-btn" onclick="runFechamentoSTP()" style="width:100%;padding:12px 20px;font-size:14px;justify-content:center;margin-top:auto">
             <span data-i18n="fech-processar">Processar</span>
           </button>
         </div>
-        <div style="background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:20px 24px;display:flex;flex-direction:column;justify-content:center;gap:16px">
+        <div style="background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:20px 24px;display:flex;flex-direction:column;gap:16px">
           <div class="fech-file-row">
             <label class="fech-file-label" data-i18n="fech-mono-pdf">PDF de créditos</label>
             <div class="fech-file-picker">
@@ -1576,7 +1576,7 @@
               <input type="file" id="fech-mono-file-clearyn" accept=".csv" style="display:none" onchange="_fechFileChosen(this,'fech-mono-clearyn-name')">
             </div>
           </div>
-          <button class="btn-primary" id="fech-mono-run-btn" onclick="runFechamentoMono()" style="width:100%;padding:12px 20px;font-size:14px;justify-content:center">
+          <button class="btn-primary" id="fech-mono-run-btn" onclick="runFechamentoMono()" style="width:100%;padding:12px 20px;font-size:14px;justify-content:center;margin-top:auto">
             <span data-i18n="fech-processar">Processar</span>
           </button>
         </div>
