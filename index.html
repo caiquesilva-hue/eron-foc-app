@@ -1547,6 +1547,12 @@
               <input type="file" id="fech-stp-file-archer" accept=".csv" style="display:none" onchange="_fechFileChosen(this,'fech-stp-archer-name')">
             </div>
           </div>
+          <div style="text-align:center;margin:auto 0">
+            <a href="https://drive.google.com/drive/folders/1nuE104GqZtATJnjgf6cbuqBrdB_-8AwA?hl=pt-br" target="_blank" rel="noopener noreferrer" style="font-size:12px;font-weight:600;color:#5b21b6;text-decoration:none;display:inline-flex;align-items:center;gap:7px;background:#ede9fe;border:1.5px solid #c4b5fd;border-radius:20px;padding:7px 16px">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              Pasta padrão dos extratos STP vindos de Archer/Clearyn
+            </a>
+          </div>
           <button class="btn-primary" id="fech-stp-run-btn" onclick="runFechamentoSTP()" style="width:100%;padding:12px 20px;font-size:14px;justify-content:center;margin-top:auto">
             <span data-i18n="fech-processar">Processar</span>
           </button>
@@ -3135,8 +3141,8 @@ const pagesMeta = {
 };
 function navigate(pageId){
   if(pageId==='cadastro-acessos'&&!canViewAcessos()) return;
-  if(pageId==='automacoes-baixa'&&_currentEnv!=='eron') return;
-  if(pageId==='automacoes-fechamentos'&&_currentEnv!=='eron') return;
+  if(pageId==='automacoes-baixa'&&!['eron','staging'].includes(_currentEnv)) return;
+  if(pageId==='automacoes-fechamentos'&&!['eron','staging'].includes(_currentEnv)) return;
   document.querySelectorAll('.page').forEach(el=>{el.classList.remove('active');el.style.display='';});
   document.querySelectorAll('.sb-item[data-page]').forEach(el=>el.classList.remove('active'));
   document.getElementById('page-'+pageId).classList.add('active');
@@ -6284,10 +6290,23 @@ const _initEnvKey=(()=>{
     return(k&&ENVIRONMENTS[k]?.cfg)?k:'eron';
   }catch(e){return'eron';}
 })();
+// Staging usa o MESMO projeto Firebase do Eron (não é um projeto à parte),
+// isolado só por convenção de caminho (storeRoot 'store_staging' em vez de
+// 'store'). Essa função é a única fonte de verdade pra esse caminho — barra
+// a inicialização se um dia alguém tirar o storeRoot do ambiente staging por
+// engano, em vez de deixar cair silenciosamente no 'store' de produção.
+function _fbResolveRoot(envKey){
+  const env=ENVIRONMENTS[envKey];
+  const root=env?.storeRoot||'store';
+  if(envKey==='staging'&&root==='store'){
+    throw new Error('[SEGURANÇA] Ambiente staging sem storeRoot isolado — abortando pra não gravar em produção.');
+  }
+  return root;
+}
 let _currentEnv=_initEnvKey;
 let _fbApp=firebase.initializeApp(ENVIRONMENTS[_initEnvKey].cfg,_initEnvKey+'_init');
-let _fbRef=firebase.database(_fbApp).ref(ENVIRONMENTS[_initEnvKey].storeRoot||'store');
-let _fbAuditRef=firebase.database(_fbApp).ref((ENVIRONMENTS[_initEnvKey].storeRoot||'store')+'/auditLog');
+let _fbRef=firebase.database(_fbApp).ref(_fbResolveRoot(_initEnvKey));
+let _fbAuditRef=firebase.database(_fbApp).ref(_fbResolveRoot(_initEnvKey)+'/auditLog');
 STORE_KEY=ENVIRONMENTS[_initEnvKey].storeKey; // sincroniza STORE_KEY com ambiente restaurado
 const _fbAuditSeen=new Set();
 let _fbListening=false,_fbAuditListening=false,_pendingWrites=0,_ownWriteTimer=null,_fbRetryTimer=null;
@@ -6540,8 +6559,8 @@ async function switchEnvironment(envKey){
   // sobrescrever uma sessão real já persistida pro mesmo projeto Firebase.
   // O login em si (via tryLogin) ou a sessão restaurada cuidam da auth.
   if(!_REAL_AUTH_ENVS.includes(envKey)) await _ensureAnonAuth(_fbApp);
-  _fbRef=firebase.database(_fbApp).ref(env.storeRoot||'store');
-  _fbAuditRef=firebase.database(_fbApp).ref((env.storeRoot||'store')+'/auditLog');
+  _fbRef=firebase.database(_fbApp).ref(_fbResolveRoot(envKey));
+  _fbAuditRef=firebase.database(_fbApp).ref(_fbResolveRoot(envKey)+'/auditLog');
   _fbAuditSeen.clear();
   _acessosTabEnv=null; _acessosOtherStore=null;
   if(_acessosOtherApp){try{_acessosOtherApp.delete();}catch(e){} _acessosOtherApp=null;}
@@ -6802,13 +6821,45 @@ function _fechProcessarSTP(rawRows,archerRows,nomeArquivoBase){
   clearyn.forEach(row=>{ row.Tipo=row.Valor.includes('-')?'D':'C'; row.Contagem=cntCl(row.Doc+'|'+row.Tipo); row.Key=`${row.Doc}_${row.Tipo}_${row.Contagem}`; });
   const clearynKeys=new Set(clearyn.map(r=>r.Key));
 
+  const stpKeys=new Set(stp.map(r=>r.Key));
+  const somenteClearyn=clearyn.filter(r=>!stpKeys.has(r.Key));
   const somenteStp=stp.filter(r=>!clearynKeys.has(r.Key));
 
+  // Réplica exata do relatório impresso pelo script original — inclusive o
+  // lado "somente no Clearyn" (linhas do Clearyn sem lastro no extrato do
+  // banco), que o .exe só mostra no console/relatório, não gera CSV pra
+  // isso, mas é informação real que não pode ficar de fora.
+  log('='.repeat(60));
+  log('INICIANDO VALIDAÇÃO DE DIVERGÊNCIAS (STP vs CLEARYN/ARCHER)');
+  log('='.repeat(60));
+  log('--------------- IDs Somente no Clearyn/Archer ---------------');
+  if(!somenteClearyn.length){
+    log('Nenhuma divergência isolada no Clearyn.');
+  } else {
+    const seen=new Set();
+    somenteClearyn.forEach(r=>{
+      const dedupeKey=r.Doc+'||'+r.Key;
+      if(seen.has(dedupeKey)) return;
+      seen.add(dedupeKey);
+      log(`${r.Doc}  —  ${r.Key}`);
+    });
+  }
+
+  log('--------------- IDs Somente no Extrato STP (GERANDO CSV) ---------------');
   if(!somenteStp.length&&temSaldoClearyn){
     log('Todas as transações estão conciliadas e o saldo já existe no Clearyn. Nenhum CSV será gerado.');
     return { csv:null, filename:null, logs };
+  } else if(somenteStp.length){
+    const seen=new Set();
+    somenteStp.forEach(r=>{
+      const dedupeKey=r.Clave+'||'+r.Key;
+      if(seen.has(dedupeKey)) return;
+      seen.add(dedupeKey);
+      log(`${r.Clave}  —  ${r.Key}`,'WARNING');
+    });
+  } else {
+    log('Transações conciliadas, mas o Saldo Final será gerado pois não consta no Clearyn.');
   }
-  log(somenteStp.length?`⚠️ ${somenteStp.length} transação(ões) só no extrato STP.`:'Transações conciliadas, mas o Saldo Final será gerado pois não consta no Clearyn.');
 
   const outRows=somenteStp.map(r=>{
     const valor=r.Cargos!==0?_fechRound2(r.Cargos)*-1:_fechRound2(r.Abonos);
@@ -8442,13 +8493,45 @@ async function _credSave(){
 }
 
 function _updateAutomacoesVisibility(){
-  const show=_currentEnv==='eron';
+  const show=['eron','staging'].includes(_currentEnv);
   ['automacoes-toggle','automacoes-children','automacoes-divider'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.style.display=show?'':'none';
   });
 }
+// Staging é visualmente idêntico à produção (mesmo login, mesmas cores) —
+// sem esse aviso, é fácil um humano perder a linha entre os dois no meio de
+// um teste. Isolamento de dado (storeRoot) já existe; isto é a rede de
+// segurança contra confusão de quem está testando.
+function _updateStagingBanner(){
+  let el=document.getElementById('_staging-banner');
+  const loginEl=document.getElementById('login-screen');
+  const appEl=document.getElementById('app');
+  if(_currentEnv!=='staging'){
+    if(el) el.remove();
+    document.body.style.paddingTop='';
+    if(loginEl) loginEl.style.top='';
+    if(appEl) appEl.style.height='';
+    return;
+  }
+  if(!el){
+    el=document.createElement('div');
+    el.id='_staging-banner';
+    el.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:#f59e0b;color:#1c1640;text-align:center;padding:6px 10px;font-size:12px;font-weight:700;font-family:inherit;letter-spacing:.02em;pointer-events:none';
+    el.textContent='🧪 STAGING — ambiente de teste, isolado dos dados reais de produção (grava em /store_staging)';
+    document.body.prepend(el);
+  }
+  // #login-screen e #app cobrem o viewport inteiro (fixed/100vh) por conta
+  // própria — um padding no body não afeta nenhum dos dois, por isso a
+  // faixa ficava sobrepondo tudo em vez de empurrar a página. Encolhe os
+  // dois pela altura da faixa em vez de só empurrar o body.
+  const h=el.offsetHeight;
+  document.body.style.paddingTop=h+'px';
+  if(loginEl) loginEl.style.top=h+'px';
+  if(appEl) appEl.style.height=`calc(100vh - ${h}px)`;
+}
 function _updateEnvSwitcher(){
+  _updateStagingBanner();
   _updateAutomacoesVisibility();
   const wrap=document.getElementById('env-switcher-wrap');
   if(!wrap) return;
