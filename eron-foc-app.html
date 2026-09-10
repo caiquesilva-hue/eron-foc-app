@@ -3194,7 +3194,12 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='cabc0a4dfc6e';
+const APP_VERSION='eced9ddac311';
+// Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
+// Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
+// testes; agora liberada pra todos os ambientes. Único ponto pra travar de
+// novo (ou tornar configurável por ambiente) se precisar no futuro.
+const _GRUPOS_UI_ENABLED=true;
 
 // ─── STORE ───────────────────────────────────────────────────────
 const store = {
@@ -3223,8 +3228,8 @@ const store = {
   cierreData:{},
   conciliacoes:[],
   cronogramaConciliacoes:{},
-  // Conciliações agrupadas ("mãe" leve, só nome+país) — feature experimental,
-  // só ativa em staging (_currentEnv==='staging'). Conciliações "filhas"
+  // Conciliações agrupadas ("mãe" leve, só nome+país) — habilitada em todos
+  // os ambientes via _GRUPOS_UI_ENABLED. Conciliações "filhas"
   // apontam pra um grupo via conc.grupoId.
   gruposConciliacao:[],
   // Quais módulos (itens do menu) ficam visíveis NESTE ambiente — chave é o
@@ -3251,9 +3256,9 @@ const store = {
 };
 
 // ─── DROPDOWN PESQUISÁVEL DE SELEÇÃO ÚNICA (+ criar novo) ──────────
-// Componente genérico usado nos campos País/Agente/Banco/Grupo (feature
-// experimental, só ativa em staging — ver _currentEnv==='staging' nos pontos
-// de uso). Reaproveita o elemento original (select ou input hidden, mesmo id
+// Componente genérico usado nos campos País/Agente/Banco/Grupo — habilitado
+// em todos os ambientes via _GRUPOS_UI_ENABLED (ver pontos de uso).
+// Reaproveita o elemento original (select ou input hidden, mesmo id
 // de sempre) como única fonte de verdade do valor — todo código existente
 // que lê document.getElementById(id).value continua funcionando sem
 // alteração; o combo só sobrepõe uma UI de busca por cima dele.
@@ -3302,7 +3307,7 @@ function _ssMountOverSelect(fieldId,containerId,placeholder){
   const sel=document.getElementById(fieldId);
   const container=document.getElementById(containerId);
   if(!sel||!container) return;
-  if(_currentEnv!=='staging'){ sel.style.display=''; container.style.display='none'; return; }
+  if(!_GRUPOS_UI_ENABLED){ sel.style.display=''; container.style.display='none'; return; }
   sel.style.display='none';
   container.style.display='';
   if(!container.dataset.ssMounted){
@@ -3612,7 +3617,7 @@ function _respondAtivarAccountsPrompt(yes){
 function navigate(pageId){
   if(pageId==='cadastro-acessos'&&!canViewAcessos()) return;
   if(pageId==='cadastro-modulos'&&!isSuperAdmin()) return;
-  if(pageId==='cadastro-grupos'&&_currentEnv!=='staging') return;
+  if(pageId==='cadastro-grupos'&&!_GRUPOS_UI_ENABLED) return;
   if(!isModuleEnabled(pageId)) return;
   document.querySelectorAll('.page').forEach(el=>{el.classList.remove('active');el.style.display='';});
   document.querySelectorAll('.sb-item[data-page]').forEach(el=>el.classList.remove('active'));
@@ -3767,7 +3772,7 @@ function openEditAccount(idx){
   onAccountPaisChange();
   document.getElementById('acc-agente').value=c.agente;
   document.getElementById('acc-banco').value=c.banco;
-  if(_currentEnv==='staging'){
+  if(_GRUPOS_UI_ENABLED){
     _ssSetValue('acc-pais',c.pais);
     _ssSetValue('acc-agente',c.agente);
     _ssSetValue('acc-banco',c.banco);
@@ -3805,7 +3810,7 @@ function resetAccountForm(){
 }
 function onConcPaisChange(){
   const pais=document.getElementById('conc-pais')?.value||'';
-  if(_currentEnv==='staging'){
+  if(_GRUPOS_UI_ENABLED){
     _refreshConcAgenteCombo(pais,document.getElementById('conc-agente')?.value||'');
     renderConcVincList();
     return;
@@ -3864,7 +3869,7 @@ function onAccountPaisChange(){
 // nenhuma alteração) — o combo só sobrepõe uma UI de busca por cima dele,
 // e o "+ criar novo" adiciona a opção nova no select antes de selecioná-la.
 function _refreshAccPaisCombo(selected){
-  if(_currentEnv!=='staging') return;
+  if(!_GRUPOS_UI_ENABLED) return;
   _ssMountOverSelect('acc-pais','acc-pais-ss',t('sel-select'));
   _ssInit('acc-pais',store.paises.map(p=>({value:p,label:countryFlag(p)+' '+p})),{
     onSelect:()=>onAccountPaisChange(),
@@ -3879,7 +3884,7 @@ function _refreshAccPaisCombo(selected){
   _ssSetValue('acc-pais',selected!==undefined?selected:(document.getElementById('acc-pais')?.value||''));
 }
 function _refreshAccAgenteBancoCombo(pais){
-  if(_currentEnv!=='staging') return;
+  if(!_GRUPOS_UI_ENABLED) return;
   _ssMountOverSelect('acc-agente','acc-agente-ss',t('sel-select'));
   _ssMountOverSelect('acc-banco','acc-banco-ss',t('sel-select'));
   const agentes=pais?store.agentes.filter(a=>a.pais===pais):store.agentes;
@@ -9167,7 +9172,7 @@ function _updateStagingBanner(){
   let el=document.getElementById('_staging-banner');
   const loginEl=document.getElementById('login-screen');
   const appEl=document.getElementById('app');
-  if(_currentEnv!=='staging'){
+  if(!_GRUPOS_UI_ENABLED){
     if(el) el.remove();
     document.body.style.paddingTop='';
     if(loginEl) loginEl.style.top='';
@@ -9193,10 +9198,10 @@ function _updateStagingBanner(){
 function _updateEnvSwitcher(){
   _updateStagingBanner();
   _applyModuleVisibility();
-  // Conciliações agrupadas é feature experimental, só staging (ver
-  // _currentEnv==='staging' nos outros pontos de uso).
+  // Conciliações agrupadas — visibilidade controlada por _GRUPOS_UI_ENABLED
+  // (mesma flag usada nos outros pontos de uso).
   const grupoItem=document.getElementById('sb-item-cadastro-grupos');
-  if(grupoItem) grupoItem.style.display=_currentEnv==='staging'?'':'none';
+  if(grupoItem) grupoItem.style.display=_GRUPOS_UI_ENABLED?'':'none';
   const wrap=document.getElementById('env-switcher-wrap');
   if(!wrap) return;
   const logU=store.responsaveis.find(r=>r.email===window._loggedEmail);
@@ -9989,7 +9994,7 @@ function openConciliacaoModal(editIdx=-1){
     ${isLocked?`<div style="display:flex;align-items:center;gap:8px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#475569">🔒 ${t('conc-locked-edit-msg')}</div>`:''}
     <div id="conc-form-fields" style="display:flex;flex-direction:column;gap:20px;${isLocked?'pointer-events:none;opacity:.55':''}">
     <div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="conc-nome" placeholder="Ex: Payout Mono Colprocesa" value="${conc.nome||''}"></div>
-    ${_currentEnv==='staging'?`
+    ${_GRUPOS_UI_ENABLED?`
     <div class="form-row">
       <div class="form-field"><label class="form-label">${t('lbl-pais')}</label>${_ssFieldHtml('conc-pais',t('sel-select'))}</div>
       <div class="form-field"><label class="form-label">${t('lbl-agente')}</label>${_ssFieldHtml('conc-agente',t('sel-select'))}</div>
@@ -10007,7 +10012,7 @@ function openConciliacaoModal(editIdx=-1){
         <option value="Diário" ${conc.frequencia==='Diário'?'selected':''}>Diário</option>
       </select>
     </div>
-    ${_currentEnv==='staging'?`
+    ${_GRUPOS_UI_ENABLED?`
     <div class="form-field" style="border-top:1px solid var(--e-pale);padding-top:12px;margin-top:4px">
       <div class="toggle-row">
         <div class="toggle-info"><div class="toggle-title" style="color:var(--e-purple)">${t('lbl-conc-agrupada')}</div></div>
@@ -10078,7 +10083,7 @@ function openConciliacaoModal(editIdx=-1){
         </label>
       </div>
     </div>`:''}`;
-  if(_currentEnv!=='staging'){
+  if(!_GRUPOS_UI_ENABLED){
     if(conc.pais) setTimeout(()=>{const s=document.getElementById('conc-pais');if(s){s.value=conc.pais;onConcPaisChange();}},0);
     if(conc.agente) setTimeout(()=>{const s=document.getElementById('conc-agente');if(s)s.value=conc.agente;},10);
   }
@@ -10086,7 +10091,7 @@ function openConciliacaoModal(editIdx=-1){
   setTimeout(()=>{
     // Tipo toggles
     _syncConcTipoUI();
-    if(_currentEnv==='staging'){
+    if(_GRUPOS_UI_ENABLED){
       _refreshConcPaisCombo(conc.pais||'');
       _refreshConcAgenteCombo(conc.pais||'',conc.agente||'');
       const isAgrupada=!!conc.grupoId;
@@ -10291,9 +10296,8 @@ function submitConciliacao(){
   if(!nome){document.getElementById('conc-nome')?.classList.add('err');return;}
   const pais=document.getElementById('conc-pais')?.value||'';
   const agente=document.getElementById('conc-agente')?.value||'';
-  // Conciliação agrupada (feature experimental, só existe em staging — os
-  // elementos nem existem fora de _currentEnv==='staging', então isto some
-  // sozinho em produção).
+  // Conciliação agrupada — campos só existem no DOM quando
+  // _GRUPOS_UI_ENABLED estava true no render do modal.
   const isAgrupada=document.getElementById('conc-agrupada-toggle')?.checked||false;
   const grupoId=isAgrupada?(document.getElementById('conc-grupo')?.value||''):'';
   if(isAgrupada&&!grupoId){
@@ -11944,7 +11948,7 @@ function renderCronogramaConciliacoes(){
   // lista pra que as filhas de um mesmo grupo fiquem contíguas logo após uma
   // linha-cabeçalho colapsável, em vez de espalhadas pela ordenação normal.
   let displayList=list;
-  if(_currentEnv==='staging'&&(store.gruposConciliacao||[]).length){
+  if(_GRUPOS_UI_ENABLED&&(store.gruposConciliacao||[]).length){
     const grupoById={};
     store.gruposConciliacao.forEach(g=>{grupoById[g.id]=g;});
     const childrenByGrupo={};
