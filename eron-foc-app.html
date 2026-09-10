@@ -194,6 +194,14 @@
   .ss-item{padding:7px 12px;font-size:12px;cursor:pointer;}
   .ss-item:hover{background:var(--e-ghost);}
   .ss-empty{padding:8px 12px;font-size:12px;color:var(--e-muted);font-style:italic;}
+  /* Conciliações agrupadas (feature experimental, staging) — usa
+     background-color (não background) de propósito: .row-ativa/.row-encerrada
+     pintam a faixa verde/cinza do primeiro <td> via background-image, e o
+     shorthand "background" reseta background-image junto, apagando essa
+     faixa. background-color nunca mexe nisso, então a linha da mãe e das
+     filhas continuam com a mesma faixa de status que qualquer outra linha. */
+  .row-grupo-header td{background-color:rgba(124,58,237,.09);}
+  .row-grupo-child td{background-color:rgba(124,58,237,.05);}
   .crono-conc-filters{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;border-bottom:1px solid var(--e-border);align-items:center;}
 
   /* EMPTY STATE */
@@ -877,7 +885,7 @@
   <div id="slack-cfg-conciliacoes"></div>
   <div class="table-wrap">
     <div id="conciliacoes-empty" class="empty-state"><div class="empty-icon">🔗</div><div class="empty-title" data-i18n="conc-empty-title">Nenhuma conciliação cadastrada</div><div class="empty-sub" data-i18n="conc-empty-sub">Adicione conciliações vinculando contas de Gerencial > Accounts.</div></div>
-    <div class="table-scroll" id="conciliacoes-table-inner" style="display:none"><table style="table-layout:fixed;width:100%"><thead><tr><th style="width:15%" data-i18n="lbl-nome">Nome</th><th style="width:6%" data-i18n="col-pais">País</th><th style="width:10%" data-i18n="col-agente">Agente</th><th style="width:7%" data-i18n="lbl-freq">Frequência</th><th style="width:9%" data-i18n="conc-col-tipo">Tipo</th><th style="width:15%" data-i18n="col-status">Status</th><th style="width:18%" data-i18n="conc-col-contas">Contas vinculadas</th><th style="width:13%" data-i18n="conc-col-gateways">Gateways vinculados</th><th style="width:7%" data-i18n="col-actions">Ações</th></tr></thead><tbody id="conciliacoes-tbody"></tbody></table></div>
+    <div class="table-scroll" id="conciliacoes-table-inner" style="display:none"><table style="table-layout:fixed;width:100%"><thead><tr><th style="width:15%" data-i18n="lbl-nome">Nome</th><th style="width:6%" data-i18n="col-pais">País</th><th style="width:10%" data-i18n="col-agente">Agente</th><th style="width:7%" data-i18n="lbl-freq">Frequência</th><th style="width:9%" data-i18n="conc-col-tipo">Tipo</th><th style="width:15%" data-i18n="col-status">Status</th><th style="width:14%" data-i18n="conc-col-contas">Contas vinculadas</th><th style="width:9%" data-i18n="conc-col-gateways">Gateways vinculados</th><th style="width:8%" data-i18n="lbl-conc-agrupada">Conciliação agrupada</th><th style="width:7%" data-i18n="col-actions">Ações</th></tr></thead><tbody id="conciliacoes-tbody"></tbody></table></div>
   </div>
 </div>
     <!-- CRONOGRAMA > ACCOUNTS -->
@@ -1819,6 +1827,30 @@
   </div>
 </div>
 
+<!-- MODAL: PERGUNTA AO CADASTRAR O PRIMEIRO BANCO (ativar módulos de Accounts) -->
+<div class="modal-overlay" id="modal-ativar-accounts" onclick="if(event.target===this)closeModal('modal-ativar-accounts')">
+  <div class="modal-card" style="width:400px">
+    <div class="modal-header">
+      <div class="modal-title" data-i18n="ativar-accounts-titulo">Ativar módulo de Accounts?</div>
+      <button class="modal-close" onclick="closeModal('modal-ativar-accounts')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:13px;color:var(--e-text);line-height:1.5" data-i18n="ativar-accounts-pergunta">Gostaria de ativar os módulos de Accounts para esse ambiente?</div>
+      <div class="toggle-row">
+        <div class="toggle-info"><div class="toggle-title" style="color:var(--e-purple)" data-i18n="ativar-accounts-cierre-subtext">Ativar também módulo de acompanhamento de cierre</div></div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="ativar-accounts-cierre-toggle">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="_respondAtivarAccountsPrompt(false)" data-i18n="lbl-nao">Não</button>
+      <button class="btn-primary" onclick="_respondAtivarAccountsPrompt(true)" data-i18n="lbl-sim">Sim</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: ACESSO (ADD / EDIT) -->
 <div class="modal-overlay" id="modal-acesso" onclick="if(event.target===this)closeModal('modal-acesso')">
   <div class="modal-card" style="width:420px">
@@ -2620,7 +2652,8 @@ const i18n = {
     'liq-st-nao-iniciado':'Não iniciado','liq-st-em-elab':'Em Elaboração','liq-st-concluida':'Concluída','liq-st-sem-mov':'Sem Movimento','liq-st-pendente':'Pendente',
     'liq-search-ph':'Buscar nome, país, agente...','conc-search-ph':'Buscar nome, país, agente...','vol-filter-val-ph':'valor','liq-empty-ger-title':'Nenhuma conciliação de Processadores ou Mista','liq-empty-crono-title':'Nenhuma conciliação encontrada',
     'liq-empty-ger-sub':'Adicione conciliações em Gerencial › Conciliações com tipo Processadores ou Mista para que apareçam aqui.','liq-ger-info-html':'Conciliações do tipo <strong>Processadores</strong> e <strong>Mista</strong> são incluídas automaticamente a partir de <strong>Gerencial › Conciliações</strong>. Conciliações do tipo <strong>Chargeback</strong> e <strong>Refunds</strong> não estão contempladas aqui. Configure o tipo de liquidação para cada uma.',
-    'conc-col-tipo':'Tipo','conc-col-contas':'Contas vinculadas','conc-col-gateways':'Gateways vinculados',
+    'conc-col-tipo':'Tipo','conc-col-contas':'Contas vinculadas','conc-col-gateways':'Gateways vinculados','lbl-sim':'Sim','lbl-nao':'Não',
+    'ativar-accounts-titulo':'Ativar módulo de Accounts?','ativar-accounts-pergunta':'Gostaria de ativar os módulos de Accounts para esse ambiente?','ativar-accounts-cierre-subtext':'Ativar também módulo de acompanhamento de cierre','ativar-accounts-sucesso':'Módulos de Accounts ativados',
     'conc-col-resp':'Resp.','conc-col-prioridade':'Prioridade','conc-col-acomp':'Acompanhamento','conc-col-volume':'Volume Pendente','conc-col-volume-short':'Volume','conc-sem-volume-pendente':'Sem volume pendente','conc-sem-volume-mapeado':'Sem volume mapeado',
     'gw-pendente-cadastro-1':'pendente de cadastro','gw-pendente-cadastro-n':'pendentes de cadastro','gw-pendente-verificar':'favor verificar em','gw-pendente-vol-label':'em volume pendente',
     'conc-empty-title':'Nenhuma conciliação cadastrada','conc-empty-sub':'Adicione conciliações vinculando contas de Gerencial > Accounts.',
@@ -2842,7 +2875,8 @@ const i18n = {
     'liq-st-nao-iniciado':'Not started','liq-st-em-elab':'In Progress','liq-st-concluida':'Completed','liq-st-sem-mov':'No Movement','liq-st-pendente':'Pending',
     'liq-search-ph':'Search name, country, agent...','conc-search-ph':'Search name, country, agent...','vol-filter-val-ph':'value','liq-empty-ger-title':'No Processor or Mixed reconciliations','liq-empty-crono-title':'No reconciliation found',
     'liq-empty-ger-sub':'Add reconciliations in Gerencial › Conciliações with type Processors or Mixed for them to appear here.','liq-ger-info-html':'Reconciliations of type <strong>Processors</strong> and <strong>Mixed</strong> are automatically included from <strong>Gerencial › Conciliações</strong>. Reconciliations of type <strong>Chargeback</strong> and <strong>Refunds</strong> are not covered here. Set the settlement type for each one.',
-    'conc-col-tipo':'Type','conc-col-contas':'Linked accounts','conc-col-gateways':'Linked gateways',
+    'conc-col-tipo':'Type','conc-col-contas':'Linked accounts','conc-col-gateways':'Linked gateways','lbl-sim':'Yes','lbl-nao':'No',
+    'ativar-accounts-titulo':'Enable Accounts module?','ativar-accounts-pergunta':'Would you like to enable the Accounts modules for this environment?','ativar-accounts-cierre-subtext':'Also enable the cierre tracking module','ativar-accounts-sucesso':'Accounts modules enabled',
     'conc-col-resp':'Resp.','conc-col-prioridade':'Priority','conc-col-acomp':'Status','conc-col-volume':'Pending Volume','conc-col-volume-short':'Volume','conc-sem-volume-pendente':'No pending volume','conc-sem-volume-mapeado':'No volume mapped',
     'gw-pendente-cadastro-1':'pending registration','gw-pendente-cadastro-n':'pending registration','gw-pendente-verificar':'please check in','gw-pendente-vol-label':'in pending volume',
     'conc-empty-title':'No reconciliations registered','conc-empty-sub':'Add reconciliations linking accounts from Management > Accounts.',
@@ -3064,7 +3098,8 @@ const i18n = {
     'liq-st-nao-iniciado':'No iniciado','liq-st-em-elab':'En Elaboración','liq-st-concluida':'Concluida','liq-st-sem-mov':'Sin Movimiento','liq-st-pendente':'Pendiente',
     'liq-search-ph':'Buscar nombre, país, agente...','conc-search-ph':'Buscar nombre, país, agente...','vol-filter-val-ph':'valor','liq-empty-ger-title':'Sin conciliaciones de Procesadores o Mixtas','liq-empty-crono-title':'No se encontraron conciliaciones',
     'liq-empty-ger-sub':'Agregue conciliaciones en Gerencial › Conciliações con tipo Procesadores o Mixta para que aparezcan aquí.','liq-ger-info-html':'Las conciliaciones de tipo <strong>Procesadores</strong> y <strong>Mixta</strong> se incluyen automáticamente desde <strong>Gerencial › Conciliações</strong>. Las conciliaciones de tipo <strong>Chargeback</strong> y <strong>Refunds</strong> no están contempladas aquí. Configure el tipo de liquidación para cada una.',
-    'conc-col-tipo':'Tipo','conc-col-contas':'Cuentas vinculadas','conc-col-gateways':'Gateways vinculados',
+    'conc-col-tipo':'Tipo','conc-col-contas':'Cuentas vinculadas','conc-col-gateways':'Gateways vinculados','lbl-sim':'Sí','lbl-nao':'No',
+    'ativar-accounts-titulo':'¿Activar módulo de Accounts?','ativar-accounts-pergunta':'¿Te gustaría activar los módulos de Accounts para este ambiente?','ativar-accounts-cierre-subtext':'Activar también el módulo de seguimiento de cierre','ativar-accounts-sucesso':'Módulos de Accounts activados',
     'conc-col-resp':'Resp.','conc-col-prioridade':'Prioridad','conc-col-acomp':'Seguimiento','conc-col-volume':'Volumen Pendiente','conc-col-volume-short':'Volumen','conc-sem-volume-pendente':'Sin volumen pendiente','conc-sem-volume-mapeado':'Sin volumen mapeado',
     'gw-pendente-cadastro-1':'pendiente de registro','gw-pendente-cadastro-n':'pendientes de registro','gw-pendente-verificar':'favor verificar en','gw-pendente-vol-label':'en volumen pendiente',
     'conc-empty-title':'Sin conciliaciones registradas','conc-empty-sub':'Agrega conciliaciones vinculando cuentas desde Gerencial > Accounts.',
@@ -3159,7 +3194,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='f7d7889677f7';
+const APP_VERSION='cabc0a4dfc6e';
 
 // ─── STORE ───────────────────────────────────────────────────────
 const store = {
@@ -3372,7 +3407,7 @@ function _qcOpen(kind,fieldId,afterCreate){
   }
   document.getElementById('qc-submit').onclick=_qcSubmit;
   openModal('modal-quick-create');
-  setTimeout(()=>document.getElementById('qc-nome')?.focus(),50);
+  setTimeout(()=>_focusEnd(document.getElementById('qc-nome')),50);
 }
 // Formulário de Conciliação Agrupada (usado tanto pelo "+ criar novo" a
 // partir do combo de grupo na Conciliação quanto por Cadastro > Conciliações
@@ -3404,7 +3439,7 @@ function _qcRenderGrupoForm(prefillNome,prefillPais,prefillResp){
       document.getElementById('qc-modal-title').textContent=t('cad-pais-modal');
       document.getElementById('qc-modal-body').innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="qc-nome" placeholder="Ex: Bolivia"></div>`;
       document.getElementById('qc-submit').onclick=_qcSubmit;
-      setTimeout(()=>document.getElementById('qc-nome')?.focus(),50);
+      setTimeout(()=>_focusEnd(document.getElementById('qc-nome')),50);
     }
   });
   _ssSetValue('qc-pais',prefillPais||'');
@@ -3421,7 +3456,7 @@ function _qcOpenGrupoFull(editIdx=-1){
   _qcCtx={kind:'grupo',fieldId:null,afterCreate:null};
   _qcRenderGrupoForm(g.nome||'',g.pais||'',g.responsavel||'');
   openModal('modal-quick-create');
-  setTimeout(()=>document.getElementById('qc-nome')?.focus(),50);
+  setTimeout(()=>_focusEnd(document.getElementById('qc-nome')),50);
 }
 function _qcSubmit(){
   if(!_qcCtx) return;
@@ -3451,17 +3486,24 @@ function _qcSubmit(){
     const pais=document.getElementById('qc-pais')?.value||'';
     if(!pais){ document.getElementById('qc-pais-input')?.classList.add('err'); return; }
     const responsavel=document.getElementById('qc-responsavel')?.value||'';
+    let _logArgsGrupo;
     if(_qcEditGrupoIdx>=0){
       store.gruposConciliacao[_qcEditGrupoIdx]={...store.gruposConciliacao[_qcEditGrupoIdx],nome,pais,responsavel};
       newValue=store.gruposConciliacao[_qcEditGrupoIdx].id;
-      logAudit('cadastro-modulos','edit-grupo',{nome,pais});
+      _logArgsGrupo=['cadastro-modulos','edit-grupo',{nome,pais}];
     } else {
       const g={id:'grp_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),nome,pais,responsavel};
       store.gruposConciliacao.push(g);
       newValue=g.id;
-      logAudit('cadastro-modulos','add-grupo',{nome,pais});
+      _logArgsGrupo=['cadastro-modulos','add-grupo',{nome,pais}];
     }
+    // _fbSync ANTES de logAudit: logAudit grava em store/auditLog e isso
+    // dispara o listener raiz do Firebase de forma síncrona — sem
+    // _ownWrites['gruposConciliacao'] já ativo (setado dentro de _fbSync),
+    // _applyFbData sobrescrevia a edição com a versão antiga ainda no
+    // servidor (mesmo cuidado já documentado em submitCadastro).
     saveStore(); _fbSync('gruposConciliacao');
+    logAudit(..._logArgsGrupo);
     renderCadastro('grupo'); updateCounts();
     _qcEditGrupoIdx=-1;
   }
@@ -3542,6 +3584,30 @@ function _toggleModuleConfig(pageId,enabled){
   saveStore(); _fbSync('moduleConfig');
   _applyModuleVisibility();
   logAudit('cadastro-modulos',enabled?'habilitar':'desabilitar',{pageId});
+}
+// Cadastrar o primeiro banco de um ambiente é um forte indício de que esse
+// ambiente vai usar o módulo de Accounts (ele depende de banco pra existir
+// conta) — pergunta na hora em vez de deixar a pessoa descobrir depois que
+// precisa ir em Cadastro > Módulos habilitar manualmente.
+function _maybePromptAtivarAccounts(){
+  const toggle=document.getElementById('ativar-accounts-cierre-toggle');
+  if(toggle) toggle.checked=false;
+  openModal('modal-ativar-accounts');
+}
+function _respondAtivarAccountsPrompt(yes){
+  if(yes){
+    const alsoCierre=document.getElementById('ativar-accounts-cierre-toggle')?.checked||false;
+    if(!store.moduleConfig) store.moduleConfig={};
+    delete store.moduleConfig['gerencial-accounts'];
+    delete store.moduleConfig['cronograma-accounts'];
+    if(alsoCierre) delete store.moduleConfig['cronograma-cierre'];
+    saveStore(); _fbSync('moduleConfig');
+    _applyModuleVisibility();
+    if(document.getElementById('modulos-list')) renderCadastroModulos();
+    logAudit('cadastro-modulos','ativar-accounts-primeiro-banco',{alsoCierre});
+    _toast(`✓ ${t('ativar-accounts-sucesso')}`,3000);
+  }
+  closeModal('modal-ativar-accounts');
 }
 function navigate(pageId){
   if(pageId==='cadastro-acessos'&&!canViewAcessos()) return;
@@ -4250,6 +4316,7 @@ function submitCadastro(){
     if(isEdit&&prevNome&&prevNome!==nome) delete store.paisesResp[prevNome];
     store.paisesResp[nome]=respConc;
   } else if(cadastroType==='banco'){
+    var _isFirstBanco=!isEdit&&store.bancos.length===0;
     const prevNomeBanco=isEdit?store.bancos[_editCadIdx]:'';
     if(isEdit) store.bancos[_editCadIdx]=nome;
     else if(!store.bancos.includes(nome)) store.bancos.push(nome);
@@ -4284,6 +4351,7 @@ function submitCadastro(){
   closeModal('modal-cadastro');
   renderCadastro(cadastroType);
   updateCounts();
+  if(cadastroType==='banco'&&_isFirstBanco) _maybePromptAtivarAccounts();
   if(cadastroType==='agente'){
     const _eIdx=isEdit?_editCadIdx:store.agentes.length-1;
     const _savedAg={...store.agentes[_eIdx]};
@@ -6043,6 +6111,16 @@ function downloadCronoCSV(){
   _downloadCSV(rows,`cronograma${start?'-'+start:''}${end?'_'+end:''}.csv`);
 }
 function _esc(s){ const d=document.createElement('div');d.appendChild(document.createTextNode(String(s??'')));return d.innerHTML; }
+// Foca um <input> e joga o cursor pro FINAL do texto já preenchido — sem
+// isso, editar um nome existente abre com o cursor no início da linha
+// (padrão do navegador), forçando a pessoa a mover o cursor manualmente
+// toda vez que só quer completar/ajustar o final do nome.
+function _focusEnd(el){
+  if(!el) return;
+  el.focus();
+  const len=el.value.length;
+  try{ el.setSelectionRange(len,len); }catch(e){}
+}
 function _renderHistoricoRows(entries){
   const tbody=document.getElementById('historico-tbody');
   const count=document.getElementById('historico-count');
@@ -7043,7 +7121,10 @@ async function startFirebaseSync(){
       const crono={};
       Object.entries(d).forEach(([k,v])=>crono[_decFbKey(k)]=v);
       store.cronogramaData=crono;
-      localStorage.setItem(STORE_KEY,JSON.stringify({paises:store.paises,agentes:store.agentes,bancos:store.bancos,responsaveis:store.responsaveis,contas:store.contas,cronogramaData:store.cronogramaData,cierreData:store.cierreData,auditLog:store.auditLog,permissions:store.permissions,credentials:store.credentials,slackConfig:store.slackConfig}));
+      // Sem try/catch isso derrubava (uncaught) toda vez que o cache local
+      // ficasse maior que a cota do navegador (ex.: staging com dados de
+      // produção copiados) — mesma proteção que saveStore() já tem.
+      try{localStorage.setItem(STORE_KEY,JSON.stringify({paises:store.paises,agentes:store.agentes,bancos:store.bancos,responsaveis:store.responsaveis,contas:store.contas,cronogramaData:store.cronogramaData,cierreData:store.cierreData,auditLog:store.auditLog,permissions:store.permissions,credentials:store.credentials,slackConfig:store.slackConfig}));}catch(e){}
       renderCronogramaAccounts();
       updateCounts();
     });
@@ -9867,7 +9948,8 @@ function renderGerencialConciliacoes(){
     const allGwIds=[...new Set([...(cvm.cashinIds||[]),...(cvm.cashoutIds||[]),...(cvm.refundIds||[]),...(cvm.chargebackIds||[])])];
     const gwTags=allGwIds.length?allGwIds.map(gid=>`<span style="font-family:monospace;font-size:10px;background:var(--e-ghost);padding:1px 5px;border-radius:3px;margin-right:3px;display:inline-block;margin-bottom:2px">${gid}</span>`).join(''):`<span style="color:var(--e-muted);font-size:11px">—</span>`;
     const freqChip=c.frequencia?`<span class="chip" style="font-size:10px;background:var(--e-ghost);color:var(--e-mid);border:1px solid var(--e-pale)">${c.frequencia}</span>`:`<span style="color:var(--e-muted);font-size:11px">—</span>`;
-    return `<tr class="${isEncerrada?'row-encerrada':''}"><td style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.nome}</td><td style="white-space:nowrap">${c.pais?`${countryFlag(c.pais)} ${c.pais}`:'—'}</td><td style="font-size:12px;color:var(--e-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.agente||'—'}</td><td>${freqChip}</td><td>${tipoChipHtml}</td><td>${statusColChip}</td><td style="white-space:normal">${tags}</td><td style="white-space:normal">${gwTags}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openConciliacaoModal(${origIdx})" title="${t('btn-editar')}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteConciliacao(${origIdx})">${trashIcon}</button></div>`:''}</td></tr>`;
+    const vinculadaChip=c.grupoId&&(store.gruposConciliacao||[]).some(g=>g.id===c.grupoId)?`<span class="chip chip-green" style="font-size:10px">${t('lbl-sim')}</span>`:`<span class="chip chip-slate" style="font-size:10px">${t('lbl-nao')}</span>`;
+    return `<tr class="${isEncerrada?'row-encerrada':''}"><td style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.nome}</td><td style="white-space:nowrap">${c.pais?`${countryFlag(c.pais)} ${c.pais}`:'—'}</td><td style="font-size:12px;color:var(--e-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.agente||'—'}</td><td>${freqChip}</td><td>${tipoChipHtml}</td><td>${statusColChip}</td><td style="white-space:normal">${tags}</td><td style="white-space:normal">${gwTags}</td><td>${vinculadaChip}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openConciliacaoModal(${origIdx})" title="${t('btn-editar')}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteConciliacao(${origIdx})">${trashIcon}</button></div>`:''}</td></tr>`;
   }).join('');
   _renderUnlinkedGateways();
 }
@@ -10136,16 +10218,30 @@ const _GW_BUCKET_KEY={cashin:'cashinIds',cashout:'cashoutIds',refunds:'refundIds
 // conciliações — aí sim as duas somam o mesmo balde. Por isso a
 // comparação é feita bucket a bucket (opTypes), não com os 4 arrays
 // misturados.
-// Conta: sempre é conflito de verdade (não tem noção de "tipo de
-// operação" pra segmentar), por isso segue bloqueando.
+// Conta: uma mesma conta pode legitimamente ter até 4 conciliações (cashin,
+// cashout, refunds, chargebacks) — por isso não é mais "qualquer conta
+// repetida bloqueia". Só é conflito de verdade quando o NOME da conciliação
+// nova e o da já existente citam o MESMO tipo de operação (ex.: duas
+// conciliações com "Cashin" no nome pra mesma conta) — "Cashin" + "Cashout"
+// pra mesma conta é o caso normal e não deve mais bloquear.
+const _NOME_TIPO_KEYWORDS=['cashin','cashout','chargeback','refund'];
+function _nomeTipoKeywords(nome){
+  const low=(nome||'').toLowerCase();
+  return _NOME_TIPO_KEYWORDS.filter(k=>low.includes(k));
+}
 // Retorna uma lista de conflitos {tipo,id,concNome} agrupável.
-function _findDuplicateLinks(contas,gatewayIds,opTypes){
+function _findDuplicateLinks(contas,gatewayIds,opTypes,nome){
   const conflicts=[];
   const selfConcId=_editConcIdx>=0?(store.conciliacoes[_editConcIdx].id||store.conciliacoes[_editConcIdx].nome||'').replace(/['"]/g,''):null;
+  const novoKeywords=_nomeTipoKeywords(nome);
   store.conciliacoes.forEach((c,idx)=>{
     if(_editConcIdx>=0&&idx===_editConcIdx) return;
     if(c.status==='encerrada') return; // encerradas não contam pra duplicidade
-    (c.contas||[]).forEach(sig=>{ if(contas.includes(sig)) conflicts.push({tipo:'conta',id:sig,concNome:c.nome}); });
+    const existingKeywords=_nomeTipoKeywords(c.nome);
+    (c.contas||[]).forEach(sig=>{
+      if(!contas.includes(sig)) return;
+      if(novoKeywords.some(k=>existingKeywords.includes(k))) conflicts.push({tipo:'conta',id:sig,concNome:c.nome});
+    });
   });
   if(gatewayIds.length&&(opTypes||[]).length){
     Object.entries(store.concilVolumeMap||{}).forEach(([cId,map])=>{
@@ -10211,7 +10307,7 @@ function submitConciliacao(){
   const tipo=isControle?'controle':hasProc&&hasBancos?'mista':hasProc?'processadores':'bancos';
   const contas=hasBancos?[..._selectedContas]:[];
   const processadores=hasProc?[..._selectedProcessadores]:[];
-  const _dupConflicts=_findDuplicateLinks(contas,_selectedGatewayIds,_selectedOpTypes);
+  const _dupConflicts=_findDuplicateLinks(contas,_selectedGatewayIds,_selectedOpTypes,nome);
   if(!_blockDuplicateLinks(_dupConflicts.filter(c=>c.tipo==='conta'))) return;
   if(!_confirmDuplicateLinks(_dupConflicts.filter(c=>c.tipo==='gateway'))) return;
   // Distribute unified gateway selection to all active op-types
@@ -10706,20 +10802,43 @@ function _effectivePriorityRanking(){
   if(_priorityRankCache) return _priorityRankCache;
   const combined=store.volumeRankings?.combined||{};
   const fixed=store.volumeRankings?.priorityFixed||{};
+  // Conciliações agrupadas (feature experimental, staging): o TOP não
+  // ranqueia cada filha individualmente — soma o volume (vivo ou congelado)
+  // de TODAS as filhas de um grupo e ranqueia o grupo como uma entidade só,
+  // junto com as conciliações que não pertencem a grupo nenhum. Cada filha
+  // herda o rank do próprio grupo no final, pra mostrar o mesmo TOP da mãe.
+  const grupoById={};
+  (store.gruposConciliacao||[]).forEach(g=>{grupoById[g.id]=g;});
+  const childGrupoOf={};
+  (store.conciliacoes||[]).forEach(c=>{
+    if(c.grupoId&&grupoById[c.grupoId]) childGrupoOf[(c.id||c.nome).replace(/['"]/g,'')]=c.grupoId;
+  });
   const ids=new Set([...Object.keys(combined),...Object.keys(fixed)]);
+  const grupoUsd={};
   const rows=[];
   ids.forEach(id=>{
     const usd=combined[id]?.usd??fixed[id]?.usd??0;
-    if(usd>0) rows.push({id,usd});
+    if(usd<=0) return;
+    const grupoId=childGrupoOf[id];
+    if(grupoId) grupoUsd[grupoId]=(grupoUsd[grupoId]||0)+usd;
+    else rows.push({id,usd});
   });
+  Object.entries(grupoUsd).forEach(([grupoId,usd])=>{ if(usd>0) rows.push({id:grupoId,usd}); });
   rows.sort((a,b)=>b.usd-a.usd);
   const ranks={};
   rows.forEach((r,i)=>{ranks[r.id]=i+1;});
+  Object.entries(childGrupoOf).forEach(([cid,grupoId])=>{
+    if(ranks[grupoId]!=null) ranks[cid]=ranks[grupoId];
+  });
   _priorityRankCache=ranks;
   return ranks;
 }
 function _computeVolumePrioridade(concId){
-  if(!(store.concilVolumeMap||{})[concId]) return null;
+  // Grupos (feature experimental, staging) não têm entrada em
+  // concilVolumeMap — só conciliações de verdade têm gateways mapeados —
+  // mas ainda assim participam do ranking (ver _effectivePriorityRanking).
+  const isGrupo=(store.gruposConciliacao||[]).some(g=>g.id===concId);
+  if(!isGrupo&&!(store.concilVolumeMap||{})[concId]) return null;
   const rank=_effectivePriorityRanking()[concId];
   if(!rank) return null;
   return _applyPriorFormula(rank,rank);
@@ -11514,29 +11633,71 @@ function _toggleGrupoExpand(id){
   if(_expandedGrupos.has(id)) _expandedGrupos.delete(id); else _expandedGrupos.add(id);
   renderCronogramaConciliacoes();
 }
+// Renderiza as células de dia (calendário) de uma conciliação OU do
+// pseudo-objeto {id,nome,...} de um grupo — reaproveitado tanto pra linha
+// normal quanto pro cabeçalho de grupo (interactive=true, clicável de
+// verdade) e pras filhas de um grupo (interactive=false: só espelha
+// visualmente o status da mãe, sem class="conc-cell" — por isso o clique
+// delegado da tabela nunca alcança essas células, ficando só de leitura).
+function _renderConcDayCellsHtml(conc,days,fmtD,statusCfg,interactive){
+  const concId=(conc.id||conc.nome).replace(/['"]/g,'');
+  const _closureDayStart=(conc.status==='encerrada'&&conc.dataEncerramento)?(d=>new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime())(new Date(conc.dataEncerramento)):null;
+  return days.map(d=>{
+    const dateStr=fmtD(d);
+    const _ck=concId.replace(/&/g,'&amp;');
+    if(_closureDayStart!==null&&d.getTime()>=_closureDayStart){
+      return `<td class="day-cell-closed instant-tip" data-ck="${_ck}" data-dt="${dateStr}" style="text-align:center" data-tip="${t('status-encerrada')}"><div class="day-filled" style="background:#f1f5f9;color:#475569;font-size:9px">${t('status-encerrada-abbr')}</div></td>`;
+    }
+    const r=_getConcilStatus(conc,dateStr);
+    const cfg=statusCfg[r.status];
+    const _cellCls=interactive?'day-cell conc-cell':'day-cell';
+    const _cursor=interactive?'cursor:pointer':'cursor:default';
+    if(r.status==='pendente'||r.status==='conta_encerrada'){
+      return `<td class="${_cellCls}" data-ck="${_ck}" data-dt="${dateStr}" style="${_cursor}"><div class="day-dot" style="background:rgba(151,111,244,.1);font-size:8px;opacity:.6">·</div></td>`;
+    }
+    const _sig=r.entry?.sigla||'';
+    const lbl=r.status==='sem_movimento'?(_sig?`${_sig} s/m`:'s/m'):r.status==='sem_acesso'?(_sig?`${_sig} s/a`:'s/a'):r.status==='elaborando'?(_sig?`${t('crono-elab-abbr')} ${_sig}`:t('crono-elab-abbr')):r.entry?_sig:(r.status==='pronto_conciliacao'?'✓':'?');
+    const _hasLink=interactive&&r.entry?.reportLink&&r.status==='sem_acesso';
+    const _noteClass=_hasLink?' has-note':'';
+    const _noteEvts=_hasLink?` onmouseenter="showNoteTooltip(event,this)" onmouseleave="scheduleHideNoteTooltip()"` :'';
+    const _noteData=_hasLink?` data-link="${r.entry.reportLink.replace(/"/g,'&quot;')}"` :'';
+    return `<td class="${_cellCls}" data-ck="${_ck}" data-dt="${dateStr}" style="${_cursor}"><div class="day-filled${_noteClass}" style="background:${cfg.bg};color:${cfg.color}"${_noteEvts}${_noteData}>${lbl}</div></td>`;
+  }).join('');
+}
 // Linha-cabeçalho colapsável de um grupo: mesma quantidade de colunas de uma
 // linha normal (nome + colunas de info na ordem atual + um <td> por dia),
 // pra não quebrar o alinhamento da tabela. Volume é a soma do volume AO VIVO
-// de cada filha (mesmo _concVolumeStatus usado na coluna normal) — não entra
-// no cálculo de Prioridade/TOP, só é um total de exibição.
-function _renderGrupoHeaderRow(grupo,children,ri,_ord,numDays){
+// de cada filha (mesmo _concVolumeStatus usado na coluna normal) — é só um
+// total de exibição, calculado à parte do ranking (ver _effectivePriorityRanking,
+// que soma o volume de TODAS as filhas pra decidir o TOP do grupo como um
+// todo). Acompanhamento e dias são da MÃE — é aqui que o analista preenche;
+// as filhas só espelham (ver __mirrorGrupo no loop principal).
+function _renderGrupoHeaderRow(grupo,children,ri,_ord,days,fmtD,statusCfg,chipHtml,d1Str){
   const isExpanded=_expandedGrupos.has(grupo.id);
   const totalUsd=children.reduce((s,c)=>{
     const st=_concVolumeStatus(c);
     return s+(st.kind==='valor'?(parseFloat(st.text.replace(/[^0-9.]/g,''))||0):0);
   },0);
   const volHtml=totalUsd>0?'$'+Math.round(totalUsd).toLocaleString('en-US'):'<span style="color:var(--e-muted);font-size:11px">—</span>';
+  const priorCell=_priorChip(grupo.id);
+  const respUser=grupo.responsavel?store.responsaveis.find(r=>r.email===grupo.responsavel):null;
+  const respCell=respUser?`<span style="font-family:monospace;font-size:10px;font-weight:700;background:rgba(151,111,244,.1);color:var(--e-mid);padding:1px 5px;border-radius:3px">${respUser.sigla}</span>`:'<span style="color:var(--e-muted);font-size:11px">—</span>';
+  const d1Result=_getConcilStatus(grupo,d1Str);
+  const d1ChipHtml=chipHtml[d1Result.status]||'<span style="color:var(--e-muted);font-size:11px">—</span>';
   const colHtml=_ord.map(d=>{
     if(d.k==='pais') return `<td class="sel-cell" style="font-size:12px">${grupo.pais?`${countryFlag(grupo.pais)} ${grupo.pais}`:'—'}</td>`;
     if(d.k==='volume') return `<td class="sel-cell" style="font-size:11px;font-weight:700;color:var(--e-mid);text-align:right;padding-right:10px">${volHtml}</td>`;
     if(d.k==='tipo') return `<td class="sel-cell" style="padding:4px 8px"><span class="chip chip-grey" style="font-size:10px">${tn('grupo-n-conciliacoes',children.length)}</span></td>`;
+    if(d.k==='resp') return `<td class="sel-cell">${respCell}</td>`;
+    if(d.k==='prioridade') return `<td class="sel-cell" style="padding:4px 8px">${priorCell}</td>`;
+    if(d.k==='acompanhamento') return `<td class="sel-cell" style="white-space:nowrap;padding:4px 8px">${d1ChipHtml}</td>`;
     return `<td class="sel-cell" style="font-size:11px;color:var(--e-muted);text-align:center">—</td>`;
   }).join('');
-  const dayCells='<td style="text-align:center;color:var(--e-muted)">·</td>'.repeat(numDays);
-  return `<tr class="row-grupo-header" onclick="_toggleGrupoExpand('${grupo.id}')" style="cursor:pointer;background:rgba(124,58,237,.07);font-weight:600">
-    <td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:700;white-space:nowrap">
+  const dayCellsHtml=_renderConcDayCellsHtml(grupo,days,fmtD,statusCfg,true);
+  return `<tr class="row-ativa row-grupo-header" style="font-weight:600">
+    <td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:700;white-space:nowrap;cursor:pointer" onclick="_toggleGrupoExpand('${grupo.id}')">
       <span style="display:inline-block;width:14px;color:var(--e-purple)">${isExpanded?'▼':'▶'}</span>📁 ${_esc(grupo.nome)}
-    </td>${colHtml}${dayCells}
+    </td>${colHtml}${dayCellsHtml}
   </tr>`;
 }
 function renderCronogramaConciliacoes(){
@@ -11798,7 +11959,7 @@ function renderCronogramaConciliacoes(){
           const grupo=grupoById[c.grupoId];
           const children=childrenByGrupo[c.grupoId];
           displayList.push({__isGrupo:true,__grupo:grupo,__children:children});
-          if(_expandedGrupos.has(grupo.id)) displayList.push(...children);
+          if(_expandedGrupos.has(grupo.id)) displayList.push(...children.map(ch=>({...ch,__mirrorGrupo:grupo})));
         } else {
           displayList.push(c);
         }
@@ -11806,15 +11967,20 @@ function renderCronogramaConciliacoes(){
     }
   }
   tbl.innerHTML=`<thead><tr>${colInfos}${dayHdrs}</tr></thead><tbody>${displayList.map((conc,ri)=>{
-    if(conc.__isGrupo) return _renderGrupoHeaderRow(conc.__grupo,conc.__children,ri,_ord,days.length);
+    if(conc.__isGrupo) return _renderGrupoHeaderRow(conc.__grupo,conc.__children,ri,_ord,days,fmtD,statusCfg,chipHtml,d1Str);
+    // Filha de grupo (mãe ainda existe — ver __mirrorGrupo montado acima):
+    // Acompanhamento e dias vêm da MÃE, não da própria filha — ela só
+    // "reflete", nunca é editável dia-a-dia por conta própria.
+    const _mirrorGrupo=conc.__mirrorGrupo;
+    const _statusSrc=_mirrorGrupo||conc;
     const rEmail=_getConcilResp(conc);
     const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;
     const respCell=rUser?`<span style="font-family:monospace;font-size:10px;font-weight:700;background:rgba(151,111,244,.1);color:var(--e-mid);padding:1px 5px;border-radius:3px">${rUser.sigla}</span>`:'<span style="color:var(--e-muted);font-size:11px">—</span>';
     const concId=(conc.id||conc.nome).replace(/['"]/g,'');
-    const d1Result=conc.status==='encerrada'?{status:'encerrada'}:_getConcilStatus(conc,d1Str);
+    const d1Result=_statusSrc.status==='encerrada'?{status:'encerrada'}:_getConcilStatus(_statusSrc,d1Str);
     let d1ChipHtml=chipHtml[d1Result.status]||'<span style="color:var(--e-muted);font-size:11px">—</span>';
     if(d1Result.status==='pronto_conciliacao'){
-      const probs=_getConcilProblems(conc,d1Str);
+      const probs=_getConcilProblems(_statusSrc,d1Str);
       if(probs.semAcesso.length||probs.aguardandoExtrato.length){
         const lines=[];
         if(probs.semAcesso.length) lines.push(`${t('status-sem-acesso')}:\n${probs.semAcesso.map(s=>`  · ${s}`).join('\n')}`);
@@ -11824,39 +11990,15 @@ function renderCronogramaConciliacoes(){
       }
     }
     const priorCell=_priorChip(concId);
-    // Dia do fechamento em diante: mostra "Encerrada" no lugar do status
-    // normal (preserva os dias ANTERIORES intactos, com o histórico real).
-    const _closureDayStart=(conc.status==='encerrada'&&conc.dataEncerramento)?(d=>new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime())(new Date(conc.dataEncerramento)):null;
-    const cells=days.map(d=>{
-      const dateStr=fmtD(d);
-      const _ck=concId.replace(/&/g,'&amp;');
-      if(_closureDayStart!==null&&d.getTime()>=_closureDayStart){
-        return `<td class="day-cell-closed instant-tip" data-ck="${_ck}" data-dt="${dateStr}" style="text-align:center" data-tip="${t('status-encerrada')}"><div class="day-filled" style="background:#f1f5f9;color:#475569;font-size:9px">${t('status-encerrada-abbr')}</div></td>`;
-      }
-      const r=_getConcilStatus(conc,dateStr);
-      const cfg=statusCfg[r.status];
-      // Conta encerrada vinculada: fica sem preencher, como pendente — não é
-      // um status de dia-a-dia, é só um aviso administrativo (banner acima).
-      if(r.status==='pendente'||r.status==='conta_encerrada'){
-        return `<td class="day-cell conc-cell" data-ck="${_ck}" data-dt="${dateStr}" style="cursor:pointer"><div class="day-dot" style="background:rgba(151,111,244,.1);font-size:8px;opacity:.6">·</div></td>`;
-      }
-      const _sig=r.entry?.sigla||'';
-      const lbl=r.status==='sem_movimento'?(_sig?`${_sig} s/m`:'s/m'):r.status==='sem_acesso'?(_sig?`${_sig} s/a`:'s/a'):r.status==='elaborando'?(_sig?`${t('crono-elab-abbr')} ${_sig}`:t('crono-elab-abbr')):r.entry?_sig:(r.status==='pronto_conciliacao'?'✓':'?');
-      const _hasLink=r.entry?.reportLink&&r.status==='sem_acesso';
-      const _noteClass=_hasLink?' has-note':'';
-      const _noteEvts=_hasLink?` onmouseenter="showNoteTooltip(event,this)" onmouseleave="scheduleHideNoteTooltip()"` :'';
-      const _noteData=_hasLink?` data-link="${r.entry.reportLink.replace(/"/g,'&quot;')}"` :'';
-      return `<td class="day-cell conc-cell" data-ck="${_ck}" data-dt="${dateStr}" style="cursor:pointer"><div class="day-filled${_noteClass}" style="background:${cfg.bg};color:${cfg.color}"${_noteEvts}${_noteData}>${lbl}</div></td>`;
-    }).join('');
+    const cells=_renderConcDayCellsHtml(_statusSrc,days,fmtD,statusCfg,!_mirrorGrupo);
     const _concTipoMap={bancos:['chip-tipo-bancos','Bancos'],processadores:['chip-tipo-proc','Processadores'],mista:['chip-tipo-mista','Mista'],controle:['chip-tipo-controle',t('tipo-controle')]};
     const _ct=_concTipoMap[conc.tipo]||['chip-grey',conc.tipo||'—'];
     const concTipoChipHtml=`<span class="chip ${_ct[0]}" style="font-size:10px">${_ct[1]}</span>`;
     const _concNomeInner=conc.obs?`<span data-link="${_esc(conc.obs)}" onmouseenter="showNoteTooltip(event,this)" onmouseleave="scheduleHideNoteTooltip()" style="pointer-events:auto">${_esc(conc.nome)}<sup style="color:var(--e-purple);font-size:7px;margin-left:1px">●</sup></span>`:_esc(conc.nome);
     const _freqCell=conc.frequencia?`<span class="chip" style="font-size:10px;background:var(--e-ghost);color:var(--e-mid);border:1px solid var(--e-pale)">${conc.frequencia}</span>`:`<span style="color:var(--e-muted);font-size:11px">—</span>`;
     const _ctx={respCell,priorCell,concTipoChipHtml,freqCell:_freqCell,d1ChipHtml};
-    const _isGrupoChild=_currentEnv==='staging'&&!!conc.grupoId;
-    const _nomeIndent=_isGrupoChild?'padding-left:26px;':'';
-    return `<tr class="row-${conc.status||'ativa'}${_isGrupoChild?' row-grupo-child':''}"><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:600;white-space:nowrap;${_nomeIndent}">${_concNomeInner}</td>${_ord.map((d,i)=>d.c(conc,ri,i+1,_ctx)).join('')}${cells}</tr>`;
+    const _nomeIndent=_mirrorGrupo?'padding-left:26px;':'';
+    return `<tr class="row-${conc.status||'ativa'}${_mirrorGrupo?' row-grupo-child':''}"><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:600;white-space:nowrap;${_nomeIndent}">${_concNomeInner}</td>${_ord.map((d,i)=>d.c(conc,ri,i+1,_ctx)).join('')}${cells}</tr>`;
   }).join('')}</tbody>`;
 
   if(calScrollEl){calScrollEl.scrollLeft=_savedSL;calScrollEl.scrollTop=_savedST;}
@@ -11921,6 +12063,14 @@ function _placeFixedDropdown(dd,rect){
   dd.style.left=left+'px';
   dd.style.top=top+'px';
 }
+// Resolve o "dono" de uma célula de calendário — uma conciliação normal OU
+// (feature experimental, staging) um grupo, já que o cabeçalho da linha de
+// grupo usa o mesmo id do grupo como data-ck e passa pelo mesmo clique
+// delegado (ver tbl.addEventListener('click',...) acima).
+function _findConcOrGrupoById(ck){
+  return store.conciliacoes.find(c=>(c.id||c.nome).replace(/['"]/g,'')===ck)
+    || (store.gruposConciliacao||[]).find(g=>g.id===ck);
+}
 function onConcCellClick(evt,ck,dateStr){
   if(!canEdit()) return;
   evt.stopPropagation();
@@ -11928,7 +12078,7 @@ function onConcCellClick(evt,ck,dateStr){
   if(!td) return;
   if(_concPop&&_concPop.td===td){ _closeConcPop(); return; }
   _closeConcPop();
-  const conc=store.conciliacoes.find(c=>(c.id||c.nome).replace(/['"]/g,'')===ck);
+  const conc=_findConcOrGrupoById(ck);
   if(!conc) return;
   const rect=td.getBoundingClientRect();
   // Conciliação encerrada: histórico fica congelado por completo, mesmo em
@@ -11996,7 +12146,7 @@ function _openConcStPopup(td,rect,ck,dateStr,opts){
 }
 function _concChooseSt(evt,ck,dateStr,v){
   evt.stopPropagation();
-  const conc=store.conciliacoes.find(c=>(c.id||c.nome).replace(/['"]/g,'')===ck);
+  const conc=_findConcOrGrupoById(ck);
   if(!conc){_closeConcPop();return;}
   const sigla=store.responsaveis.find(r=>r.email===window._loggedEmail)?.sigla||'?';
   const manualKey=`${conc.id||conc.nome}_${dateStr}`;
