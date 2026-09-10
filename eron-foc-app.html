@@ -182,7 +182,13 @@
   .ss-input:focus{outline:none;border-color:var(--e-accent);}
   .ss-add-btn{width:34px;height:34px;flex-shrink:0;border-radius:8px;border:1px solid var(--e-accent);background:transparent;color:var(--e-accent);font-size:17px;font-weight:700;cursor:pointer;line-height:1;}
   .ss-add-btn:hover{background:var(--e-accent);color:#fff;}
-  .ss-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:38px;background:var(--e-surface);border:1px solid var(--e-pale);border-radius:8px;max-height:180px;overflow-y:auto;z-index:80;box-shadow:0 4px 16px rgba(0,0,0,.14);display:none;}
+  /* position:fixed de propósito (não absolute) — precisa escapar do
+     .modal-card, que tem overflow:hidden + transform (cantos arredondados).
+     Um transform no ancestral já basta pra "prender" um position:fixed
+     dentro dele também; por isso o dropdown vive fora da árvore do modal,
+     direto em document.body (ver _ssEnsurePortal), reposicionado via
+     getBoundingClientRect() a cada abertura/scroll/resize. */
+  .ss-dropdown{position:fixed;background:var(--e-surface);border:1px solid var(--e-pale);border-radius:8px;max-height:180px;overflow-y:auto;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.18);display:none;}
   .ss-item{padding:7px 12px;font-size:12px;cursor:pointer;}
   .ss-item:hover{background:var(--e-ghost);}
   .ss-empty{padding:8px 12px;font-size:12px;color:var(--e-muted);font-style:italic;}
@@ -3127,7 +3133,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='7d49c1496087';
+const APP_VERSION='4d417bca1c68';
 
 // ─── STORE ───────────────────────────────────────────────────────
 const store = {
@@ -3186,13 +3192,29 @@ const store = {
 // que lê document.getElementById(id).value continua funcionando sem
 // alteração; o combo só sobrepõe uma UI de busca por cima dele.
 let _ssState={};
+// Campo atualmente aberto (só um por vez) — a lista em si vive num único
+// elemento "portal" compartilhado, direto em document.body (ver
+// _ssEnsurePortal), nunca dentro do modal. Precisa ser assim porque
+// .modal-card tem overflow:hidden + transform, e um transform no ancestral
+// já basta pra "prender" um position:fixed dentro dele também — só ficar
+// fora da árvore do modal garante que o dropdown nunca fica cortado.
+let _ssActiveField=null;
+function _ssEnsurePortal(){
+  let el=document.getElementById('ss-portal-dropdown');
+  if(!el){
+    el=document.createElement('div');
+    el.id='ss-portal-dropdown';
+    el.className='ss-dropdown';
+    document.body.appendChild(el);
+  }
+  return el;
+}
 function _ssFieldHtml(fieldId,placeholder){
   return `<div class="ss-wrap" id="${fieldId}-wrap">
     <div class="ss-row">
       <input type="text" class="ss-input" id="${fieldId}-input" placeholder="${placeholder}" autocomplete="off" oninput="_ssRender('${fieldId}')" onfocus="_ssOpen('${fieldId}')">
       <button type="button" class="ss-add-btn" onclick="_ssCreateNew('${fieldId}')" title="${t('btn-criar-novo')}">+</button>
     </div>
-    <div class="ss-dropdown" id="${fieldId}-list"></div>
     <input type="hidden" id="${fieldId}">
   </div>`;
 }
@@ -3205,7 +3227,6 @@ function _ssFieldHtmlBare(fieldId,placeholder){
       <input type="text" class="ss-input" id="${fieldId}-input" placeholder="${placeholder}" autocomplete="off" oninput="_ssRender('${fieldId}')" onfocus="_ssOpen('${fieldId}')">
       <button type="button" class="ss-add-btn" onclick="_ssCreateNew('${fieldId}')" title="${t('btn-criar-novo')}">+</button>
     </div>
-    <div class="ss-dropdown" id="${fieldId}-list"></div>
   </div>`;
 }
 // Esconde o elemento original (select estático) e monta o combo num
@@ -3235,35 +3256,54 @@ function _ssSetValue(fieldId,value){
     input.value=opt?opt.label:'';
   }
 }
+function _ssPosition(fieldId){
+  const input=document.getElementById(fieldId+'-input');
+  const portal=_ssEnsurePortal();
+  if(!input) return;
+  const r=input.getBoundingClientRect();
+  portal.style.left=Math.round(r.left)+'px';
+  portal.style.top=Math.round(r.bottom+4)+'px';
+  portal.style.width=Math.round(r.width)+'px';
+}
 function _ssRender(fieldId){
+  if(_ssActiveField!==fieldId){ _ssOpen(fieldId); return; }
   const st=_ssState[fieldId];
-  const list=document.getElementById(fieldId+'-list');
-  if(!st||!list) return;
+  const portal=_ssEnsurePortal();
+  if(!st) return;
   const q=(document.getElementById(fieldId+'-input')?.value||'').toLowerCase();
   const filtered=st.options.filter(o=>o.label.toLowerCase().includes(q));
-  list.innerHTML=filtered.length?filtered.map(o=>`<div class="ss-item" onclick="_ssSelect('${fieldId}','${String(o.value).replace(/'/g,"\\'")}')">${o.label}</div>`).join(''):`<div class="ss-empty">${t('empty-nenhum-resultado')}</div>`;
+  portal.innerHTML=filtered.length?filtered.map(o=>`<div class="ss-item" onclick="_ssSelect('${fieldId}','${String(o.value).replace(/'/g,"\\'")}')">${o.label}</div>`).join(''):`<div class="ss-empty">${t('empty-nenhum-resultado')}</div>`;
 }
 function _ssOpen(fieldId){
-  document.querySelectorAll('.ss-dropdown').forEach(d=>{ if(d.id!==fieldId+'-list') d.style.display='none'; });
-  const list=document.getElementById(fieldId+'-list');
-  if(!list) return;
-  list.style.display='';
+  _ssActiveField=fieldId;
+  const portal=_ssEnsurePortal();
+  portal.style.display='';
+  _ssPosition(fieldId);
   _ssRender(fieldId);
+}
+function _ssCloseAll(){
+  _ssActiveField=null;
+  const portal=document.getElementById('ss-portal-dropdown');
+  if(portal) portal.style.display='none';
 }
 function _ssSelect(fieldId,value){
   _ssSetValue(fieldId,value);
-  const list=document.getElementById(fieldId+'-list');
-  if(list) list.style.display='none';
+  _ssCloseAll();
   _ssState[fieldId]?.onSelect?.(value);
 }
 function _ssCreateNew(fieldId){
   _ssState[fieldId]?.onCreateNew?.();
 }
 document.addEventListener('click',e=>{
-  document.querySelectorAll('.ss-wrap').forEach(w=>{
-    if(!w.contains(e.target)){ const d=w.querySelector('.ss-dropdown'); if(d) d.style.display='none'; }
-  });
+  if(!_ssActiveField) return;
+  const wrap=document.getElementById(_ssActiveField+'-wrap');
+  const portal=document.getElementById('ss-portal-dropdown');
+  if(wrap&&wrap.contains(e.target)) return;
+  if(portal&&portal.contains(e.target)) return;
+  _ssCloseAll();
 });
+window.addEventListener('scroll',()=>{ if(_ssActiveField) _ssPosition(_ssActiveField); },true);
+window.addEventListener('resize',()=>{ if(_ssActiveField) _ssPosition(_ssActiveField); });
 
 // ─── MODAL DE CRIAÇÃO RÁPIDA (país/agente/banco/grupo, a partir do combo) ──
 let _qcCtx=null;
@@ -9673,10 +9713,14 @@ function openConciliacaoModal(editIdx=-1){
     <div id="conc-form-fields" style="${isLocked?'pointer-events:none;opacity:.55':''}">
     <div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="conc-nome" placeholder="Ex: Payout Mono Colprocesa" value="${conc.nome||''}"></div>
     ${_currentEnv==='staging'?`
-    <div class="form-field"><label class="form-label">${t('lbl-pais')}</label>${_ssFieldHtml('conc-pais',t('sel-select'))}</div>
-    <div class="form-field"><label class="form-label">${t('lbl-agente')}</label>${_ssFieldHtml('conc-agente',t('sel-select'))}</div>`:`
-    <div class="form-field"><label class="form-label">${t('lbl-pais')}</label><select class="form-select" id="conc-pais" onchange="onConcPaisChange()"><option value="">${t('sel-select')}</option>${paisOpts}</select></div>
-    <div class="form-field"><label class="form-label">${t('lbl-agente')}</label><select class="form-select" id="conc-agente" onchange="renderContasMSList()"><option value="">${t('sel-select')}</option>${agenteOpts}</select></div>`}
+    <div class="form-row">
+      <div class="form-field"><label class="form-label">${t('lbl-pais')}</label>${_ssFieldHtml('conc-pais',t('sel-select'))}</div>
+      <div class="form-field"><label class="form-label">${t('lbl-agente')}</label>${_ssFieldHtml('conc-agente',t('sel-select'))}</div>
+    </div>`:`
+    <div class="form-row">
+      <div class="form-field"><label class="form-label">${t('lbl-pais')}</label><select class="form-select" id="conc-pais" onchange="onConcPaisChange()"><option value="">${t('sel-select')}</option>${paisOpts}</select></div>
+      <div class="form-field"><label class="form-label">${t('lbl-agente')}</label><select class="form-select" id="conc-agente" onchange="renderContasMSList()"><option value="">${t('sel-select')}</option>${agenteOpts}</select></div>
+    </div>`}
     <div class="form-field"><label class="form-label">${t('lbl-freq')}</label>
       <select class="form-select" id="conc-freq">
         <option value="">${t('sel-select')}</option>
