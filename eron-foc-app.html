@@ -174,6 +174,18 @@
   .contas-ms-tags{display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;min-height:30px;border-top:1px solid var(--e-border);background:var(--e-ghost);}
   .contas-tag{display:inline-flex;align-items:center;gap:3px;background:var(--e-surface);border:1px solid var(--e-border);border-radius:4px;padding:1px 6px;font-size:11px;font-family:monospace;}
   .contas-tag button{background:none;border:none;cursor:pointer;color:var(--e-muted);font-size:14px;line-height:1;padding:0 0 0 2px;}
+  /* Dropdown pesquisável de seleção única, com botão "+ criar novo" ao lado —
+     usado em País/Agente/Banco/Grupo (feature experimental, só em staging). */
+  .ss-wrap{position:relative;}
+  .ss-row{display:flex;gap:6px;align-items:center;}
+  .ss-input{flex:1;padding:8px 10px;border:1px solid var(--e-pale);border-radius:8px;font-size:13px;background:var(--e-bg);color:var(--e-text);min-width:0;}
+  .ss-input:focus{outline:none;border-color:var(--e-accent);}
+  .ss-add-btn{width:34px;height:34px;flex-shrink:0;border-radius:8px;border:1px solid var(--e-accent);background:transparent;color:var(--e-accent);font-size:17px;font-weight:700;cursor:pointer;line-height:1;}
+  .ss-add-btn:hover{background:var(--e-accent);color:#fff;}
+  .ss-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:38px;background:var(--e-surface);border:1px solid var(--e-pale);border-radius:8px;max-height:180px;overflow-y:auto;z-index:80;box-shadow:0 4px 16px rgba(0,0,0,.14);display:none;}
+  .ss-item{padding:7px 12px;font-size:12px;cursor:pointer;}
+  .ss-item:hover{background:var(--e-ghost);}
+  .ss-empty{padding:8px 12px;font-size:12px;color:var(--e-muted);font-style:italic;}
   .crono-conc-filters{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;border-bottom:1px solid var(--e-border);align-items:center;}
 
   /* EMPTY STATE */
@@ -1610,15 +1622,18 @@
         <select class="form-select" id="acc-pais" onchange="onAccountPaisChange()">
           <option value="" data-i18n="sel-select">Selecione...</option>
         </select>
+        <div id="acc-pais-ss" style="display:none"></div>
       </div>
       <div class="form-row">
         <div class="form-field">
           <label class="form-label"><span data-i18n="lbl-agente">Agente</span><span class="req">*</span></label>
           <select class="form-select" id="acc-agente"><option value="" data-i18n="sel-select">Selecione...</option></select>
+          <div id="acc-agente-ss" style="display:none"></div>
         </div>
         <div class="form-field">
           <label class="form-label"><span data-i18n="lbl-banco">Banco</span><span class="req">*</span></label>
           <select class="form-select" id="acc-banco"><option value="" data-i18n="sel-select">Selecione...</option></select>
+          <div id="acc-banco-ss" style="display:none"></div>
         </div>
       </div>
       <div class="form-field">
@@ -1758,6 +1773,22 @@
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('modal-cadastro')" data-i18n="btn-cancel">Cancelar</button>
       <button class="btn-primary" id="cad-submit" data-i18n="btn-save">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CRIAÇÃO RÁPIDA (país/agente/banco/grupo, a partir de um dropdown
+     pesquisável — feature experimental, só em staging) -->
+<div class="modal-overlay" id="modal-quick-create" onclick="if(event.target===this)closeModal('modal-quick-create')">
+  <div class="modal-card" style="width:380px">
+    <div class="modal-header">
+      <div class="modal-title" id="qc-modal-title"></div>
+      <button class="modal-close" onclick="closeModal('modal-quick-create')">×</button>
+    </div>
+    <div class="modal-body" id="qc-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-quick-create')" data-i18n="btn-cancel">Cancelar</button>
+      <button class="btn-primary" id="qc-submit" data-i18n="btn-save">Salvar</button>
     </div>
   </div>
 </div>
@@ -2427,6 +2458,9 @@ const i18n = {
     'ph-crono-con-desc':'Calendário de conciliações e prazos por processador.',
     'lbl-nome':'Nome','lbl-pais-vinculo':'País vinculado',
     'cad-pais-modal':'Adicionar país','cad-agente-modal':'Adicionar agente','cad-banco-modal':'Adicionar banco','cad-proc-modal':'Adicionar processador',
+    'btn-criar-novo':'Criar novo','grupo-criar-titulo':'Criar conciliação agrupada','lbl-conc-agrupada':'Conciliação agrupada','lbl-conc-grupo':'Grupo',
+    'qc-criado-sucesso':'{nome} criado(a) com sucesso','err-selecione-grupo':'Selecione um grupo','cad-dup-pais':'País já cadastrado como',
+    'grupo-n-conciliacoes-1':'{n} conciliação','grupo-n-conciliacoes-n':'{n} conciliações',
     'edit-cad-pais-modal':'Editar país','edit-cad-agente-modal':'Editar agente','edit-cad-banco-modal':'Editar banco','edit-cad-proc-modal':'Editar processador',
     'cad-banco-resp-excl':'Responsável exclusivo por banco?','cad-proc-resp-excl':'Responsável exclusivo por processador?',
     'nav-processadores':'Processadores',
@@ -2651,6 +2685,9 @@ const i18n = {
     'ph-crono-con-desc':'Reconciliation calendar and deadlines by processor.',
     'lbl-nome':'Name','lbl-pais-vinculo':'Linked country',
     'cad-pais-modal':'Add country','cad-agente-modal':'Add agent','cad-banco-modal':'Add bank','cad-proc-modal':'Add processor',
+    'btn-criar-novo':'Create new','grupo-criar-titulo':'Create grouped reconciliation','lbl-conc-agrupada':'Grouped reconciliation','lbl-conc-grupo':'Group',
+    'qc-criado-sucesso':'{nome} created successfully','err-selecione-grupo':'Select a group','cad-dup-pais':'Country already registered as',
+    'grupo-n-conciliacoes-1':'{n} reconciliation','grupo-n-conciliacoes-n':'{n} reconciliations',
     'edit-cad-pais-modal':'Edit country','edit-cad-agente-modal':'Edit agent','edit-cad-banco-modal':'Edit bank','edit-cad-proc-modal':'Edit processor',
     'cad-banco-resp-excl':'Exclusive bank manager?','cad-proc-resp-excl':'Exclusive processor manager?',
     'nav-processadores':'Processors',
@@ -2868,6 +2905,9 @@ const i18n = {
     'ph-crono-con-desc':'Calendario de conciliaciones y plazos por procesador.',
     'lbl-nome':'Nombre','lbl-pais-vinculo':'País vinculado',
     'cad-pais-modal':'Agregar país','cad-agente-modal':'Agregar agente','cad-banco-modal':'Agregar banco','cad-proc-modal':'Agregar procesador',
+    'btn-criar-novo':'Crear nuevo','grupo-criar-titulo':'Crear conciliación agrupada','lbl-conc-agrupada':'Conciliación agrupada','lbl-conc-grupo':'Grupo',
+    'qc-criado-sucesso':'{nome} creado(a) con éxito','err-selecione-grupo':'Seleccione un grupo','cad-dup-pais':'País ya registrado como',
+    'grupo-n-conciliacoes-1':'{n} conciliación','grupo-n-conciliacoes-n':'{n} conciliaciones',
     'edit-cad-pais-modal':'Editar país','edit-cad-agente-modal':'Editar agente','edit-cad-banco-modal':'Editar banco','edit-cad-proc-modal':'Editar procesador',
     'cad-banco-resp-excl':'¿Responsable exclusivo por banco?','cad-proc-resp-excl':'¿Responsable exclusivo por procesador?',
     'nav-processadores':'Procesadores',
@@ -3087,7 +3127,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='c8aac060e7f2';
+const APP_VERSION='7d49c1496087';
 
 // ─── STORE ───────────────────────────────────────────────────────
 const store = {
@@ -3137,6 +3177,155 @@ const store = {
   liquidacoesExcluidos:{},
   slackConfig:{},
 };
+
+// ─── DROPDOWN PESQUISÁVEL DE SELEÇÃO ÚNICA (+ criar novo) ──────────
+// Componente genérico usado nos campos País/Agente/Banco/Grupo (feature
+// experimental, só ativa em staging — ver _currentEnv==='staging' nos pontos
+// de uso). Reaproveita o elemento original (select ou input hidden, mesmo id
+// de sempre) como única fonte de verdade do valor — todo código existente
+// que lê document.getElementById(id).value continua funcionando sem
+// alteração; o combo só sobrepõe uma UI de busca por cima dele.
+let _ssState={};
+function _ssFieldHtml(fieldId,placeholder){
+  return `<div class="ss-wrap" id="${fieldId}-wrap">
+    <div class="ss-row">
+      <input type="text" class="ss-input" id="${fieldId}-input" placeholder="${placeholder}" autocomplete="off" oninput="_ssRender('${fieldId}')" onfocus="_ssOpen('${fieldId}')">
+      <button type="button" class="ss-add-btn" onclick="_ssCreateNew('${fieldId}')" title="${t('btn-criar-novo')}">+</button>
+    </div>
+    <div class="ss-dropdown" id="${fieldId}-list"></div>
+    <input type="hidden" id="${fieldId}">
+  </div>`;
+}
+// Variante sem o input hidden — usada quando o combo é montado POR CIMA de
+// um elemento já existente (ex.: um <select> estático que continua sendo a
+// fonte da verdade do valor, ver _ssMountOverSelect).
+function _ssFieldHtmlBare(fieldId,placeholder){
+  return `<div class="ss-wrap" id="${fieldId}-wrap">
+    <div class="ss-row">
+      <input type="text" class="ss-input" id="${fieldId}-input" placeholder="${placeholder}" autocomplete="off" oninput="_ssRender('${fieldId}')" onfocus="_ssOpen('${fieldId}')">
+      <button type="button" class="ss-add-btn" onclick="_ssCreateNew('${fieldId}')" title="${t('btn-criar-novo')}">+</button>
+    </div>
+    <div class="ss-dropdown" id="${fieldId}-list"></div>
+  </div>`;
+}
+// Esconde o elemento original (select estático) e monta o combo num
+// container irmão vazio — só em staging; fora disso deixa tudo como sempre
+// foi (select visível, container escondido).
+function _ssMountOverSelect(fieldId,containerId,placeholder){
+  const sel=document.getElementById(fieldId);
+  const container=document.getElementById(containerId);
+  if(!sel||!container) return;
+  if(_currentEnv!=='staging'){ sel.style.display=''; container.style.display='none'; return; }
+  sel.style.display='none';
+  container.style.display='';
+  if(!container.dataset.ssMounted){
+    container.innerHTML=_ssFieldHtmlBare(fieldId,placeholder);
+    container.dataset.ssMounted='1';
+  }
+}
+function _ssInit(fieldId,options,{onSelect=null,onCreateNew=null}={}){
+  _ssState[fieldId]={options,onSelect,onCreateNew};
+}
+function _ssSetValue(fieldId,value){
+  const hidden=document.getElementById(fieldId);
+  if(hidden) hidden.value=value||'';
+  const input=document.getElementById(fieldId+'-input');
+  if(input){
+    const opt=(_ssState[fieldId]?.options||[]).find(o=>o.value===value);
+    input.value=opt?opt.label:'';
+  }
+}
+function _ssRender(fieldId){
+  const st=_ssState[fieldId];
+  const list=document.getElementById(fieldId+'-list');
+  if(!st||!list) return;
+  const q=(document.getElementById(fieldId+'-input')?.value||'').toLowerCase();
+  const filtered=st.options.filter(o=>o.label.toLowerCase().includes(q));
+  list.innerHTML=filtered.length?filtered.map(o=>`<div class="ss-item" onclick="_ssSelect('${fieldId}','${String(o.value).replace(/'/g,"\\'")}')">${o.label}</div>`).join(''):`<div class="ss-empty">${t('empty-nenhum-resultado')}</div>`;
+}
+function _ssOpen(fieldId){
+  document.querySelectorAll('.ss-dropdown').forEach(d=>{ if(d.id!==fieldId+'-list') d.style.display='none'; });
+  const list=document.getElementById(fieldId+'-list');
+  if(!list) return;
+  list.style.display='';
+  _ssRender(fieldId);
+}
+function _ssSelect(fieldId,value){
+  _ssSetValue(fieldId,value);
+  const list=document.getElementById(fieldId+'-list');
+  if(list) list.style.display='none';
+  _ssState[fieldId]?.onSelect?.(value);
+}
+function _ssCreateNew(fieldId){
+  _ssState[fieldId]?.onCreateNew?.();
+}
+document.addEventListener('click',e=>{
+  document.querySelectorAll('.ss-wrap').forEach(w=>{
+    if(!w.contains(e.target)){ const d=w.querySelector('.ss-dropdown'); if(d) d.style.display='none'; }
+  });
+});
+
+// ─── MODAL DE CRIAÇÃO RÁPIDA (país/agente/banco/grupo, a partir do combo) ──
+let _qcCtx=null;
+function _qcOpen(kind,fieldId,afterCreate){
+  _qcCtx={kind,fieldId,afterCreate};
+  const titleEl=document.getElementById('qc-modal-title');
+  const body=document.getElementById('qc-modal-body');
+  if(!titleEl||!body) return;
+  const paisOpts=store.paises.map(p=>`<option value="${p}">${countryFlag(p)} ${p}</option>`).join('');
+  if(kind==='pais'){
+    titleEl.textContent=t('cad-pais-modal');
+    body.innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="qc-nome" placeholder="Ex: Bolivia"></div>`;
+  } else if(kind==='agente'){
+    titleEl.textContent=t('cad-agente-modal');
+    body.innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="qc-nome" placeholder="Ex: BO.Cowgromo"></div>
+      <div class="form-field"><label class="form-label">${t('lbl-pais-vinculo')}<span class="req">*</span></label><select class="form-select" id="qc-pais"><option value="">${t('sel-select')}</option>${paisOpts}</select></div>`;
+  } else if(kind==='banco'){
+    titleEl.textContent=t('cad-banco-modal');
+    body.innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="qc-nome" placeholder="Ex: Banco do Brasil"></div>`;
+  } else if(kind==='grupo'){
+    titleEl.textContent=t('grupo-criar-titulo');
+    body.innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="qc-nome" placeholder="Ex: Chile"></div>
+      <div class="form-field"><label class="form-label">${t('lbl-pais')}<span class="req">*</span></label><select class="form-select" id="qc-pais"><option value="">${t('sel-select')}</option>${paisOpts}</select></div>`;
+  }
+  document.getElementById('qc-submit').onclick=_qcSubmit;
+  openModal('modal-quick-create');
+  setTimeout(()=>document.getElementById('qc-nome')?.focus(),50);
+}
+function _qcSubmit(){
+  if(!_qcCtx) return;
+  const {kind,fieldId,afterCreate}=_qcCtx;
+  const nomeEl=document.getElementById('qc-nome');
+  const nome=(nomeEl?.value||'').trim();
+  nomeEl?.classList.remove('err');
+  if(!nome){ nomeEl?.classList.add('err'); return; }
+  let newValue=nome;
+  if(kind==='pais'){
+    const dup=store.paises.find(p=>_normNome(p)===_normNome(nome));
+    if(dup){ nomeEl.classList.add('err'); _toast(`⚠️ ${t('cad-dup-pais')} "${dup}"`,4000); return; }
+    store.paises.push(nome);
+    saveStore(); _fbSync('paises');
+  } else if(kind==='agente'){
+    const pais=document.getElementById('qc-pais')?.value||'';
+    if(!pais){ document.getElementById('qc-pais')?.classList.add('err'); return; }
+    store.agentes.push({nome,pais,responsavel:''});
+    saveStore(); _fbSync('agentes');
+  } else if(kind==='banco'){
+    if(!store.bancos.includes(nome)) store.bancos.push(nome);
+    saveStore(); _fbSync('bancos');
+  } else if(kind==='grupo'){
+    const pais=document.getElementById('qc-pais')?.value||'';
+    if(!pais){ document.getElementById('qc-pais')?.classList.add('err'); return; }
+    const g={id:'grp_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),nome,pais};
+    store.gruposConciliacao.push(g);
+    saveStore(); _fbSync('gruposConciliacao');
+    newValue=g.id;
+  }
+  closeModal('modal-quick-create');
+  _toast(`✓ ${t('qc-criado-sucesso').replace('{nome}',nome)}`,2500);
+  _qcCtx=null;
+  afterCreate?.(newValue);
+}
 
 // ─── NAVIGATION ───────────────────────────────────────────────────
 const pagesMeta = {
@@ -3308,6 +3497,11 @@ function openEditAccount(idx){
   onAccountPaisChange();
   document.getElementById('acc-agente').value=c.agente;
   document.getElementById('acc-banco').value=c.banco;
+  if(_currentEnv==='staging'){
+    _ssSetValue('acc-pais',c.pais);
+    _ssSetValue('acc-agente',c.agente);
+    _ssSetValue('acc-banco',c.banco);
+  }
   document.getElementById('acc-sigla').value=c.sigla;
   document.getElementById('acc-num-conta').value=c.numeroConta||'';
   document.getElementById('acc-agencia').value=c.agencia||'';
@@ -3326,6 +3520,7 @@ function resetAccountForm(){
   pSel.innerHTML=`<option value="">${t('sel-select')}</option>`;
   store.paises.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=countryFlag(p)+' '+p; pSel.appendChild(o); });
   pSel.value='';
+  _refreshAccPaisCombo('');
   refreshAgenteBanco('');
   // clear text fields
   document.getElementById('acc-sigla').value='';
@@ -3340,6 +3535,11 @@ function resetAccountForm(){
 }
 function onConcPaisChange(){
   const pais=document.getElementById('conc-pais')?.value||'';
+  if(_currentEnv==='staging'){
+    _refreshConcAgenteCombo(pais,document.getElementById('conc-agente')?.value||'');
+    renderConcVincList();
+    return;
+  }
   const aSel=document.getElementById('conc-agente');
   if(!aSel) return;
   const agentes=pais?store.agentes.filter(a=>a.pais===pais):store.agentes;
@@ -3352,11 +3552,85 @@ function onConcPaisChange(){
   if(prev&&agentes.some(a=>a.nome===prev)) aSel.value=prev;
   renderConcVincList();
 }
+// ─── Combos pesquisáveis do modal de Conciliação (staging) ─────────
+function _refreshConcPaisCombo(selected){
+  _ssInit('conc-pais',store.paises.map(p=>({value:p,label:countryFlag(p)+' '+p})),{
+    onSelect:()=>onConcPaisChange(),
+    onCreateNew:()=>_qcOpen('pais','conc-pais',val=>{ _refreshConcPaisCombo(val); onConcPaisChange(); })
+  });
+  _ssSetValue('conc-pais',selected);
+}
+function _refreshConcAgenteCombo(pais,selected){
+  const agentes=(pais?store.agentes.filter(a=>a.pais===pais):store.agentes).slice().sort((a,b)=>a.nome.localeCompare(b.nome));
+  const kept=selected&&agentes.some(a=>a.nome===selected)?selected:'';
+  _ssInit('conc-agente',agentes.map(a=>({value:a.nome,label:a.nome})),{
+    onSelect:()=>renderConcVincList(),
+    onCreateNew:()=>_qcOpen('agente','conc-agente',val=>{
+      _refreshConcAgenteCombo(document.getElementById('conc-pais')?.value||pais,val);
+      renderConcVincList();
+    })
+  });
+  _ssSetValue('conc-agente',kept);
+}
+function _refreshConcGrupoCombo(selected){
+  _ssInit('conc-grupo',(store.gruposConciliacao||[]).map(g=>({value:g.id,label:`${g.nome} (${g.pais})`})),{
+    onCreateNew:()=>_qcOpen('grupo','conc-grupo',val=>_refreshConcGrupoCombo(val))
+  });
+  _ssSetValue('conc-grupo',selected);
+}
+function _toggleConcAgrupada(on){
+  const wrap=document.getElementById('conc-grupo-wrap');
+  if(wrap) wrap.style.display=on?'':'none';
+}
 function onAccountPaisChange(){
   const pais=document.getElementById('acc-pais').value;
   refreshAgenteBanco(pais);
   document.getElementById('acc-agencia-field').style.display=pais==='Brasil'?'':'none';
   if(pais!=='Brasil') document.getElementById('acc-agencia').value='';
+}
+// ─── Combos pesquisáveis do modal de Conta (staging) ───────────────
+// Mesmo princípio do modal de Conciliação: o <select> nativo continua sendo
+// populado e é a fonte da verdade de .value (lido em submitAccountForm sem
+// nenhuma alteração) — o combo só sobrepõe uma UI de busca por cima dele,
+// e o "+ criar novo" adiciona a opção nova no select antes de selecioná-la.
+function _refreshAccPaisCombo(selected){
+  if(_currentEnv!=='staging') return;
+  _ssMountOverSelect('acc-pais','acc-pais-ss',t('sel-select'));
+  _ssInit('acc-pais',store.paises.map(p=>({value:p,label:countryFlag(p)+' '+p})),{
+    onSelect:()=>onAccountPaisChange(),
+    onCreateNew:()=>_qcOpen('pais','acc-pais',val=>{
+      const pSel=document.getElementById('acc-pais');
+      const o=document.createElement('option'); o.value=val; o.textContent=countryFlag(val)+' '+val; pSel.appendChild(o);
+      pSel.value=val;
+      _refreshAccPaisCombo(val);
+      onAccountPaisChange();
+    })
+  });
+  _ssSetValue('acc-pais',selected!==undefined?selected:(document.getElementById('acc-pais')?.value||''));
+}
+function _refreshAccAgenteBancoCombo(pais){
+  if(_currentEnv!=='staging') return;
+  _ssMountOverSelect('acc-agente','acc-agente-ss',t('sel-select'));
+  _ssMountOverSelect('acc-banco','acc-banco-ss',t('sel-select'));
+  const agentes=pais?store.agentes.filter(a=>a.pais===pais):store.agentes;
+  _ssInit('acc-agente',agentes.map(a=>({value:a.nome,label:a.nome})),{
+    onCreateNew:()=>_qcOpen('agente','acc-agente',val=>{
+      const aSel=document.getElementById('acc-agente');
+      const o=document.createElement('option'); o.value=val; o.textContent=val; aSel.appendChild(o);
+      aSel.value=val;
+      _refreshAccAgenteBancoCombo(document.getElementById('acc-pais')?.value||pais);
+    })
+  });
+  _ssSetValue('acc-agente',document.getElementById('acc-agente')?.value||'');
+  _ssInit('acc-banco',store.bancos.map(b=>({value:b,label:b})),{
+    onCreateNew:()=>_qcOpen('banco','acc-banco',val=>{
+      const bSel=document.getElementById('acc-banco');
+      const o=document.createElement('option'); o.value=val; o.textContent=val; bSel.appendChild(o);
+      bSel.value=val;
+      _refreshAccAgenteBancoCombo(document.getElementById('acc-pais')?.value||pais);
+    })
+  });
+  _ssSetValue('acc-banco',document.getElementById('acc-banco')?.value||'');
 }
 function refreshAgenteBanco(pais){
   const aSel=document.getElementById('acc-agente');
@@ -3367,6 +3641,7 @@ function refreshAgenteBanco(pais){
   agentes.forEach(a=>{ const o=document.createElement('option'); o.value=a.nome; o.textContent=a.nome; aSel.appendChild(o); });
   bSel.innerHTML=`<option value="">${t('sel-select')}</option>`;
   bancos.forEach(b=>{ const o=document.createElement('option'); o.value=b; o.textContent=b; bSel.appendChild(o); });
+  _refreshAccAgenteBancoCombo(pais);
 }
 function submitAccountForm(){
   const pais=document.getElementById('acc-pais').value;
@@ -6184,7 +6459,7 @@ function saveStore(){
   const _ls={paises:store.paises,agentes:store.agentes,bancos:store.bancos,processadores:store.processadores,
     responsaveis:store.responsaveis,contas:store.contas,
     cronogramaData:store.cronogramaData,cierreData:store.cierreData,
-    conciliacoes:store.conciliacoes,cronogramaConciliacoes:store.cronogramaConciliacoes,
+    conciliacoes:store.conciliacoes,cronogramaConciliacoes:store.cronogramaConciliacoes,gruposConciliacao:store.gruposConciliacao,
     paisesResp:store.paisesResp,bancosResp:store.bancosResp,processadoresResp:store.processadoresResp,conciliacoesPrioridade:store.conciliacoesPrioridade,
     volumeRankings:store.volumeRankings,volumeColumnMapping:store.volumeColumnMapping,concilVolumeMap:store.concilVolumeMap,
     liquidacoesConfig:store.liquidacoesConfig,liquidacoesStatus:store.liquidacoesStatus,liquidacoesManual:store.liquidacoesManual,liquidacoesExcluidos:store.liquidacoesExcluidos,
@@ -6213,6 +6488,7 @@ function loadStore(){
     if(saved.cierreData) store.cierreData=saved.cierreData;
     if(saved.conciliacoes) store.conciliacoes=(Array.isArray(saved.conciliacoes)?saved.conciliacoes:Object.values(saved.conciliacoes)).filter(Boolean);
     if(saved.cronogramaConciliacoes) store.cronogramaConciliacoes=saved.cronogramaConciliacoes;
+    if(saved.gruposConciliacao) store.gruposConciliacao=(Array.isArray(saved.gruposConciliacao)?saved.gruposConciliacao:Object.values(saved.gruposConciliacao)).filter(Boolean);
     if(saved.paisesResp) store.paisesResp=saved.paisesResp;
     if(saved.bancosResp) store.bancosResp=saved.bancosResp;
     if(saved.processadoresResp) store.processadoresResp=saved.processadoresResp;
@@ -6416,6 +6692,7 @@ function _applyFbData(saved){
   if(saved.contas&&!_ownWrites.contas)store.contas=_fbArr(saved.contas).map(c=>({...c,status:c.status==='aberta'?'ativa':c.status}));
   if(saved.conciliacoes&&!_ownWrites.conciliacoes)store.conciliacoes=_fbArr(saved.conciliacoes);
   if(saved.cronogramaConciliacoes&&!_ownWrites.cronogramaConciliacoes)store.cronogramaConciliacoes=saved.cronogramaConciliacoes;
+  if(saved.gruposConciliacao&&!_ownWrites.gruposConciliacao)store.gruposConciliacao=_fbArr(saved.gruposConciliacao);
   if(saved.paisesResp&&!_ownWrites.paisesResp)store.paisesResp=saved.paisesResp;
   if(saved.bancosResp&&!_ownWrites.bancosResp)store.bancosResp=saved.bancosResp;
   if(saved.processadoresResp&&!_ownWrites.processadoresResp)store.processadoresResp=saved.processadoresResp;
@@ -9395,8 +9672,11 @@ function openConciliacaoModal(editIdx=-1){
     ${isLocked?`<div style="display:flex;align-items:center;gap:8px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#475569">🔒 ${t('conc-locked-edit-msg')}</div>`:''}
     <div id="conc-form-fields" style="${isLocked?'pointer-events:none;opacity:.55':''}">
     <div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="conc-nome" placeholder="Ex: Payout Mono Colprocesa" value="${conc.nome||''}"></div>
+    ${_currentEnv==='staging'?`
+    <div class="form-field"><label class="form-label">${t('lbl-pais')}</label>${_ssFieldHtml('conc-pais',t('sel-select'))}</div>
+    <div class="form-field"><label class="form-label">${t('lbl-agente')}</label>${_ssFieldHtml('conc-agente',t('sel-select'))}</div>`:`
     <div class="form-field"><label class="form-label">${t('lbl-pais')}</label><select class="form-select" id="conc-pais" onchange="onConcPaisChange()"><option value="">${t('sel-select')}</option>${paisOpts}</select></div>
-    <div class="form-field"><label class="form-label">${t('lbl-agente')}</label><select class="form-select" id="conc-agente" onchange="renderContasMSList()"><option value="">${t('sel-select')}</option>${agenteOpts}</select></div>
+    <div class="form-field"><label class="form-label">${t('lbl-agente')}</label><select class="form-select" id="conc-agente" onchange="renderContasMSList()"><option value="">${t('sel-select')}</option>${agenteOpts}</select></div>`}
     <div class="form-field"><label class="form-label">${t('lbl-freq')}</label>
       <select class="form-select" id="conc-freq">
         <option value="">${t('sel-select')}</option>
@@ -9413,6 +9693,20 @@ function openConciliacaoModal(editIdx=-1){
         <button type="button" id="tipo-controle-btn" class="op-type-toggle" onclick="toggleConcTipo('controle')">${t('tipo-controle')}</button>
       </div>
     </div>
+    ${_currentEnv==='staging'?`
+    <div class="form-field" style="border-top:1px solid var(--e-pale);padding-top:12px;margin-top:4px">
+      <div class="toggle-row">
+        <div class="toggle-info"><div class="toggle-title">${t('lbl-conc-agrupada')}</div></div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="conc-agrupada-toggle" onchange="_toggleConcAgrupada(this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div id="conc-grupo-wrap" style="display:none;margin-top:8px">
+        <label class="form-label">${t('lbl-conc-grupo')}<span class="req">*</span></label>
+        ${_ssFieldHtml('conc-grupo',t('sel-select'))}
+      </div>
+    </div>`:''}
     <div id="conc-vinc-wrap" class="form-field">
       <label class="form-label" id="conc-vinc-label">${t('conc-col-contas')}</label>
       <div class="contas-ms-wrap">
@@ -9460,12 +9754,23 @@ function openConciliacaoModal(editIdx=-1){
         </label>
       </div>
     </div>`:''}`;
-  if(conc.pais) setTimeout(()=>{const s=document.getElementById('conc-pais');if(s){s.value=conc.pais;onConcPaisChange();}},0);
-  if(conc.agente) setTimeout(()=>{const s=document.getElementById('conc-agente');if(s)s.value=conc.agente;},10);
+  if(_currentEnv!=='staging'){
+    if(conc.pais) setTimeout(()=>{const s=document.getElementById('conc-pais');if(s){s.value=conc.pais;onConcPaisChange();}},0);
+    if(conc.agente) setTimeout(()=>{const s=document.getElementById('conc-agente');if(s)s.value=conc.agente;},10);
+  }
   if(isEdit){const ec=document.getElementById('conc-encerrar');if(ec)ec.checked=conc.status==='encerrada';}
   setTimeout(()=>{
     // Tipo toggles
     _syncConcTipoUI();
+    if(_currentEnv==='staging'){
+      _refreshConcPaisCombo(conc.pais||'');
+      _refreshConcAgenteCombo(conc.pais||'',conc.agente||'');
+      const isAgrupada=!!conc.grupoId;
+      const agTog=document.getElementById('conc-agrupada-toggle');
+      if(agTog) agTog.checked=isAgrupada;
+      _toggleConcAgrupada(isAgrupada);
+      _refreshConcGrupoCombo(conc.grupoId||'');
+    }
     const _concObsEl=document.getElementById('conc-obs');
     if(_concObsEl){_concObsEl.style.height='auto';_concObsEl.style.height=_concObsEl.scrollHeight+'px';}
     renderConcVincList(); renderConcVincTags();
@@ -9646,6 +9951,16 @@ function submitConciliacao(){
   if(!nome){document.getElementById('conc-nome')?.classList.add('err');return;}
   const pais=document.getElementById('conc-pais')?.value||'';
   const agente=document.getElementById('conc-agente')?.value||'';
+  // Conciliação agrupada (feature experimental, só existe em staging — os
+  // elementos nem existem fora de _currentEnv==='staging', então isto some
+  // sozinho em produção).
+  const isAgrupada=document.getElementById('conc-agrupada-toggle')?.checked||false;
+  const grupoId=isAgrupada?(document.getElementById('conc-grupo')?.value||''):'';
+  if(isAgrupada&&!grupoId){
+    document.getElementById('conc-grupo-input')?.classList.add('err');
+    _toast(t('err-selecione-grupo'),3000);
+    return;
+  }
   const isControle=_tipoAtivosConc.includes('controle');
   const hasProc=_tipoAtivosConc.includes('processadores');
   const hasBancos=_tipoAtivosConc.includes('bancos');
@@ -9675,6 +9990,7 @@ function submitConciliacao(){
     // original se já estava encerrada); reabrir remove a data antiga.
     if(encerrado) _merged.dataEncerramento=(_oldConc.status==='encerrada'&&_oldConc.dataEncerramento)?_oldConc.dataEncerramento:Date.now();
     else delete _merged.dataEncerramento;
+    if(grupoId) _merged.grupoId=grupoId; else delete _merged.grupoId;
     store.conciliacoes[_editConcIdx]=_merged;
     concId=(store.conciliacoes[_editConcIdx].id||nome).replace(/['"]/g,'');
     // Migrar entrada do volume map se a chave mudou (renomeou sem id)
@@ -9684,7 +10000,9 @@ function submitConciliacao(){
     }
   } else {
     concId=nome.toLowerCase().replace(/[^a-z0-9]/g,'_')+'_'+Date.now();
-    store.conciliacoes.push({id:concId,nome,pais,agente,tipo,contas,processadores,obs,frequencia,createdAt:new Date(new Date().getFullYear(),new Date().getMonth(),1).getTime()});
+    const _novaConc={id:concId,nome,pais,agente,tipo,contas,processadores,obs,frequencia,createdAt:new Date(new Date().getFullYear(),new Date().getMonth(),1).getTime()};
+    if(grupoId) _novaConc.grupoId=grupoId;
+    store.conciliacoes.push(_novaConc);
   }
   if(!isEdit||_gatewayModified){
     // Nova conciliação: salva sempre. Edição: só salva se o usuário modificou gateways.
@@ -10944,6 +11262,39 @@ function _renderCronconcWarningsSummary(){
   </div>`;
   detail.style.display=_cronconcWarningsExpanded?'':'none';
 }
+// Conciliações agrupadas (feature experimental, só staging) — quais grupos
+// estão expandidos na tabela agora. Em memória só (reseta ao recarregar a
+// página), mesmo padrão de outros estados de UI efêmeros deste arquivo.
+let _expandedGrupos=new Set();
+function _toggleGrupoExpand(id){
+  if(_expandedGrupos.has(id)) _expandedGrupos.delete(id); else _expandedGrupos.add(id);
+  renderCronogramaConciliacoes();
+}
+// Linha-cabeçalho colapsável de um grupo: mesma quantidade de colunas de uma
+// linha normal (nome + colunas de info na ordem atual + um <td> por dia),
+// pra não quebrar o alinhamento da tabela. Volume é a soma do volume AO VIVO
+// de cada filha (mesmo _concVolumeStatus usado na coluna normal) — não entra
+// no cálculo de Prioridade/TOP, só é um total de exibição.
+function _renderGrupoHeaderRow(grupo,children,ri,_ord,numDays){
+  const isExpanded=_expandedGrupos.has(grupo.id);
+  const totalUsd=children.reduce((s,c)=>{
+    const st=_concVolumeStatus(c);
+    return s+(st.kind==='valor'?(parseFloat(st.text.replace(/[^0-9.]/g,''))||0):0);
+  },0);
+  const volHtml=totalUsd>0?'$'+Math.round(totalUsd).toLocaleString('en-US'):'<span style="color:var(--e-muted);font-size:11px">—</span>';
+  const colHtml=_ord.map(d=>{
+    if(d.k==='pais') return `<td class="sel-cell" style="font-size:12px">${grupo.pais?`${countryFlag(grupo.pais)} ${grupo.pais}`:'—'}</td>`;
+    if(d.k==='volume') return `<td class="sel-cell" style="font-size:11px;font-weight:700;color:var(--e-mid);text-align:right;padding-right:10px">${volHtml}</td>`;
+    if(d.k==='tipo') return `<td class="sel-cell" style="padding:4px 8px"><span class="chip chip-grey" style="font-size:10px">${tn('grupo-n-conciliacoes',children.length)}</span></td>`;
+    return `<td class="sel-cell" style="font-size:11px;color:var(--e-muted);text-align:center">—</td>`;
+  }).join('');
+  const dayCells='<td style="text-align:center;color:var(--e-muted)">·</td>'.repeat(numDays);
+  return `<tr class="row-grupo-header" onclick="_toggleGrupoExpand('${grupo.id}')" style="cursor:pointer;background:rgba(124,58,237,.07);font-weight:600">
+    <td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:700;white-space:nowrap">
+      <span style="display:inline-block;width:14px;color:var(--e-accent)">${isExpanded?'▼':'▶'}</span>📁 ${_esc(grupo.nome)}
+    </td>${colHtml}${dayCells}
+  </tr>`;
+}
 function renderCronogramaConciliacoes(){
   const emptyEl=document.getElementById('crono-conc-empty');
   const calWrap=document.getElementById('crono-conc-cal-wrap');
@@ -11184,7 +11535,34 @@ function renderCronogramaConciliacoes(){
     pendente:`<span class="chip chip-amber" style="font-size:10px">${t('status-pendente')}</span>`
   };
 
-  tbl.innerHTML=`<thead><tr>${colInfos}${dayHdrs}</tr></thead><tbody>${list.map((conc,ri)=>{
+  // Conciliações agrupadas (feature experimental, só staging): reordena a
+  // lista pra que as filhas de um mesmo grupo fiquem contíguas logo após uma
+  // linha-cabeçalho colapsável, em vez de espalhadas pela ordenação normal.
+  let displayList=list;
+  if(_currentEnv==='staging'&&(store.gruposConciliacao||[]).length){
+    const grupoById={};
+    store.gruposConciliacao.forEach(g=>{grupoById[g.id]=g;});
+    const childrenByGrupo={};
+    list.forEach(c=>{ if(c.grupoId&&grupoById[c.grupoId]) (childrenByGrupo[c.grupoId]=childrenByGrupo[c.grupoId]||[]).push(c); });
+    if(Object.keys(childrenByGrupo).length){
+      const seen=new Set();
+      displayList=[];
+      list.forEach(c=>{
+        if(c.grupoId&&grupoById[c.grupoId]){
+          if(seen.has(c.grupoId)) return;
+          seen.add(c.grupoId);
+          const grupo=grupoById[c.grupoId];
+          const children=childrenByGrupo[c.grupoId];
+          displayList.push({__isGrupo:true,__grupo:grupo,__children:children});
+          if(_expandedGrupos.has(grupo.id)) displayList.push(...children);
+        } else {
+          displayList.push(c);
+        }
+      });
+    }
+  }
+  tbl.innerHTML=`<thead><tr>${colInfos}${dayHdrs}</tr></thead><tbody>${displayList.map((conc,ri)=>{
+    if(conc.__isGrupo) return _renderGrupoHeaderRow(conc.__grupo,conc.__children,ri,_ord,days.length);
     const rEmail=_getConcilResp(conc);
     const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;
     const respCell=rUser?`<span style="font-family:monospace;font-size:10px;font-weight:700;background:rgba(151,111,244,.1);color:var(--e-mid);padding:1px 5px;border-radius:3px">${rUser.sigla}</span>`:'<span style="color:var(--e-muted);font-size:11px">—</span>';
@@ -11232,7 +11610,9 @@ function renderCronogramaConciliacoes(){
     const _concNomeInner=conc.obs?`<span data-link="${_esc(conc.obs)}" onmouseenter="showNoteTooltip(event,this)" onmouseleave="scheduleHideNoteTooltip()" style="pointer-events:auto">${_esc(conc.nome)}<sup style="color:var(--e-purple);font-size:7px;margin-left:1px">●</sup></span>`:_esc(conc.nome);
     const _freqCell=conc.frequencia?`<span class="chip" style="font-size:10px;background:var(--e-ghost);color:var(--e-mid);border:1px solid var(--e-pale)">${conc.frequencia}</span>`:`<span style="color:var(--e-muted);font-size:11px">—</span>`;
     const _ctx={respCell,priorCell,concTipoChipHtml,freqCell:_freqCell,d1ChipHtml};
-    return `<tr class="row-${conc.status||'ativa'}"><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:600;white-space:nowrap">${_concNomeInner}</td>${_ord.map((d,i)=>d.c(conc,ri,i+1,_ctx)).join('')}${cells}</tr>`;
+    const _isGrupoChild=_currentEnv==='staging'&&!!conc.grupoId;
+    const _nomeIndent=_isGrupoChild?'padding-left:26px;':'';
+    return `<tr class="row-${conc.status||'ativa'}${_isGrupoChild?' row-grupo-child':''}"><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:600;white-space:nowrap;${_nomeIndent}">${_concNomeInner}</td>${_ord.map((d,i)=>d.c(conc,ri,i+1,_ctx)).join('')}${cells}</tr>`;
   }).join('')}</tbody>`;
 
   if(calScrollEl){calScrollEl.scrollLeft=_savedSL;calScrollEl.scrollTop=_savedST;}
