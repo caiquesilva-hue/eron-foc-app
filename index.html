@@ -3959,7 +3959,10 @@ function initCronoFilters(){
   const at=document.getElementById('crono-anl-toggles');
   if(at){
     const activeAnlts=_sf?.anl?.length?_sf.anl:[...document.querySelectorAll('#crono-anl-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
-    at.innerHTML=store.responsaveis.map(r=>`<button class="freq-toggle${activeAnlts.includes(r.sigla)?' active':''}" data-resp="${r.sigla}" onclick="toggleAnlFilter(this)" title="${r.nome}">${r.sigla}</button>`).join('');
+    // Visualização nunca preenche uma célula do cronograma (só lê), então
+    // nunca aparece como sigla de um dia — não faz sentido oferecer esse
+    // usuário no filtro de Analista.
+    at.innerHTML=store.responsaveis.filter(r=>r.role!=='visualizacao').map(r=>`<button class="freq-toggle${activeAnlts.includes(r.sigla)?' active':''}" data-resp="${r.sigla}" onclick="toggleAnlFilter(this)" title="${r.nome}">${r.sigla}</button>`).join('');
     if(_sf?.anl?.length) setTimeout(_updateAnlLabel,0);
   }
 }
@@ -10082,7 +10085,10 @@ function _initConcFilters(){
   if(at&&!at.dataset.init){
     at.dataset.init='1';
     const savedAnl=_sf?.anl||[];
-    at.innerHTML=store.responsaveis.map(r=>`<button class="freq-toggle${savedAnl.includes(r.sigla)?' active':''}" data-resp="${r.sigla}" title="${r.nome}" onclick="this.classList.toggle('active');_updateConcAnlLabel();renderCronogramaConciliacoes()">${r.sigla}</button>`).join('');
+    // Visualização nunca preenche uma célula do cronograma (só lê), então
+    // nunca aparece como sigla de um dia — não faz sentido oferecer esse
+    // usuário no filtro de Analista.
+    at.innerHTML=store.responsaveis.filter(r=>r.role!=='visualizacao').map(r=>`<button class="freq-toggle${savedAnl.includes(r.sigla)?' active':''}" data-resp="${r.sigla}" title="${r.nome}" onclick="this.classList.toggle('active');_updateConcAnlLabel();renderCronogramaConciliacoes()">${r.sigla}</button>`).join('');
     if(savedAnl.length) setTimeout(_updateConcAnlLabel,0);
   }
 }
