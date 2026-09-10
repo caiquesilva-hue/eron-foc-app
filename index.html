@@ -3159,7 +3159,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='9ef352aaaf83';
+const APP_VERSION='c76e1b3572d0';
 
 // ─── STORE ───────────────────────────────────────────────────────
 const store = {
@@ -9899,7 +9899,7 @@ function openConciliacaoModal(editIdx=-1){
   const isLocked=isEdit&&conc.status==='encerrada';
   body.innerHTML=`
     ${isLocked?`<div style="display:flex;align-items:center;gap:8px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#475569">🔒 ${t('conc-locked-edit-msg')}</div>`:''}
-    <div id="conc-form-fields" style="${isLocked?'pointer-events:none;opacity:.55':''}">
+    <div id="conc-form-fields" style="display:flex;flex-direction:column;gap:26px;${isLocked?'pointer-events:none;opacity:.55':''}">
     <div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="conc-nome" placeholder="Ex: Payout Mono Colprocesa" value="${conc.nome||''}"></div>
     ${_currentEnv==='staging'?`
     <div class="form-row">
