@@ -682,7 +682,7 @@
         <div class="sb-item" data-page="cadastro-agente" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-agente">Agente</span></div>
         <div class="sb-item" data-page="cadastro-banco" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-banco">Banco</span></div>
         <div class="sb-item" data-page="cadastro-processadores" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-processadores">Processadores</span></div>
-        <div class="sb-item" data-page="cadastro-acessos" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-acessos">Acessos</span></div>
+        <div class="sb-item" data-page="cadastro-acessos" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-acessos">Acessos</span></div><div class="sb-item" id="sb-item-cadastro-modulos" data-page="cadastro-modulos" onclick="navigate(this.dataset.page)" style="display:none"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-modulos">Módulos</span></div>
       </div>
       <div class="sb-divider"></div>
       <!-- GERENCIAL (segundo) -->
@@ -1357,6 +1357,14 @@
         <div style="padding:0 0 10px"><input type="search" id="acessos-search" placeholder="Buscar nome, email, sigla..." data-i18n-placeholder="acessos-search-ph" style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderAcessos()"></div>
         <div class="table-wrap"><div id="acessos-empty" class="empty-state"><div class="empty-icon">👤</div><div class="empty-title" data-i18n="acessos-empty-title">Nenhum acesso cadastrado</div><div class="empty-sub" data-i18n="acessos-empty-sub">Adicione responsáveis que aparecerão no sistema.</div></div><div class="table-scroll" id="acessos-table-inner" style="display:none"><table><thead><tr><th data-i18n="lbl-nome">Nome</th><th data-i18n="col-email">Email</th><th style="width:60px" data-i18n="col-sigla">Sigla</th><th style="width:130px" data-i18n="col-perfil">Perfil</th><th style="width:110px" data-i18n="col-ambientes">Ambientes</th><th style="width:140px" data-i18n="col-status">Status</th><th style="width:130px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="acessos-tbody"></tbody></table></div></div>
       </div>
+    </div>
+    <!-- ── CADASTRO: MÓDULOS (habilita/desabilita por ambiente, só Super Admin) ── -->
+    <div class="page" id="page-cadastro-modulos">
+      <div class="page-header">
+        <div class="page-header-left"><div class="page-title-text" data-i18n="nav-modulos">Módulos</div></div>
+      </div>
+      <div class="empty-sub" style="margin-bottom:16px;max-width:560px" data-i18n="modulos-desc">Escolha quais módulos ficam visíveis no menu deste ambiente. Cada ambiente (Eron/AstroPay/LimePay) tem sua própria configuração.</div>
+      <div id="modulos-list" style="max-width:560px;display:flex;flex-direction:column;gap:0"></div>
     </div>
     <!-- ── AUTOMAÇÕES: BAIXA AUTOMÁTICA ──────────────────────────── -->
     <div class="page" id="page-automacoes-baixa">
@@ -2445,6 +2453,7 @@ const i18n = {
     'col-tipo':'Frequência','col-tipo-conta':'Tipo','col-responsavel':'Responsável','col-status':'Status','col-actions':'Ações',
     'crono-all-paises':'Todos os países','crono-all-agentes':'Todos os agentes','crono-all-bancos':'Todos os bancos','crono-all-freq':'Todas as freq.','crono-apply':'Aplicar','crono-empty':'Nenhuma conta para o período.',
     'nav-acessos':'Acessos','btn-add-acesso':'Adicionar acesso','acessos-empty-title':'Nenhum acesso cadastrado','acessos-empty-sub':'Adicione responsáveis que aparecerão no sistema.','acessos-no-perm':'Acesso restrito','acessos-no-perm-sub':'Somente o administrador pode gerenciar acessos.',
+    'nav-modulos':'Módulos','modulos-desc':'Escolha quais módulos ficam visíveis no menu deste ambiente. Cada ambiente (Eron/AstroPay/LimePay) tem sua própria configuração.',
     'col-email':'Email','col-perfil':'Perfil','col-ambientes':'Ambientes',
     'acessos-search-ph':'Buscar nome, email, sigla...','acessos-sem-senha':'Sem senha','acessos-ag-troca':'Aguardando troca','acessos-ativo':'Ativo',
     'count-acesso':'acesso','count-acessos':'acessos',
@@ -2672,6 +2681,7 @@ const i18n = {
     'col-tipo':'Frequency','col-tipo-conta':'Type','col-responsavel':'Responsible','col-status':'Status','col-actions':'Actions',
     'crono-all-paises':'All countries','crono-all-agentes':'All agents','crono-all-bancos':'All banks','crono-all-freq':'All freq.','crono-apply':'Apply','crono-empty':'No accounts for this period.',
     'nav-acessos':'Access','btn-add-acesso':'Add access','acessos-empty-title':'No access registered','acessos-empty-sub':'Add users who will appear in the system.','acessos-no-perm':'Restricted access','acessos-no-perm-sub':'Only the administrator can manage access.',
+    'nav-modulos':'Modules','modulos-desc':'Choose which modules are visible in the menu for this environment. Each environment (Eron/AstroPay/LimePay) has its own configuration.',
     'col-email':'Email','col-perfil':'Profile','col-ambientes':'Environments',
     'acessos-search-ph':'Search name, email, initials...','acessos-sem-senha':'No password','acessos-ag-troca':'Awaiting change','acessos-ativo':'Active',
     'count-acesso':'access','count-acessos':'accesses',
@@ -2892,6 +2902,7 @@ const i18n = {
     'col-tipo':'Frecuencia','col-tipo-conta':'Tipo','col-responsavel':'Responsable','col-status':'Estado','col-actions':'Acciones',
     'crono-all-paises':'Todos los países','crono-all-agentes':'Todos los agentes','crono-all-bancos':'Todos los bancos','crono-all-freq':'Todas las freq.','crono-apply':'Aplicar','crono-empty':'Sin cuentas para el período.',
     'nav-acessos':'Accesos','btn-add-acesso':'Agregar acceso','acessos-empty-title':'Sin accesos registrados','acessos-empty-sub':'Agrega usuarios que aparecerán en el sistema.','acessos-no-perm':'Acceso restringido','acessos-no-perm-sub':'Solo el administrador puede gestionar accesos.',
+    'nav-modulos':'Módulos','modulos-desc':'Elige qué módulos quedan visibles en el menú de este ambiente. Cada ambiente (Eron/AstroPay/LimePay) tiene su propia configuración.',
     'col-email':'Email','col-perfil':'Perfil','col-ambientes':'Entornos',
     'acessos-search-ph':'Buscar nombre, email, sigla...','acessos-sem-senha':'Sin contraseña','acessos-ag-troca':'Esperando cambio','acessos-ativo':'Activo',
     'count-acesso':'acceso','count-acessos':'accesos',
@@ -3133,7 +3144,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='4d417bca1c68';
+const APP_VERSION='6cb57bbb1967';
 
 // ─── STORE ───────────────────────────────────────────────────────
 const store = {
@@ -3166,6 +3177,11 @@ const store = {
   // só ativa em staging (_currentEnv==='staging'). Conciliações "filhas"
   // apontam pra um grupo via conc.grupoId.
   gruposConciliacao:[],
+  // Quais módulos (itens do menu) ficam visíveis NESTE ambiente — chave é o
+  // data-page do item, valor false esconde. Ausência de chave = habilitado
+  // (padrão). Cada ambiente (eron/astropay/limepay/staging) tem seu próprio
+  // store, então essa config já é por ambiente de graça, sem plumbing extra.
+  moduleConfig:{},
   processadores:[],
   paisesResp:{},bancosResp:{},processadoresResp:{},
   conciliacoesPrioridade:{},
@@ -3383,11 +3399,52 @@ const pagesMeta = {
   'cadastro-banco':{parentKey:'nav-cadastro',labelKey:'nav-banco'},
   'cadastro-processadores':{parentKey:'nav-cadastro',labelKey:'nav-processadores'},
   'cadastro-acessos':{parentKey:'nav-cadastro',labelKey:'nav-acessos'},
+  'cadastro-modulos':{parentKey:'nav-cadastro',labelKey:'nav-modulos'},
 };
+// Módulos que um Super Admin pode ligar/desligar por ambiente (Cadastro >
+// Módulos) — cada ambiente tem seu próprio store, então a config já nasce
+// isolada por ambiente sem plumbing extra. Cadastro (País/Agente/Banco/
+// Processadores/Acessos) fica de fora de propósito: é dado de referência
+// básico, não faz sentido desabilitar por ambiente.
+const MODULE_TOGGLE_KEYS=['gerencial-accounts','gerencial-custos','gerencial-conciliacoes','cronograma-accounts','cronograma-cierre','cronograma-custos','cronograma-conciliacoes','automacoes-baixa','automacoes-fechamentos'];
+function isModuleEnabled(pageId){ return (store.moduleConfig||{})[pageId]!==false; }
+function _applyModuleVisibility(){
+  MODULE_TOGGLE_KEYS.forEach(pageId=>{
+    const item=document.querySelector('.sb-item[data-page="'+pageId+'"]');
+    if(item) item.style.display=isModuleEnabled(pageId)?'':'none';
+  });
+}
+function renderCadastroModulos(){
+  const list=document.getElementById('modulos-list');
+  if(!list) return;
+  let lastParent=null;
+  list.innerHTML=MODULE_TOGGLE_KEYS.map(pageId=>{
+    const meta=pagesMeta[pageId];
+    const enabled=isModuleEnabled(pageId);
+    const sectionHtml=meta.parentKey!==lastParent?`<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--e-muted);margin:${lastParent?'18px':'0'} 0 4px">${t(meta.parentKey)}</div>`:'';
+    lastParent=meta.parentKey;
+    return `${sectionHtml}<div class="toggle-row" style="padding:10px 0;border-bottom:1px solid var(--e-pale)">
+      <div class="toggle-info"><div class="toggle-title" style="color:var(--e-text)">${t(meta.labelKey)}</div></div>
+      <label class="toggle-switch">
+        <input type="checkbox" ${enabled?'checked':''} onchange="_toggleModuleConfig('${pageId}',this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>`;
+  }).join('');
+}
+function _toggleModuleConfig(pageId,enabled){
+  if(!store.moduleConfig) store.moduleConfig={};
+  if(enabled) delete store.moduleConfig[pageId]; else store.moduleConfig[pageId]=false;
+  saveStore(); _fbSync('moduleConfig');
+  _applyModuleVisibility();
+  logAudit('cadastro-modulos',enabled?'habilitar':'desabilitar',{pageId});
+}
 function navigate(pageId){
   if(pageId==='cadastro-acessos'&&!canViewAcessos()) return;
+  if(pageId==='cadastro-modulos'&&!isSuperAdmin()) return;
   if(pageId==='automacoes-baixa'&&!['eron','staging'].includes(_currentEnv)) return;
   if(pageId==='automacoes-fechamentos'&&!['eron','staging'].includes(_currentEnv)) return;
+  if(!isModuleEnabled(pageId)) return;
   document.querySelectorAll('.page').forEach(el=>{el.classList.remove('active');el.style.display='';});
   document.querySelectorAll('.sb-item[data-page]').forEach(el=>el.classList.remove('active'));
   document.getElementById('page-'+pageId).classList.add('active');
@@ -3395,6 +3452,7 @@ function navigate(pageId){
   if(item) item.classList.add('active');
   currentPageId=pageId;
   updateBreadcrumb();
+  if(pageId==='cadastro-modulos'){ renderCadastroModulos(); }
   if(pageId==='cronograma-accounts'){ _applyPendingFilters('crono'); initCronoFilters(); initCronoDates(); renderCronogramaAccounts(); }
   if(pageId==='cronograma-cierre'){ initCierreFilters(); renderCierreTable(); }
   if(pageId==='cronograma-conciliacoes'){
@@ -3474,6 +3532,9 @@ function updateSidebarForRole(){
   // Show/hide Acessos in sidebar
   const acessosItem=document.querySelector('.sb-item[data-page="cadastro-acessos"]');
   if(acessosItem) acessosItem.style.display=canViewAcessos()?'':'none';
+  // Módulos (habilitar/desabilitar seções por ambiente) — só Super Admin.
+  const modulosItem=document.getElementById('sb-item-cadastro-modulos');
+  if(modulosItem) modulosItem.style.display=isSuperAdmin()?'':'none';
   // Show/hide edit action buttons
   document.querySelectorAll('[data-requires-edit]').forEach(el=>{
     const isInline=el.tagName==='BUTTON'&&el.classList.contains('btn-bulk-apply');
@@ -6499,7 +6560,7 @@ function saveStore(){
   const _ls={paises:store.paises,agentes:store.agentes,bancos:store.bancos,processadores:store.processadores,
     responsaveis:store.responsaveis,contas:store.contas,
     cronogramaData:store.cronogramaData,cierreData:store.cierreData,
-    conciliacoes:store.conciliacoes,cronogramaConciliacoes:store.cronogramaConciliacoes,gruposConciliacao:store.gruposConciliacao,
+    conciliacoes:store.conciliacoes,cronogramaConciliacoes:store.cronogramaConciliacoes,gruposConciliacao:store.gruposConciliacao,moduleConfig:store.moduleConfig,
     paisesResp:store.paisesResp,bancosResp:store.bancosResp,processadoresResp:store.processadoresResp,conciliacoesPrioridade:store.conciliacoesPrioridade,
     volumeRankings:store.volumeRankings,volumeColumnMapping:store.volumeColumnMapping,concilVolumeMap:store.concilVolumeMap,
     liquidacoesConfig:store.liquidacoesConfig,liquidacoesStatus:store.liquidacoesStatus,liquidacoesManual:store.liquidacoesManual,liquidacoesExcluidos:store.liquidacoesExcluidos,
@@ -6529,6 +6590,7 @@ function loadStore(){
     if(saved.conciliacoes) store.conciliacoes=(Array.isArray(saved.conciliacoes)?saved.conciliacoes:Object.values(saved.conciliacoes)).filter(Boolean);
     if(saved.cronogramaConciliacoes) store.cronogramaConciliacoes=saved.cronogramaConciliacoes;
     if(saved.gruposConciliacao) store.gruposConciliacao=(Array.isArray(saved.gruposConciliacao)?saved.gruposConciliacao:Object.values(saved.gruposConciliacao)).filter(Boolean);
+    if(saved.moduleConfig) store.moduleConfig=saved.moduleConfig;
     if(saved.paisesResp) store.paisesResp=saved.paisesResp;
     if(saved.bancosResp) store.bancosResp=saved.bancosResp;
     if(saved.processadoresResp) store.processadoresResp=saved.processadoresResp;
@@ -6733,6 +6795,7 @@ function _applyFbData(saved){
   if(saved.conciliacoes&&!_ownWrites.conciliacoes)store.conciliacoes=_fbArr(saved.conciliacoes);
   if(saved.cronogramaConciliacoes&&!_ownWrites.cronogramaConciliacoes)store.cronogramaConciliacoes=saved.cronogramaConciliacoes;
   if(saved.gruposConciliacao&&!_ownWrites.gruposConciliacao)store.gruposConciliacao=_fbArr(saved.gruposConciliacao);
+  if(saved.moduleConfig&&!_ownWrites.moduleConfig){store.moduleConfig=saved.moduleConfig;_applyModuleVisibility();}
   if(saved.paisesResp&&!_ownWrites.paisesResp)store.paisesResp=saved.paisesResp;
   if(saved.bancosResp&&!_ownWrites.bancosResp)store.bancosResp=saved.bancosResp;
   if(saved.processadoresResp&&!_ownWrites.processadoresResp)store.processadoresResp=saved.processadoresResp;
@@ -8921,6 +8984,7 @@ function _updateStagingBanner(){
 function _updateEnvSwitcher(){
   _updateStagingBanner();
   _updateAutomacoesVisibility();
+  _applyModuleVisibility();
   const wrap=document.getElementById('env-switcher-wrap');
   if(!wrap) return;
   const logU=store.responsaveis.find(r=>r.email===window._loggedEmail);
@@ -11978,7 +12042,7 @@ function submitConcBulkApply(){
   }
 }
 
-function renderAll(){ renderAccountsTable(); _applyPendingFilters('crono'); initCronoFilters(); initCronoDates(); renderCronogramaAccounts(); renderCadastro('pais'); renderCadastro('agente'); renderCadastro('banco'); renderCadastro('processadores'); renderAcessos(); renderGerencialConciliacoes(); renderCronogramaConciliacoes(); renderSlackConfig('accounts'); renderSlackConfig('conciliacoes'); }
+function renderAll(){ renderAccountsTable(); _applyPendingFilters('crono'); initCronoFilters(); initCronoDates(); renderCronogramaAccounts(); renderCadastro('pais'); renderCadastro('agente'); renderCadastro('banco'); renderCadastro('processadores'); renderAcessos(); renderCadastroModulos(); _applyModuleVisibility(); renderGerencialConciliacoes(); renderCronogramaConciliacoes(); renderSlackConfig('accounts'); renderSlackConfig('conciliacoes'); }
 
 // ─── COUNTS ───────────────────────────────────────────────────────
 function updateCounts(){
