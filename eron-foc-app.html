@@ -1344,6 +1344,16 @@
       <div class="table-wrap"><div id="proc-empty" class="empty-state"><div class="empty-icon">⚙️</div><div class="empty-title" data-i18n="proc-empty-title">Nenhum processador cadastrado</div><div class="empty-sub" data-i18n="proc-empty-sub">Adicione processadores ao sistema.</div></div><div class="table-scroll" id="proc-table-inner" style="display:none"><table><thead><tr><th data-i18n="nav-processadores">Processador</th><th data-i18n="col-resp-exclusivo">Responsável exclusivo</th><th style="width:70px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="proc-tbody"></tbody></table></div></div>
     </div>
 
+    <!-- CADASTRO > CONCILIAÇÕES AGRUPADAS (feature experimental, só staging) -->
+    <div class="page" id="page-cadastro-grupos">
+      <div class="page-header">
+        <div class="page-header-left"><div class="page-title-text" data-i18n="nav-grupos">Conciliações agrupadas</div><div class="page-title-count" id="grupo-count"></div></div>
+        <button class="btn-primary" onclick="openCadastroModal('grupo')" data-requires-edit><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn-add-grupo">Adicionar grupo</span></button>
+      </div>
+      <div style="padding:0 0 10px"><input type="search" id="cad-grupo-search" data-i18n-placeholder="cad-grupo-search-ph" placeholder="Pesquisar grupo..." style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderCadastro('grupo')"></div>
+      <div class="table-wrap"><div id="grupo-empty" class="empty-state"><div class="empty-icon">📁</div><div class="empty-title" data-i18n="grupo-empty-title">Nenhuma conciliação agrupada cadastrada</div><div class="empty-sub" data-i18n="grupo-empty-sub">Crie um grupo pra reunir várias conciliações sob uma linha única no Cronograma.</div></div><div class="table-scroll" id="grupo-table-inner" style="display:none"><table><thead><tr><th data-i18n="nav-grupos">Conciliação agrupada</th><th data-i18n="col-pais">País</th><th data-i18n="conc-col-resp">Responsável</th><th style="width:70px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="grupo-tbody"></tbody></table></div></div>
+    </div>
+
     <!-- CADASTRO > ACESSOS -->
     <div class="page" id="page-cadastro-acessos">
       <div class="page-header">
@@ -2478,6 +2488,7 @@ const i18n = {
     'btn-criar-novo':'Criar novo','grupo-criar-titulo':'Criar conciliação agrupada','lbl-conc-agrupada':'Conciliação agrupada','lbl-conc-grupo':'Grupo',
     'qc-criado-sucesso':'{nome} criado(a) com sucesso','err-selecione-grupo':'Selecione um grupo','cad-dup-pais':'País já cadastrado como',
     'grupo-n-conciliacoes-1':'{n} conciliação','grupo-n-conciliacoes-n':'{n} conciliações',
+    'nav-grupos':'Conciliações agrupadas','btn-add-grupo':'Adicionar grupo','cad-grupo-search-ph':'Pesquisar grupo...','grupo-empty-title':'Nenhuma conciliação agrupada cadastrada','grupo-empty-sub':'Crie um grupo pra reunir várias conciliações sob uma linha única no Cronograma.','cad-grupo-modal':'Adicionar conciliação agrupada','edit-cad-grupo-modal':'Editar conciliação agrupada','del-cadastro-label-grupo':'a conciliação agrupada',
     'edit-cad-pais-modal':'Editar país','edit-cad-agente-modal':'Editar agente','edit-cad-banco-modal':'Editar banco','edit-cad-proc-modal':'Editar processador',
     'cad-banco-resp-excl':'Responsável exclusivo por banco?','cad-proc-resp-excl':'Responsável exclusivo por processador?',
     'nav-processadores':'Processadores',
@@ -2706,6 +2717,7 @@ const i18n = {
     'btn-criar-novo':'Create new','grupo-criar-titulo':'Create grouped reconciliation','lbl-conc-agrupada':'Grouped reconciliation','lbl-conc-grupo':'Group',
     'qc-criado-sucesso':'{nome} created successfully','err-selecione-grupo':'Select a group','cad-dup-pais':'Country already registered as',
     'grupo-n-conciliacoes-1':'{n} reconciliation','grupo-n-conciliacoes-n':'{n} reconciliations',
+    'nav-grupos':'Grouped reconciliations','btn-add-grupo':'Add group','cad-grupo-search-ph':'Search group...','grupo-empty-title':'No grouped reconciliation registered','grupo-empty-sub':'Create a group to gather several reconciliations under a single collapsible row in the Schedule.','cad-grupo-modal':'Add grouped reconciliation','edit-cad-grupo-modal':'Edit grouped reconciliation','del-cadastro-label-grupo':'the grouped reconciliation',
     'edit-cad-pais-modal':'Edit country','edit-cad-agente-modal':'Edit agent','edit-cad-banco-modal':'Edit bank','edit-cad-proc-modal':'Edit processor',
     'cad-banco-resp-excl':'Exclusive bank manager?','cad-proc-resp-excl':'Exclusive processor manager?',
     'nav-processadores':'Processors',
@@ -2927,6 +2939,7 @@ const i18n = {
     'btn-criar-novo':'Crear nuevo','grupo-criar-titulo':'Crear conciliación agrupada','lbl-conc-agrupada':'Conciliación agrupada','lbl-conc-grupo':'Grupo',
     'qc-criado-sucesso':'{nome} creado(a) con éxito','err-selecione-grupo':'Seleccione un grupo','cad-dup-pais':'País ya registrado como',
     'grupo-n-conciliacoes-1':'{n} conciliación','grupo-n-conciliacoes-n':'{n} conciliaciones',
+    'nav-grupos':'Conciliaciones agrupadas','btn-add-grupo':'Agregar grupo','cad-grupo-search-ph':'Buscar grupo...','grupo-empty-title':'Ninguna conciliación agrupada registrada','grupo-empty-sub':'Crea un grupo para reunir varias conciliaciones bajo una sola fila colapsable en el Cronograma.','cad-grupo-modal':'Agregar conciliación agrupada','edit-cad-grupo-modal':'Editar conciliación agrupada','del-cadastro-label-grupo':'la conciliación agrupada',
     'edit-cad-pais-modal':'Editar país','edit-cad-agente-modal':'Editar agente','edit-cad-banco-modal':'Editar banco','edit-cad-proc-modal':'Editar procesador',
     'cad-banco-resp-excl':'¿Responsable exclusivo por banco?','cad-proc-resp-excl':'¿Responsable exclusivo por procesador?',
     'nav-processadores':'Procesadores',
@@ -3146,7 +3159,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='9bdd71b515b8';
+const APP_VERSION='bfa09aabd2ff';
 
 // ─── STORE ───────────────────────────────────────────────────────
 const store = {
@@ -3385,7 +3398,8 @@ function _qcSubmit(){
   } else if(kind==='grupo'){
     const pais=document.getElementById('qc-pais')?.value||'';
     if(!pais){ document.getElementById('qc-pais')?.classList.add('err'); return; }
-    const g={id:'grp_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),nome,pais};
+    const responsavel=document.getElementById('qc-responsavel')?.value||'';
+    const g={id:'grp_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),nome,pais,responsavel};
     store.gruposConciliacao.push(g);
     saveStore(); _fbSync('gruposConciliacao');
     newValue=g.id;
@@ -4099,14 +4113,22 @@ function openCadastroModal(type, editIdx=-1){
   cadastroType=type;
   _editCadIdx=editIdx;
   const isEdit=editIdx>=0;
-  const titles={pais:t('cad-pais-modal'),agente:t('cad-agente-modal'),banco:t('cad-banco-modal'),processadores:t('cad-proc-modal')};
-  const editTitles={pais:t('edit-cad-pais-modal'),agente:t('edit-cad-agente-modal'),banco:t('edit-cad-banco-modal'),processadores:t('edit-cad-proc-modal')};
-  const phs={pais:'Ex: Bolivia',agente:'Ex: BO.Cowgromo',banco:'Ex: Banco do Brasil',processadores:'Ex: CO.Colprocesa'};
+  const titles={pais:t('cad-pais-modal'),agente:t('cad-agente-modal'),banco:t('cad-banco-modal'),processadores:t('cad-proc-modal'),grupo:t('cad-grupo-modal')};
+  const editTitles={pais:t('edit-cad-pais-modal'),agente:t('edit-cad-agente-modal'),banco:t('edit-cad-banco-modal'),processadores:t('edit-cad-proc-modal'),grupo:t('edit-cad-grupo-modal')};
+  const phs={pais:'Ex: Bolivia',agente:'Ex: BO.Cowgromo',banco:'Ex: Banco do Brasil',processadores:'Ex: CO.Colprocesa',grupo:'Ex: Chile'};
   document.getElementById('cad-modal-title').textContent=isEdit?editTitles[type]:titles[type];
   const body=document.getElementById('cad-modal-body');
   const paisOpts=store.paises.map(p=>`<option value="${p}">${countryFlag(p)} ${p}</option>`).join('');
   const respOpts=store.responsaveis.map(r=>`<option value="${r.email}">${r.nome} [${r.sigla||'?'}]</option>`).join('');
-  if(type==='pais'||type==='banco'||type==='processadores'){
+  if(type==='grupo'){
+    const g=isEdit?store.gruposConciliacao[editIdx]:{};
+    body.innerHTML=`
+      <div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="cad-nome" placeholder="${phs[type]}" value="${g.nome||''}"></div>
+      <div class="form-field"><label class="form-label">${t('lbl-pais')}<span class="req">*</span></label><select class="form-select" id="cad-pais-vinculo"><option value="">${t('sel-select')}</option>${paisOpts}</select></div>
+      <div class="form-field"><label class="form-label">${t('conc-col-resp')}</label><select class="form-select" id="cad-responsavel"><option value="">${t('sel-nenhum')}</option>${respOpts}</select></div>`;
+    if(g.pais) setTimeout(()=>{const s=document.getElementById('cad-pais-vinculo');if(s)s.value=g.pais;},0);
+    if(g.responsavel) setTimeout(()=>{const s=document.getElementById('cad-responsavel');if(s)s.value=g.responsavel;},0);
+  } else if(type==='pais'||type==='banco'||type==='processadores'){
     const currentVal=isEdit?(type==='pais'?store.paises[editIdx]:type==='banco'?store.bancos[editIdx]:store.processadores[editIdx]):'';
     if(type==='processadores'){
       const currentProcResp=isEdit?(store.processadoresResp[currentVal]||''):'';
@@ -4159,6 +4181,24 @@ function submitCadastro(){
   const nome=document.getElementById('cad-nome').value.trim();
   const isEdit=_editCadIdx>=0;
   let _logArgs=null;
+  if(cadastroType==='grupo'){
+    const pais=document.getElementById('cad-pais-vinculo').value;
+    const responsavel=document.getElementById('cad-responsavel')?.value||'';
+    if(isEdit){
+      store.gruposConciliacao[_editCadIdx]={...store.gruposConciliacao[_editCadIdx],nome,pais,responsavel};
+      _logArgs=['cadastro-modulos','edit-grupo',{nome,pais}];
+    } else {
+      const g={id:'grp_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),nome,pais,responsavel};
+      store.gruposConciliacao.push(g);
+      _logArgs=['cadastro-modulos','add-grupo',{nome,pais}];
+    }
+    saveStore(); _fbSync('gruposConciliacao');
+    if(_logArgs) logAudit(..._logArgs);
+    closeModal('modal-cadastro');
+    renderCadastro('grupo');
+    updateCounts();
+    return;
+  }
   if(cadastroType==='pais'){
     if(!isEdit){
       const dup=store.paises.find(p=>_normNome(p)===_normNome(nome));
@@ -4224,10 +4264,21 @@ function submitCadastro(){
   }
 }
 function deleteCadastro(type,idx){
-  const labels={'pais':t('del-cadastro-label-pais'),'agente':t('del-cadastro-label-agente'),'banco':t('del-cadastro-label-banco'),'processadores':t('del-cadastro-label-processador')};
-  const names={'pais':store.paises[idx],'agente':store.agentes[idx]?.nome,'banco':store.bancos[idx],'processadores':store.processadores[idx]};
+  const labels={'pais':t('del-cadastro-label-pais'),'agente':t('del-cadastro-label-agente'),'banco':t('del-cadastro-label-banco'),'processadores':t('del-cadastro-label-processador'),'grupo':t('del-cadastro-label-grupo')};
+  const names={'pais':store.paises[idx],'agente':store.agentes[idx]?.nome,'banco':store.bancos[idx],'processadores':store.processadores[idx],'grupo':store.gruposConciliacao[idx]?.nome};
   const name=names[type]||t('del-cadastro-fallback-nome');
   showDeleteConfirm(`${t('del-cadastro-title-prefix')} ${labels[type]||type} "${name}"`,t('confirm-irreversivel'),()=>{
+    if(type==='grupo'){
+      // Conciliações que apontavam pra esse grupo ficam órfãs (grupoId sem
+      // grupo correspondente) — já tratado como fallback seguro em
+      // renderCronogramaConciliacoes (volta a mostrar a linha normal, não
+      // agrupada), então não precisa limpar conc.grupoId aqui.
+      store.gruposConciliacao.splice(idx,1);
+      saveStore(); _fbSync('gruposConciliacao');
+      logAudit('cadastro-modulos','delete-grupo',{idx});
+      renderCadastro('grupo'); updateCounts();
+      return;
+    }
     if(type==='pais') store.paises.splice(idx,1);
     else if(type==='agente') store.agentes.splice(idx,1);
     else if(type==='processadores'){ const pNome=store.processadores[idx]; store.processadores.splice(idx,1); delete store.processadoresResp[pNome]; _fbSync('processadoresResp'); }
@@ -4241,7 +4292,19 @@ const trashIcon=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" str
 function renderCadastro(type){
   const edit=canEdit();
   const _q=id=>(document.getElementById(id)?.value||'').toLowerCase().trim();
-  if(type==='pais'){
+  if(type==='grupo'){
+    const q=_q('cad-grupo-search');
+    const e=document.getElementById('grupo-empty'),i=document.getElementById('grupo-table-inner'),b=document.getElementById('grupo-tbody');
+    if(!e||!i||!b) return;
+    if(!store.gruposConciliacao.length){e.style.display='';i.style.display='none';return;} e.style.display='none';i.style.display='';
+    b.innerHTML=store.gruposConciliacao.map((g,gi)=>{
+      if(q&&!`${g.nome} ${g.pais}`.toLowerCase().includes(q)) return '';
+      const resp=store.responsaveis.find(r=>r.email===g.responsavel);
+      const respCell=resp?`<span style="font-size:12px;color:var(--e-text)">${resp.nome} <span style="font-family:monospace;background:var(--e-ghost);padding:1px 5px;border-radius:3px;font-weight:700;color:var(--e-mid)">${resp.sigla||''}</span></span>`:`<span style="color:var(--e-muted);font-size:12px">—</span>`;
+      const nFilhas=store.conciliacoes.filter(c=>c.grupoId===g.id).length;
+      return `<tr><td>📁 ${_esc(g.nome)} <span style="color:var(--e-muted);font-size:11px">(${tn('grupo-n-conciliacoes',nFilhas)})</span></td><td><span class="pais-tag">${countryFlag(g.pais)} ${g.pais}</span></td><td>${respCell}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openCadastroModal('grupo',${gi})" title="${t('btn-editar')}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteCadastro('grupo',${gi})">${trashIcon}</button></div>`:''}</td></tr>`;
+    }).join('');
+  } else if(type==='pais'){
     const q=_q('cad-pais-search');
     const e=document.getElementById('pais-empty'),i=document.getElementById('pais-table-inner'),b=document.getElementById('pais-tbody');
     if(!store.paises.length){e.style.display='';i.style.display='none';return;} e.style.display='none';i.style.display='';
@@ -7005,11 +7068,14 @@ async function switchEnvironment(envKey){
   Object.assign(store,{paises:[],agentes:[],bancos:[],processadores:[],responsaveis:[],contas:[],cronogramaData:{},cierreData:{},conciliacoes:[],cronogramaConciliacoes:{},gruposConciliacao:[],moduleConfig:{},paisesResp:{},bancosResp:{},processadoresResp:{},conciliacoesPrioridade:{},volumeRankings:{cashin:{},cashout:{},refunds:{},chargebacks:{},combined:{}},volumeColumnMapping:{},concilVolumeMap:{},ignoredGatewayIds:{cashin:[],cashout:[],refunds:[],chargebacks:[]},liquidacoesConfig:{},liquidacoesStatus:{},liquidacoesManual:[],liquidacoesExcluidos:{},auditLog:[],permissions:{},credentials:{}});
   loadStore();
   _updateEnvSwitcher();
-  // Automações agora é habilitado/desabilitado por ambiente via Cadastro >
-  // Módulos (não mais fixo no código) — se o módulo da página atual ficou
-  // desabilitado no ambiente pro qual acabou de trocar, sai dela em vez de
-  // deixar os controles visíveis e "funcionando" sem efeito real.
-  if((currentPageId==='automacoes-baixa'||currentPageId==='automacoes-fechamentos')&&!isModuleEnabled(currentPageId)) navigate('cadastro-pais');
+  // Trocar de ambiente sempre volta pra Home, nunca deixa a pessoa "presa"
+  // na página em que estava. Antes disso só existia pra Automações (cuja
+  // visibilidade era fixa por ambiente); agora que QUALQUER módulo pode ser
+  // ligado/desligado por ambiente (Cadastro > Módulos), a página atual pode
+  // ficar com dado do ambiente ANTERIOR sem recarregar (ex.: os toggles de
+  // Módulos mostrando o estado de antes da troca) — sair pra Home evita
+  // qualquer tela ficar com estado desatualizado/inconsistente.
+  navigate('home');
   document.getElementById('env-dd').style.display='none';
   document.getElementById('env-btn').classList.remove('open');
   _toast('Ambiente: '+env.label,3000);
@@ -12071,7 +12137,7 @@ function submitConcBulkApply(){
   }
 }
 
-function renderAll(){ renderAccountsTable(); _applyPendingFilters('crono'); initCronoFilters(); initCronoDates(); renderCronogramaAccounts(); renderCadastro('pais'); renderCadastro('agente'); renderCadastro('banco'); renderCadastro('processadores'); renderAcessos(); renderCadastroModulos(); _applyModuleVisibility(); renderGerencialConciliacoes(); renderCronogramaConciliacoes(); renderSlackConfig('accounts'); renderSlackConfig('conciliacoes'); }
+function renderAll(){ renderAccountsTable(); _applyPendingFilters('crono'); initCronoFilters(); initCronoDates(); renderCronogramaAccounts(); renderCadastro('pais'); renderCadastro('agente'); renderCadastro('banco'); renderCadastro('processadores'); renderCadastro('grupo'); renderAcessos(); renderCadastroModulos(); _applyModuleVisibility(); renderGerencialConciliacoes(); renderCronogramaConciliacoes(); renderSlackConfig('accounts'); renderSlackConfig('conciliacoes'); }
 
 // ─── COUNTS ───────────────────────────────────────────────────────
 function updateCounts(){
