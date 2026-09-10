@@ -2465,6 +2465,7 @@ const i18n = {
     'status-elaborando':'Em Elaboração','crono-elab-abbr':'Elab','status-encerrada-abbr':'EN',
     'status-pronto-conciliacao':'Pronto p/ Conc.','status-conta-encerrada':'Conta Encerrada',
     'tipo-bancos':'Bancos','tipo-processadores':'Processadores','tipo-mista':'Mista','tipo-controle':'Somente controle',
+    'update-banner-msg':'Uma nova versão do app está disponível.','update-banner-btn':'Atualizar',
     'crono-all-tops':'Todos os TOPs','top-acima-50':'Acima TOP 50','crono-sem-top':'Sem TOP','crono-analista':'Analista',
     'tt-limpar-busca':'Limpar busca','tt-sintaxe-busca':'Sintaxe de busca','tt-baixar-csv':'Baixar CSV com os filtros aplicados','search-help-title':'Operadores de busca',
     'dd-search-ph':'Pesquisar...','n-selecionados':'{n} selecionados','col-hide':'Ocultar coluna','col-top':'TOP',
@@ -2680,6 +2681,7 @@ const i18n = {
     'status-elaborando':'In Progress','crono-elab-abbr':'Elab','status-encerrada-abbr':'CL',
     'status-pronto-conciliacao':'Ready to Reconcile','status-conta-encerrada':'Account Closed',
     'tipo-bancos':'Banks','tipo-processadores':'Processors','tipo-mista':'Mixed','tipo-controle':'Control only',
+    'update-banner-msg':'A new version of the app is available.','update-banner-btn':'Update',
     'crono-all-tops':'All TOPs','top-acima-50':'Above TOP 50','crono-sem-top':'No TOP','crono-analista':'Analyst',
     'tt-limpar-busca':'Clear search','tt-sintaxe-busca':'Search syntax','tt-baixar-csv':'Download CSV with applied filters','search-help-title':'Search operators',
     'dd-search-ph':'Search...','n-selecionados':'{n} selected','col-hide':'Hide column','col-top':'TOP',
@@ -2896,6 +2898,7 @@ const i18n = {
     'status-elaborando':'En Elaboración','crono-elab-abbr':'Elab','status-encerrada-abbr':'CE',
     'status-pronto-conciliacao':'Listo p/ Concil.','status-conta-encerrada':'Cuenta Cerrada',
     'tipo-bancos':'Bancos','tipo-processadores':'Procesadores','tipo-mista':'Mixta','tipo-controle':'Solo control',
+    'update-banner-msg':'Hay una nueva versión de la app disponible.','update-banner-btn':'Actualizar',
     'crono-all-tops':'Todos los TOPs','top-acima-50':'Arriba TOP 50','crono-sem-top':'Sin TOP','crono-analista':'Analista',
     'tt-limpar-busca':'Limpiar búsqueda','tt-sintaxe-busca':'Sintaxis de búsqueda','tt-baixar-csv':'Descargar CSV con los filtros aplicados','search-help-title':'Operadores de búsqueda',
     'dd-search-ph':'Buscar...','n-selecionados':'{n} seleccionados','col-hide':'Ocultar columna','col-top':'TOP',
@@ -3082,6 +3085,10 @@ function applyTranslations(){
 // em EN/ES.
 function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[currentLang]||'pt-BR'; }
 
+// Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
+// deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
+const APP_VERSION='c8aac060e7f2';
+
 // ─── STORE ───────────────────────────────────────────────────────
 const store = {
   paises:['Bolivia','Brasil','Chile','Colombia','Peru'],
@@ -3109,6 +3116,10 @@ const store = {
   cierreData:{},
   conciliacoes:[],
   cronogramaConciliacoes:{},
+  // Conciliações agrupadas ("mãe" leve, só nome+país) — feature experimental,
+  // só ativa em staging (_currentEnv==='staging'). Conciliações "filhas"
+  // apontam pra um grupo via conc.grupoId.
+  gruposConciliacao:[],
   processadores:[],
   paisesResp:{},bancosResp:{},processadoresResp:{},
   conciliacoesPrioridade:{},
@@ -12093,6 +12104,36 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
   _forceRepaintOnReturn();
 });
+
+// ─── VERIFICAÇÃO DE VERSÃO ──────────────────────────────────────────
+// Busca o próprio HTML publicado (sem cache) e compara o APP_VERSION nele
+// contra o desta aba. Uma aba aberta há horas continua rodando o JS antigo
+// em memória mesmo depois de um novo deploy — isso já causou bugs corrigidos
+// reaparecerem (ex.: congelamento de Prioridade sendo recalculado com uma
+// versão do código de antes do fix). Em vez de forçar reload sozinho (o que
+// perderia um formulário em andamento), avisa e deixa a pessoa decidir.
+let _updateBannerShown=false;
+function _showUpdateBanner(){
+  if(_updateBannerShown) return;
+  _updateBannerShown=true;
+  const b=document.createElement('div');
+  b.id='app-update-banner';
+  b.style.cssText='position:fixed;bottom:18px;right:18px;z-index:99999;background:#1e1b4b;color:#e9e7ff;padding:12px 16px;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.35);font-size:13px;display:flex;align-items:center;gap:12px;max-width:340px;line-height:1.4';
+  b.innerHTML=`<span>🔄 ${t('update-banner-msg')||'Uma nova versão do app está disponível.'}</span><button style="background:#7c3aed;border:none;color:#fff;padding:7px 14px;border-radius:6px;cursor:pointer;font-weight:600;white-space:nowrap;flex-shrink:0" onclick="location.reload()">${t('update-banner-btn')||'Atualizar'}</button>`;
+  document.body.appendChild(b);
+}
+async function _checkAppVersion(){
+  try{
+    const res=await fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'});
+    if(!res.ok) return;
+    const text=await res.text();
+    const m=text.match(/const APP_VERSION\s*=\s*'([^']+)'/);
+    if(m&&m[1]&&m[1]!==APP_VERSION) _showUpdateBanner();
+  }catch(e){/* offline ou bloqueado por CORS local — ignora silenciosamente */}
+}
+setTimeout(_checkAppVersion,15000);
+setInterval(_checkAppVersion,5*60*1000);
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) _checkAppVersion(); });
 </script>
 </body>
 </html>
