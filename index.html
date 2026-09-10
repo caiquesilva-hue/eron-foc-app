@@ -3953,7 +3953,9 @@ function initCronoFilters(){
   const rt=document.getElementById('crono-resp-toggles');
   if(rt){
     const activeResps=_sf?.resp?.length?_sf.resp:[...document.querySelectorAll('#crono-resp-toggles .freq-toggle.active')].map(b=>b.dataset.resp);
-    rt.innerHTML=store.responsaveis.map(r=>`<button class="freq-toggle${activeResps.includes(r.sigla)?' active':''}" data-resp="${r.sigla}" onclick="toggleRespFilter(this)" title="${r.nome}">${r.sigla}</button>`).join('');
+    // Visualização só acompanha o cronograma, não opera nem é responsável
+    // por nada nele — fora do filtro de Responsável também.
+    rt.innerHTML=store.responsaveis.filter(r=>r.role!=='visualizacao').map(r=>`<button class="freq-toggle${activeResps.includes(r.sigla)?' active':''}" data-resp="${r.sigla}" onclick="toggleRespFilter(this)" title="${r.nome}">${r.sigla}</button>`).join('');
     if(_sf?.resp?.length) setTimeout(_updateRespLabel,0);
   }
   const at=document.getElementById('crono-anl-toggles');
@@ -10078,7 +10080,9 @@ function _initConcFilters(){
   if(rt&&!rt.dataset.init){
     rt.dataset.init='1';
     const savedResp=_sf?.resp||[];
-    rt.innerHTML=store.responsaveis.map(r=>`<button class="freq-toggle${savedResp.includes(r.sigla)?' active':''}" data-resp="${r.sigla}" title="${r.nome}" onclick="this.classList.toggle('active');_updateConcRespLabel();renderCronogramaConciliacoes()">${r.sigla}</button>`).join('');
+    // Visualização só acompanha o cronograma, não opera nem é responsável
+    // por nada nele — fora do filtro de Responsável também.
+    rt.innerHTML=store.responsaveis.filter(r=>r.role!=='visualizacao').map(r=>`<button class="freq-toggle${savedResp.includes(r.sigla)?' active':''}" data-resp="${r.sigla}" title="${r.nome}" onclick="this.classList.toggle('active');_updateConcRespLabel();renderCronogramaConciliacoes()">${r.sigla}</button>`).join('');
     if(savedResp.length) setTimeout(_updateConcRespLabel,0);
   }
   const at=document.getElementById('crono-conc-anl-toggles');
