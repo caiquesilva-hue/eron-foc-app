@@ -1348,7 +1348,7 @@
     <div class="page" id="page-cadastro-grupos">
       <div class="page-header">
         <div class="page-header-left"><div class="page-title-text" data-i18n="nav-grupos">Conciliações agrupadas</div><div class="page-title-count" id="grupo-count"></div></div>
-        <button class="btn-primary" onclick="openCadastroModal('grupo')" data-requires-edit><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn-add-grupo">Adicionar grupo</span></button>
+        <button class="btn-primary" onclick="_qcOpenGrupoFull()" data-requires-edit><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn-add-grupo">Adicionar grupo</span></button>
       </div>
       <div style="padding:0 0 10px"><input type="search" id="cad-grupo-search" data-i18n-placeholder="cad-grupo-search-ph" placeholder="Pesquisar grupo..." style="width:100%;border:1px solid var(--e-pale);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;outline:none;color:var(--e-text);background:#fff;box-sizing:border-box" oninput="renderCadastro('grupo')"></div>
       <div class="table-wrap"><div id="grupo-empty" class="empty-state"><div class="empty-icon">📁</div><div class="empty-title" data-i18n="grupo-empty-title">Nenhuma conciliação agrupada cadastrada</div><div class="empty-sub" data-i18n="grupo-empty-sub">Crie um grupo pra reunir várias conciliações sob uma linha única no Cronograma.</div></div><div class="table-scroll" id="grupo-table-inner" style="display:none"><table><thead><tr><th data-i18n="nav-grupos">Conciliação agrupada</th><th data-i18n="col-pais">País</th><th data-i18n="conc-col-resp">Responsável</th><th style="width:70px" data-i18n="col-actions">Ações</th></tr></thead><tbody id="grupo-tbody"></tbody></table></div></div>
@@ -3159,7 +3159,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='bfa09aabd2ff';
+const APP_VERSION='9ef352aaaf83';
 
 // ─── STORE ───────────────────────────────────────────────────────
 const store = {
@@ -3341,7 +3341,13 @@ window.addEventListener('resize',()=>{ if(_ssActiveField) _ssPosition(_ssActiveF
 
 // ─── MODAL DE CRIAÇÃO RÁPIDA (país/agente/banco/grupo, a partir do combo) ──
 let _qcCtx=null;
+let _qcEditGrupoIdx=-1;
 function _qcOpen(kind,fieldId,afterCreate){
+  // Fecha qualquer combo pesquisável aberto antes de trocar de modal — sem
+  // isso, o dropdown (portal em document.body, z-index acima de tudo)
+  // ficava visualmente "grudado" por cima do novo modal, porque clicar no
+  // botão "+" conta como clique DENTRO do próprio combo (não fecha sozinho).
+  _ssCloseAll();
   _qcCtx={kind,fieldId,afterCreate};
   const titleEl=document.getElementById('qc-modal-title');
   const body=document.getElementById('qc-modal-body');
@@ -3361,13 +3367,59 @@ function _qcOpen(kind,fieldId,afterCreate){
     titleEl.textContent=t('cad-proc-modal');
     body.innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="qc-nome" placeholder="Ex: CO.Colprocesa"></div>`;
   } else if(kind==='grupo'){
-    const respOpts=store.responsaveis.map(r=>`<option value="${r.email}">${r.nome} [${r.sigla||'?'}]</option>`).join('');
-    titleEl.textContent=t('grupo-criar-titulo');
-    body.innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="qc-nome" placeholder="Ex: Chile"></div>
-      <div class="form-field"><label class="form-label">${t('lbl-pais')}<span class="req">*</span></label><select class="form-select" id="qc-pais"><option value="">${t('sel-select')}</option>${paisOpts}</select></div>
-      <div class="form-field"><label class="form-label">${t('conc-col-resp')}</label><select class="form-select" id="qc-responsavel"><option value="">${t('sel-nenhum')}</option>${respOpts}</select></div>`;
+    _qcEditGrupoIdx=-1;
+    _qcRenderGrupoForm('','','');
   }
   document.getElementById('qc-submit').onclick=_qcSubmit;
+  openModal('modal-quick-create');
+  setTimeout(()=>document.getElementById('qc-nome')?.focus(),50);
+}
+// Formulário de Conciliação Agrupada (usado tanto pelo "+ criar novo" a
+// partir do combo de grupo na Conciliação quanto por Cadastro > Conciliações
+// agrupadas) — o campo País também é um combo pesquisável com "+", e como o
+// modal-quick-create é compartilhado (só um de cada vez), o "+" de país
+// PRECISA sair temporariamente do formulário de grupo pra usar o mesmo
+// modal — por isso salva nome/responsável antes e reconstrói o form de
+// grupo depois, preservando o que já tinha sido digitado.
+function _qcRenderGrupoForm(prefillNome,prefillPais,prefillResp){
+  const titleEl=document.getElementById('qc-modal-title');
+  const body=document.getElementById('qc-modal-body');
+  titleEl.textContent=_qcEditGrupoIdx>=0?t('edit-cad-grupo-modal'):t('grupo-criar-titulo');
+  const respOpts=store.responsaveis.map(r=>`<option value="${r.email}">${r.nome} [${r.sigla||'?'}]</option>`).join('');
+  body.innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="qc-nome" placeholder="Ex: Chile" value="${_esc(prefillNome||'')}"></div>
+    <div class="form-field"><label class="form-label">${t('lbl-pais')}<span class="req">*</span></label>${_ssFieldHtml('qc-pais',t('sel-select'))}</div>
+    <div class="form-field"><label class="form-label">${t('conc-col-resp')}</label><select class="form-select" id="qc-responsavel"><option value="">${t('sel-nenhum')}</option>${respOpts}</select></div>`;
+  _ssInit('qc-pais',store.paises.map(p=>({value:p,label:countryFlag(p)+' '+p})),{
+    onCreateNew:()=>{
+      const keepNome=document.getElementById('qc-nome')?.value||'';
+      const keepResp=document.getElementById('qc-responsavel')?.value||'';
+      const keepEditIdx=_qcEditGrupoIdx;
+      const keepCtx=_qcCtx;
+      _ssCloseAll();
+      _qcCtx={kind:'pais',fieldId:null,afterCreate:val=>{
+        _qcCtx=keepCtx;
+        _qcEditGrupoIdx=keepEditIdx;
+        _qcRenderGrupoForm(keepNome,val,keepResp);
+      }};
+      document.getElementById('qc-modal-title').textContent=t('cad-pais-modal');
+      document.getElementById('qc-modal-body').innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="qc-nome" placeholder="Ex: Bolivia"></div>`;
+      document.getElementById('qc-submit').onclick=_qcSubmit;
+      setTimeout(()=>document.getElementById('qc-nome')?.focus(),50);
+    }
+  });
+  _ssSetValue('qc-pais',prefillPais||'');
+  if(prefillResp) setTimeout(()=>{const s=document.getElementById('qc-responsavel');if(s)s.value=prefillResp;},0);
+  document.getElementById('qc-submit').onclick=_qcSubmit;
+}
+// Abre o formulário de grupo em modo completo (Cadastro > Conciliações
+// agrupadas) — mesma UI do "+ criar novo" inline, mas com suporte a edição.
+function _qcOpenGrupoFull(editIdx=-1){
+  _ssCloseAll();
+  _qcEditGrupoIdx=editIdx;
+  const isEdit=editIdx>=0;
+  const g=isEdit?store.gruposConciliacao[editIdx]:{};
+  _qcCtx={kind:'grupo',fieldId:null,afterCreate:null};
+  _qcRenderGrupoForm(g.nome||'',g.pais||'',g.responsavel||'');
   openModal('modal-quick-create');
   setTimeout(()=>document.getElementById('qc-nome')?.focus(),50);
 }
@@ -3397,12 +3449,21 @@ function _qcSubmit(){
     saveStore(); _fbSync('processadores');
   } else if(kind==='grupo'){
     const pais=document.getElementById('qc-pais')?.value||'';
-    if(!pais){ document.getElementById('qc-pais')?.classList.add('err'); return; }
+    if(!pais){ document.getElementById('qc-pais-input')?.classList.add('err'); return; }
     const responsavel=document.getElementById('qc-responsavel')?.value||'';
-    const g={id:'grp_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),nome,pais,responsavel};
-    store.gruposConciliacao.push(g);
+    if(_qcEditGrupoIdx>=0){
+      store.gruposConciliacao[_qcEditGrupoIdx]={...store.gruposConciliacao[_qcEditGrupoIdx],nome,pais,responsavel};
+      newValue=store.gruposConciliacao[_qcEditGrupoIdx].id;
+      logAudit('cadastro-modulos','edit-grupo',{nome,pais});
+    } else {
+      const g={id:'grp_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),nome,pais,responsavel};
+      store.gruposConciliacao.push(g);
+      newValue=g.id;
+      logAudit('cadastro-modulos','add-grupo',{nome,pais});
+    }
     saveStore(); _fbSync('gruposConciliacao');
-    newValue=g.id;
+    renderCadastro('grupo'); updateCounts();
+    _qcEditGrupoIdx=-1;
   }
   closeModal('modal-quick-create');
   _toast(`✓ ${t('qc-criado-sucesso').replace('{nome}',nome)}`,2500);
@@ -4113,22 +4174,14 @@ function openCadastroModal(type, editIdx=-1){
   cadastroType=type;
   _editCadIdx=editIdx;
   const isEdit=editIdx>=0;
-  const titles={pais:t('cad-pais-modal'),agente:t('cad-agente-modal'),banco:t('cad-banco-modal'),processadores:t('cad-proc-modal'),grupo:t('cad-grupo-modal')};
-  const editTitles={pais:t('edit-cad-pais-modal'),agente:t('edit-cad-agente-modal'),banco:t('edit-cad-banco-modal'),processadores:t('edit-cad-proc-modal'),grupo:t('edit-cad-grupo-modal')};
-  const phs={pais:'Ex: Bolivia',agente:'Ex: BO.Cowgromo',banco:'Ex: Banco do Brasil',processadores:'Ex: CO.Colprocesa',grupo:'Ex: Chile'};
+  const titles={pais:t('cad-pais-modal'),agente:t('cad-agente-modal'),banco:t('cad-banco-modal'),processadores:t('cad-proc-modal')};
+  const editTitles={pais:t('edit-cad-pais-modal'),agente:t('edit-cad-agente-modal'),banco:t('edit-cad-banco-modal'),processadores:t('edit-cad-proc-modal')};
+  const phs={pais:'Ex: Bolivia',agente:'Ex: BO.Cowgromo',banco:'Ex: Banco do Brasil',processadores:'Ex: CO.Colprocesa'};
   document.getElementById('cad-modal-title').textContent=isEdit?editTitles[type]:titles[type];
   const body=document.getElementById('cad-modal-body');
   const paisOpts=store.paises.map(p=>`<option value="${p}">${countryFlag(p)} ${p}</option>`).join('');
   const respOpts=store.responsaveis.map(r=>`<option value="${r.email}">${r.nome} [${r.sigla||'?'}]</option>`).join('');
-  if(type==='grupo'){
-    const g=isEdit?store.gruposConciliacao[editIdx]:{};
-    body.innerHTML=`
-      <div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="cad-nome" placeholder="${phs[type]}" value="${g.nome||''}"></div>
-      <div class="form-field"><label class="form-label">${t('lbl-pais')}<span class="req">*</span></label><select class="form-select" id="cad-pais-vinculo"><option value="">${t('sel-select')}</option>${paisOpts}</select></div>
-      <div class="form-field"><label class="form-label">${t('conc-col-resp')}</label><select class="form-select" id="cad-responsavel"><option value="">${t('sel-nenhum')}</option>${respOpts}</select></div>`;
-    if(g.pais) setTimeout(()=>{const s=document.getElementById('cad-pais-vinculo');if(s)s.value=g.pais;},0);
-    if(g.responsavel) setTimeout(()=>{const s=document.getElementById('cad-responsavel');if(s)s.value=g.responsavel;},0);
-  } else if(type==='pais'||type==='banco'||type==='processadores'){
+  if(type==='pais'||type==='banco'||type==='processadores'){
     const currentVal=isEdit?(type==='pais'?store.paises[editIdx]:type==='banco'?store.bancos[editIdx]:store.processadores[editIdx]):'';
     if(type==='processadores'){
       const currentProcResp=isEdit?(store.processadoresResp[currentVal]||''):'';
@@ -4181,24 +4234,6 @@ function submitCadastro(){
   const nome=document.getElementById('cad-nome').value.trim();
   const isEdit=_editCadIdx>=0;
   let _logArgs=null;
-  if(cadastroType==='grupo'){
-    const pais=document.getElementById('cad-pais-vinculo').value;
-    const responsavel=document.getElementById('cad-responsavel')?.value||'';
-    if(isEdit){
-      store.gruposConciliacao[_editCadIdx]={...store.gruposConciliacao[_editCadIdx],nome,pais,responsavel};
-      _logArgs=['cadastro-modulos','edit-grupo',{nome,pais}];
-    } else {
-      const g={id:'grp_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),nome,pais,responsavel};
-      store.gruposConciliacao.push(g);
-      _logArgs=['cadastro-modulos','add-grupo',{nome,pais}];
-    }
-    saveStore(); _fbSync('gruposConciliacao');
-    if(_logArgs) logAudit(..._logArgs);
-    closeModal('modal-cadastro');
-    renderCadastro('grupo');
-    updateCounts();
-    return;
-  }
   if(cadastroType==='pais'){
     if(!isEdit){
       const dup=store.paises.find(p=>_normNome(p)===_normNome(nome));
@@ -4302,7 +4337,7 @@ function renderCadastro(type){
       const resp=store.responsaveis.find(r=>r.email===g.responsavel);
       const respCell=resp?`<span style="font-size:12px;color:var(--e-text)">${resp.nome} <span style="font-family:monospace;background:var(--e-ghost);padding:1px 5px;border-radius:3px;font-weight:700;color:var(--e-mid)">${resp.sigla||''}</span></span>`:`<span style="color:var(--e-muted);font-size:12px">—</span>`;
       const nFilhas=store.conciliacoes.filter(c=>c.grupoId===g.id).length;
-      return `<tr><td>📁 ${_esc(g.nome)} <span style="color:var(--e-muted);font-size:11px">(${tn('grupo-n-conciliacoes',nFilhas)})</span></td><td><span class="pais-tag">${countryFlag(g.pais)} ${g.pais}</span></td><td>${respCell}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="openCadastroModal('grupo',${gi})" title="${t('btn-editar')}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteCadastro('grupo',${gi})">${trashIcon}</button></div>`:''}</td></tr>`;
+      return `<tr><td>📁 ${_esc(g.nome)} <span style="color:var(--e-muted);font-size:11px">(${tn('grupo-n-conciliacoes',nFilhas)})</span></td><td><span class="pais-tag">${countryFlag(g.pais)} ${g.pais}</span></td><td>${respCell}</td><td>${edit?`<div class="actions-cell"><button class="action-btn" onclick="_qcOpenGrupoFull(${gi})" title="${t('btn-editar')}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" onclick="deleteCadastro('grupo',${gi})">${trashIcon}</button></div>`:''}</td></tr>`;
     }).join('');
   } else if(type==='pais'){
     const q=_q('cad-pais-search');
