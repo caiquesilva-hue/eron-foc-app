@@ -3194,7 +3194,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='eced9ddac311';
+const APP_VERSION='991436edb6c0';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -3301,8 +3301,8 @@ function _ssFieldHtmlBare(fieldId,placeholder){
   </div>`;
 }
 // Esconde o elemento original (select estático) e monta o combo num
-// container irmão vazio — só em staging; fora disso deixa tudo como sempre
-// foi (select visível, container escondido).
+// container irmão vazio — quando _GRUPOS_UI_ENABLED for false, deixa tudo
+// como sempre foi (select visível, container escondido).
 function _ssMountOverSelect(fieldId,containerId,placeholder){
   const sel=document.getElementById(fieldId);
   const container=document.getElementById(containerId);
@@ -3863,7 +3863,7 @@ function onAccountPaisChange(){
   document.getElementById('acc-agencia-field').style.display=pais==='Brasil'?'':'none';
   if(pais!=='Brasil') document.getElementById('acc-agencia').value='';
 }
-// ─── Combos pesquisáveis do modal de Conta (staging) ───────────────
+// ─── Combos pesquisáveis do modal de Conta ──────────────────────────
 // Mesmo princípio do modal de Conciliação: o <select> nativo continua sendo
 // populado e é a fonte da verdade de .value (lido em submitAccountForm sem
 // nenhuma alteração) — o combo só sobrepõe uma UI de busca por cima dele,
@@ -9172,7 +9172,7 @@ function _updateStagingBanner(){
   let el=document.getElementById('_staging-banner');
   const loginEl=document.getElementById('login-screen');
   const appEl=document.getElementById('app');
-  if(!_GRUPOS_UI_ENABLED){
+  if(_currentEnv!=='staging'){
     if(el) el.remove();
     document.body.style.paddingTop='';
     if(loginEl) loginEl.style.top='';
@@ -11944,9 +11944,9 @@ function renderCronogramaConciliacoes(){
     pendente:`<span class="chip chip-amber" style="font-size:10px">${t('status-pendente')}</span>`
   };
 
-  // Conciliações agrupadas (feature experimental, só staging): reordena a
-  // lista pra que as filhas de um mesmo grupo fiquem contíguas logo após uma
-  // linha-cabeçalho colapsável, em vez de espalhadas pela ordenação normal.
+  // Conciliações agrupadas: reordena a lista pra que as filhas de um mesmo
+  // grupo fiquem contíguas logo após uma linha-cabeçalho colapsável, em vez
+  // de espalhadas pela ordenação normal.
   let displayList=list;
   if(_GRUPOS_UI_ENABLED&&(store.gruposConciliacao||[]).length){
     const grupoById={};
