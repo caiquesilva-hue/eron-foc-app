@@ -3144,7 +3144,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='6cb57bbb1967';
+const APP_VERSION='68bd16551581';
 
 // ─── STORE ───────────────────────────────────────────────────────
 const store = {
@@ -3293,7 +3293,10 @@ function _ssRender(fieldId){
 function _ssOpen(fieldId){
   _ssActiveField=fieldId;
   const portal=_ssEnsurePortal();
-  portal.style.display='';
+  // .ss-dropdown tem display:none por padrão no CSS — style.display='' só
+  // removeria o override inline e voltaria pro none da classe, nunca
+  // mostrando nada. Precisa de um valor explícito.
+  portal.style.display='block';
   _ssPosition(fieldId);
   _ssRender(fieldId);
 }
