@@ -219,7 +219,7 @@
   .modal-title{font-size:16px;font-weight:700;color:var(--e-text);}
   .modal-close{background:none;border:none;cursor:pointer;color:var(--e-muted);font-size:22px;line-height:1;padding:0 2px;transition:color .15s;}
   .modal-close:hover{color:var(--e-text);}
-  .modal-body{padding:22px 24px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;}
+  .modal-body{padding:22px 24px;display:flex;flex-direction:column;gap:26px;overflow-y:auto;}
   .modal-footer{padding:16px 24px;border-top:1px solid var(--e-pale);display:flex;gap:10px;justify-content:flex-end;flex-shrink:0;}
 
   /* FORM */
@@ -3146,7 +3146,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='41fb1ab48381';
+const APP_VERSION='9bdd71b515b8';
 
 // ─── STORE ───────────────────────────────────────────────────────
 const store = {
@@ -3348,9 +3348,11 @@ function _qcOpen(kind,fieldId,afterCreate){
     titleEl.textContent=t('cad-proc-modal');
     body.innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="qc-nome" placeholder="Ex: CO.Colprocesa"></div>`;
   } else if(kind==='grupo'){
+    const respOpts=store.responsaveis.map(r=>`<option value="${r.email}">${r.nome} [${r.sigla||'?'}]</option>`).join('');
     titleEl.textContent=t('grupo-criar-titulo');
     body.innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="qc-nome" placeholder="Ex: Chile"></div>
-      <div class="form-field"><label class="form-label">${t('lbl-pais')}<span class="req">*</span></label><select class="form-select" id="qc-pais"><option value="">${t('sel-select')}</option>${paisOpts}</select></div>`;
+      <div class="form-field"><label class="form-label">${t('lbl-pais')}<span class="req">*</span></label><select class="form-select" id="qc-pais"><option value="">${t('sel-select')}</option>${paisOpts}</select></div>
+      <div class="form-field"><label class="form-label">${t('conc-col-resp')}</label><select class="form-select" id="qc-responsavel"><option value="">${t('sel-nenhum')}</option>${respOpts}</select></div>`;
   }
   document.getElementById('qc-submit').onclick=_qcSubmit;
   openModal('modal-quick-create');
@@ -9817,7 +9819,7 @@ function openConciliacaoModal(editIdx=-1){
       </select>
     </div>
     ${_currentEnv==='staging'?`
-    <div class="form-field" style="border-top:1px solid var(--e-pale);border-bottom:1px solid var(--e-pale);padding:14px 0">
+    <div class="form-field" style="border-top:1px solid var(--e-pale);padding-top:12px;margin-top:4px">
       <div class="toggle-row">
         <div class="toggle-info"><div class="toggle-title" style="color:var(--e-purple)">${t('lbl-conc-agrupada')}</div></div>
         <label class="toggle-switch">
