@@ -3159,7 +3159,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='81075328e0df';
+const APP_VERSION='f7d7889677f7';
 
 // ─── STORE ───────────────────────────────────────────────────────
 const store = {
@@ -5350,7 +5350,13 @@ function _matchesInSearch(fields,q){
     return vs.some(v=>fvals.includes(v));
   }
   const hay=fields.join(' ');
-  return hay.includes(q);
+  // Múltiplos termos separados por espaço = E lógico (cada termo precisa
+  // aparecer em algum lugar, em qualquer ordem) — antes era uma substring
+  // contígua só, que exigia as palavras exatamente coladas na ordem digitada
+  // (ex.: "cashin chile" não achava "Cashin OKP CL...Chile" com outras
+  // palavras no meio).
+  const terms=q.split(/\s+/).filter(Boolean);
+  return terms.every(term=>hay.includes(term));
 }
 function updateCronoSearchClear(){
   const val=document.getElementById('crono-search')?.value||'';
