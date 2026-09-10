@@ -219,7 +219,7 @@
   .modal-title{font-size:16px;font-weight:700;color:var(--e-text);}
   .modal-close{background:none;border:none;cursor:pointer;color:var(--e-muted);font-size:22px;line-height:1;padding:0 2px;transition:color .15s;}
   .modal-close:hover{color:var(--e-text);}
-  .modal-body{padding:22px 24px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;}
+  .modal-body{padding:22px 24px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;}
   .modal-footer{padding:16px 24px;border-top:1px solid var(--e-pale);display:flex;gap:10px;justify-content:flex-end;flex-shrink:0;}
 
   /* FORM */
@@ -683,7 +683,7 @@
         <div class="sb-item" data-page="cadastro-pais" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-pais">País</span></div>
         <div class="sb-item" data-page="cadastro-agente" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-agente">Agente</span></div>
         <div class="sb-item" data-page="cadastro-banco" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-banco">Banco</span></div>
-        <div class="sb-item" data-page="cadastro-processadores" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-processadores">Processadores</span></div>
+        <div class="sb-item" data-page="cadastro-processadores" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-processadores">Processadores</span></div><div class="sb-item" id="sb-item-cadastro-grupos" data-page="cadastro-grupos" onclick="navigate(this.dataset.page)" style="display:none"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-grupos">Conciliações agrupadas</span></div>
         <div class="sb-item" data-page="cadastro-acessos" onclick="navigate(this.dataset.page)"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-acessos">Acessos</span></div><div class="sb-item" id="sb-item-cadastro-modulos" data-page="cadastro-modulos" onclick="navigate(this.dataset.page)" style="display:none"><span class="dot"></span><span class="sb-item-label" data-i18n="nav-modulos">Módulos</span></div>
       </div>
       <div class="sb-divider"></div>
@@ -3146,7 +3146,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='a34c03aac577';
+const APP_VERSION='41fb1ab48381';
 
 // ─── STORE ───────────────────────────────────────────────────────
 const store = {
@@ -3344,6 +3344,9 @@ function _qcOpen(kind,fieldId,afterCreate){
   } else if(kind==='banco'){
     titleEl.textContent=t('cad-banco-modal');
     body.innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="qc-nome" placeholder="Ex: Banco do Brasil"></div>`;
+  } else if(kind==='processador'){
+    titleEl.textContent=t('cad-proc-modal');
+    body.innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="qc-nome" placeholder="Ex: CO.Colprocesa"></div>`;
   } else if(kind==='grupo'){
     titleEl.textContent=t('grupo-criar-titulo');
     body.innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="qc-nome" placeholder="Ex: Chile"></div>
@@ -3374,6 +3377,9 @@ function _qcSubmit(){
   } else if(kind==='banco'){
     if(!store.bancos.includes(nome)) store.bancos.push(nome);
     saveStore(); _fbSync('bancos');
+  } else if(kind==='processador'){
+    if(!store.processadores.includes(nome)) store.processadores.push(nome);
+    saveStore(); _fbSync('processadores');
   } else if(kind==='grupo'){
     const pais=document.getElementById('qc-pais')?.value||'';
     if(!pais){ document.getElementById('qc-pais')?.classList.add('err'); return; }
@@ -3412,11 +3418,27 @@ const pagesMeta = {
 // Processadores/Acessos) fica de fora de propósito: é dado de referência
 // básico, não faz sentido desabilitar por ambiente.
 const MODULE_TOGGLE_KEYS=['gerencial-accounts','gerencial-custos','gerencial-conciliacoes','cronograma-accounts','cronograma-cierre','cronograma-custos','cronograma-conciliacoes','automacoes-baixa','automacoes-fechamentos'];
+// Cada seção do menu some sozinha quando NENHUM dos módulos filhos dela está
+// habilitado neste ambiente — não é mais um env fixo no código (ex.:
+// Automações só aparecer em eron/staging); agora é o Super Admin quem decide
+// por ambiente em Cadastro > Módulos, e a seção-mãe reage a isso.
+const MODULE_SECTIONS={
+  'gerencial-toggle':{childrenId:'gerencial-children',keys:['gerencial-accounts','gerencial-custos','gerencial-conciliacoes']},
+  'cronograma-toggle':{childrenId:'cronograma-children',keys:['cronograma-accounts','cronograma-cierre','cronograma-custos','cronograma-conciliacoes']},
+  'automacoes-toggle':{childrenId:'automacoes-children',keys:['automacoes-baixa','automacoes-fechamentos'],dividerId:'automacoes-divider'},
+};
 function isModuleEnabled(pageId){ return (store.moduleConfig||{})[pageId]!==false; }
 function _applyModuleVisibility(){
   MODULE_TOGGLE_KEYS.forEach(pageId=>{
     const item=document.querySelector('.sb-item[data-page="'+pageId+'"]');
     if(item) item.style.display=isModuleEnabled(pageId)?'':'none';
+  });
+  Object.entries(MODULE_SECTIONS).forEach(([headerId,{childrenId,keys,dividerId}])=>{
+    const anyVisible=keys.some(isModuleEnabled);
+    [headerId,childrenId,dividerId].filter(Boolean).forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.style.display=anyVisible?'':'none';
+    });
   });
 }
 function renderCadastroModulos(){
@@ -3447,8 +3469,7 @@ function _toggleModuleConfig(pageId,enabled){
 function navigate(pageId){
   if(pageId==='cadastro-acessos'&&!canViewAcessos()) return;
   if(pageId==='cadastro-modulos'&&!isSuperAdmin()) return;
-  if(pageId==='automacoes-baixa'&&!['eron','staging'].includes(_currentEnv)) return;
-  if(pageId==='automacoes-fechamentos'&&!['eron','staging'].includes(_currentEnv)) return;
+  if(pageId==='cadastro-grupos'&&_currentEnv!=='staging') return;
   if(!isModuleEnabled(pageId)) return;
   document.querySelectorAll('.page').forEach(el=>{el.classList.remove('active');el.style.display='';});
   document.querySelectorAll('.sb-item[data-page]').forEach(el=>el.classList.remove('active'));
@@ -6979,14 +7000,14 @@ async function switchEnvironment(envKey){
   _acessosTabEnv=null; _acessosOtherStore=null;
   if(_acessosOtherApp){try{_acessosOtherApp.delete();}catch(e){} _acessosOtherApp=null;}
   // Reset store to defaults for the new environment
-  Object.assign(store,{paises:[],agentes:[],bancos:[],processadores:[],responsaveis:[],contas:[],cronogramaData:{},cierreData:{},conciliacoes:[],cronogramaConciliacoes:{},paisesResp:{},bancosResp:{},processadoresResp:{},conciliacoesPrioridade:{},volumeRankings:{cashin:{},cashout:{},refunds:{},chargebacks:{},combined:{}},volumeColumnMapping:{},concilVolumeMap:{},ignoredGatewayIds:{cashin:[],cashout:[],refunds:[],chargebacks:[]},liquidacoesConfig:{},liquidacoesStatus:{},liquidacoesManual:[],liquidacoesExcluidos:{},auditLog:[],permissions:{},credentials:{}});
+  Object.assign(store,{paises:[],agentes:[],bancos:[],processadores:[],responsaveis:[],contas:[],cronogramaData:{},cierreData:{},conciliacoes:[],cronogramaConciliacoes:{},gruposConciliacao:[],moduleConfig:{},paisesResp:{},bancosResp:{},processadoresResp:{},conciliacoesPrioridade:{},volumeRankings:{cashin:{},cashout:{},refunds:{},chargebacks:{},combined:{}},volumeColumnMapping:{},concilVolumeMap:{},ignoredGatewayIds:{cashin:[],cashout:[],refunds:[],chargebacks:[]},liquidacoesConfig:{},liquidacoesStatus:{},liquidacoesManual:[],liquidacoesExcluidos:{},auditLog:[],permissions:{},credentials:{}});
   loadStore();
   _updateEnvSwitcher();
-  // A aba Automações só existe no ambiente "eron" — navigate() já bloqueia
-  // entrar nela vindo de outro ambiente, mas se o usuário já estava nela e
-  // trocou de ambiente sem sair da tela, ela ficava com os controles ainda
-  // visíveis e "funcionando" (só que sem efeito real), confundindo o usuário.
-  if(currentPageId==='automacoes-baixa'&&envKey!=='eron') navigate('cadastro-pais');
+  // Automações agora é habilitado/desabilitado por ambiente via Cadastro >
+  // Módulos (não mais fixo no código) — se o módulo da página atual ficou
+  // desabilitado no ambiente pro qual acabou de trocar, sai dela em vez de
+  // deixar os controles visíveis e "funcionando" sem efeito real.
+  if((currentPageId==='automacoes-baixa'||currentPageId==='automacoes-fechamentos')&&!isModuleEnabled(currentPageId)) navigate('cadastro-pais');
   document.getElementById('env-dd').style.display='none';
   document.getElementById('env-btn').classList.remove('open');
   _toast('Ambiente: '+env.label,3000);
@@ -8948,13 +8969,6 @@ async function _credSave(){
   }
 }
 
-function _updateAutomacoesVisibility(){
-  const show=['eron','staging'].includes(_currentEnv);
-  ['automacoes-toggle','automacoes-children','automacoes-divider'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.style.display=show?'':'none';
-  });
-}
 // Staging é visualmente idêntico à produção (mesmo login, mesmas cores) —
 // sem esse aviso, é fácil um humano perder a linha entre os dois no meio de
 // um teste. Isolamento de dado (storeRoot) já existe; isto é a rede de
@@ -8988,8 +9002,11 @@ function _updateStagingBanner(){
 }
 function _updateEnvSwitcher(){
   _updateStagingBanner();
-  _updateAutomacoesVisibility();
   _applyModuleVisibility();
+  // Conciliações agrupadas é feature experimental, só staging (ver
+  // _currentEnv==='staging' nos outros pontos de uso).
+  const grupoItem=document.getElementById('sb-item-cadastro-grupos');
+  if(grupoItem) grupoItem.style.display=_currentEnv==='staging'?'':'none';
   const wrap=document.getElementById('env-switcher-wrap');
   if(!wrap) return;
   const logU=store.responsaveis.find(r=>r.email===window._loggedEmail);
@@ -9799,6 +9816,20 @@ function openConciliacaoModal(editIdx=-1){
         <option value="Diário" ${conc.frequencia==='Diário'?'selected':''}>Diário</option>
       </select>
     </div>
+    ${_currentEnv==='staging'?`
+    <div class="form-field" style="border-top:1px solid var(--e-pale);border-bottom:1px solid var(--e-pale);padding:14px 0">
+      <div class="toggle-row">
+        <div class="toggle-info"><div class="toggle-title" style="color:var(--e-purple)">${t('lbl-conc-agrupada')}</div></div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="conc-agrupada-toggle" onchange="_toggleConcAgrupada(this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div id="conc-grupo-wrap" style="display:none;margin-top:10px">
+        <label class="form-label">${t('lbl-conc-grupo')}<span class="req">*</span></label>
+        ${_ssFieldHtml('conc-grupo',t('sel-select'))}
+      </div>
+    </div>`:''}
     <div class="form-field"><label class="form-label">${t('conc-col-tipo')}<span class="req">*</span></label>
       <div style="display:flex;gap:6px">
         <button type="button" id="tipo-proc-btn" class="op-type-toggle" onclick="toggleConcTipo('processadores')">${t('cad-proc-title')}</button>
@@ -9806,22 +9837,11 @@ function openConciliacaoModal(editIdx=-1){
         <button type="button" id="tipo-controle-btn" class="op-type-toggle" onclick="toggleConcTipo('controle')">${t('tipo-controle')}</button>
       </div>
     </div>
-    ${_currentEnv==='staging'?`
-    <div class="form-field" style="border-top:1px solid var(--e-pale);padding-top:12px;margin-top:4px">
-      <div class="toggle-row">
-        <div class="toggle-info"><div class="toggle-title">${t('lbl-conc-agrupada')}</div></div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="conc-agrupada-toggle" onchange="_toggleConcAgrupada(this.checked)">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      <div id="conc-grupo-wrap" style="display:none;margin-top:8px">
-        <label class="form-label">${t('lbl-conc-grupo')}<span class="req">*</span></label>
-        ${_ssFieldHtml('conc-grupo',t('sel-select'))}
-      </div>
-    </div>`:''}
     <div id="conc-vinc-wrap" class="form-field">
-      <label class="form-label" id="conc-vinc-label">${t('conc-col-contas')}</label>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <label class="form-label" id="conc-vinc-label">${t('conc-col-contas')}</label>
+        <button type="button" id="conc-vinc-add-proc-btn" class="ss-add-btn" style="display:none;width:24px;height:24px;font-size:15px" onclick="_qcOpen('processador',null,()=>renderConcVincList())" title="${t('btn-criar-novo')}">+</button>
+      </div>
       <div class="contas-ms-wrap">
         <div class="contas-ms-search"><input type="text" placeholder="${t('ph-buscar')}" id="conc-vinc-search" oninput="renderConcVincList()"></div>
         <div class="contas-ms-list" id="conc-vinc-list"></div>
@@ -9908,6 +9928,8 @@ function renderConcVincList(){
   const showBancos=_tipoAtivosConc.includes('bancos');
   const lbl=document.getElementById('conc-vinc-label');
   if(lbl) lbl.textContent=showProc&&showBancos?t('lbl-proc-e-contas'):showProc?t('lbl-proc-vinc'):t('conc-col-contas');
+  const addProcBtn=document.getElementById('conc-vinc-add-proc-btn');
+  if(addProcBtn) addProcBtn.style.display=showProc?'':'none';
   let items=[];
   if(showProc) items.push(...store.processadores.map(p=>({type:'proc',key:p,label:p,sub:t('dup-link-tipo-processador-1')})));
   if(showBancos){
