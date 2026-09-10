@@ -6355,6 +6355,14 @@ function _fbSync(field){
     val={};Object.entries(store[field]||{}).forEach(([k,v])=>val[_encFbKey(k)]=v);
   } else if(field==='credentials'){
     val={};Object.entries(store.credentials).forEach(([k,v])=>val[_encK(k)]=v);
+  } else if(field==='volumeRankings'){
+    // priorityFixed é sincronizado à parte, por transação atômica (ver
+    // _fbMergePriorityFixed) — precisa ficar de fora deste .set() do nó
+    // inteiro, senão qualquer cliente com uma cópia local desatualizada
+    // (ex: sessão aberta antes de outra pessoa concluir um dia em outra aba)
+    // apaga por cima os congelamentos que só existem no servidor.
+    val={...store.volumeRankings};
+    delete val.priorityFixed;
   } else {
     val=store[field];
   }
@@ -10464,12 +10472,32 @@ function _rebuildCombinedRanking(){
 // ao vivo, mas seu volume precisa continuar congelado pra sempre (até ela
 // voltar a ter volume pendente de verdade). Sobrescrever do zero aqui é o
 // que causava a Prioridade virar "—" quando a conta ficava em dia.
+// Mescla as entradas de "combined" no priorityFixed do SERVIDOR via
+// transação atômica do Firebase — nunca faz "ler cópia local, escrever nó
+// inteiro por cima". Isso é o que garante que o congelamento feito por um
+// usuário numa aba não seja apagado pela sincronização de outro usuário
+// noutra aba com uma cópia local desatualizada (era o bug: a importação de
+// volume sobrescrevia o nó inteiro com a cópia de quem importou, que nunca
+// tinha visto os congelamentos feitos por conclusões em outras sessões,
+// já que essas nunca chegavam a sincronizar).
+function _fbMergePriorityFixed(delta){
+  if(typeof _fbRef==='undefined'||!Object.keys(delta).length) return;
+  try{
+    _fbRef.child('volumeRankings/priorityFixed').transaction(current=>({...(current||{}),...delta}));
+  }catch(e){console.warn('[FB priorityFixed merge]',e);}
+}
 function _snapshotFixedPriority(){
   const combined=store.volumeRankings.combined||{};
   const fixed={...(store.volumeRankings.priorityFixed||{})};
-  for(const concId in combined) fixed[concId]={usd:combined[concId].usd};
+  const delta={};
+  for(const concId in combined){
+    const entry={usd:combined[concId].usd};
+    fixed[concId]=entry;
+    delta[concId]=entry;
+  }
   store.volumeRankings.priorityFixed=fixed;
   _invalidatePriorityRankCache();
+  _fbMergePriorityFixed(delta);
 }
 function _renderVolLastImport(){
   const lbl=document.getElementById('vol-last-import-lbl');
