@@ -3219,7 +3219,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='b602b139b057';
+const APP_VERSION='f2cce1c9e6e5';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -10880,23 +10880,23 @@ function _computeVolumePrioridade(concId){
 function _concVolumeStatus(conc){
   const _cid=(conc.id||conc.nome).replace(/['"]/g,'');
   const _vol=(store.volumeRankings?.combined||{})[_cid]?.usd||0;
-  if(_vol) return {kind:'valor',text:'$'+Math.round(_vol).toLocaleString('en-US')};
+  if(_vol) return {kind:'valor',text:'$'+Math.round(_vol).toLocaleString('en-US'),val:_vol};
   const _map=store.concilVolumeMap?.[_cid];
   const _vr=store.volumeRankings||{};
   const _inData=(ids,src)=>(ids||[]).some(id=>!!(src||{})[id]);
   const _hasGw=!!(_map&&[...(_map.cashinIds||[]),...(_map.cashoutIds||[]),...(_map.refundIds||[]),...(_map.chargebackIds||[])].length);
   const _hasMappedData=_hasGw&&(_inData(_map.cashinIds,_vr.cashin)||_inData(_map.cashoutIds,_vr.cashout)||_inData(_map.refundIds,_vr.refunds)||_inData(_map.chargebackIds,_vr.chargebacks));
-  if(_hasGw&&!_hasMappedData) return {kind:'mapeado',text:t('conc-sem-volume-mapeado')};
+  if(_hasGw&&!_hasMappedData) return {kind:'mapeado',text:t('conc-sem-volume-mapeado'),val:0};
   if(_hasGw){
     // Volume ao vivo zerado por conciliação concluída: mostra o volume
     // congelado na última ingestão (mesmo padrão do tile "Concluída", ver
     // _concluidoVol acima) em vez do pill "sem volume pendente" — a conta
     // não deixou de ter volume, só foi conciliada.
     const _frozen=(_vr.priorityFixed||{})[_cid]?.usd;
-    if(_frozen>0) return {kind:'valor',text:'$'+Math.round(_frozen).toLocaleString('en-US')};
-    return {kind:'pendente',text:t('conc-sem-volume-pendente')};
+    if(_frozen>0) return {kind:'valor',text:'$'+Math.round(_frozen).toLocaleString('en-US'),val:_frozen};
+    return {kind:'pendente',text:t('conc-sem-volume-pendente'),val:0};
   }
-  return {kind:null,text:''};
+  return {kind:null,text:'',val:0};
 }
 function _priorTierClass(tier){
   if(tier==='TOP 10') return 'prior-top10';
@@ -11903,8 +11903,21 @@ function renderCronogramaConciliacoes(){
   const st=_sortState['crono-conc'];
   list=[...list].sort((a,b)=>{
     if(st.col==='volume'){
-      const _va=(store.volumeRankings?.combined||{})[(a.id||a.nome).replace(/['"]/g,'')]?.usd||0;
-      const _vb=(store.volumeRankings?.combined||{})[(b.id||b.nome).replace(/['"]/g,'')]?.usd||0;
+      // Chave numérica alinhada ao que a célula realmente mostra (ver
+      // _concVolumeStatus): valores em $ (ao vivo ou congelado) sempre
+      // acima dos pills "sem volume pendente"/"sem volume mapeado", que
+      // por sua vez ficam acima de conciliações sem gateway mapeado —
+      // sem isso, tudo que tinha $0 de volume ao vivo (incluindo linhas
+      // com valor congelado) empatava em 0 e a ordem virava um sorteio.
+      const _volSortVal=c=>{
+        const _s=_concVolumeStatus(c);
+        if(_s.kind==='valor') return _s.val;
+        if(_s.kind==='pendente') return -1;
+        if(_s.kind==='mapeado') return -2;
+        return -3;
+      };
+      const _va=_volSortVal(a);
+      const _vb=_volSortVal(b);
       const d=(_va-_vb)*st.dir;
       if(d!==0) return d;
     } else if(st.col){
