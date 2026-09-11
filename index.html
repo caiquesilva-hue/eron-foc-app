@@ -436,11 +436,28 @@
   .sort-arrow.none::after{content:'⇅';}
   .sort-active .sort-arrow{opacity:1;color:var(--e-purple);}
   th.sort-active{color:var(--e-purple);}
+  /* tbody tr{transition:background .1s} (regra global lá em cima) faz o
+     fundo da <tr> chegar suave em .1s — some por trás das colunas normais
+     (transparentes) porque elas só mostram o fundo da própria linha. Mas
+     .cal-sticky nunca teve essa transition, então seu fundo muda na hora.
+     Com o mouse em movimento contínuo, "funde suave" vs "salta na hora"
+     parece um desalinhamento entre a coluna Nome e as demais — aqui
+     desliga a transição só nesta tabela pra as duas mudarem juntas, sem
+     fade de nenhum lado. */
+  .cal-table tbody tr{transition:none;}
   :root{--e-row-bg:#fff;}
   tbody tr:hover{--e-row-bg:var(--e-ghost);}
   tbody tr.row-encerrada{--e-row-bg:#f8f7ff;}
   tbody tr.row-encerrada:hover{--e-row-bg:#ecebf8;}
   .cal-sticky{position:sticky;left:0;background:var(--e-row-bg);z-index:2;border-right:1px solid var(--e-pale);}
+  /* O hover acima muda via custom property (--e-row-bg), que num elemento
+     position:sticky recalcula com um frame ou dois de atraso em relação ao
+     resto da linha (camada de composição própria) — dá a sensação de a
+     coluna Nome "demorar" pra ficar roxa. Aplicando o background direto
+     (sem passar pela variável) só nela, o navegador atualiza no mesmo
+     instante que as outras colunas. */
+  tbody tr:hover .cal-sticky{background:var(--e-ghost);}
+  tbody tr.row-encerrada:hover .cal-sticky{background:#ecebf8;}
   .cal-table thead th.cal-sticky{background:var(--e-ghost);z-index:5;}
   .col-head-btns{position:absolute;right:3px;top:50%;transform:translateY(-50%);display:none;align-items:center;gap:1px;}
   th:hover .col-head-btns,.col-head-btns.has-pin{display:flex;}
@@ -3202,7 +3219,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='0ec936764d0d';
+const APP_VERSION='b602b139b057';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -11419,7 +11436,7 @@ function _renderCronconcUnlinkedBanner(){
   const volSuffix=totalUSD?` · $${Math.round(totalUSD).toLocaleString('en-US')} ${t('gw-pendente-vol-label')}`:'';
   wrap.innerHTML=`<div style="display:flex;align-items:center;gap:8px;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin:0 0 10px">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    <span style="font-size:12px;color:#92400e"><strong>${total} gateway${total!==1?'s':''}</strong> ${tn('gw-pendente-cadastro',total)}${volSuffix} — ${t('gw-pendente-verificar')} <strong>${t('nav-gerencial')} › ${t('nav-conciliacoes')}</strong></span>
+    <span style="font-size:12px;color:#92400e">${total} gateway${total!==1?'s':''} ${tn('gw-pendente-cadastro',total)}${volSuffix} — ${t('gw-pendente-verificar')} ${t('nav-gerencial')} › ${t('nav-conciliacoes')}</span>
   </div>`;
 }
 // Conciliações ATIVAS com pelo menos uma conta vinculada já ENCERRADA em
