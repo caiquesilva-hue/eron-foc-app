@@ -1893,6 +1893,22 @@
     </div>
   </div>
 </div>
+<!-- ── MODAL: AVISO DE DESATIVAÇÃO DE MOVIMENTO RETROATIVO ─────── -->
+<div class="modal-overlay" id="modal-retroativo-warn" onclick="if(event.target===this)_respondRetroativoWarn(false)">
+  <div class="modal-card" style="width:400px">
+    <div class="modal-header">
+      <div class="modal-title" data-i18n="retroativo-warn-titulo">Remover movimento retroativo?</div>
+      <button class="modal-close" onclick="_respondRetroativoWarn(false)">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:13px;color:var(--e-text);line-height:1.5" data-i18n="retroativo-warn-pergunta">Retirar o movimento retroativo fará com que a conta seja entendida como criada agora, isso pode afetar o cronograma de cierre. Deseja prosseguir?</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="_respondRetroativoWarn(false)" data-i18n="lbl-nao">Não</button>
+      <button class="btn-primary" onclick="_respondRetroativoWarn(true)" data-i18n="lbl-sim">Sim</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL: ACESSO (ADD / EDIT) -->
 <div class="modal-overlay" id="modal-acesso" onclick="if(event.target===this)closeModal('modal-acesso')">
@@ -2562,6 +2578,7 @@ const i18n = {
     'cad-pais-modal':'Adicionar país','cad-agente-modal':'Adicionar agente','cad-banco-modal':'Adicionar banco','cad-proc-modal':'Adicionar processador',
     'btn-criar-novo':'Criar novo','grupo-criar-titulo':'Criar conciliação agrupada','lbl-conc-agrupada':'Conciliação agrupada','lbl-conc-grupo':'Grupo',
     'lbl-acc-retroativo':'Conta com movimento retroativo?','lbl-acc-retroativo-desde':'Movimento retroativo desde:',
+    'retroativo-warn-titulo':'Remover movimento retroativo?','retroativo-warn-pergunta':'Retirar o movimento retroativo fará com que a conta seja entendida como criada agora, isso pode afetar o cronograma de cierre. Deseja prosseguir?',
     'qc-criado-sucesso':'{nome} criado(a) com sucesso','err-selecione-grupo':'Selecione um grupo','cad-dup-pais':'País já cadastrado como',
     'grupo-n-conciliacoes-1':'{n} conciliação','grupo-n-conciliacoes-n':'{n} conciliações',
     'nav-grupos':'Conciliações agrupadas','btn-add-grupo':'Adicionar grupo','cad-grupo-search-ph':'Pesquisar grupo...','grupo-empty-title':'Nenhuma conciliação agrupada cadastrada','grupo-empty-sub':'Crie um grupo pra reunir várias conciliações sob uma linha única no Cronograma.','cad-grupo-modal':'Adicionar conciliação agrupada','edit-cad-grupo-modal':'Editar conciliação agrupada','del-cadastro-label-grupo':'a conciliação agrupada',
@@ -2793,6 +2810,7 @@ const i18n = {
     'cad-pais-modal':'Add country','cad-agente-modal':'Add agent','cad-banco-modal':'Add bank','cad-proc-modal':'Add processor',
     'btn-criar-novo':'Create new','grupo-criar-titulo':'Create grouped reconciliation','lbl-conc-agrupada':'Grouped reconciliation','lbl-conc-grupo':'Group',
     'lbl-acc-retroativo':'Account with retroactive movement?','lbl-acc-retroativo-desde':'Retroactive movement since:',
+    'retroativo-warn-titulo':'Remove retroactive movement?','retroativo-warn-pergunta':'Removing the retroactive movement will make the account be understood as created now, which may affect the cierre schedule. Do you want to proceed?',
     'qc-criado-sucesso':'{nome} created successfully','err-selecione-grupo':'Select a group','cad-dup-pais':'Country already registered as',
     'grupo-n-conciliacoes-1':'{n} reconciliation','grupo-n-conciliacoes-n':'{n} reconciliations',
     'nav-grupos':'Grouped reconciliations','btn-add-grupo':'Add group','cad-grupo-search-ph':'Search group...','grupo-empty-title':'No grouped reconciliation registered','grupo-empty-sub':'Create a group to gather several reconciliations under a single collapsible row in the Schedule.','cad-grupo-modal':'Add grouped reconciliation','edit-cad-grupo-modal':'Edit grouped reconciliation','del-cadastro-label-grupo':'the grouped reconciliation',
@@ -3017,6 +3035,7 @@ const i18n = {
     'cad-pais-modal':'Agregar país','cad-agente-modal':'Agregar agente','cad-banco-modal':'Agregar banco','cad-proc-modal':'Agregar procesador',
     'btn-criar-novo':'Crear nuevo','grupo-criar-titulo':'Crear conciliación agrupada','lbl-conc-agrupada':'Conciliación agrupada','lbl-conc-grupo':'Grupo',
     'lbl-acc-retroativo':'¿Cuenta con movimiento retroactivo?','lbl-acc-retroativo-desde':'Movimiento retroactivo desde:',
+    'retroativo-warn-titulo':'¿Eliminar el movimiento retroactivo?','retroativo-warn-pergunta':'Quitar el movimiento retroactivo hará que la cuenta se entienda como creada ahora, lo que puede afectar el cronograma de cierre. ¿Desea continuar?',
     'qc-criado-sucesso':'{nome} creado(a) con éxito','err-selecione-grupo':'Seleccione un grupo','cad-dup-pais':'País ya registrado como',
     'grupo-n-conciliacoes-1':'{n} conciliación','grupo-n-conciliacoes-n':'{n} conciliaciones',
     'nav-grupos':'Conciliaciones agrupadas','btn-add-grupo':'Agregar grupo','cad-grupo-search-ph':'Buscar grupo...','grupo-empty-title':'Ninguna conciliación agrupada registrada','grupo-empty-sub':'Crea un grupo para reunir varias conciliaciones bajo una sola fila colapsable en el Cronograma.','cad-grupo-modal':'Agregar conciliación agrupada','edit-cad-grupo-modal':'Editar conciliación agrupada','del-cadastro-label-grupo':'la conciliación agrupada',
@@ -3240,7 +3259,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='68d6962ebd4a';
+const APP_VERSION='5250d877fe3d';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -4008,6 +4027,7 @@ function refreshAgenteBanco(pais){
   bancos.forEach(b=>{ const o=document.createElement('option'); o.value=b; o.textContent=b; bSel.appendChild(o); });
   _refreshAccAgenteBancoCombo(pais);
 }
+let _pendingAccountSave=null;
 function submitAccountForm(){
   const pais=document.getElementById('acc-pais').value;
   const required=['acc-pais','acc-agente','acc-banco','acc-sigla','acc-num-conta','acc-tipo','acc-tipo-conta'];
@@ -4031,21 +4051,40 @@ function submitAccountForm(){
   };
   // createdAt guarda a data EFETIVA a partir da qual a conta aparece nos
   // cronogramas (renderCronogramaAccounts/renderCierreTable já comparam
-  // contra ela) — sem "movimento retroativo", é a data real de criação,
-  // preservada em edições (nunca recalculada). _createdAtReal guarda essa
-  // data real à parte, pra não se perder se o usuário ligar e depois
-  // desligar o retroativo (senão "não" não teria como voltar à data
-  // verdadeira depois de já ter sido sobrescrita).
-  data._createdAtReal=oldContaPre?._createdAtReal!==undefined?oldContaPre._createdAtReal:(oldContaPre?.createdAt!==undefined?oldContaPre.createdAt:Date.now());
+  // contra ela). Com retroativo, é o 1º dia do mês escolhido; sem
+  // retroativo, uma edição normal preserva a data já existente (não deve
+  // "recriar" a conta a cada salvamento). A única transição arriscada é
+  // desativar um retroativo que já estava ativo — nesse caso a conta passa
+  // a ser entendida como criada agora, o que pode empurrá-la pra fora dos
+  // cronogramas de cierre passados, então confirma antes (ver
+  // _respondRetroativoWarn) em vez de aplicar direto.
+  const wasRetroativo=!!oldContaPre?.retroativoDesde;
   const retroativoMes=isRetroativo?(document.getElementById('acc-retroativo-mes')?.value||''):'';
   if(isRetroativo&&retroativoMes){
     const [ry,rm]=retroativoMes.split('-').map(Number);
     data.createdAt=new Date(ry,rm-1,1).getTime();
     data.retroativoDesde=retroativoMes;
+  } else if(wasRetroativo&&!isRetroativo){
+    _pendingAccountSave={data,encerrado,oldContaPre};
+    openModal('modal-retroativo-warn');
+    return;
   } else {
-    data.createdAt=data._createdAtReal;
+    data.createdAt=oldContaPre?.createdAt!==undefined?oldContaPre.createdAt:Date.now();
   }
   if(encerrado) data.dataEncerramento=(oldContaPre?.status==='encerrada'&&oldContaPre.dataEncerramento)?oldContaPre.dataEncerramento:Date.now();
+  _commitAccountSave(data,encerrado,oldContaPre);
+}
+function _respondRetroativoWarn(yes){
+  closeModal('modal-retroativo-warn');
+  const pending=_pendingAccountSave;
+  _pendingAccountSave=null;
+  if(!yes||!pending) return;
+  const {data,encerrado,oldContaPre}=pending;
+  data.createdAt=Date.now();
+  if(encerrado) data.dataEncerramento=(oldContaPre?.status==='encerrada'&&oldContaPre.dataEncerramento)?oldContaPre.dataEncerramento:Date.now();
+  _commitAccountSave(data,encerrado,oldContaPre);
+}
+function _commitAccountSave(data,encerrado,oldContaPre){
   if(editingIdx>=0){
     const oldConta=store.contas[editingIdx];
     const oldKey=`${oldConta.sigla}_${oldConta.numeroConta}`.replace(/['"]/g,'');
