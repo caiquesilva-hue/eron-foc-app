@@ -2540,6 +2540,7 @@ const i18n = {
     'yesno-yes':'Sim','yesno-no':'Não',
     'yn-encerrar-title':'Encerrar no cronograma?','yn-encerrar-sub':'Contas removidas da rotina. Deseja encerrá-las no cronograma também?','yn-encerrar-sub-s':'Conta removida da rotina. Deseja encerrá-la no cronograma também?',
     'yn-add-title':'Adicionar ao cronograma?','yn-add-sub':'Esta conta não existe no cronograma. Deseja adicioná-la agora?',
+    'yn-add-cred-title':'Criar credencial de baixa?','yn-add-cred-sub':'Esta conta ainda não tem credencial de baixa automática configurada. Deseja criar agora?',
     'nav-accounts':'Accounts','nav-custos':'Liquidações','nav-conciliacoes':'Conciliações','nav-cierre':'Accounts – Cierre',
     'nav-pais':'País','nav-agente':'Agente','nav-banco':'Banco',
     'dev-badge':'Em desenvolvimento',
@@ -2772,6 +2773,7 @@ const i18n = {
     'yesno-yes':'Yes','yesno-no':'No',
     'yn-encerrar-title':'Close in schedule?','yn-encerrar-sub':'Accounts removed from routine. Close them in the schedule too?','yn-encerrar-sub-s':'Account removed from routine. Close it in the schedule too?',
     'yn-add-title':'Add to schedule?','yn-add-sub':'This account does not exist in the schedule. Add it now?',
+    'yn-add-cred-title':'Create download credential?','yn-add-cred-sub':'This account does not have an automatic download credential configured yet. Create it now?',
     'nav-accounts':'Accounts','nav-custos':'Settlements','nav-conciliacoes':'Reconciliations',
     'nav-pais':'Country','nav-agente':'Agent','nav-banco':'Bank',
     'dev-badge':'In development',
@@ -2997,6 +2999,7 @@ const i18n = {
     'yesno-yes':'Sí','yesno-no':'No',
     'yn-encerrar-title':'¿Cerrar en el cronograma?','yn-encerrar-sub':'Cuentas eliminadas de la rutina. ¿Cerrarlas también en el cronograma?','yn-encerrar-sub-s':'Cuenta eliminada de la rutina. ¿Cerrarla también en el cronograma?',
     'yn-add-title':'¿Agregar al cronograma?','yn-add-sub':'Esta cuenta no existe en el cronograma. ¿Agregarla ahora?',
+    'yn-add-cred-title':'¿Crear credencial de descarga?','yn-add-cred-sub':'Esta cuenta todavía no tiene una credencial de descarga automática configurada. ¿Crearla ahora?',
     'nav-accounts':'Cuentas','nav-custos':'Liquidaciones','nav-conciliacoes':'Conciliaciones',
     'nav-pais':'País','nav-agente':'Agente','nav-banco':'Banco',
     'dev-badge':'En desarrollo',
@@ -3259,7 +3262,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='5250d877fe3d';
+const APP_VERSION='1dc696125994';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -4109,6 +4112,7 @@ function _commitAccountSave(data,encerrado,oldContaPre){
     store.contas.push(data);
     closeModal('modal-account');
     saveStore(); _fbSync('contas');
+    _accMaybeSuggestCredencial(data);
   }
   renderAccountsTable();
   renderCronogramaAccounts();
@@ -4274,6 +4278,42 @@ function _credOpenAddToCronograma(paisNome,banco_nome,agente){
       if(opt) aSel.value=opt.value;
     }
   },120);
+}
+
+// Inverso do fluxo acima: lá, criar uma credencial sem conta correspondente
+// sugere criar a conta; aqui, criar uma conta cujo banco já é suportado
+// pela Baixa automática (está em _DT_BANCO_MAP) mas cujo agente ainda não
+// tem credencial configurada (fora de CRED_BANK_AGENTS) sugere criar essa
+// credencial. Só dispara pra contas NOVAS — editar uma conta já existente
+// não deveria ficar perguntando isso de novo a cada salvamento.
+function _accMaybeSuggestCredencial(conta){
+  if(!isModuleEnabled('automacoes-baixa')) return;
+  const dt=_DT_BANCO_MAP[conta.banco];
+  if(!dt) return; // banco fora do escopo da Baixa automática — nada a sugerir
+  const agUp=(conta.agente||'').toUpperCase().replace(/^[A-Z]+\./,'');
+  if(!agUp) return;
+  const jaTem=(CRED_BANK_AGENTS[dt.bank_raw]||[]).includes(agUp);
+  if(jaTem) return;
+  const body=`<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--e-ghost);border-radius:7px;font-size:12px">
+    <span>🔐</span><span><strong>${_escHtml(conta.banco)}</strong> / ${_escHtml(agUp)} <span style="color:var(--e-muted)">(${_escHtml(conta.pais)})</span></span>
+  </div>`;
+  _ynShow('🔐',t('yn-add-cred-title'),t('yn-add-cred-sub'),body,
+    ()=>{_accOpenCreateCredencial(dt.bank_raw,agUp);},
+    ()=>{}
+  );
+}
+
+function _accOpenCreateCredencial(bankRaw,agente){
+  navigate('automacoes-baixa');
+  setTimeout(()=>{
+    _credSetMode('new');
+    const bankSel=document.getElementById('cred-bank-sel');
+    if(bankSel){bankSel.value=bankRaw;_ssRefresh('cred-bank-sel');}
+    _credBankChange();
+    const agentTxt=document.getElementById('cred-agent-txt');
+    if(agentTxt) agentTxt.value=agente;
+    _credAgentChange();
+  },80);
 }
 
 // ─── RENDER ACCOUNTS TABLE ────────────────────────────────────────
