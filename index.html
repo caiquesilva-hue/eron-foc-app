@@ -8,6 +8,7 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
+    color-scheme:light;
     --e-darkest:#1b133c;--e-dark:#211b40;--e-navy:#292252;--e-mid:#4b368a;
     --e-purple:#976ff4;--e-violet:#6f73f4;--e-lilac:#b7b9f9;--e-lavender:#ddc8f4;
     --e-pale:#e5e6f8;--e-ghost:#f1f1fe;--e-muted:#9898c3;--e-pink:#c95aff;
@@ -18,12 +19,13 @@
        já apareciam implicitamente (branco), então não muda nada visualmente
        em modo claro — só passam a existir de verdade pro dark mode poder
        sobrescrevê-las. */
-    --e-surface:#fff;--e-bg:#fff;--e-border:#e5e6f8;--e-accent:var(--e-purple);
+    --e-surface:#fff;--e-bg:#f1f1fe;--e-border:#e5e6f8;--e-accent:var(--e-purple);
     /* Tokens semânticos de "aviso" (bancos/gateways pendentes etc) — extraídos
        dos valores fixos que os banners amarelos já usavam, pra poder escurecer
        só no dark mode sem tocar o visual atual em modo claro. */
     --e-warn-bg:#fffbeb;--e-warn-border:#fcd34d;--e-warn-divider:#fde68a;
     --e-warn-header-bg:#fef3c7;--e-warn-text:#92400e;--e-warn-accent:#d97706;
+    --e-danger-bg:#fef2f2;--e-danger-border:#fca5a5;--e-danger-text:#991b1b;--e-danger-accent:#dc2626;
   }
   /* Dark mode (Light/Dark/Auto) — feature em desenvolvimento, só staging
      (ver _darkModeEnabled mais abaixo, no bloco de JS). "Auto" acompanha o SO via
@@ -33,11 +35,13 @@
      já usada na sidebar (--e-dark/--e-navy), que já é escura hoje. */
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
+      color-scheme:dark;
       --e-text:#e8e6f7;--e-sub:#b8b3d9;--e-muted:#7a749e;--e-mid:#c3b0f5;
       --e-pale:#3a3260;--e-ghost:#1a1533;
       --e-surface:#16112c;--e-bg:#100c22;--e-border:#3a3260;
       --e-warn-bg:var(--e-surface);--e-warn-border:rgba(251,191,36,.35);--e-warn-divider:rgba(251,191,36,.15);
       --e-warn-header-bg:rgba(251,191,36,.12);--e-warn-text:#fbbf24;--e-warn-accent:#f59e0b;
+      --e-danger-bg:var(--e-surface);--e-danger-border:rgba(248,113,113,.4);--e-danger-text:#f87171;--e-danger-accent:#f87171;
     }
   }
   @media (prefers-color-scheme: dark){
@@ -54,11 +58,13 @@
     :root:not([data-theme="light"]) .chip-liq-4{background:rgba(251,146,60,.16);color:#fb923c;border-color:rgba(251,146,60,.45);}
   }
   :root[data-theme="dark"]{
+    color-scheme:dark;
     --e-text:#e8e6f7;--e-sub:#b8b3d9;--e-muted:#7a749e;--e-mid:#c3b0f5;
     --e-pale:#3a3260;--e-ghost:#1a1533;
     --e-surface:#16112c;--e-bg:#100c22;--e-border:#3a3260;
     --e-warn-bg:var(--e-surface);--e-warn-border:rgba(251,191,36,.35);--e-warn-divider:rgba(251,191,36,.15);
     --e-warn-header-bg:rgba(251,191,36,.12);--e-warn-text:#fbbf24;--e-warn-accent:#f59e0b;
+    --e-danger-bg:var(--e-surface);--e-danger-border:rgba(248,113,113,.4);--e-danger-text:#f87171;--e-danger-accent:#f87171;
   }
   :root[data-theme="dark"] .chip-green,:root[data-theme="dark"] .prior-baixa,:root[data-theme="dark"] .d1-toggle.active.dt-concluida,:root[data-theme="dark"] .chip-cierre-concluido,:root[data-theme="dark"] .prior-top30{background:rgba(34,197,94,.16);color:#4ade80;border-color:rgba(34,197,94,.45);}
     :root[data-theme="dark"] .chip-red,:root[data-theme="dark"] .prior-alta,:root[data-theme="dark"] .d1-toggle.active.dt-sem-acesso{background:rgba(248,113,113,.16);color:#f87171;border-color:rgba(248,113,113,.45);}
@@ -483,12 +489,19 @@
   .cal-wrap{background:var(--e-surface);border:1px solid var(--e-pale);border-radius:12px;}
   .cal-scroll{overflow-x:scroll;}
   .cal-table{width:max-content;min-width:100%;border-collapse:collapse;}
-  .cal-table thead{position:sticky;top:0;z-index:4;}
+  .cal-table thead{position:sticky;top:0;z-index:4;will-change:transform;}
   .cal-table thead th{padding:8px 10px;text-align:center;font-size:11px;font-weight:600;color:var(--e-muted);text-transform:uppercase;letter-spacing:.06em;background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap;}
   .cal-table thead tr:last-child th{border-top:none;}
   .cal-table thead th.col-info{text-align:left;padding:8px 46px 8px 14px;}
   .cal-table thead th.col-day{min-width:50px;width:auto;padding:5px 3px;}
-  .cal-table thead th.weekend{background:#faf5ff;}
+  /* Precisa ser OPACO, não rgba translúcido — thead é position:sticky, e um
+     fundo translúcido nele deixa as linhas do corpo aparecerem "por trás"
+     ao rolar (mesmo bug já visto na coluna Nome das conciliações agrupadas). */
+  .cal-table thead th.weekend{background:#f7f3fe;}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) .cal-table thead th.weekend{background:#20193c;}
+  }
+  :root[data-theme="dark"] .cal-table thead th.weekend{background:#20193c;}
   .cal-table tbody tr{border-bottom:1px solid var(--e-pale);}
   .cal-table tbody tr:last-child{border-bottom:none;}
   .cal-table tbody tr.row-ativa td:first-child{background-image:linear-gradient(to right,#22c55e 3px,transparent 3px);}
@@ -498,6 +511,15 @@
   .cal-table td.day-cell{padding:4px 2px;text-align:center;width:auto;min-width:50px;}
   .sel-cell.c-sel{background:rgba(124,58,237,.1)!important;box-shadow:inset 0 0 0 1.5px rgba(124,58,237,.55);}
   .cal-sticky.sel-cell.c-sel{background:#f2ebfd!important;}
+  /* Mesma mistura acima, só que sobre --e-surface escuro — sem isso, ao
+     clicar (selecionar) a célula sticky do Nome — muito comum ao expandir
+     uma conciliação agrupada, já que o clique passa pelo mesmo handler de
+     seleção — ela "pisca" branca porque o valor fixo acima nunca muda com
+     o tema. */
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) .cal-sticky.sel-cell.c-sel{background:#231645!important;}
+  }
+  :root[data-theme="dark"] .cal-sticky.sel-cell.c-sel{background:#231645!important;}
   .sel-cell{cursor:default;}
   #sel-sum-bar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(0);display:none;align-items:center;gap:16px;background:#1e1b4b;color:#fff;padding:9px 20px;border-radius:10px;font-size:13px;font-family:inherit;box-shadow:0 8px 24px rgba(0,0,0,.22);z-index:9998;white-space:nowrap;}
   #sel-sum-bar b{font-weight:700;}
@@ -537,7 +559,13 @@
   tbody tr:hover{--e-row-bg:var(--e-ghost);}
   tbody tr.row-encerrada{--e-row-bg:#f8f7ff;}
   tbody tr.row-encerrada:hover{--e-row-bg:#ecebf8;}
-  .cal-sticky{position:sticky;left:0;background:var(--e-row-bg);z-index:2;border-right:1px solid var(--e-pale);}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) tbody tr.row-encerrada{--e-row-bg:#1d1836;}
+    :root:not([data-theme="light"]) tbody tr.row-encerrada:hover{--e-row-bg:#2a2348;}
+  }
+  :root[data-theme="dark"] tbody tr.row-encerrada{--e-row-bg:#1d1836;}
+  :root[data-theme="dark"] tbody tr.row-encerrada:hover{--e-row-bg:#2a2348;}
+  .cal-sticky{position:sticky;left:0;background:var(--e-row-bg);z-index:2;border-right:1px solid var(--e-pale);will-change:transform;}
   /* O hover acima muda via custom property (--e-row-bg), que num elemento
      position:sticky recalcula com um frame ou dois de atraso em relação ao
      resto da linha (camada de composição própria) — dá a sensação de a
@@ -546,6 +574,10 @@
      instante que as outras colunas. */
   tbody tr:hover .cal-sticky{background:var(--e-ghost);}
   tbody tr.row-encerrada:hover .cal-sticky{background:#ecebf8;}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) tbody tr.row-encerrada:hover .cal-sticky{background:#2a2348;}
+  }
+  :root[data-theme="dark"] tbody tr.row-encerrada:hover .cal-sticky{background:#2a2348;}
   .cal-table thead th.cal-sticky{background:var(--e-ghost);z-index:5;}
   .col-head-btns{position:absolute;right:3px;top:50%;transform:translateY(-50%);display:none;align-items:center;gap:1px;}
   th:hover .col-head-btns,.col-head-btns.has-pin{display:flex;}
@@ -3480,7 +3512,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='9e515b26157d';
+const APP_VERSION='4ef7afac3c42';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -5658,6 +5690,11 @@ function renderCronogramaAccounts(){
   const _ord=[..._crPins.map(k=>_cDefs.find(d=>d.k===k)),..._cDefs.filter(d=>!_crPins.includes(d.k))];
   const colInfos=`${_sth('sigla',t('col-sigla'),0,'cal-sticky')}${_ord.map(d=>d.h()).join('')}`;
   const fmtDate=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  // Ver comentário equivalente em renderCronogramaConciliacoes(): esconde a
+  // tabela durante a reconstrução e só revela depois que tudo (inclusive o
+  // passo de colunas ocultas/fixadas no setTimeout abaixo) terminar, pra
+  // nunca mostrar o frame intermediário incompleto.
+  tbl.style.visibility='hidden';
   tbl.innerHTML=`<thead><tr>${colInfos}${dayHeaders}</tr></thead><tbody>${
     listSorted.map((c,ri)=>{
       const contaKey=`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'');
@@ -5755,7 +5792,9 @@ function renderCronogramaAccounts(){
       onDayCellClick(e,td.dataset.ck,td.dataset.dt,td.dataset.act==='true',td);
     });
   }
-  setTimeout(()=>{const _t=document.getElementById('crono-cal-table');if(_crPins.length){const pg=document.getElementById('page-cronograma-accounts');if(pg)for(let i=1;i<=10;i++)pg.classList.remove('hide-col-'+i);_applyHiddenColsByKey(_t,'crono');_applyPinnedSticky(_t,'crono',calScrollEl);}else{_applyHiddenCols('crono','crono-cal-table',10);}},0);
+  setTimeout(()=>{const _t=document.getElementById('crono-cal-table');if(_crPins.length){const pg=document.getElementById('page-cronograma-accounts');if(pg)for(let i=1;i<=10;i++)pg.classList.remove('hide-col-'+i);_applyHiddenColsByKey(_t,'crono');_applyPinnedSticky(_t,'crono',calScrollEl);}else{_applyHiddenCols('crono','crono-cal-table',10);}
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{if(_t)_t.style.visibility='';}));
+  },0);
   _saveFilters('crono');
 }
 const _sortState={accounts:{col:null,dir:1},crono:{col:null,dir:1},cierre:{col:null,dir:1},'crono-conc':{col:null,dir:1},liq:{col:null,dir:1}};
@@ -10757,7 +10796,7 @@ function _renderUnlinkedGateways(){
   }).join('');
   const mkBlock=(title,ids,type,dataMap,useKey)=>ids.length?`
     <div style="border-bottom:1px solid var(--e-warn-divider)">
-      <div style="padding:5px 12px;font-size:10px;font-weight:700;color:var(--e-warn-text);text-transform:uppercase;letter-spacing:.8px;background:var(--e-warn-header-bg);position:sticky;top:0">${_esc(title)}</div>
+      <div style="padding:5px 12px;font-size:10px;font-weight:700;color:var(--e-warn-text);text-transform:uppercase;letter-spacing:.8px;background:var(--e-warn-bg);position:sticky;top:0">${_esc(title)}</div>
       ${mkRows(ids,type,dataMap,useKey)}
     </div>`:'';
   const body=[
@@ -12432,12 +12471,12 @@ function _renderClosedConcilMovementBanner(){
   const items=_closedConcilsWithMovement();
   if(!items.length){wrap.innerHTML='';return;}
   const n=items.length;
-  wrap.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:8px 12px;margin:0 0 10px">
+  wrap.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--e-danger-bg);border:1px solid var(--e-danger-border);border-radius:8px;padding:8px 12px;margin:0 0 10px">
     <div style="display:flex;align-items:center;gap:8px">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      <span style="font-size:12px;color:#991b1b">${tn('closed-movement-banner-msg',n)}</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--e-danger-accent)" stroke-width="2.5" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span style="font-size:12px;color:var(--e-danger-text)">${tn('closed-movement-banner-msg',n)}</span>
     </div>
-    <button onclick="openClosedConcilMovementModal()" style="font-size:12px;font-weight:600;padding:5px 12px;background:var(--e-surface);color:#991b1b;border:1px solid #fca5a5;border-radius:6px;cursor:pointer;font-family:inherit;flex-shrink:0">${t('closed-movement-banner-btn')}</button>
+    <button onclick="openClosedConcilMovementModal()" style="font-size:12px;font-weight:600;padding:5px 12px;background:var(--e-surface);color:var(--e-danger-text);border:1px solid var(--e-danger-border);border-radius:6px;cursor:pointer;font-family:inherit;flex-shrink:0">${t('closed-movement-banner-btn')}</button>
   </div>`;
 }
 function openClosedConcilMovementModal(){
@@ -12509,7 +12548,10 @@ function _renderConcilNoGatewayList(){
 let _cronconcWarningsExpanded=false;
 function _toggleCronconcWarnings(){
   _cronconcWarningsExpanded=!_cronconcWarningsExpanded;
-  _renderCronconcWarningsSummary();
+  // renderCronogramaConciliacoes() esconde a tabela durante a reconstrução
+  // e só revela no final (ver comentário lá) — evita o "quebrado" visual
+  // que uma troca de altura acima dela costumava causar.
+  renderCronogramaConciliacoes();
 }
 function _renderCronconcWarningsSummary(){
   const wrap=document.getElementById('crono-conc-warnings-summary');
@@ -12522,12 +12564,12 @@ function _renderCronconcWarningsSummary(){
   const activeCategories=[nUnlinkedGw,nClosedAcc,nClosedMove,nNoGw].filter(n=>n>0).length;
   if(!activeCategories){ wrap.innerHTML=''; detail.style.display='none'; return; }
   const arrow=_cronconcWarningsExpanded?'▲':'▼';
-  wrap.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:9px 14px;margin:0 0 10px;cursor:pointer" onclick="_toggleCronconcWarnings()">
+  wrap.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--e-danger-bg);border:1px solid var(--e-danger-border);border-radius:8px;padding:9px 14px;margin:0 0 10px;cursor:pointer" onclick="_toggleCronconcWarnings()">
     <div style="display:flex;align-items:center;gap:8px">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      <span style="font-size:13px;font-weight:700;color:#991b1b">${tn('cronconc-warnings-summary',activeCategories)}</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--e-danger-accent)" stroke-width="2.5" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span style="font-size:13px;font-weight:700;color:var(--e-danger-text)">${tn('cronconc-warnings-summary',activeCategories)}</span>
     </div>
-    <span style="font-size:16px;color:#991b1b">${arrow}</span>
+    <span style="font-size:16px;color:var(--e-danger-text)">${arrow}</span>
   </div>`;
   detail.style.display=_cronconcWarningsExpanded?'':'none';
 }
@@ -12892,6 +12934,14 @@ function renderCronogramaConciliacoes(){
       });
     }
   }
+  // Reconstruir centenas de linhas de uma vez (thead+tbody inteiros) é
+  // trabalho síncrono pesado o bastante pra o navegador às vezes pintar um
+  // frame incompleto (linhas de baixo em branco) antes de terminar o
+  // layout — só se corrige sozinho no próximo repaint (ex: ao mover o
+  // mouse). Escondendo a tabela durante a troca e só revelando depois que
+  // tudo (inclusive o passo de colunas ocultas/fixadas abaixo) terminar,
+  // garantimos que o usuário nunca vê esse estado intermediário quebrado.
+  tbl.style.visibility='hidden';
   tbl.innerHTML=`<thead><tr>${colInfos}${dayHdrs}</tr></thead><tbody>${displayList.map((conc,ri)=>{
     if(conc.__isGrupo) return _renderGrupoHeaderRow(conc.__grupo,conc.__children,ri,_ord,days,fmtD,statusCfg,chipHtml,d1Str);
     // Filha de grupo (mãe ainda existe — ver __mirrorGrupo montado acima):
@@ -12969,7 +13019,9 @@ function renderCronogramaConciliacoes(){
       onConcCellClick(ev,td.dataset.ck,td.dataset.dt);
     });
   }
-  setTimeout(()=>{const _t=document.getElementById('crono-conc-cal-table');if(_ccPins.length){const pg=document.getElementById('page-cronograma-conciliacoes');if(pg)for(let i=1;i<=9;i++)pg.classList.remove('hide-col-'+i);_applyHiddenColsByKey(_t,'crono-conc');_applyPinnedSticky(_t,'crono-conc',calScrollEl);}else{_applyHiddenCols('crono-conc','crono-conc-cal-table',8);}_initLiqColResize(_t);},0);
+  setTimeout(()=>{const _t=document.getElementById('crono-conc-cal-table');if(_ccPins.length){const pg=document.getElementById('page-cronograma-conciliacoes');if(pg)for(let i=1;i<=9;i++)pg.classList.remove('hide-col-'+i);_applyHiddenColsByKey(_t,'crono-conc');_applyPinnedSticky(_t,'crono-conc',calScrollEl);}else{_applyHiddenCols('crono-conc','crono-conc-cal-table',8);}_initLiqColResize(_t);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{if(_t)_t.style.visibility='';}));
+  },0);
   _saveFilters('crono-conc');
 }
 
