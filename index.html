@@ -1736,6 +1736,19 @@
         <label class="form-label" data-i18n="lbl-obs">Observações</label>
         <textarea class="form-input" id="acc-obs" rows="1" style="resize:none;overflow:hidden;font-size:13px;transition:height .1s" placeholder="" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
       </div>
+      <div class="form-field" style="border-top:1px solid var(--e-pale);padding-top:12px;margin-top:4px">
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="toggle-title" style="color:var(--e-purple)" data-i18n="lbl-acc-retroativo">Conta com movimento retroativo?</div></div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="acc-retroativo-toggle" onchange="_toggleAccRetroativo(this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div id="acc-retroativo-mes-wrap" style="display:none;margin-top:10px">
+          <label class="form-label"><span data-i18n="lbl-acc-retroativo-desde">Movimento retroativo desde:</span><span class="req">*</span></label>
+          <select class="form-select" id="acc-retroativo-mes"><option value="" data-i18n="sel-select">Selecione...</option></select>
+        </div>
+      </div>
       <!-- Encerrar conta — só aparece no modo edição -->
       <div id="acc-encerrar-section" style="display:none">
         <div class="toggle-divider"></div>
@@ -2543,6 +2556,7 @@ const i18n = {
     'lbl-nome':'Nome','lbl-pais-vinculo':'País vinculado',
     'cad-pais-modal':'Adicionar país','cad-agente-modal':'Adicionar agente','cad-banco-modal':'Adicionar banco','cad-proc-modal':'Adicionar processador',
     'btn-criar-novo':'Criar novo','grupo-criar-titulo':'Criar conciliação agrupada','lbl-conc-agrupada':'Conciliação agrupada','lbl-conc-grupo':'Grupo',
+    'lbl-acc-retroativo':'Conta com movimento retroativo?','lbl-acc-retroativo-desde':'Movimento retroativo desde:',
     'qc-criado-sucesso':'{nome} criado(a) com sucesso','err-selecione-grupo':'Selecione um grupo','cad-dup-pais':'País já cadastrado como',
     'grupo-n-conciliacoes-1':'{n} conciliação','grupo-n-conciliacoes-n':'{n} conciliações',
     'nav-grupos':'Conciliações agrupadas','btn-add-grupo':'Adicionar grupo','cad-grupo-search-ph':'Pesquisar grupo...','grupo-empty-title':'Nenhuma conciliação agrupada cadastrada','grupo-empty-sub':'Crie um grupo pra reunir várias conciliações sob uma linha única no Cronograma.','cad-grupo-modal':'Adicionar conciliação agrupada','edit-cad-grupo-modal':'Editar conciliação agrupada','del-cadastro-label-grupo':'a conciliação agrupada',
@@ -2773,6 +2787,7 @@ const i18n = {
     'lbl-nome':'Name','lbl-pais-vinculo':'Linked country',
     'cad-pais-modal':'Add country','cad-agente-modal':'Add agent','cad-banco-modal':'Add bank','cad-proc-modal':'Add processor',
     'btn-criar-novo':'Create new','grupo-criar-titulo':'Create grouped reconciliation','lbl-conc-agrupada':'Grouped reconciliation','lbl-conc-grupo':'Group',
+    'lbl-acc-retroativo':'Account with retroactive movement?','lbl-acc-retroativo-desde':'Retroactive movement since:',
     'qc-criado-sucesso':'{nome} created successfully','err-selecione-grupo':'Select a group','cad-dup-pais':'Country already registered as',
     'grupo-n-conciliacoes-1':'{n} reconciliation','grupo-n-conciliacoes-n':'{n} reconciliations',
     'nav-grupos':'Grouped reconciliations','btn-add-grupo':'Add group','cad-grupo-search-ph':'Search group...','grupo-empty-title':'No grouped reconciliation registered','grupo-empty-sub':'Create a group to gather several reconciliations under a single collapsible row in the Schedule.','cad-grupo-modal':'Add grouped reconciliation','edit-cad-grupo-modal':'Edit grouped reconciliation','del-cadastro-label-grupo':'the grouped reconciliation',
@@ -2996,6 +3011,7 @@ const i18n = {
     'lbl-nome':'Nombre','lbl-pais-vinculo':'País vinculado',
     'cad-pais-modal':'Agregar país','cad-agente-modal':'Agregar agente','cad-banco-modal':'Agregar banco','cad-proc-modal':'Agregar procesador',
     'btn-criar-novo':'Crear nuevo','grupo-criar-titulo':'Crear conciliación agrupada','lbl-conc-agrupada':'Conciliación agrupada','lbl-conc-grupo':'Grupo',
+    'lbl-acc-retroativo':'¿Cuenta con movimiento retroactivo?','lbl-acc-retroativo-desde':'Movimiento retroactivo desde:',
     'qc-criado-sucesso':'{nome} creado(a) con éxito','err-selecione-grupo':'Seleccione un grupo','cad-dup-pais':'País ya registrado como',
     'grupo-n-conciliacoes-1':'{n} conciliación','grupo-n-conciliacoes-n':'{n} conciliaciones',
     'nav-grupos':'Conciliaciones agrupadas','btn-add-grupo':'Agregar grupo','cad-grupo-search-ph':'Buscar grupo...','grupo-empty-title':'Ninguna conciliación agrupada registrada','grupo-empty-sub':'Crea un grupo para reunir varias conciliaciones bajo una sola fila colapsable en el Cronograma.','cad-grupo-modal':'Agregar conciliación agrupada','edit-cad-grupo-modal':'Editar conciliación agrupada','del-cadastro-label-grupo':'la conciliación agrupada',
@@ -3219,7 +3235,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='f2cce1c9e6e5';
+const APP_VERSION='422aa836dde1';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -3812,7 +3828,46 @@ function openEditAccount(idx){
   _obsEl.style.height='auto';
   _obsEl.style.height=_obsEl.scrollHeight+'px';
   document.getElementById('acc-encerrar').checked=c.status==='encerrada';
+  const retroToggle=document.getElementById('acc-retroativo-toggle');
+  if(retroToggle){
+    retroToggle.checked=!!c.retroativoDesde;
+    _populateAccRetroativoMeses(c.retroativoDesde||'');
+    document.getElementById('acc-retroativo-mes-wrap').style.display=c.retroativoDesde?'':'none';
+  }
   openModal('modal-account');
+}
+// Meses disponíveis pro "movimento retroativo": os últimos 12 meses
+// ANTERIORES ao atual (o mês corrente já é coberto pelo fluxo normal, não
+// retroativo, que usa a data real de criação). Mesmo formato de value
+// (YYYY-MM) e label usados no filtro de mês do Accounts – Cierre, pra bater
+// com _createdYM() lá quando comparado com createdAt.
+function _populateAccRetroativoMeses(selectedVal){
+  const sel=document.getElementById('acc-retroativo-mes');
+  if(!sel) return;
+  const now=new Date();
+  const vals=[];
+  for(let i=-1;i>=-12;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()+i,1);
+    vals.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+  }
+  // Uma conta editada bem mais tarde pode ter um retroativoDesde fora da
+  // janela padrão de 12 meses — inclui esse valor também, senão o toggle
+  // aparece ligado mas o dropdown fica em branco ao reabrir pra edição.
+  if(selectedVal&&!vals.includes(selectedVal)) vals.push(selectedVal);
+  vals.sort().reverse();
+  let opts=`<option value="">${t('sel-select')}</option>`;
+  vals.forEach(val=>{
+    const [vy,vm]=val.split('-').map(Number);
+    const lbl=new Date(vy,vm-1,1).toLocaleDateString(_dateLocale(),{month:'long',year:'numeric'});
+    const sl=val===selectedVal?' selected':'';
+    opts+=`<option value="${val}"${sl}>${lbl.charAt(0).toUpperCase()+lbl.slice(1)}</option>`;
+  });
+  sel.innerHTML=opts;
+}
+function _toggleAccRetroativo(on){
+  const wrap=document.getElementById('acc-retroativo-mes-wrap');
+  if(wrap) wrap.style.display=on?'':'none';
+  if(on) _populateAccRetroativoMeses(document.getElementById('acc-retroativo-mes')?.value||'');
 }
 function resetAccountForm(){
   // País
@@ -3832,6 +3887,11 @@ function resetAccountForm(){
   document.getElementById('acc-obs').value='';
   const toggle=document.getElementById('acc-encerrar');
   if(toggle) toggle.checked=false;
+  const retroToggle=document.getElementById('acc-retroativo-toggle');
+  if(retroToggle) retroToggle.checked=false;
+  const retroWrap=document.getElementById('acc-retroativo-mes-wrap');
+  if(retroWrap) retroWrap.style.display='none';
+  _populateAccRetroativoMeses('');
 }
 function onConcPaisChange(){
   const pais=document.getElementById('conc-pais')?.value||'';
@@ -3947,6 +4007,8 @@ function submitAccountForm(){
   const pais=document.getElementById('acc-pais').value;
   const required=['acc-pais','acc-agente','acc-banco','acc-sigla','acc-num-conta','acc-tipo','acc-tipo-conta'];
   if(pais==='Brasil') required.push('acc-agencia');
+  const isRetroativo=document.getElementById('acc-retroativo-toggle')?.checked||false;
+  if(isRetroativo) required.push('acc-retroativo-mes');
   if(!validate(required)) return;
   const encerrado=editingIdx>=0&&document.getElementById('acc-encerrar').checked;
   const oldContaPre=editingIdx>=0?store.contas[editingIdx]:null;
@@ -3962,10 +4024,22 @@ function submitAccountForm(){
     status:encerrado?'encerrada':'ativa',
     obs:document.getElementById('acc-obs').value.trim(),
   };
-  // Preserva a data de criação original (não é recalculada em edições) e
-  // registra a data de fechamento só na transição pra "encerrada" — reabrir
-  // e fechar de novo mais tarde deve gerar uma data nova, não a antiga.
-  if(oldContaPre?.createdAt!==undefined) data.createdAt=oldContaPre.createdAt;
+  // createdAt guarda a data EFETIVA a partir da qual a conta aparece nos
+  // cronogramas (renderCronogramaAccounts/renderCierreTable já comparam
+  // contra ela) — sem "movimento retroativo", é a data real de criação,
+  // preservada em edições (nunca recalculada). _createdAtReal guarda essa
+  // data real à parte, pra não se perder se o usuário ligar e depois
+  // desligar o retroativo (senão "não" não teria como voltar à data
+  // verdadeira depois de já ter sido sobrescrita).
+  data._createdAtReal=oldContaPre?._createdAtReal!==undefined?oldContaPre._createdAtReal:(oldContaPre?.createdAt!==undefined?oldContaPre.createdAt:Date.now());
+  const retroativoMes=isRetroativo?(document.getElementById('acc-retroativo-mes')?.value||''):'';
+  if(isRetroativo&&retroativoMes){
+    const [ry,rm]=retroativoMes.split('-').map(Number);
+    data.createdAt=new Date(ry,rm-1,1).getTime();
+    data.retroativoDesde=retroativoMes;
+  } else {
+    data.createdAt=data._createdAtReal;
+  }
   if(encerrado) data.dataEncerramento=(oldContaPre?.status==='encerrada'&&oldContaPre.dataEncerramento)?oldContaPre.dataEncerramento:Date.now();
   if(editingIdx>=0){
     const oldConta=store.contas[editingIdx];
@@ -3988,7 +4062,6 @@ function submitAccountForm(){
     if(siglaChanged) _fbSync('conciliacoes');
   } else {
     logAudit('gerencial','add-conta',{sigla:data.sigla,pais:data.pais});
-    data.createdAt=Date.now();
     store.contas.push(data);
     closeModal('modal-account');
     saveStore(); _fbSync('contas');
