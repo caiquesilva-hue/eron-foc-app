@@ -1930,7 +1930,7 @@
 <div class="modal-overlay" id="modal-enc-outras" onclick="if(event.target===this)_respondEncOutras(false)">
   <div class="modal-card" style="width:440px">
     <div class="modal-header">
-      <div class="modal-title" data-i18n="enc-outras-titulo">Encerrar outras contas também?</div>
+      <div class="modal-title" id="enc-outras-modal-title" data-i18n="enc-outras-titulo">Encerrar outras contas também?</div>
       <button class="modal-close" onclick="_respondEncOutras(false)">×</button>
     </div>
     <div class="modal-body">
@@ -2622,6 +2622,7 @@ const i18n = {
     'cred-quick-del-titulo':'Excluir credencial de baixa',
     'yn-rm-cred-title':'Excluir credencial da rotina?','yn-rm-cred-sub':'Esta conta ainda tem uma credencial de baixa automática ativa. Deseja excluí-la da rotina agora?',
     'enc-outras-titulo':'Encerrar outras contas também?','enc-outras-pergunta':'Existem outras contas de {banco} {agente} ativas no cronograma. Deseja encerrar todas ou somente essa?',
+    'reativar-outras-titulo':'Reativar outras contas também?','reativar-outras-pergunta':'Existem outras contas de {banco} {agente} encerradas no cronograma. Deseja reativar todas ou somente essa?',
     'nav-accounts':'Accounts','nav-custos':'Liquidações','nav-conciliacoes':'Conciliações','nav-cierre':'Accounts – Cierre',
     'nav-pais':'País','nav-agente':'Agente','nav-banco':'Banco',
     'dev-badge':'Em desenvolvimento',
@@ -2863,6 +2864,7 @@ const i18n = {
     'cred-quick-del-titulo':'Delete download credential',
     'yn-rm-cred-title':'Remove credential from routine?','yn-rm-cred-sub':'This account still has an active automatic download credential. Do you want to remove it from the routine now?',
     'enc-outras-titulo':'Close other accounts too?','enc-outras-pergunta':'There are other active {banco} {agente} accounts in the schedule. Do you want to close all of them or just this one?',
+    'reativar-outras-titulo':'Reactivate other accounts too?','reativar-outras-pergunta':'There are other closed {banco} {agente} accounts in the schedule. Do you want to reactivate all of them or just this one?',
     'nav-accounts':'Accounts','nav-custos':'Settlements','nav-conciliacoes':'Reconciliations',
     'nav-pais':'Country','nav-agente':'Agent','nav-banco':'Bank',
     'dev-badge':'In development',
@@ -3097,6 +3099,7 @@ const i18n = {
     'cred-quick-del-titulo':'Eliminar credencial de descarga',
     'yn-rm-cred-title':'¿Eliminar la credencial de la rutina?','yn-rm-cred-sub':'Esta cuenta todavía tiene una credencial de descarga automática activa. ¿Desea eliminarla de la rutina ahora?',
     'enc-outras-titulo':'¿Cerrar también otras cuentas?','enc-outras-pergunta':'Hay otras cuentas activas de {banco} {agente} en el cronograma. ¿Desea cerrarlas todas o solo esta?',
+    'reativar-outras-titulo':'¿Reactivar también otras cuentas?','reativar-outras-pergunta':'Hay otras cuentas cerradas de {banco} {agente} en el cronograma. ¿Desea reactivarlas todas o solo esta?',
     'nav-accounts':'Cuentas','nav-custos':'Liquidaciones','nav-conciliacoes':'Conciliaciones',
     'nav-pais':'País','nav-agente':'Agente','nav-banco':'Banco',
     'dev-badge':'En desarrollo',
@@ -3361,7 +3364,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='40764804bc30';
+const APP_VERSION='f63aa189f78a';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -4207,6 +4210,7 @@ function _commitAccountSave(data,encerrado,oldContaPre){
     if(keyChanged){_fbSync('cronogramaData');_fbSync('cierreData');}
     if(siglaChanged) _fbSync('conciliacoes');
     if(encerrado&&oldConta.status!=='encerrada') _accHandlePosEncerrar(data);
+    else if(!encerrado&&oldConta.status==='encerrada') _accHandlePosReativar(data);
   } else {
     logAudit('gerencial','add-conta',{sigla:data.sigla,pais:data.pais});
     store.contas.push(data);
@@ -4493,17 +4497,22 @@ function _accOpenUpdateCredencial(conta){
 // credencial, pergunta se as outras contas do mesmo banco+agente também
 // devem ser encerradas junto; só chega a sugerir excluir a credencial
 // depois disso, e só se NENHUMA conta daquele banco+agente continuar ativa.
-function _accOutrasContasMesmoAgente(conta,excludeIdx){
+// statusAlvo filtra o QUE conta como "outra conta candidata": 'ativa' pra
+// achar outras ainda ativas (fluxo de encerrar) ou 'encerrada' pra achar
+// outras já encerradas (fluxo de reativar — ver _accHandlePosReativar).
+function _accOutrasContasMesmoAgente(conta,excludeIdx,statusAlvo){
   const agUpAlvo=(conta.agente||'').toUpperCase().replace(/^[A-Z]+\./,'');
   const out=[];
   store.contas.forEach((c,idx)=>{
-    if(idx===excludeIdx||c.status==='encerrada'||c.banco!==conta.banco) return;
+    if(idx===excludeIdx||c.banco!==conta.banco) return;
+    if(statusAlvo==='ativa'&&c.status==='encerrada') return;
+    if(statusAlvo==='encerrada'&&c.status!=='encerrada') return;
     if((c.agente||'').toUpperCase().replace(/^[A-Z]+\./,'')===agUpAlvo) out.push({idx,conta:c});
   });
   return out;
 }
 function _accCountAtivasMesmoAgente(conta){
-  return _accOutrasContasMesmoAgente(conta,-1).length;
+  return _accOutrasContasMesmoAgente(conta,-1,'ativa').length;
 }
 let _encOutrasItems=[],_encOutrasSelected=new Set(),_encOutrasCtx=null;
 function _toggleEncOutra(idx,checked){
@@ -4521,37 +4530,70 @@ function _renderEncOutrasList(){
     </label>`;
   }).join('');
 }
+function _setEncOutrasTexts(titulo,pergunta){
+  const titleEl=document.getElementById('enc-outras-modal-title');
+  if(titleEl) titleEl.textContent=titulo;
+  const pergEl=document.getElementById('enc-outras-pergunta');
+  if(pergEl) pergEl.textContent=pergunta;
+}
 function _accHandlePosEncerrar(conta){
   const idx=store.contas.indexOf(conta);
-  const outras=_accOutrasContasMesmoAgente(conta,idx);
+  const outras=_accOutrasContasMesmoAgente(conta,idx,'ativa');
   if(!outras.length){_accMaybeSuggestRemoveCredencial(conta);return;}
   _encOutrasItems=outras;
   _encOutrasSelected=new Set(outras.map(o=>o.idx));
-  _encOutrasCtx=conta;
+  _encOutrasCtx={conta,modo:'encerrar'};
   const agUp=(conta.agente||'').toUpperCase().replace(/^[A-Z]+\./,'');
-  const pergEl=document.getElementById('enc-outras-pergunta');
-  if(pergEl) pergEl.textContent=t('enc-outras-pergunta').replace('{banco}',conta.banco).replace('{agente}',agUp);
+  _setEncOutrasTexts(t('enc-outras-titulo'),t('enc-outras-pergunta').replace('{banco}',conta.banco).replace('{agente}',agUp));
+  _renderEncOutrasList();
+  openModal('modal-enc-outras');
+}
+// Espelha _accHandlePosEncerrar: reativar uma conta cujo banco+agente tem
+// outras contas ainda ENCERRADAS pergunta se reativa todas juntas. Não
+// encadeia nenhuma sugestão de credencial depois — diferente de encerrar,
+// reativar não implica remover nada da rotina de baixa.
+function _accHandlePosReativar(conta){
+  const idx=store.contas.indexOf(conta);
+  const outras=_accOutrasContasMesmoAgente(conta,idx,'encerrada');
+  if(!outras.length){_accMaybeSuggestCredencial(conta);return;}
+  _encOutrasItems=outras;
+  _encOutrasSelected=new Set(outras.map(o=>o.idx));
+  _encOutrasCtx={conta,modo:'reativar'};
+  const agUp=(conta.agente||'').toUpperCase().replace(/^[A-Z]+\./,'');
+  _setEncOutrasTexts(t('reativar-outras-titulo'),t('reativar-outras-pergunta').replace('{banco}',conta.banco).replace('{agente}',agUp));
   _renderEncOutrasList();
   openModal('modal-enc-outras');
 }
 function _respondEncOutras(yes){
   closeModal('modal-enc-outras');
-  const conta=_encOutrasCtx;
+  const ctx=_encOutrasCtx;
+  const conta=ctx?.conta;
+  const modo=ctx?.modo;
   const selected=[..._encOutrasSelected];
   _encOutrasCtx=null;_encOutrasItems=[];_encOutrasSelected=new Set();
   if(yes&&selected.length){
     let n=0;
     selected.forEach(idx=>{
       const c=store.contas[idx];
-      if(c&&c.status!=='encerrada'){c.status='encerrada';if(!c.dataEncerramento)c.dataEncerramento=Date.now();n++;}
+      if(!c) return;
+      if(modo==='encerrar'&&c.status!=='encerrada'){
+        c.status='encerrada';if(!c.dataEncerramento)c.dataEncerramento=Date.now();n++;
+      }else if(modo==='reativar'&&c.status==='encerrada'){
+        c.status='ativa';delete c.dataEncerramento;n++;
+      }
     });
     if(n){
       saveStore();_fbSync('contas');
-      logAudit('gerencial','encerrar-mesmo-banco-agente',{banco:conta?.banco,agente:conta?.agente,n});
+      logAudit('gerencial',modo==='reativar'?'reativar-mesmo-banco-agente':'encerrar-mesmo-banco-agente',{banco:conta?.banco,agente:conta?.agente,n});
       renderAccountsTable();renderCronogramaAccounts();updateCounts();
     }
   }
-  if(conta&&_accCountAtivasMesmoAgente(conta)===0) _accMaybeSuggestRemoveCredencial(conta);
+  if(!conta) return;
+  if(modo==='encerrar'){
+    if(_accCountAtivasMesmoAgente(conta)===0) _accMaybeSuggestRemoveCredencial(conta);
+  }else if(modo==='reativar'){
+    _accMaybeSuggestCredencial(conta);
+  }
 }
 
 // Inverso do fluxo de _credAskEncerrar (que sugere encerrar a CONTA quando
