@@ -3364,7 +3364,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='c8955909fb43';
+const APP_VERSION='538361af2d6b';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -12438,7 +12438,7 @@ function renderCronogramaConciliacoes(){
   const _riskEl=document.getElementById('conc-risk-vol');
   if(_riskEl){
     _riskEl.textContent=_totalRisk>0?'$'+Math.round(_totalRisk).toLocaleString('en-US'):'—';
-    _riskEl.style.color=`rgb(${Math.round(22+(220-22)*_riskT)},${Math.round(163+(38-163)*_riskT)},${Math.round(74+(38-74)*_riskT)})`;
+    _riskEl.style.color=`rgb(${Math.round(37+(220-37)*_riskT)},${Math.round(99+(38-99)*_riskT)},${Math.round(235+(38-235)*_riskT)})`;
   }
 
   // full filter including d1 status filter
