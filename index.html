@@ -27,12 +27,12 @@
     --e-warn-header-bg:#fef3c7;--e-warn-text:#92400e;--e-warn-accent:#d97706;
     --e-danger-bg:#fef2f2;--e-danger-border:#fca5a5;--e-danger-text:#991b1b;--e-danger-accent:#dc2626;
   }
-  /* Dark mode (Light/Dark/Auto) — feature em desenvolvimento, só staging
-     (ver _darkModeEnabled mais abaixo, no bloco de JS). "Auto" acompanha o SO via
-     prefers-color-scheme quando data-theme não foi forçado; "dark" força
-     independente do SO; ausência total de data-theme ou data-theme="light"
-     força claro. Os tons escuros reaproveitam a mesma família roxo-marinho
-     já usada na sidebar (--e-dark/--e-navy), que já é escura hoje. */
+  /* Dark mode (Light/Dark/Auto), disponível em todos os ambientes. "Auto"
+     acompanha o SO via prefers-color-scheme quando data-theme não foi
+     forçado; "dark" força independente do SO; ausência total de data-theme
+     ou data-theme="light" força claro. Os tons escuros reaproveitam a
+     mesma família roxo-marinho já usada na sidebar (--e-dark/--e-navy),
+     que já é escura hoje. */
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
       color-scheme:dark;
@@ -770,9 +770,8 @@
 </style>
 <script>
   // Aplica o tema salvo o quanto antes (antes do body renderizar) pra
-  // evitar flash de tema errado — a validação "isso só vale em staging"
-  // (_darkModeEnabled()) acontece depois, em _initTheme(), quando
-  // _currentEnv já existe; aqui ainda não dá pra sabê-lo.
+  // evitar flash de tema errado — _initTheme() roda depois e reaplica
+  // (mesma leitura do localStorage), então não precisa fazer mais nada aqui.
   try{
     const _t=localStorage.getItem('eron-foc-theme');
     if(_t==='dark'||_t==='light') document.documentElement.setAttribute('data-theme',_t);
@@ -3512,7 +3511,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='4ef7afac3c42';
+const APP_VERSION='661ed956d941';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -7648,12 +7647,9 @@ function _fbResolveRoot(envKey){
   return root;
 }
 let _currentEnv=_initEnvKey;
-// Dark mode (seletor Light/Dark/Auto na sidebar) — feature em
-// desenvolvimento, só em staging por enquanto (mesmo padrão que
-// _GRUPOS_UI_ENABLED já usou: um único ponto pra depois liberar geral).
-// Função, não const: _currentEnv pode mudar em runtime (switchEnvironment,
-// sem reload de página), então isso precisa ser reavaliado a cada chamada.
-function _darkModeEnabled(){return _currentEnv==='staging';}
+// Dark mode (seletor Light/Dark/Auto na sidebar) — disponível em todos os
+// ambientes (deploy = produção geral, sem gate por env; testado e ajustado
+// em staging antes de aprovar o deploy).
 const THEME_PERSIST_KEY='eron-foc-theme';
 // mode: 'light' | 'dark' | 'auto'. 'auto' = sem data-theme (deixa o
 // @media prefers-color-scheme decidir sozinho, atualiza com o SO sem
@@ -7666,15 +7662,6 @@ function applyTheme(mode){
 }
 function _initTheme(){
   const row=document.getElementById('sb-theme-row');
-  if(!_darkModeEnabled()){
-    // Fora de staging: sem seletor, sem tema salvo valendo — força claro,
-    // mesmo se um dia essa mesma máquina tiver testado dark em staging
-    // (localStorage é por origem/porta, então isso na prática só afeta
-    // quem já mexeu localmente, mas por segurança limpa mesmo assim).
-    if(row) row.style.display='none';
-    document.documentElement.removeAttribute('data-theme');
-    return;
-  }
   if(row) row.style.display='';
   let saved='auto';
   try{const s=localStorage.getItem(THEME_PERSIST_KEY);if(s==='light'||s==='dark'||s==='auto')saved=s;}catch(e){}
@@ -12548,10 +12535,12 @@ function _renderConcilNoGatewayList(){
 let _cronconcWarningsExpanded=false;
 function _toggleCronconcWarnings(){
   _cronconcWarningsExpanded=!_cronconcWarningsExpanded;
-  // renderCronogramaConciliacoes() esconde a tabela durante a reconstrução
-  // e só revela no final (ver comentário lá) — evita o "quebrado" visual
-  // que uma troca de altura acima dela costumava causar.
-  renderCronogramaConciliacoes();
+  // Expandir/colapsar o resumo não muda nenhum dado das conciliações — só
+  // o próprio bloco de avisos. Chamar o render completo da tabela (que
+  // precisa esconder/revelar pra não mostrar o frame quebrado durante a
+  // reconstrução de 500+ linhas) é trabalho desnecessário pra essa ação;
+  // atualizar só o resumo evita esse work (e a piscada) por completo aqui.
+  _renderCronconcWarningsSummary();
 }
 function _renderCronconcWarningsSummary(){
   const wrap=document.getElementById('crono-conc-warnings-summary');
@@ -12577,15 +12566,50 @@ function _renderCronconcWarningsSummary(){
 // estão expandidos na tabela agora. Em memória só (reseta ao recarregar a
 // página), mesmo padrão de outros estados de UI efêmeros deste arquivo.
 let _expandedGrupos=new Set();
+// Preenchido a cada renderCronogramaConciliacoes() com o que _toggleGrupoExpand
+// precisa pra inserir/remover só as linhas de UM grupo (sem refazer a
+// tabela inteira, que é o que causava a "piscada" ao abrir um grupo).
+let _lastConcRenderCtx=null;
 function _toggleGrupoExpand(id){
-  if(_expandedGrupos.has(id)) _expandedGrupos.delete(id); else _expandedGrupos.add(id);
+  const wasExpanded=_expandedGrupos.has(id);
+  if(wasExpanded) _expandedGrupos.delete(id); else _expandedGrupos.add(id);
   // Expandir/colapsar muda a contagem de linhas abaixo do grupo, então
   // qualquer seleção de células ativa (baseada em índice de linha) fica
   // referenciando linhas erradas depois do redraw — limpa antes de
-  // redesenhar pra não deixar um "fantasma" de seleção em linhas que
+  // mexer na tabela pra não deixar um "fantasma" de seleção em linhas que
   // agora são outra coisa.
   if(_selTbl) _clearSel(_selTbl);
-  renderCronogramaConciliacoes();
+  const tbl=document.getElementById('crono-conc-cal-table');
+  const ctx=_lastConcRenderCtx;
+  const headerRow=tbl&&[...tbl.querySelectorAll('tr[data-grupo-id]')].find(tr=>tr.dataset.grupoId===String(id));
+  if(!tbl||!ctx||!headerRow){
+    // Sem contexto cacheado ainda (ex: primeiro render) — cai pro caminho
+    // seguro de sempre, que reconstrói tudo.
+    renderCronogramaConciliacoes();
+    return;
+  }
+  const arrowSpan=headerRow.querySelector('td.cal-sticky span');
+  if(wasExpanded){
+    [...tbl.querySelectorAll('tr[data-grupo-parent]')].filter(tr=>tr.dataset.grupoParent===String(id)).forEach(tr=>tr.remove());
+    headerRow.classList.remove('row-grupo-header');
+    if(arrowSpan) arrowSpan.textContent='▶';
+  } else {
+    const grupo=(store.gruposConciliacao||[]).find(g=>g.id===id);
+    const children=ctx.childrenByGrupo[id]||[];
+    if(grupo&&children.length){
+      const rowsHtml=children.map(ch=>_renderConcRowHtml({...ch,__mirrorGrupo:grupo},0,ctx._ord,ctx.days,ctx.fmtD,ctx.statusCfg,ctx.chipHtml,ctx.d1Str)).join('');
+      headerRow.insertAdjacentHTML('afterend',rowsHtml);
+    }
+    headerRow.classList.add('row-grupo-header');
+    if(arrowSpan) arrowSpan.textContent='▼';
+  }
+  // data-sr precisa ficar contíguo e bater com a ordem visual real da
+  // tabela (é o índice que a seleção por arrasto usa) — como só inserimos/
+  // removemos linhas do grupo em vez de refazer tudo, renumeramos aqui
+  // (troca de atributo é bem mais barato que recriar milhares de nós).
+  [...tbl.querySelectorAll('tbody tr')].forEach((tr,idx)=>{
+    tr.querySelectorAll('[data-sr]').forEach(el=>el.setAttribute('data-sr',idx));
+  });
 }
 // Renderiza as células de dia (calendário) de uma conciliação OU do
 // pseudo-objeto {id,nome,...} de um grupo — reaproveitado tanto pra linha
@@ -12649,11 +12673,48 @@ function _renderGrupoHeaderRow(grupo,children,ri,_ord,days,fmtD,statusCfg,chipHt
     return `<td class="sel-cell" ${_sr} style="font-size:11px;color:var(--e-muted);text-align:center">—</td>`;
   }).join('');
   const dayCellsHtml=_renderConcDayCellsHtml(grupo,days,fmtD,statusCfg,true);
-  return `<tr class="row-ativa${isExpanded?' row-grupo-header':''}" style="font-weight:600">
+  return `<tr class="row-ativa${isExpanded?' row-grupo-header':''}" data-grupo-id="${_esc(grupo.id)}" style="font-weight:600">
     <td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:700;white-space:nowrap;cursor:pointer" onclick="_toggleGrupoExpand('${grupo.id}')">
       <span style="display:inline-block;width:14px;color:var(--e-purple)">${isExpanded?'▼':'▶'}</span>📁 ${_esc(grupo.nome)}
     </td>${colHtml}${dayCellsHtml}
   </tr>`;
+}
+// Extraída do loop principal de renderCronogramaConciliacoes() pra poder
+// ser reaproveitada por _toggleGrupoExpand ao inserir só as linhas-filhas
+// de UM grupo na hora de expandir, sem precisar reconstruir a tabela
+// inteira (isso é o que causava a "piscada" ao abrir um grupo). Comporta-se
+// exatamente como o trecho original: `conc.__mirrorGrupo`, quando setado
+// pelo chamador, indica que é uma filha espelhando o status da mãe.
+function _renderConcRowHtml(conc,ri,_ord,days,fmtD,statusCfg,chipHtml,d1Str){
+  const _mirrorGrupo=conc.__mirrorGrupo;
+  const _statusSrc=_mirrorGrupo||conc;
+  const rEmail=_getConcilResp(conc);
+  const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;
+  const respCell=rUser?`<span style="font-family:monospace;font-size:10px;font-weight:700;background:rgba(151,111,244,.1);color:var(--e-mid);padding:1px 5px;border-radius:3px">${rUser.sigla}</span>`:'<span style="color:var(--e-muted);font-size:11px">—</span>';
+  const concId=(conc.id||conc.nome).replace(/['"]/g,'');
+  const d1Result=_statusSrc.status==='encerrada'?{status:'encerrada'}:_getConcilStatus(_statusSrc,d1Str);
+  let d1ChipHtml=chipHtml[d1Result.status]||'<span style="color:var(--e-muted);font-size:11px">—</span>';
+  if(d1Result.status==='pronto_conciliacao'){
+    const probs=_getConcilProblems(_statusSrc,d1Str);
+    if(probs.semAcesso.length||probs.aguardandoExtrato.length){
+      const lines=[];
+      if(probs.semAcesso.length) lines.push(`${t('status-sem-acesso')}:\n${probs.semAcesso.map(s=>`  · ${s}`).join('\n')}`);
+      if(probs.aguardandoExtrato.length) lines.push(`${t('d1-ag-extrato')}:\n${probs.aguardandoExtrato.map(s=>`  · ${s}`).join('\n')}`);
+      const tipEnc=encodeURIComponent(lines.join('\n\n'));
+      d1ChipHtml+=` <span class="conc-warn" data-warn="${tipEnc}" onmouseenter="showConcWarnTooltip(event,this)" onmouseleave="scheduleHideConcWarn()" title="">⚠️</span>`;
+    }
+  }
+  const priorCell=_priorChip(concId);
+  const cells=_renderConcDayCellsHtml(_statusSrc,days,fmtD,statusCfg,!_mirrorGrupo);
+  const _concTipoMap={bancos:['chip-tipo-bancos','Bancos'],processadores:['chip-tipo-proc','Processadores'],mista:['chip-tipo-mista','Mista'],controle:['chip-tipo-controle',t('tipo-controle')]};
+  const _ct=_concTipoMap[conc.tipo]||['chip-grey',conc.tipo||'—'];
+  const concTipoChipHtml=`<span class="chip ${_ct[0]}" style="font-size:10px">${_ct[1]}</span>`;
+  const _concNomeInner=conc.obs?`<span data-link="${_esc(conc.obs)}" onmouseenter="showNoteTooltip(event,this)" onmouseleave="scheduleHideNoteTooltip()" style="pointer-events:auto">${_esc(conc.nome)}<sup style="color:var(--e-purple);font-size:7px;margin-left:1px">●</sup></span>`:_esc(conc.nome);
+  const _freqCell=conc.frequencia?`<span class="chip" style="font-size:10px;background:var(--e-ghost);color:var(--e-mid);border:1px solid var(--e-pale)">${conc.frequencia}</span>`:`<span style="color:var(--e-muted);font-size:11px">—</span>`;
+  const _ctx={respCell,priorCell,concTipoChipHtml,freqCell:_freqCell,d1ChipHtml};
+  const _nomeIndent=_mirrorGrupo?'padding-left:26px;':'';
+  const _grupoParentAttr=_mirrorGrupo?` data-grupo-parent="${_esc(_mirrorGrupo.id)}"`:'';
+  return `<tr class="row-${conc.status||'ativa'}${_mirrorGrupo?' row-grupo-child':''}"${_grupoParentAttr}><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:600;white-space:nowrap;${_nomeIndent}">${_concNomeInner}</td>${_ord.map((d,i)=>d.c(conc,ri,i+1,_ctx)).join('')}${cells}</tr>`;
 }
 function renderCronogramaConciliacoes(){
   const emptyEl=document.getElementById('crono-conc-empty');
@@ -12912,10 +12973,10 @@ function renderCronogramaConciliacoes(){
   // grupo fiquem contíguas logo após uma linha-cabeçalho colapsável, em vez
   // de espalhadas pela ordenação normal.
   let displayList=list;
+  let childrenByGrupo={};
   if(_GRUPOS_UI_ENABLED&&(store.gruposConciliacao||[]).length){
     const grupoById={};
     store.gruposConciliacao.forEach(g=>{grupoById[g.id]=g;});
-    const childrenByGrupo={};
     list.forEach(c=>{ if(c.grupoId&&grupoById[c.grupoId]) (childrenByGrupo[c.grupoId]=childrenByGrupo[c.grupoId]||[]).push(c); });
     if(Object.keys(childrenByGrupo).length){
       const seen=new Set();
@@ -12942,39 +13003,15 @@ function renderCronogramaConciliacoes(){
   // tudo (inclusive o passo de colunas ocultas/fixadas abaixo) terminar,
   // garantimos que o usuário nunca vê esse estado intermediário quebrado.
   tbl.style.visibility='hidden';
+  // Cacheado pra _toggleGrupoExpand poder inserir/remover só as linhas do
+  // grupo clicado sem precisar refazer todo esse cálculo de filtro/ordem.
+  _lastConcRenderCtx={_ord,days,fmtD,statusCfg,chipHtml,d1Str,childrenByGrupo};
   tbl.innerHTML=`<thead><tr>${colInfos}${dayHdrs}</tr></thead><tbody>${displayList.map((conc,ri)=>{
     if(conc.__isGrupo) return _renderGrupoHeaderRow(conc.__grupo,conc.__children,ri,_ord,days,fmtD,statusCfg,chipHtml,d1Str);
     // Filha de grupo (mãe ainda existe — ver __mirrorGrupo montado acima):
     // Acompanhamento e dias vêm da MÃE, não da própria filha — ela só
     // "reflete", nunca é editável dia-a-dia por conta própria.
-    const _mirrorGrupo=conc.__mirrorGrupo;
-    const _statusSrc=_mirrorGrupo||conc;
-    const rEmail=_getConcilResp(conc);
-    const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;
-    const respCell=rUser?`<span style="font-family:monospace;font-size:10px;font-weight:700;background:rgba(151,111,244,.1);color:var(--e-mid);padding:1px 5px;border-radius:3px">${rUser.sigla}</span>`:'<span style="color:var(--e-muted);font-size:11px">—</span>';
-    const concId=(conc.id||conc.nome).replace(/['"]/g,'');
-    const d1Result=_statusSrc.status==='encerrada'?{status:'encerrada'}:_getConcilStatus(_statusSrc,d1Str);
-    let d1ChipHtml=chipHtml[d1Result.status]||'<span style="color:var(--e-muted);font-size:11px">—</span>';
-    if(d1Result.status==='pronto_conciliacao'){
-      const probs=_getConcilProblems(_statusSrc,d1Str);
-      if(probs.semAcesso.length||probs.aguardandoExtrato.length){
-        const lines=[];
-        if(probs.semAcesso.length) lines.push(`${t('status-sem-acesso')}:\n${probs.semAcesso.map(s=>`  · ${s}`).join('\n')}`);
-        if(probs.aguardandoExtrato.length) lines.push(`${t('d1-ag-extrato')}:\n${probs.aguardandoExtrato.map(s=>`  · ${s}`).join('\n')}`);
-        const tipEnc=encodeURIComponent(lines.join('\n\n'));
-        d1ChipHtml+=` <span class="conc-warn" data-warn="${tipEnc}" onmouseenter="showConcWarnTooltip(event,this)" onmouseleave="scheduleHideConcWarn()" title="">⚠️</span>`;
-      }
-    }
-    const priorCell=_priorChip(concId);
-    const cells=_renderConcDayCellsHtml(_statusSrc,days,fmtD,statusCfg,!_mirrorGrupo);
-    const _concTipoMap={bancos:['chip-tipo-bancos','Bancos'],processadores:['chip-tipo-proc','Processadores'],mista:['chip-tipo-mista','Mista'],controle:['chip-tipo-controle',t('tipo-controle')]};
-    const _ct=_concTipoMap[conc.tipo]||['chip-grey',conc.tipo||'—'];
-    const concTipoChipHtml=`<span class="chip ${_ct[0]}" style="font-size:10px">${_ct[1]}</span>`;
-    const _concNomeInner=conc.obs?`<span data-link="${_esc(conc.obs)}" onmouseenter="showNoteTooltip(event,this)" onmouseleave="scheduleHideNoteTooltip()" style="pointer-events:auto">${_esc(conc.nome)}<sup style="color:var(--e-purple);font-size:7px;margin-left:1px">●</sup></span>`:_esc(conc.nome);
-    const _freqCell=conc.frequencia?`<span class="chip" style="font-size:10px;background:var(--e-ghost);color:var(--e-mid);border:1px solid var(--e-pale)">${conc.frequencia}</span>`:`<span style="color:var(--e-muted);font-size:11px">—</span>`;
-    const _ctx={respCell,priorCell,concTipoChipHtml,freqCell:_freqCell,d1ChipHtml};
-    const _nomeIndent=_mirrorGrupo?'padding-left:26px;':'';
-    return `<tr class="row-${conc.status||'ativa'}${_mirrorGrupo?' row-grupo-child':''}"><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:600;white-space:nowrap;${_nomeIndent}">${_concNomeInner}</td>${_ord.map((d,i)=>d.c(conc,ri,i+1,_ctx)).join('')}${cells}</tr>`;
+    return _renderConcRowHtml(conc,ri,_ord,days,fmtD,statusCfg,chipHtml,d1Str);
   }).join('')}</tbody>`;
 
   if(calScrollEl){calScrollEl.scrollLeft=_savedSL;calScrollEl.scrollTop=_savedST;}
