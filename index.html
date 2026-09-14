@@ -824,7 +824,7 @@
         <div style="display:flex;gap:8px;align-items:center">
           <button class="btn-bulk-apply" id="btn-bulk-freq" onclick="openBulkFreq()" data-requires-edit="1" style="display:none">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/></svg>
-            <span data-i18n="btn-bulk-freq-label">Alterar frequência</span>
+            <span data-i18n="btn-bulk-freq-label">Alterar em massa</span>
           </button>
 <button class="btn-primary" onclick="openAddAccount()" data-requires-edit>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
@@ -1421,7 +1421,7 @@
       <div class="page-header">
         <div class="page-header-left"><div class="page-title-text" data-i18n="nav-baixa-auto">Baixa automática</div></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;padding-bottom:40px">
+      <div id="automacoes-baixa-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;padding-bottom:40px">
 
         <!-- ── Coluna 1: Download Extratos ── -->
         <div>
@@ -1504,7 +1504,7 @@
         </div>
 
         <!-- ── Coluna 2: Atualização de Credenciais ── -->
-        <div>
+        <div id="cred-coluna2-wrap">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#5b21b6;margin-bottom:14px" data-i18n="baixa-sec-cred">Atualização de Credenciais</div>
           <div id="cred-noperm-box" style="display:none;background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:20px 24px;font-size:13px;color:#6b7280" data-i18n="cred-no-perm">Acesso restrito — apenas Analista ou superior pode criar, editar ou excluir credenciais.</div>
           <div id="cred-panel-col" style="background:#fff;border:1px solid var(--e-pale);border-radius:12px;padding:20px 24px;display:flex;flex-direction:column;gap:16px">
@@ -1833,8 +1833,8 @@
       <div id="yesno-body" style="font-size:13px"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="_ynCancel()" data-i18n="yesno-no">Não</button>
-      <button class="btn-primary" onclick="_ynConfirm()" data-i18n="yesno-yes">Sim</button>
+      <button class="btn-secondary" id="yesno-btn-no" onclick="_ynCancel()" data-i18n="yesno-no">Não</button>
+      <button class="btn-primary" id="yesno-btn-yes" onclick="_ynConfirm()" data-i18n="yesno-yes">Sim</button>
     </div>
   </div>
 </div>
@@ -1906,6 +1906,40 @@
     <div class="modal-footer">
       <button class="btn-secondary" onclick="_respondRetroativoWarn(false)" data-i18n="lbl-nao">Não</button>
       <button class="btn-primary" onclick="_respondRetroativoWarn(true)" data-i18n="lbl-sim">Sim</button>
+    </div>
+  </div>
+</div>
+<!-- ── MODAL: CRIAR CREDENCIAL DE BAIXA (a partir de Gerencial > Accounts) ──
+     Não duplica o painel de credenciais — move o MESMO subtree do DOM
+     (#cred-coluna2-wrap, de dentro de page-automacoes-baixa) pra dentro
+     deste modal enquanto ele está aberto, e devolve pro lugar de origem ao
+     fechar. Assim toda a lógica existente (_credSave, job em
+     credentialChangeRequests, card persistente em #cred-cards-wrap) continua
+     funcionando sem reescrever nada — o usuário só não precisa sair de
+     Accounts pra usar. -->
+<div class="modal-overlay" id="modal-cred-quick" onclick="if(event.target===this)_closeCredQuickModal()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title" id="cred-quick-modal-title" data-i18n="cred-quick-titulo">Criar credencial de baixa</div>
+      <button class="modal-close" onclick="_closeCredQuickModal()">×</button>
+    </div>
+    <div class="modal-body" id="cred-quick-mount"></div>
+  </div>
+</div>
+<!-- ── MODAL: ENCERRAR OUTRAS CONTAS DO MESMO BANCO/AGENTE ─────── -->
+<div class="modal-overlay" id="modal-enc-outras" onclick="if(event.target===this)_respondEncOutras(false)">
+  <div class="modal-card" style="width:440px">
+    <div class="modal-header">
+      <div class="modal-title" data-i18n="enc-outras-titulo">Encerrar outras contas também?</div>
+      <button class="modal-close" onclick="_respondEncOutras(false)">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="enc-outras-pergunta" style="font-size:13px;color:var(--e-text);line-height:1.5"></div>
+      <div id="enc-outras-list" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="_respondEncOutras(false)" data-i18n="lbl-nao">Não</button>
+      <button class="btn-primary" onclick="_respondEncOutras(true)" data-i18n="lbl-sim">Sim</button>
     </div>
   </div>
 </div>
@@ -2171,27 +2205,68 @@
   </div>
 </div>
 
-<!-- MODAL: ALTERAR FREQUÊNCIA EM MASSA -->
+<!-- MODAL: ALTERAR EM MASSA (frequência e/ou encerrar) -->
 <div class="modal-overlay" id="modal-bulk-freq" onclick="if(event.target===this)closeModal('modal-bulk-freq')">
   <div class="modal-card" style="width:420px">
     <div class="modal-header">
-      <div class="modal-title" data-i18n="modal-bulk-freq-title">Alterar frequência em massa</div>
+      <div class="modal-title" data-i18n="modal-bulk-freq-title">Alterar em massa</div>
       <button class="modal-close" onclick="closeModal('modal-bulk-freq')">×</button>
     </div>
-    <div style="padding:20px 24px">
-      <p id="bulk-freq-desc" style="font-size:13px;color:var(--e-sub);margin-bottom:14px"></p>
-      <label class="form-label" data-i18n="lbl-nova-freq">Nova frequência</label>
-      <select id="bulk-freq-select" class="form-input" style="width:100%">
-        <option value="T1">T1</option>
-        <option value="T2">T2</option>
-        <option value="Diário" data-i18n="freq-diario">Diário</option>
-        <option value="1 vez ao mês" data-i18n="freq-mensal">1 vez ao mês</option>
-        <option value="1 vez na semana" data-i18n="freq-semanal">1 vez na semana</option>
-      </select>
+    <div class="modal-body">
+      <p id="bulk-freq-desc" style="font-size:13px;color:var(--e-sub)"></p>
+      <div class="form-field" style="border-top:1px solid var(--e-pale);padding-top:12px;margin-top:4px">
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="toggle-title" style="color:var(--e-purple)" data-i18n="lbl-bulk-alterar-freq">Alterar frequência</div></div>
+          <label class="toggle-switch toggle-purple">
+            <input type="checkbox" id="bulk-alterar-freq-toggle" checked onchange="_toggleBulkFreqSelect(this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div id="bulk-freq-select-wrap" style="margin-top:10px">
+          <label class="form-label" data-i18n="lbl-nova-freq">Nova frequência</label>
+          <select id="bulk-freq-select" class="form-input" style="width:100%">
+            <option value="T1">T1</option>
+            <option value="T2">T2</option>
+            <option value="Diário" data-i18n="freq-diario">Diário</option>
+            <option value="1 vez ao mês" data-i18n="freq-mensal">1 vez ao mês</option>
+            <option value="1 vez na semana" data-i18n="freq-semanal">1 vez na semana</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-field" style="border-top:1px solid var(--e-pale);padding-top:12px">
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-title" style="color:#ef4444" data-i18n="lbl-bulk-encerrar">Encerrar estas contas</div>
+            <div class="toggle-desc" data-i18n="bulk-encerrar-desc">Marca todas as contas filtradas como inativas.</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="bulk-encerrar-toggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('modal-bulk-freq')" data-i18n="btn-cancel">Cancelar</button>
       <button class="btn-primary" onclick="submitBulkFreq()" data-i18n="crono-apply">Aplicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CONFIRMAR ENCERRAMENTO EM MASSA (lista as contas afetadas) -->
+<div class="modal-overlay" id="modal-bulk-encerrar-confirm" onclick="if(event.target===this)cancelBulkEncerrar()">
+  <div class="modal-card" style="width:460px">
+    <div class="modal-header">
+      <div class="modal-title" data-i18n="bulk-encerrar-confirm-titulo">Confirmar encerramento em massa</div>
+      <button class="modal-close" onclick="cancelBulkEncerrar()">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="bulk-encerrar-confirm-count" style="font-size:13px;font-weight:600;color:#ef4444"></div>
+      <div id="bulk-encerrar-confirm-list" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="cancelBulkEncerrar()" data-i18n="lbl-nao">Não</button>
+      <button class="btn-danger" onclick="confirmBulkEncerrar()" data-i18n="lbl-sim">Sim</button>
     </div>
   </div>
 </div>
@@ -2541,6 +2616,12 @@ const i18n = {
     'yn-encerrar-title':'Encerrar no cronograma?','yn-encerrar-sub':'Contas removidas da rotina. Deseja encerrá-las no cronograma também?','yn-encerrar-sub-s':'Conta removida da rotina. Deseja encerrá-la no cronograma também?',
     'yn-add-title':'Adicionar ao cronograma?','yn-add-sub':'Esta conta não existe no cronograma. Deseja adicioná-la agora?',
     'yn-add-cred-title':'Criar credencial de baixa?','yn-add-cred-sub':'Esta conta ainda não tem credencial de baixa automática configurada. Deseja criar agora?',
+    'cred-quick-titulo':'Criar credencial de baixa',
+    'cred-quick-upd-titulo':'Atualizar credencial de baixa',
+    'acc-semacesso-titulo':'Recuperação de acesso','acc-semacesso-pergunta':'Essa conta esteve sem acesso por muito tempo, recuperamos o acesso ou apenas recebemos os extratos?','acc-semacesso-recuperou':'Recuperamos os acessos','acc-semacesso-recebemos':'Recebemos o extrato',
+    'cred-quick-del-titulo':'Excluir credencial de baixa',
+    'yn-rm-cred-title':'Excluir credencial da rotina?','yn-rm-cred-sub':'Esta conta ainda tem uma credencial de baixa automática ativa. Deseja excluí-la da rotina agora?',
+    'enc-outras-titulo':'Encerrar outras contas também?','enc-outras-pergunta':'Existem outras contas de {banco} {agente} ativas no cronograma. Deseja encerrar todas ou somente essa?',
     'nav-accounts':'Accounts','nav-custos':'Liquidações','nav-conciliacoes':'Conciliações','nav-cierre':'Accounts – Cierre',
     'nav-pais':'País','nav-agente':'Agente','nav-banco':'Banco',
     'dev-badge':'Em desenvolvimento',
@@ -2638,8 +2719,10 @@ const i18n = {
     'confirm-irreversivel':'Esta ação não pode ser desfeita.',
     'lbl-nao-configurado':'— não configurado —','lbl-pais-sg':'país','lbl-agente-sg':'agente','lbl-banco-sg':'banco','lbl-processador-sg':'processador',
     'op-cashin':'Cashin','op-cashout':'Cashout',
-    'btn-bulk-freq-label':'Alterar frequência','acc-search-ph':'Buscar país, agente, banco, sigla...',
-    'modal-bulk-freq-title':'Alterar frequência em massa','lbl-nova-freq':'Nova frequência',
+    'btn-bulk-freq-label':'Alterar em massa','acc-search-ph':'Buscar país, agente, banco, sigla...',
+    'modal-bulk-freq-title':'Alterar em massa','lbl-nova-freq':'Nova frequência',
+    'lbl-bulk-alterar-freq':'Alterar frequência','lbl-bulk-encerrar':'Encerrar estas contas','bulk-encerrar-desc':'Marca todas as contas filtradas como inativas.',
+    'bulk-encerrar-confirm-titulo':'Confirmar encerramento em massa','bulk-encerrar-confirm-count-1':'{n} conta será encerrada:','bulk-encerrar-confirm-count-n':'{n} contas serão encerradas:',
     'btn-incluir-liquidacao':'Incluir liquidação','modal-liq-manual-title':'Incluir liquidação manual',
     'lbl-conciliacao-vinculada':'Conciliação vinculada','liq-manual-search-ph':'Buscar conciliação...',
     'lbl-nome-personalizado':'Nome personalizado','lbl-opcional':'(opcional)','liq-manual-nome-ph':'Deixe em branco para usar o nome da conciliação',
@@ -2774,6 +2857,12 @@ const i18n = {
     'yn-encerrar-title':'Close in schedule?','yn-encerrar-sub':'Accounts removed from routine. Close them in the schedule too?','yn-encerrar-sub-s':'Account removed from routine. Close it in the schedule too?',
     'yn-add-title':'Add to schedule?','yn-add-sub':'This account does not exist in the schedule. Add it now?',
     'yn-add-cred-title':'Create download credential?','yn-add-cred-sub':'This account does not have an automatic download credential configured yet. Create it now?',
+    'cred-quick-titulo':'Create download credential',
+    'cred-quick-upd-titulo':'Update download credential',
+    'acc-semacesso-titulo':'Access recovery','acc-semacesso-pergunta':'This account has been without access for a long time — did we recover access, or did we just receive the statements?','acc-semacesso-recuperou':'We recovered access','acc-semacesso-recebemos':'We received the statement',
+    'cred-quick-del-titulo':'Delete download credential',
+    'yn-rm-cred-title':'Remove credential from routine?','yn-rm-cred-sub':'This account still has an active automatic download credential. Do you want to remove it from the routine now?',
+    'enc-outras-titulo':'Close other accounts too?','enc-outras-pergunta':'There are other active {banco} {agente} accounts in the schedule. Do you want to close all of them or just this one?',
     'nav-accounts':'Accounts','nav-custos':'Settlements','nav-conciliacoes':'Reconciliations',
     'nav-pais':'Country','nav-agente':'Agent','nav-banco':'Bank',
     'dev-badge':'In development',
@@ -2863,8 +2952,10 @@ const i18n = {
     'confirm-irreversivel':'This action cannot be undone.',
     'lbl-nao-configurado':'— not configured —','lbl-pais-sg':'country','lbl-agente-sg':'agent','lbl-banco-sg':'bank','lbl-processador-sg':'processor',
     'op-cashin':'Cashin','op-cashout':'Cashout',
-    'btn-bulk-freq-label':'Change frequency','acc-search-ph':'Search country, agent, bank, sigla...',
-    'modal-bulk-freq-title':'Bulk change frequency','lbl-nova-freq':'New frequency',
+    'btn-bulk-freq-label':'Bulk edit','acc-search-ph':'Search country, agent, bank, sigla...',
+    'modal-bulk-freq-title':'Bulk edit','lbl-nova-freq':'New frequency',
+    'lbl-bulk-alterar-freq':'Change frequency','lbl-bulk-encerrar':'Close these accounts','bulk-encerrar-desc':'Marks all filtered accounts as inactive.',
+    'bulk-encerrar-confirm-titulo':'Confirm bulk closure','bulk-encerrar-confirm-count-1':'{n} account will be closed:','bulk-encerrar-confirm-count-n':'{n} accounts will be closed:',
     'btn-incluir-liquidacao':'Add settlement','modal-liq-manual-title':'Add manual settlement',
     'lbl-conciliacao-vinculada':'Linked reconciliation','liq-manual-search-ph':'Search reconciliation...',
     'lbl-nome-personalizado':'Custom name','lbl-opcional':'(optional)','liq-manual-nome-ph':'Leave blank to use the reconciliation name',
@@ -3000,6 +3091,12 @@ const i18n = {
     'yn-encerrar-title':'¿Cerrar en el cronograma?','yn-encerrar-sub':'Cuentas eliminadas de la rutina. ¿Cerrarlas también en el cronograma?','yn-encerrar-sub-s':'Cuenta eliminada de la rutina. ¿Cerrarla también en el cronograma?',
     'yn-add-title':'¿Agregar al cronograma?','yn-add-sub':'Esta cuenta no existe en el cronograma. ¿Agregarla ahora?',
     'yn-add-cred-title':'¿Crear credencial de descarga?','yn-add-cred-sub':'Esta cuenta todavía no tiene una credencial de descarga automática configurada. ¿Crearla ahora?',
+    'cred-quick-titulo':'Crear credencial de descarga',
+    'cred-quick-upd-titulo':'Actualizar credencial de descarga',
+    'acc-semacesso-titulo':'Recuperación de acceso','acc-semacesso-pergunta':'Esta cuenta estuvo sin acceso durante mucho tiempo, ¿recuperamos el acceso o solo recibimos los extractos?','acc-semacesso-recuperou':'Recuperamos los accesos','acc-semacesso-recebemos':'Recibimos el extracto',
+    'cred-quick-del-titulo':'Eliminar credencial de descarga',
+    'yn-rm-cred-title':'¿Eliminar la credencial de la rutina?','yn-rm-cred-sub':'Esta cuenta todavía tiene una credencial de descarga automática activa. ¿Desea eliminarla de la rutina ahora?',
+    'enc-outras-titulo':'¿Cerrar también otras cuentas?','enc-outras-pergunta':'Hay otras cuentas activas de {banco} {agente} en el cronograma. ¿Desea cerrarlas todas o solo esta?',
     'nav-accounts':'Cuentas','nav-custos':'Liquidaciones','nav-conciliacoes':'Conciliaciones',
     'nav-pais':'País','nav-agente':'Agente','nav-banco':'Banco',
     'dev-badge':'En desarrollo',
@@ -3089,8 +3186,10 @@ const i18n = {
     'confirm-irreversivel':'Esta acción no se puede deshacer.',
     'lbl-nao-configurado':'— no configurado —','lbl-pais-sg':'país','lbl-agente-sg':'agente','lbl-banco-sg':'banco','lbl-processador-sg':'procesador',
     'op-cashin':'Cashin','op-cashout':'Cashout',
-    'btn-bulk-freq-label':'Cambiar frecuencia','acc-search-ph':'Buscar país, agente, banco, sigla...',
-    'modal-bulk-freq-title':'Cambiar frecuencia en masa','lbl-nova-freq':'Nueva frecuencia',
+    'btn-bulk-freq-label':'Editar en masa','acc-search-ph':'Buscar país, agente, banco, sigla...',
+    'modal-bulk-freq-title':'Editar en masa','lbl-nova-freq':'Nueva frecuencia',
+    'lbl-bulk-alterar-freq':'Cambiar frecuencia','lbl-bulk-encerrar':'Cerrar estas cuentas','bulk-encerrar-desc':'Marca todas las cuentas filtradas como inactivas.',
+    'bulk-encerrar-confirm-titulo':'Confirmar cierre masivo','bulk-encerrar-confirm-count-1':'{n} cuenta será cerrada:','bulk-encerrar-confirm-count-n':'{n} cuentas serán cerradas:',
     'btn-incluir-liquidacao':'Agregar liquidación','modal-liq-manual-title':'Agregar liquidación manual',
     'lbl-conciliacao-vinculada':'Conciliación vinculada','liq-manual-search-ph':'Buscar conciliación...',
     'lbl-nome-personalizado':'Nombre personalizado','lbl-opcional':'(opcional)','liq-manual-nome-ph':'Deja en blanco para usar el nombre de la conciliación',
@@ -3262,7 +3361,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='1dc696125994';
+const APP_VERSION='40764804bc30';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -4107,6 +4206,7 @@ function _commitAccountSave(data,encerrado,oldContaPre){
     _fbSync('contas');
     if(keyChanged){_fbSync('cronogramaData');_fbSync('cierreData');}
     if(siglaChanged) _fbSync('conciliacoes');
+    if(encerrado&&oldConta.status!=='encerrada') _accHandlePosEncerrar(data);
   } else {
     logAudit('gerencial','add-conta',{sigla:data.sigla,pais:data.pais});
     store.contas.push(data);
@@ -4184,12 +4284,16 @@ function cancelEncerrar(){
 
 // ── Yes/No prompt modal ─────────────────────────────────────────
 let _ynCb=null;
-function _ynShow(icon,title,subtitle,body,onYes,onNo){
+// yesLabel/noLabel são opcionais — omitidos, os botões continuam "Sim"/"Não"
+// (todo call site existente antes desses dois parâmetros não muda nada).
+function _ynShow(icon,title,subtitle,body,onYes,onNo,yesLabel,noLabel){
   const g=id=>document.getElementById(id);
   if(g('yesno-icon')) g('yesno-icon').textContent=icon||'❓';
   if(g('yesno-title')) g('yesno-title').textContent=title;
   if(g('yesno-subtitle')) g('yesno-subtitle').textContent=subtitle||'';
   if(g('yesno-body')) g('yesno-body').innerHTML=body||'';
+  if(g('yesno-btn-yes')) g('yesno-btn-yes').textContent=yesLabel||t('yesno-yes');
+  if(g('yesno-btn-no')) g('yesno-btn-no').textContent=noLabel||t('yesno-no');
   _ynCb={yes:onYes,no:onNo};
   openModal('modal-yesno');
 }
@@ -4288,6 +4392,7 @@ function _credOpenAddToCronograma(paisNome,banco_nome,agente){
 // não deveria ficar perguntando isso de novo a cada salvamento.
 function _accMaybeSuggestCredencial(conta){
   if(!isModuleEnabled('automacoes-baixa')) return;
+  if(!canEdit()) return; // sem permissão de editar credenciais, não adianta sugerir
   const dt=_DT_BANCO_MAP[conta.banco];
   if(!dt) return; // banco fora do escopo da Baixa automática — nada a sugerir
   const agUp=(conta.agente||'').toUpperCase().replace(/^[A-Z]+\./,'');
@@ -4303,8 +4408,22 @@ function _accMaybeSuggestCredencial(conta){
   );
 }
 
+// Em vez de navegar pra Automações > Baixa automática, move o PRÓPRIO
+// subtree do painel de credenciais (#cred-coluna2-wrap, que já existe fixo
+// dentro de page-automacoes-baixa) pra dentro do modal-cred-quick enquanto
+// ele fica aberto — mesmos elementos, mesmos ids, então _credSave/
+// _createCredCard/etc funcionam sem alteração nenhuma. _closeCredQuickModal
+// devolve o subtree pro lugar de origem ao fechar (o card de
+// acompanhamento, se já criado, volta junto — por isso continua
+// "persistente" mesmo depois de fechar o popup).
 function _accOpenCreateCredencial(bankRaw,agente){
-  navigate('automacoes-baixa');
+  const wrap=document.getElementById('cred-coluna2-wrap');
+  const mount=document.getElementById('cred-quick-mount');
+  if(wrap&&mount) mount.appendChild(wrap);
+  const titleEl=document.getElementById('cred-quick-modal-title');
+  if(titleEl) titleEl.textContent=t('cred-quick-titulo');
+  openModal('modal-cred-quick');
+  _credInit();
   setTimeout(()=>{
     _credSetMode('new');
     const bankSel=document.getElementById('cred-bank-sel');
@@ -4314,6 +4433,166 @@ function _accOpenCreateCredencial(bankRaw,agente){
     if(agentTxt) agentTxt.value=agente;
     _credAgentChange();
   },80);
+}
+function _closeCredQuickModal(){
+  const wrap=document.getElementById('cred-coluna2-wrap');
+  const grid=document.getElementById('automacoes-baixa-grid');
+  if(wrap&&grid) grid.appendChild(wrap);
+  closeModal('modal-cred-quick');
+}
+
+// Um "Concluído"/"Sem movimento" que resolve uma sequência longa de
+// "Sem acesso" (ver _contaSemAcessoStreakAntes) pode significar duas
+// coisas bem diferentes: a senha/credencial foi corrigida (o robô volta a
+// baixar sozinho) ou alguém só conseguiu o extrato por fora (nada mudou na
+// automação) — pergunta antes de presumir qualquer uma das duas.
+function _accAskRecuperouAcesso(contaKey){
+  const conta=store.contas.find(c=>`${c.sigla}_${c.numeroConta}`.replace(/['"]/g,'')===contaKey);
+  if(!conta) return;
+  _ynShow('🔓',t('acc-semacesso-titulo'),'',
+    `<div style="font-size:13px;color:var(--e-text);line-height:1.5">${t('acc-semacesso-pergunta')}</div>`,
+    ()=>{_accOpenUpdateCredencial(conta);},
+    ()=>{},
+    t('acc-semacesso-recuperou'),
+    t('acc-semacesso-recebemos')
+  );
+}
+// Mesmo truque de mover #cred-coluna2-wrap pro modal (ver
+// _accOpenCreateCredencial), mas em modo "Atualizar existente" — a conta já
+// tinha automação configurada (senão nunca teria ficado "sem acesso"), só
+// precisa da senha/credencial corrigida.
+function _accOpenUpdateCredencial(conta){
+  const dt=_DT_BANCO_MAP[conta.banco];
+  if(!dt) return;
+  const agUp=(conta.agente||'').toUpperCase().replace(/^[A-Z]+\./,'');
+  const wrap=document.getElementById('cred-coluna2-wrap');
+  const mount=document.getElementById('cred-quick-mount');
+  if(wrap&&mount) mount.appendChild(wrap);
+  const titleEl=document.getElementById('cred-quick-modal-title');
+  if(titleEl) titleEl.textContent=t('cred-quick-upd-titulo');
+  openModal('modal-cred-quick');
+  _credInit();
+  setTimeout(()=>{
+    _credSetMode('update');
+    const bankSel=document.getElementById('cred-bank-sel');
+    if(bankSel){bankSel.value=dt.bank_raw;_ssRefresh('cred-bank-sel');}
+    _credBankChange();
+    const agentSel=document.getElementById('cred-agent-sel');
+    if(agentSel){
+      const opt=[...agentSel.options].find(o=>o.value.toUpperCase()===agUp);
+      if(opt) agentSel.value=opt.value;
+      _ssRefresh('cred-agent-sel');
+    }
+    _credAgentChange();
+  },80);
+}
+
+// Uma conta encerrada pode não ser a ÚNICA do seu banco+agente ainda ativa
+// no cronograma (ex: BCP_1/BCP_2/BCP_3, todas "PE.Onlinepro") — a mesma
+// credencial de baixa serve pra todas elas. Antes de sugerir excluir a
+// credencial, pergunta se as outras contas do mesmo banco+agente também
+// devem ser encerradas junto; só chega a sugerir excluir a credencial
+// depois disso, e só se NENHUMA conta daquele banco+agente continuar ativa.
+function _accOutrasContasMesmoAgente(conta,excludeIdx){
+  const agUpAlvo=(conta.agente||'').toUpperCase().replace(/^[A-Z]+\./,'');
+  const out=[];
+  store.contas.forEach((c,idx)=>{
+    if(idx===excludeIdx||c.status==='encerrada'||c.banco!==conta.banco) return;
+    if((c.agente||'').toUpperCase().replace(/^[A-Z]+\./,'')===agUpAlvo) out.push({idx,conta:c});
+  });
+  return out;
+}
+function _accCountAtivasMesmoAgente(conta){
+  return _accOutrasContasMesmoAgente(conta,-1).length;
+}
+let _encOutrasItems=[],_encOutrasSelected=new Set(),_encOutrasCtx=null;
+function _toggleEncOutra(idx,checked){
+  if(checked) _encOutrasSelected.add(idx); else _encOutrasSelected.delete(idx);
+}
+function _renderEncOutrasList(){
+  const box=document.getElementById('enc-outras-list');
+  if(!box) return;
+  box.innerHTML=_encOutrasItems.map(({idx,conta})=>{
+    const chk=_encOutrasSelected.has(idx);
+    return `<label style="display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--e-pale);border-radius:8px;cursor:pointer">
+      <input type="checkbox" ${chk?'checked':''} onchange="_toggleEncOutra(${idx},this.checked)" style="accent-color:var(--e-purple);cursor:pointer;width:14px;height:14px;flex-shrink:0">
+      <span style="font-size:13px;font-weight:600">${_escHtml(conta.sigla)}</span>
+      <span style="font-size:11px;color:var(--e-muted)">${_escHtml(conta.numeroConta||'')}</span>
+    </label>`;
+  }).join('');
+}
+function _accHandlePosEncerrar(conta){
+  const idx=store.contas.indexOf(conta);
+  const outras=_accOutrasContasMesmoAgente(conta,idx);
+  if(!outras.length){_accMaybeSuggestRemoveCredencial(conta);return;}
+  _encOutrasItems=outras;
+  _encOutrasSelected=new Set(outras.map(o=>o.idx));
+  _encOutrasCtx=conta;
+  const agUp=(conta.agente||'').toUpperCase().replace(/^[A-Z]+\./,'');
+  const pergEl=document.getElementById('enc-outras-pergunta');
+  if(pergEl) pergEl.textContent=t('enc-outras-pergunta').replace('{banco}',conta.banco).replace('{agente}',agUp);
+  _renderEncOutrasList();
+  openModal('modal-enc-outras');
+}
+function _respondEncOutras(yes){
+  closeModal('modal-enc-outras');
+  const conta=_encOutrasCtx;
+  const selected=[..._encOutrasSelected];
+  _encOutrasCtx=null;_encOutrasItems=[];_encOutrasSelected=new Set();
+  if(yes&&selected.length){
+    let n=0;
+    selected.forEach(idx=>{
+      const c=store.contas[idx];
+      if(c&&c.status!=='encerrada'){c.status='encerrada';if(!c.dataEncerramento)c.dataEncerramento=Date.now();n++;}
+    });
+    if(n){
+      saveStore();_fbSync('contas');
+      logAudit('gerencial','encerrar-mesmo-banco-agente',{banco:conta?.banco,agente:conta?.agente,n});
+      renderAccountsTable();renderCronogramaAccounts();updateCounts();
+    }
+  }
+  if(conta&&_accCountAtivasMesmoAgente(conta)===0) _accMaybeSuggestRemoveCredencial(conta);
+}
+
+// Inverso do fluxo de _credAskEncerrar (que sugere encerrar a CONTA quando
+// uma credencial é excluída da rotina): aqui, encerrar a CONTA em Gerencial
+// > Accounts, quando ela ainda tem uma credencial ativa (em
+// CRED_BANK_AGENTS), sugere excluir essa credencial da rotina. Só dispara
+// na transição de ativa→encerrada — reabrir/editar uma conta já encerrada
+// não deveria perguntar de novo.
+function _accMaybeSuggestRemoveCredencial(conta){
+  if(!isModuleEnabled('automacoes-baixa')) return;
+  if(!canEdit()) return;
+  const dt=_DT_BANCO_MAP[conta.banco];
+  if(!dt) return; // banco fora do escopo da Baixa automática
+  const agUp=(conta.agente||'').toUpperCase().replace(/^[A-Z]+\./,'');
+  if(!agUp) return;
+  const jaTem=(CRED_BANK_AGENTS[dt.bank_raw]||[]).includes(agUp);
+  if(!jaTem) return; // não tem credencial ativa, nada a remover
+  const body=`<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--e-ghost);border-radius:7px;font-size:12px">
+    <span>🔐</span><span><strong>${_escHtml(conta.banco)}</strong> / ${_escHtml(agUp)} <span style="color:var(--e-muted)">(${_escHtml(conta.pais)})</span></span>
+  </div>`;
+  _ynShow('⚠️',t('yn-rm-cred-title'),t('yn-rm-cred-sub'),body,
+    ()=>{_accOpenRemoveCredencial(dt.pais,conta.banco,agUp);},
+    ()=>{}
+  );
+}
+
+// Mesmo truque de mover #cred-coluna2-wrap pro modal, mas já entrando
+// direto no modo "Excluir conta da rotina" (delete) com a combinação
+// pais/banco/agente da conta encerrada pré-selecionada na lista — o
+// preselectKey passa por _credSetMode → _credLoadDeleteList (ambos já
+// preparados pra receber isso), então nenhuma lógica de exclusão é
+// duplicada aqui.
+function _accOpenRemoveCredencial(paisCode,banco_nome,agente){
+  const wrap=document.getElementById('cred-coluna2-wrap');
+  const mount=document.getElementById('cred-quick-mount');
+  if(wrap&&mount) mount.appendChild(wrap);
+  const titleEl=document.getElementById('cred-quick-modal-title');
+  if(titleEl) titleEl.textContent=t('cred-quick-del-titulo');
+  openModal('modal-cred-quick');
+  _credInit();
+  _credSetMode('delete',`${paisCode}|${banco_nome}|${agente}`);
 }
 
 // ─── RENDER ACCOUNTS TABLE ────────────────────────────────────────
@@ -4364,31 +4643,38 @@ function renderAccountsTable(){
     </tr>`;
   }).join('');
 }
-function openBulkFreq(){
+function _bulkFilteredContas(){
   const q=(document.getElementById('acc-search')||{}).value?.toLowerCase()||'';
   const sf=(document.getElementById('acc-filter-status')||{}).value||'';
-  const list=store.contas.filter(c=>{
+  return store.contas.filter(c=>{
     const mq=_matchesInSearch([c.pais,c.agente,c.banco,c.sigla].map(v=>(v||'').toLowerCase()),q);
     const ms=!sf||c.status===sf;
     return mq&&ms;
   });
+}
+function _toggleBulkFreqSelect(checked){
+  const wrap=document.getElementById('bulk-freq-select-wrap');
+  if(wrap) wrap.style.display=checked?'':'none';
+}
+function openBulkFreq(){
+  const list=_bulkFilteredContas();
   const desc=document.getElementById('bulk-freq-desc');
   if(desc) desc.textContent=`${t('msg-aplicar-nova-freq-prefix')}${list.length} ${list.length!==1?t('count-contas'):t('count-conta')} ${list.length!==1?t('msg-filtrada-pl'):t('msg-filtrada-sg')}.`;
+  const freqToggle=document.getElementById('bulk-alterar-freq-toggle');
+  if(freqToggle) freqToggle.checked=true;
+  _toggleBulkFreqSelect(true);
+  const encToggle=document.getElementById('bulk-encerrar-toggle');
+  if(encToggle) encToggle.checked=false;
   openModal('modal-bulk-freq');
 }
-function submitBulkFreq(){
-  const novaFreq=document.getElementById('bulk-freq-select')?.value;
-  if(!novaFreq) return;
-  const q=(document.getElementById('acc-search')||{}).value?.toLowerCase()||'';
-  const sf=(document.getElementById('acc-filter-status')||{}).value||'';
-  const _matches=c=>{
-    const mq=_matchesInSearch([c.pais,c.agente,c.banco,c.sigla].map(v=>(v||'').toLowerCase()),q);
-    const ms=!sf||c.status===sf;
-    return mq&&ms;
-  };
-  if(!store.contas.filter(_matches).length) return;
+// Só a frequência tem a re-aplicação após 1.5s/4s (guarda contra o
+// Firebase revertendo a escrita local por uma corrida de sincronização já
+// observada em produção nesse fluxo especificamente) — encerrar contas não
+// teve esse problema relatado, então não replica a retentativa ali.
+function _applyBulkFreqSomente(list,novaFreq){
+  if(!novaFreq||!list.length) return;
   let changed=0;
-  store.contas.forEach((c,i)=>{ if(_matches(c)){ store.contas[i].tipo=novaFreq; changed++; } });
+  list.forEach(c=>{const idx=store.contas.indexOf(c);if(idx>=0){store.contas[idx].tipo=novaFreq;changed++;}});
   if(!changed) return;
   logAudit('gerencial','bulk-freq',{novaFreq,count:changed});
   saveStore(); _fbSync('contas');
@@ -4396,8 +4682,7 @@ function submitBulkFreq(){
   renderAccountsTable();
   renderCronogramaAccounts();
   _toast(`✓ ${changed} ${changed!==1?t('count-contas'):t('count-conta')} → ${novaFreq}`);
-  // Guarda siglas alteradas e re-aplica após 1.5s caso Firebase tenha revertido
-  const _siglasTipo=store.contas.filter(_matches).map(c=>({sigla:c.sigla,tipo:novaFreq}));
+  const _siglasTipo=list.map(c=>({sigla:c.sigla,tipo:novaFreq}));
   const _reapply=()=>{
     let fixed=0;
     _siglasTipo.forEach(({sigla,tipo})=>{
@@ -4408,6 +4693,67 @@ function submitBulkFreq(){
   };
   setTimeout(_reapply,1500);
   setTimeout(_reapply,4000);
+}
+let _bulkPendingFreq=null,_bulkPendingList=null;
+function _renderBulkEncerrarConfirmList(list){
+  const countEl=document.getElementById('bulk-encerrar-confirm-count');
+  if(countEl) countEl.textContent=tn('bulk-encerrar-confirm-count',list.length);
+  const box=document.getElementById('bulk-encerrar-confirm-list');
+  if(!box) return;
+  box.innerHTML=list.map(c=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--e-pale);border-radius:8px;font-size:12px">
+    <span style="font-weight:600">${_escHtml(c.sigla)}</span>
+    <span style="color:var(--e-muted)">${_escHtml(c.numeroConta||'—')} · ${_escHtml(c.banco)} · ${_escHtml(c.agente)}</span>
+  </div>`).join('');
+}
+function submitBulkFreq(){
+  const wantFreq=document.getElementById('bulk-alterar-freq-toggle')?.checked;
+  const wantEncerrar=document.getElementById('bulk-encerrar-toggle')?.checked;
+  if(!wantFreq&&!wantEncerrar) return;
+  const novaFreq=wantFreq?(document.getElementById('bulk-freq-select')?.value||null):null;
+  const list=_bulkFilteredContas();
+  if(!list.length) return;
+  if(wantEncerrar){
+    const ativas=list.filter(c=>c.status!=='encerrada');
+    if(!ativas.length){ _applyBulkFreqSomente(list,novaFreq); return; }
+    _bulkPendingFreq=novaFreq;
+    _bulkPendingList=list;
+    _renderBulkEncerrarConfirmList(ativas);
+    closeModal('modal-bulk-freq');
+    openModal('modal-bulk-encerrar-confirm');
+    return;
+  }
+  _applyBulkFreqSomente(list,novaFreq);
+}
+function confirmBulkEncerrar(){
+  const list=_bulkPendingList||[];
+  const novaFreq=_bulkPendingFreq;
+  _bulkPendingList=null;_bulkPendingFreq=null;
+  let changedFreq=0,changedEnc=0;
+  list.forEach(c=>{
+    const idx=store.contas.indexOf(c);
+    if(idx<0) return;
+    if(novaFreq){store.contas[idx].tipo=novaFreq;changedFreq++;}
+    if(store.contas[idx].status!=='encerrada'){
+      store.contas[idx].status='encerrada';
+      if(!store.contas[idx].dataEncerramento) store.contas[idx].dataEncerramento=Date.now();
+      changedEnc++;
+    }
+  });
+  if(!changedFreq&&!changedEnc){closeModal('modal-bulk-encerrar-confirm');return;}
+  logAudit('gerencial','bulk-encerrar',{novaFreq,changedFreq,changedEnc});
+  saveStore(); _fbSync('contas');
+  closeModal('modal-bulk-encerrar-confirm');
+  renderAccountsTable();
+  renderCronogramaAccounts();
+  updateCounts();
+  const parts=[];
+  if(changedFreq) parts.push(`${changedFreq} → ${novaFreq}`);
+  if(changedEnc) parts.push(`${changedEnc} ${t('status-encerrada')}`);
+  _toast(`✓ ${parts.join(' · ')}`);
+}
+function cancelBulkEncerrar(){
+  _bulkPendingList=null;_bulkPendingFreq=null;
+  closeModal('modal-bulk-encerrar-confirm');
 }
 function tipoChip(tipo){
   const map={'T1':'chip-violet','T2':'chip-purple','Diário':'chip-teal','1 vez ao mês':'chip-amber','1 vez na semana':'chip-rose'};
@@ -4866,6 +5212,20 @@ function _prevDay(dateStr){
   const d=new Date(dateStr+'T12:00:00');
   d.setDate(d.getDate()-1);
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+// Conta quantos dias consecutivos IMEDIATAMENTE ANTES de dateStr estavam
+// marcados "sem_acesso", sem nenhuma quebra — usado pra detectar quando um
+// "Concluído"/"Sem movimento" está resolvendo uma sequência longa de
+// sem-acesso (ver _accAskRecuperouAcesso, chamado por setCronoDayStatus).
+function _contaSemAcessoStreakAntes(contaKey,dateStr){
+  let streak=0,cur=dateStr;
+  while(true){
+    cur=_prevDay(cur);
+    const e=store.cronogramaData[`${contaKey}_${cur}`];
+    if(e&&e.status==='sem_acesso') streak++;
+    else break;
+  }
+  return streak;
 }
 function _getEronFb(){
   let app;
@@ -6578,6 +6938,9 @@ function setCronoDayStatus(contaKey, dateStr, status, event){
   } else {
     closeCalDropdown();
     _doSave(null);
+    if((status==='concluido'||status==='sem_movimento')&&_contaSemAcessoStreakAntes(contaKey,dateStr)>=5){
+      _accAskRecuperouAcesso(contaKey);
+    }
   }
 }
 function _calLinkSave(){
@@ -8833,7 +9196,7 @@ function _credInit(){
   _loadUserCredRequests();
 }
 
-function _credSetMode(mode){
+function _credSetMode(mode,preselectKey){
   _credMode=mode;
   const active='flex:1;border:none;border-radius:17px;padding:6px 8px;font-size:10.5px;font-weight:600;cursor:pointer;transition:all .18s;background:#7c3aed;color:#fff;font-family:inherit;line-height:1.3';
   const inactive='flex:1;border:none;border-radius:17px;padding:6px 8px;font-size:10.5px;font-weight:600;cursor:pointer;transition:all .18s;background:transparent;color:#5b21b6;font-family:inherit;line-height:1.3';
@@ -8847,7 +9210,7 @@ function _credSetMode(mode){
   if(bankWrap) bankWrap.style.display=mode==='delete'?'none':'';
   const dw=document.getElementById('cred-delete-wrap');
   if(dw){
-    if(mode==='delete'){dw.style.display='flex';_credLoadDeleteList();}
+    if(mode==='delete'){dw.style.display='flex';_credLoadDeleteList(preselectKey);}
     else{_credDelClose();_credDelSelected.clear();_credDelItems=[];dw.style.display='none';dw.innerHTML='';}
   }
   // Update save button label
@@ -9189,7 +9552,7 @@ function _credDelUpdateLabel(){
   }
 }
 
-async function _credLoadDeleteList(){
+async function _credLoadDeleteList(preselectKey){
   const dw=document.getElementById('cred-delete-wrap');
   if(!dw) return;
   _credDelItems=[];_credDelSelected.clear();
@@ -9227,6 +9590,13 @@ async function _credLoadDeleteList(){
           <div id="cred-del-list" style="overflow-y:auto;max-height:260px;padding:0 6px 8px"></div>
         </div>
       </div>`;
+    // Pré-seleciona uma combinação específica (ex: veio da conta que
+    // acabou de ser encerrada em Gerencial > Accounts) — se ela não estiver
+    // mais ativa em dynamic_tasks, simplesmente não marca nada.
+    if(preselectKey&&_credDelItems.some(i=>`${i.pais}|${i.banco_nome}|${i.agente}`===preselectKey)){
+      _credDelSelected.add(preselectKey);
+      _credDelUpdateLabel();_credDelRender();
+    }
     _credUpdateSaveBtn();
   }catch(e){
     dw.innerHTML=`<span style="font-size:12px;color:#dc2626">${t('cred-del-err')} ${_escHtml(String(e.message||e))}</span>`;
