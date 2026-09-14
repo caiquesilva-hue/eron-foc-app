@@ -261,6 +261,11 @@
   .toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.25);}
   input:checked+.toggle-slider{background:#ef4444;}
   input:checked+.toggle-slider::before{transform:translateX(16px);}
+  /* Vermelho é o padrão porque a maioria dos toggles do app são ações
+     destrutivas (Encerrar conta/conciliação). Os poucos que não são —
+     título já estilizado em roxo — usam esta variante pra não parecer um
+     aviso de perigo. */
+  .toggle-purple input:checked+.toggle-slider{background:var(--e-purple);}
 
   /* CONFIRM MODAL */
   .confirm-card{background:#fff;border-radius:16px;width:420px;max-width:100%;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.18);transform:translateY(10px);transition:transform .2s;overflow:hidden;}
@@ -1739,7 +1744,7 @@
       <div class="form-field" style="border-top:1px solid var(--e-pale);padding-top:12px;margin-top:4px">
         <div class="toggle-row">
           <div class="toggle-info"><div class="toggle-title" style="color:var(--e-purple)" data-i18n="lbl-acc-retroativo">Conta com movimento retroativo?</div></div>
-          <label class="toggle-switch">
+          <label class="toggle-switch toggle-purple">
             <input type="checkbox" id="acc-retroativo-toggle" onchange="_toggleAccRetroativo(this.checked)">
             <span class="toggle-slider"></span>
           </label>
@@ -1876,7 +1881,7 @@
       <div style="font-size:13px;color:var(--e-text);line-height:1.5" data-i18n="ativar-accounts-pergunta">Gostaria de ativar os módulos de Accounts para esse ambiente?</div>
       <div class="toggle-row">
         <div class="toggle-info"><div class="toggle-title" style="color:var(--e-purple)" data-i18n="ativar-accounts-cierre-subtext">Ativar também módulo de acompanhamento de cierre</div></div>
-        <label class="toggle-switch">
+        <label class="toggle-switch toggle-purple">
           <input type="checkbox" id="ativar-accounts-cierre-toggle">
           <span class="toggle-slider"></span>
         </label>
@@ -3235,7 +3240,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='422aa836dde1';
+const APP_VERSION='68d6962ebd4a';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -10114,7 +10119,7 @@ function openConciliacaoModal(editIdx=-1){
     <div class="form-field" style="border-top:1px solid var(--e-pale);padding-top:12px;margin-top:4px">
       <div class="toggle-row">
         <div class="toggle-info"><div class="toggle-title" style="color:var(--e-purple)">${t('lbl-conc-agrupada')}</div></div>
-        <label class="toggle-switch">
+        <label class="toggle-switch toggle-purple">
           <input type="checkbox" id="conc-agrupada-toggle" onchange="_toggleConcAgrupada(this.checked)">
           <span class="toggle-slider"></span>
         </label>
