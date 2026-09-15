@@ -3533,7 +3533,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='c9c5fa7e8fae';
+const APP_VERSION='cb05fe47c96a';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -8661,7 +8661,7 @@ const EXTR_PAIS={CO:{flag:'🇨🇴',name:'Colombia'},AR:{flag:'🇦🇷',name:'
 // Robôs já aprovados no automacao_download_extratos (SUPORTA_RANGE=True) —
 // só esses ganham o toggle "Range de datas?" na tela de Baixa automática.
 // Nome tem que bater exatamente com a chave usada em _MAPA_* no main.py.
-const RANGE_SUPPORTED_BANCOS=new Set(['BICE','Industrial','Bancoomeva','BCI','BCP','BBVA Argentina','BBVA Colombia']);
+const RANGE_SUPPORTED_BANCOS=new Set(['BICE','Industrial','Bancoomeva','BCI','BCP','BBVA Argentina','BBVA Colombia','BBVA']);
 let _extrSelected=new Set();
 // Restrição opcional por conta dentro de um banco+agente já selecionado —
 // { [chaveExtr]: Set<numeroConta> }. Uma entrada só existe quando o
