@@ -1573,6 +1573,15 @@
                 </div>
               </div>
               <div id="extr-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"></div>
+              <div style="position:relative;margin-top:10px;display:none" id="extr-contas-restr-wrap">
+                <button type="button" id="extr-contas-restr-trigger" onclick="_extrToggleContaRestrDropdown()" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border:1px solid var(--e-border);border-radius:8px;background:var(--e-surface);cursor:pointer;font-family:inherit;font-size:13px;color:var(--e-muted);text-align:left">
+                  <span id="extr-contas-restr-label" data-i18n="extr-contas-restr-ph">Todas as contas</span>
+                  <svg id="extr-contas-restr-chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0;transition:transform .2s"><path d="M4 6l4 4 4-4"/></svg>
+                </button>
+                <div id="extr-contas-restr-panel" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--e-surface);border:1px solid var(--e-pale);border-radius:10px;box-shadow:0 8px 28px rgba(80,60,160,.13);z-index:299;overflow:hidden;flex-direction:column">
+                  <div id="extr-contas-restr-list" style="overflow-y:auto;max-height:280px;padding:6px"></div>
+                </div>
+              </div>
             </div>
             <div style="background:var(--e-surface);border:1px solid var(--e-pale);border-radius:12px;padding:16px 20px">
               <div style="font-size:11px;font-weight:700;color:var(--e-sub);text-transform:uppercase;letter-spacing:.09em;margin-bottom:10px" data-i18n="baixa-tipo-dl">Tipo de download</div>
@@ -2738,7 +2747,7 @@ const i18n = {
     'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Cadastro','nav-automacoes':'Automações','nav-dl-extratos':'Download Extratos','nav-cred-bancos':'Credenciais Bancos','nav-baixa-auto':'Baixa automática','baixa-sec-extr':'Download Extratos','baixa-sec-cred':'Atualização de Credenciais','cred-no-perm':'Acesso restrito — apenas Analista ou superior pode criar, editar ou excluir credenciais.',
     'nav-fechamentos':'Fechamentos','nav-fechamento-stp':'Fechamento STP','nav-fechamento-mono':'Fechamento Mono','fech-sec-arquivos':'Arquivos','fech-sec-progresso':'Progresso','fech-escolher':'Escolher arquivo','fech-nenhum':'Nenhum arquivo selecionado','fech-processar':'Processar','fech-stp-extrato':'Extrato STP (Excel)','fech-stp-archer':'Extrato Archer/Clearyn (CSV)','fech-mono-pdf':'PDF de créditos','fech-mono-extrato':'Extrato Mono (Excel)','fech-mono-clearyn':'Extrato Clearyn (CSV)','fech-err-campos':'Selecione todos os arquivos antes de processar.','fech-sem-divergencias':'Todas as transações estão conciliadas — nenhum CSV foi gerado.','fech-stp-drive-link':'Pasta padrão dos extratos STP vindos de Archer/Clearyn',
     'fech-err-clave-rastreo':"CRÍTICO: A coluna 'Clave de Rastreo' não existe neste arquivo STP!",'fech-log-linhas-1':'{n} linha','fech-log-linhas-n':'{n} linhas','fech-log-iniciando-stp':'Iniciando processo STP...','fech-log-lendo-excel-stp':'Lendo arquivo Excel (STP)...','fech-log-excel-lido-stp':'Excel lido: {n} linha(s) com conteúdo.','fech-log-lendo-csv-clearyn':'Lendo arquivo CSV (Clearyn/Archer)...','fech-log-validacao-titulo':'INICIANDO VALIDAÇÃO DE DIVERGÊNCIAS (STP vs CLEARYN/ARCHER)','fech-log-somente-clearyn-titulo':'--------------- IDs Somente no Clearyn/Archer ---------------','fech-log-nenhuma-div-clearyn':'Nenhuma divergência isolada no Clearyn.','fech-log-somente-stp-titulo':'--------------- IDs Somente no Extrato STP (GERANDO CSV) ---------------','fech-log-tudo-conciliado-com-saldo':'Todas as transações estão conciliadas e o saldo já existe no Clearyn. Nenhum CSV será gerado.','fech-log-conciliado-mas-saldo':'Transações conciliadas, mas o Saldo Final será gerado pois não consta no Clearyn.','fech-log-saldo-adicionado':'⚠️ Saldo Final adicionado ao CSV (não foi encontrado no Clearyn).','fech-log-saldo-ignorado':'A linha de Saldo Final foi ignorada pois já existe no arquivo Clearyn.','fech-log-csv-sucesso':'✅ CSV gerado com sucesso! ({linhas})','fech-log-erro-critico':'❌ [ERRO CRÍTICO] {msg}','fech-log-iniciando-mono':'Iniciando processo MONO...','fech-log-extraindo-pdf':'Extraindo texto do PDF de créditos...','fech-log-lendo-mono-excel':'Lendo extrato Mono (Excel)...','fech-log-excel-lido-mono':'Excel lido: {n} linha(s).','fech-log-lendo-clearyn-csv':'Lendo extrato Clearyn (CSV)...','fech-log-pipeline-inicio':'🚀 INICIANDO PIPELINE DE FECHAMENTO...','fech-log-etapa1':'>>> [1/3] EXTRAÇÃO DO PDF DE CRÉDITOS...','fech-log-extrato-convertido':'✅ Extrato convertido salvo em: {filename}','fech-log-filtro-mes-ano':'📅 Filtro automático aplicado baseado no PDF: Mês {mes} / Ano {ano}','fech-log-etapa2':'>>> [2/3] MOTOR DE CONCILIAÇÃO (DÉBITOS CLEARYN VS MONO)...','fech-log-relatorio-debitos':'================== RELATÓRIO DE CONCILIAÇÃO (DÉBITOS) ==================','fech-log-sem-transacoes':'[{categoria}] -> Sem transações no período.','fech-log-categoria-header':'--- {categoria} ---','fech-log-conciliadas-perfeitas':'✅ Conciliadas Perfeitas: {n}','fech-log-conciliadas-flutuacao':'✅ Conciliadas (Flutuação de Dia): {n}','fech-log-faltam-clearyn':'⚠️ Faltam no Clearyn (Add): {n}','fech-log-alteracoes-reais':'🔄 Alterações Reais (Mês/Status): {n}','fech-log-sobram-clearyn':'❌ Sobram no Clearyn (Excluir): {n}','fech-log-arquivo-adicionar':'✅ Arquivo de ADICIONAR (Débitos) gerado: {filename}','fech-log-arquivo-excluir':'✅ Arquivo de EXCLUIR gerado: {filename}','fech-log-arquivo-alteracoes':'✅ Arquivo de ALTERAÇÕES gerado: {filename}','fech-log-motor-debitos-concluido':'✅ Motor de Débitos Concluído.','fech-log-etapa3':'>>> [3/3] CONCILIAÇÃO DE DEVOLUÇÕES (CRÉDITOS)...','fech-log-arquivo-creditos':'✅ Arquivo de CRÉDITOS gerado: {filename}','fech-log-pipeline-sucesso':'🎉 PIPELINE FINALIZADO COM SUCESSO!',
-    'extr-accounts-label':'Contas','extr-sel-ph':'Selecionar contas...','extr-search-ph':'Buscar banco ou agente...','extr-sel-all':'Tudo','extr-date-label':'Data','extr-date-yesterday':'Ontem','extr-date-custom':'Personalizado','extr-date-range-toggle':'Range de datas?','extr-date-from':'De','extr-date-to':'Até','extr-run':'Executar','extr-n-sel-1':'{n} selecionada','extr-n-sel-n':'{n} selecionadas','extr-drive-link':'Pasta dos extratos baixados',
+    'extr-accounts-label':'Contas','extr-sel-ph':'Selecionar contas...','extr-search-ph':'Buscar banco ou agente...','extr-sel-all':'Tudo','extr-date-label':'Data','extr-date-yesterday':'Ontem','extr-date-custom':'Personalizado','extr-date-range-toggle':'Range de datas?','extr-date-from':'De','extr-date-to':'Até','extr-run':'Executar','extr-n-sel-1':'{n} selecionada','extr-n-sel-n':'{n} selecionadas','extr-drive-link':'Pasta dos extratos baixados','extr-contas-label':'contas','extr-contas-restr-ph':'Todas as contas','extr-contas-vazio-err':'Selecione ao menos uma conta ou desmarque a restrição.',
     'baixa-tipo-dl':'Tipo de download','baixa-tipo-extrato':'Extrato Cru','baixa-enviar-imp':'Enviar ao importador','baixa-enviar-imp-desc':'Move os extratos para a pasta do importador; acione-o após a finalização da baixa',
     'baixa-enviar-pdf':'Enviar para a pasta de PDFs','baixa-enviar-pdf-desc':'Move os PDFs baixados para a pasta compartilhada',
     'extr-drive-pdf-link':'Pasta dos PDFs baixados',
@@ -2984,7 +2993,7 @@ const i18n = {
     'nav-gerencial':'Management','nav-cronograma':'Schedule','nav-cadastro':'Registry','nav-automacoes':'Automations','nav-dl-extratos':'Download Statements','nav-cred-bancos':'Bank Credentials','nav-baixa-auto':'Automatic download','baixa-sec-extr':'Download Statements','baixa-sec-cred':'Credential Update','cred-no-perm':'Restricted access — only Analyst role or higher can create, edit, or delete credentials.',
     'nav-fechamentos':'Closings','nav-fechamento-stp':'STP Closing','nav-fechamento-mono':'Mono Closing','fech-sec-arquivos':'Files','fech-sec-progresso':'Progress','fech-escolher':'Choose file','fech-nenhum':'No file selected','fech-processar':'Process','fech-stp-extrato':'STP statement (Excel)','fech-stp-archer':'Archer/Clearyn statement (CSV)','fech-mono-pdf':'Credits PDF','fech-mono-extrato':'Mono statement (Excel)','fech-mono-clearyn':'Clearyn statement (CSV)','fech-err-campos':'Select all files before processing.','fech-sem-divergencias':'All transactions are reconciled — no CSV was generated.','fech-stp-drive-link':'Default folder for STP statements from Archer/Clearyn',
     'fech-err-clave-rastreo':"CRITICAL: The 'Clave de Rastreo' column doesn't exist in this STP file!",'fech-log-linhas-1':'{n} line','fech-log-linhas-n':'{n} lines','fech-log-iniciando-stp':'Starting STP process...','fech-log-lendo-excel-stp':'Reading Excel file (STP)...','fech-log-excel-lido-stp':'Excel read: {n} line(s) with content.','fech-log-lendo-csv-clearyn':'Reading CSV file (Clearyn/Archer)...','fech-log-validacao-titulo':'STARTING DIVERGENCE VALIDATION (STP vs CLEARYN/ARCHER)','fech-log-somente-clearyn-titulo':'--------------- IDs Only in Clearyn/Archer ---------------','fech-log-nenhuma-div-clearyn':'No isolated divergence in Clearyn.','fech-log-somente-stp-titulo':'--------------- IDs Only in STP Statement (GENERATING CSV) ---------------','fech-log-tudo-conciliado-com-saldo':'All transactions are reconciled and the balance already exists in Clearyn. No CSV will be generated.','fech-log-conciliado-mas-saldo':'Transactions reconciled, but the Final Balance will be generated since it is not in Clearyn.','fech-log-saldo-adicionado':'⚠️ Final Balance added to the CSV (not found in Clearyn).','fech-log-saldo-ignorado':'The Final Balance line was ignored since it already exists in the Clearyn file.','fech-log-csv-sucesso':'✅ CSV generated successfully! ({linhas})','fech-log-erro-critico':'❌ [CRITICAL ERROR] {msg}','fech-log-iniciando-mono':'Starting MONO process...','fech-log-extraindo-pdf':'Extracting text from credits PDF...','fech-log-lendo-mono-excel':'Reading Mono statement (Excel)...','fech-log-excel-lido-mono':'Excel read: {n} line(s).','fech-log-lendo-clearyn-csv':'Reading Clearyn statement (CSV)...','fech-log-pipeline-inicio':'🚀 STARTING CLOSING PIPELINE...','fech-log-etapa1':'>>> [1/3] CREDITS PDF EXTRACTION...','fech-log-extrato-convertido':'✅ Converted statement saved to: {filename}','fech-log-filtro-mes-ano':'📅 Automatic filter applied based on the PDF: Month {mes} / Year {ano}','fech-log-etapa2':'>>> [2/3] RECONCILIATION ENGINE (CLEARYN vs MONO DEBITS)...','fech-log-relatorio-debitos':'================== RECONCILIATION REPORT (DEBITS) ==================','fech-log-sem-transacoes':'[{categoria}] -> No transactions in the period.','fech-log-categoria-header':'--- {categoria} ---','fech-log-conciliadas-perfeitas':'✅ Perfect Matches: {n}','fech-log-conciliadas-flutuacao':'✅ Reconciled (Day Shift): {n}','fech-log-faltam-clearyn':'⚠️ Missing in Clearyn (Add): {n}','fech-log-alteracoes-reais':'🔄 Real Changes (Month/Status): {n}','fech-log-sobram-clearyn':'❌ Extra in Clearyn (Remove): {n}','fech-log-arquivo-adicionar':'✅ ADD file (Debits) generated: {filename}','fech-log-arquivo-excluir':'✅ REMOVE file generated: {filename}','fech-log-arquivo-alteracoes':'✅ CHANGES file generated: {filename}','fech-log-motor-debitos-concluido':'✅ Debits Engine Completed.','fech-log-etapa3':'>>> [3/3] REFUND RECONCILIATION (CREDITS)...','fech-log-arquivo-creditos':'✅ CREDITS file generated: {filename}','fech-log-pipeline-sucesso':'🎉 PIPELINE COMPLETED SUCCESSFULLY!',
-    'extr-accounts-label':'Accounts','extr-sel-ph':'Select accounts...','extr-search-ph':'Search bank or agent...','extr-sel-all':'All','extr-date-label':'Date','extr-date-yesterday':'Yesterday','extr-date-custom':'Custom','extr-date-range-toggle':'Date range?','extr-date-from':'From','extr-date-to':'To','extr-run':'Run','extr-n-sel-1':'{n} selected','extr-n-sel-n':'{n} selected','extr-drive-link':'Downloaded statements folder',
+    'extr-accounts-label':'Accounts','extr-sel-ph':'Select accounts...','extr-search-ph':'Search bank or agent...','extr-sel-all':'All','extr-date-label':'Date','extr-date-yesterday':'Yesterday','extr-date-custom':'Custom','extr-date-range-toggle':'Date range?','extr-date-from':'From','extr-date-to':'To','extr-run':'Run','extr-n-sel-1':'{n} selected','extr-n-sel-n':'{n} selected','extr-drive-link':'Downloaded statements folder','extr-contas-label':'accounts','extr-contas-restr-ph':'All accounts','extr-contas-vazio-err':'Select at least one account, or clear the restriction.',
     'baixa-tipo-dl':'Download type','baixa-tipo-extrato':'Raw Statement','baixa-enviar-imp':'Send to importer','baixa-enviar-imp-desc':'Moves statements to the importer folder; trigger it after the download completes',
     'baixa-enviar-pdf':'Send to PDFs folder','baixa-enviar-pdf-desc':'Moves downloaded PDFs to the shared folder',
     'extr-drive-pdf-link':'Downloaded PDFs folder',
@@ -3223,7 +3232,7 @@ const i18n = {
     'nav-gerencial':'Gerencial','nav-cronograma':'Cronograma','nav-cadastro':'Registro','nav-automacoes':'Automatizaciones','nav-dl-extratos':'Descargar Extractos','nav-cred-bancos':'Credenciales Bancos','nav-baixa-auto':'Descarga automática','baixa-sec-extr':'Descargar Extractos','baixa-sec-cred':'Actualización de Credenciales','cred-no-perm':'Acceso restringido — solo el rol Analista o superior puede crear, editar o eliminar credenciales.',
     'nav-fechamentos':'Cierres','nav-fechamento-stp':'Cierre STP','nav-fechamento-mono':'Cierre Mono','fech-sec-arquivos':'Archivos','fech-sec-progresso':'Progreso','fech-escolher':'Elegir archivo','fech-nenhum':'Ningún archivo seleccionado','fech-processar':'Procesar','fech-stp-extrato':'Extracto STP (Excel)','fech-stp-archer':'Extracto Archer/Clearyn (CSV)','fech-mono-pdf':'PDF de créditos','fech-mono-extrato':'Extracto Mono (Excel)','fech-mono-clearyn':'Extracto Clearyn (CSV)','fech-err-campos':'Seleccione todos los archivos antes de procesar.','fech-sem-divergencias':'Todas las transacciones están conciliadas — no se generó ningún CSV.','fech-stp-drive-link':'Carpeta predeterminada de extractos STP desde Archer/Clearyn',
     'fech-err-clave-rastreo':"CRÍTICO: ¡La columna 'Clave de Rastreo' no existe en este archivo STP!",'fech-log-linhas-1':'{n} línea','fech-log-linhas-n':'{n} líneas','fech-log-iniciando-stp':'Iniciando proceso STP...','fech-log-lendo-excel-stp':'Leyendo archivo Excel (STP)...','fech-log-excel-lido-stp':'Excel leído: {n} línea(s) con contenido.','fech-log-lendo-csv-clearyn':'Leyendo archivo CSV (Clearyn/Archer)...','fech-log-validacao-titulo':'INICIANDO VALIDACIÓN DE DIVERGENCIAS (STP vs CLEARYN/ARCHER)','fech-log-somente-clearyn-titulo':'--------------- IDs Solo en Clearyn/Archer ---------------','fech-log-nenhuma-div-clearyn':'Ninguna divergencia aislada en Clearyn.','fech-log-somente-stp-titulo':'--------------- IDs Solo en el Extracto STP (GENERANDO CSV) ---------------','fech-log-tudo-conciliado-com-saldo':'Todas las transacciones están conciliadas y el saldo ya existe en Clearyn. No se generará ningún CSV.','fech-log-conciliado-mas-saldo':'Transacciones conciliadas, pero se generará el Saldo Final porque no consta en Clearyn.','fech-log-saldo-adicionado':'⚠️ Saldo Final añadido al CSV (no se encontró en Clearyn).','fech-log-saldo-ignorado':'La línea de Saldo Final fue ignorada porque ya existe en el archivo Clearyn.','fech-log-csv-sucesso':'✅ ¡CSV generado con éxito! ({linhas})','fech-log-erro-critico':'❌ [ERROR CRÍTICO] {msg}','fech-log-iniciando-mono':'Iniciando proceso MONO...','fech-log-extraindo-pdf':'Extrayendo texto del PDF de créditos...','fech-log-lendo-mono-excel':'Leyendo extracto Mono (Excel)...','fech-log-excel-lido-mono':'Excel leído: {n} línea(s).','fech-log-lendo-clearyn-csv':'Leyendo extracto Clearyn (CSV)...','fech-log-pipeline-inicio':'🚀 INICIANDO PIPELINE DE CIERRE...','fech-log-etapa1':'>>> [1/3] EXTRACCIÓN DEL PDF DE CRÉDITOS...','fech-log-extrato-convertido':'✅ Extracto convertido guardado en: {filename}','fech-log-filtro-mes-ano':'📅 Filtro automático aplicado según el PDF: Mes {mes} / Año {ano}','fech-log-etapa2':'>>> [2/3] MOTOR DE CONCILIACIÓN (DÉBITOS CLEARYN VS MONO)...','fech-log-relatorio-debitos':'================== INFORME DE CONCILIACIÓN (DÉBITOS) ==================','fech-log-sem-transacoes':'[{categoria}] -> Sin transacciones en el período.','fech-log-categoria-header':'--- {categoria} ---','fech-log-conciliadas-perfeitas':'✅ Conciliadas Perfectas: {n}','fech-log-conciliadas-flutuacao':'✅ Conciliadas (Fluctuación de Día): {n}','fech-log-faltam-clearyn':'⚠️ Faltan en Clearyn (Agregar): {n}','fech-log-alteracoes-reais':'🔄 Cambios Reales (Mes/Estado): {n}','fech-log-sobram-clearyn':'❌ Sobran en Clearyn (Eliminar): {n}','fech-log-arquivo-adicionar':'✅ Archivo de AGREGAR (Débitos) generado: {filename}','fech-log-arquivo-excluir':'✅ Archivo de ELIMINAR generado: {filename}','fech-log-arquivo-alteracoes':'✅ Archivo de CAMBIOS generado: {filename}','fech-log-motor-debitos-concluido':'✅ Motor de Débitos Completado.','fech-log-etapa3':'>>> [3/3] CONCILIACIÓN DE DEVOLUCIONES (CRÉDITOS)...','fech-log-arquivo-creditos':'✅ Archivo de CRÉDITOS generado: {filename}','fech-log-pipeline-sucesso':'🎉 ¡PIPELINE FINALIZADO CON ÉXITO!',
-    'extr-accounts-label':'Cuentas','extr-sel-ph':'Seleccionar cuentas...','extr-search-ph':'Buscar banco o agente...','extr-sel-all':'Todo','extr-date-label':'Fecha','extr-date-yesterday':'Ayer','extr-date-custom':'Personalizado','extr-date-range-toggle':'¿Rango de fechas?','extr-date-from':'Desde','extr-date-to':'Hasta','extr-run':'Ejecutar','extr-n-sel-1':'{n} seleccionada','extr-n-sel-n':'{n} seleccionadas','extr-drive-link':'Carpeta de extractos descargados',
+    'extr-accounts-label':'Cuentas','extr-sel-ph':'Seleccionar cuentas...','extr-search-ph':'Buscar banco o agente...','extr-sel-all':'Todo','extr-date-label':'Fecha','extr-date-yesterday':'Ayer','extr-date-custom':'Personalizado','extr-date-range-toggle':'¿Rango de fechas?','extr-date-from':'Desde','extr-date-to':'Hasta','extr-run':'Ejecutar','extr-n-sel-1':'{n} seleccionada','extr-n-sel-n':'{n} seleccionadas','extr-drive-link':'Carpeta de extractos descargados','extr-contas-label':'cuentas','extr-contas-restr-ph':'Todas las cuentas','extr-contas-vazio-err':'Seleccione al menos una cuenta, o quite la restricción.',
     'baixa-tipo-dl':'Tipo de descarga','baixa-tipo-extrato':'Extracto Bruto','baixa-enviar-imp':'Enviar al importador','baixa-enviar-imp-desc':'Mueve los extractos a la carpeta del importador; acciónelo tras finalizar la descarga',
     'baixa-enviar-pdf':'Enviar a la carpeta de PDFs','baixa-enviar-pdf-desc':'Mueve los PDFs descargados a la carpeta compartida',
     'extr-drive-pdf-link':'Carpeta de PDFs descargados',
@@ -3511,7 +3520,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='661ed956d941';
+const APP_VERSION='0308e4472f64';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -8639,8 +8648,16 @@ const EXTR_PAIS={CO:{flag:'🇨🇴',name:'Colombia'},AR:{flag:'🇦🇷',name:'
 // Robôs já aprovados no automacao_download_extratos (SUPORTA_RANGE=True) —
 // só esses ganham o toggle "Range de datas?" na tela de Baixa automática.
 // Nome tem que bater exatamente com a chave usada em _MAPA_* no main.py.
-const RANGE_SUPPORTED_BANCOS=new Set(['BICE']);
+const RANGE_SUPPORTED_BANCOS=new Set(['BICE','Industrial','Bancoomeva','BCI']);
 let _extrSelected=new Set();
+// Restrição opcional por conta dentro de um banco+agente já selecionado —
+// { [chaveExtr]: Set<numeroConta> }. Uma entrada só existe quando o
+// usuário restringiu ativamente aquele banco+agente no segundo dropdown
+// (ver #extr-contas-restr-wrap) e desmarcou pelo menos uma conta; ausência
+// = "todas as contas", igual sempre foi. Não confundir com _extrSelected
+// (banco+agente, primeiro dropdown).
+let _extrContaFiltro={};
+let _extrContaRestrPanelOpen=false;
 let _extrDateMode='ontem';
 let _extrRangeMode=false;
 let _extrPanelOpen=false;
@@ -8659,6 +8676,7 @@ function _extrFmtYesterday(){
 
 function _extrInit(){
   _extrSelected.clear();
+  _extrContaFiltro={};
   _extrDateMode='ontem';
   _extrRangeMode=false;
   _extrPanelOpen=false;
@@ -8688,6 +8706,7 @@ function _extrInit(){
   document.querySelectorAll('input[name="extr-date-mode"]').forEach(r=>{r.checked=r.value==='ontem';});
   _extrUpdateUI();
   _extrRenderList();
+  _extrRenderContaRestrWrap();
   document.removeEventListener('click',_extrOutsideClick);
   document.addEventListener('click',_extrOutsideClick);
 }
@@ -8723,13 +8742,34 @@ function _extrCloseDropdown(){
 
 function _extrSearch(){_extrRenderList();}
 
+// Mesmo predicado usado no render (_extrRenderList) e no toggle do grupo
+// por país (_extrToggleGroup) — precisa ser o MESMO nos dois, ou o
+// checkbox do país acaba marcando/desmarcando tarefas que a busca já
+// escondeu (o grupo deve agir só sobre o que está visível no filtro atual).
+function _extrMatchesSearch(tarefa,q){
+  if(!q) return true;
+  const paisNome=(EXTR_PAIS[tarefa.pais]?.name||tarefa.pais||'').toLowerCase();
+  return tarefa.banco.toLowerCase().includes(q)||tarefa.agente.toLowerCase().includes(q)||paisNome.includes(q);
+}
+// Contas cadastradas (Cadastro > Contas) que pertencem a um banco+agente da
+// lista de robôs — mesma normalização de agente já usada por
+// _accOutrasContasMesmoAgente (ignora prefixo de país, ex: "PE.Malisac").
+function _extrContasDoAgente(tarefa){
+  // Nome do banco em /Cadastro > Bancos é texto livre — pode divergir em
+  // maiúsculas/espaços do nome fixo usado em EXTR_TAREFAS (ex: "Bancolombia"
+  // vs "bancolombia "), então compara normalizado, não igualdade exata
+  // (mesmo cuidado que o robô já toma em _conta_bate/_normalizar_texto).
+  const bcNorm=(tarefa.banco||'').trim().toUpperCase();
+  const agNorm=(tarefa.agente||'').toUpperCase().replace(/^[A-Z]+\./,'');
+  return store.contas.filter(c=>(c.banco||'').trim().toUpperCase()===bcNorm&&c.status!=='encerrada'&&
+    (c.agente||'').toUpperCase().replace(/^[A-Z]+\./,'')===agNorm);
+}
 function _extrRenderList(){
   const q=(document.getElementById('extr-ms-search')?.value||'').toLowerCase();
   const groups={};
   EXTR_TAREFAS.forEach(tarefa=>{
     const key=_extrKey(tarefa);
-    const paisNome=(EXTR_PAIS[tarefa.pais]?.name||tarefa.pais||'').toLowerCase();
-    if(q&&!tarefa.banco.toLowerCase().includes(q)&&!tarefa.agente.toLowerCase().includes(q)&&!paisNome.includes(q)) return;
+    if(!_extrMatchesSearch(tarefa,q)) return;
     if(!groups[tarefa.pais]) groups[tarefa.pais]=[];
     groups[tarefa.pais].push({...tarefa,key});
   });
@@ -8770,14 +8810,135 @@ function _extrRenderList(){
 
 function _extrToggleItem(key,checked){
   if(checked) _extrSelected.add(key); else _extrSelected.delete(key);
-  _extrUpdateUI();_extrRenderList();
+  _extrUpdateUI();_extrRenderList();_extrRenderContaRestrWrap();
+}
+
+function _extrToggleConta(key,numeroConta,checked){
+  const tarefa=EXTR_TAREFAS.find(t=>_extrKey(t)===key);
+  if(!tarefa) return;
+  const todasContas=_extrContasDoAgente(tarefa).map(c=>c.numeroConta);
+  let set=_extrContaFiltro[key];
+  if(!set){ set=new Set(todasContas); _extrContaFiltro[key]=set; }
+  if(checked) set.add(numeroConta); else set.delete(numeroConta);
+  // Marcou tudo de novo: remove a restrição (payload igual a nunca ter
+  // restringido, mais limpo que gravar numeros_conta com a lista inteira).
+  if(set.size===todasContas.length) delete _extrContaFiltro[key];
+  _extrRenderContaRestrWrap();
+}
+function _extrToggleContaGroup(key,checked){
+  if(checked) delete _extrContaFiltro[key];
+  else _extrContaFiltro[key]=new Set(); // nada marcado = restrição vazia, bloqueia no Executar
+  _extrRenderContaRestrWrap();
 }
 
 function _extrToggleGroup(pais,checked){
-  EXTR_TAREFAS.filter(t=>t.pais===pais).forEach(t=>{
+  const q=(document.getElementById('extr-ms-search')?.value||'').toLowerCase();
+  EXTR_TAREFAS.filter(t=>t.pais===pais&&_extrMatchesSearch(t,q)).forEach(t=>{
     if(checked) _extrSelected.add(_extrKey(t)); else _extrSelected.delete(_extrKey(t));
   });
-  _extrUpdateUI();_extrRenderList();
+  _extrUpdateUI();_extrRenderList();_extrRenderContaRestrWrap();
+}
+
+// ─── Segundo dropdown: restringir contas dentro dos banco+agente já
+// selecionados no primeiro (só aparece quando pelo menos um selecionado
+// tem mais de uma conta cadastrada — nada a restringir com 0 ou 1). ───
+function _extrOpenContaRestrDropdown(){
+  _extrContaRestrPanelOpen=true;
+  const panel=document.getElementById('extr-contas-restr-panel');
+  if(panel){panel.style.display='flex';panel.style.flexDirection='column';}
+  const chevron=document.getElementById('extr-contas-restr-chevron');
+  if(chevron) chevron.style.transform='rotate(180deg)';
+  _extrRenderContaRestrList();
+  document.removeEventListener('click',_extrContaRestrOutsideClick);
+  document.addEventListener('click',_extrContaRestrOutsideClick);
+}
+function _extrCloseContaRestrDropdown(){
+  _extrContaRestrPanelOpen=false;
+  const panel=document.getElementById('extr-contas-restr-panel');
+  if(panel) panel.style.display='none';
+  const chevron=document.getElementById('extr-contas-restr-chevron');
+  if(chevron) chevron.style.transform='';
+}
+function _extrToggleContaRestrDropdown(){
+  if(_extrContaRestrPanelOpen) _extrCloseContaRestrDropdown();
+  else _extrOpenContaRestrDropdown();
+}
+function _extrContaRestrOutsideClick(e){
+  const wrap=document.getElementById('extr-contas-restr-wrap');
+  if(wrap&&!wrap.contains(e.target)) _extrCloseContaRestrDropdown();
+}
+// Só mostra o segundo dropdown quando algum banco+agente selecionado no
+// primeiro tem mais de uma conta cadastrada — nos outros casos fica
+// escondido (nada a restringir).
+function _extrRenderContaRestrWrap(){
+  const wrap=document.getElementById('extr-contas-restr-wrap');
+  if(!wrap) return;
+  const qualifica=[..._extrSelected].some(key=>{
+    const tarefa=EXTR_TAREFAS.find(t=>_extrKey(t)===key);
+    return tarefa&&_extrContasDoAgente(tarefa).length>1;
+  });
+  wrap.style.display=qualifica?'':'none';
+  if(!qualifica) _extrCloseContaRestrDropdown();
+  _extrUpdateContaRestrLabel();
+  _extrRenderContaRestrList();
+}
+function _extrUpdateContaRestrLabel(){
+  const label=document.getElementById('extr-contas-restr-label');
+  if(!label) return;
+  let totalMarcado=0,totalContas=0,restringiu=false;
+  [..._extrSelected].forEach(key=>{
+    const tarefa=EXTR_TAREFAS.find(t=>_extrKey(t)===key);
+    if(!tarefa) return;
+    const contas=_extrContasDoAgente(tarefa);
+    if(contas.length<=1) return;
+    totalContas+=contas.length;
+    const filtro=_extrContaFiltro[key];
+    if(filtro&&filtro.size<contas.length){ restringiu=true; totalMarcado+=filtro.size; }
+    else totalMarcado+=contas.length;
+  });
+  if(restringiu){
+    label.textContent=`${totalMarcado}/${totalContas} ${t('extr-contas-label')}`;
+    label.style.color=totalMarcado===0?'var(--e-danger-accent)':'var(--e-mid)';
+  } else {
+    label.textContent=t('extr-contas-restr-ph');
+    label.style.color='var(--e-muted)';
+  }
+}
+function _extrRenderContaRestrList(){
+  const listEl=document.getElementById('extr-contas-restr-list');
+  if(!listEl) return;
+  const relevantes=[..._extrSelected].map(key=>EXTR_TAREFAS.find(t=>_extrKey(t)===key)).filter(Boolean)
+    .map(tarefa=>({tarefa,key:_extrKey(tarefa),contas:_extrContasDoAgente(tarefa)}))
+    .filter(x=>x.contas.length>1)
+    .sort((a,b)=>a.tarefa.banco.localeCompare(b.tarefa.banco)||a.tarefa.agente.localeCompare(b.tarefa.agente));
+  let html='';let first=true;
+  relevantes.forEach(({tarefa,key,contas})=>{
+    const filtro=_extrContaFiltro[key];
+    const allChk=contas.every(c=>!filtro||filtro.has(c.numeroConta));
+    html+=`<div style="padding:${first?'4':'8'}px 8px 4px;display:flex;align-items:center;gap:8px;font-size:10px;font-weight:700;color:var(--e-muted);text-transform:uppercase;letter-spacing:.09em;${!first?'border-top:1px solid var(--e-ghost)':''}">
+      <input type="checkbox" id="extr-cr-grp-${key}" ${allChk?'checked':''} onchange="_extrToggleContaGroup('${key}',this.checked)" style="accent-color:var(--e-lilac);cursor:pointer;width:14px;height:14px">
+      <label for="extr-cr-grp-${key}" style="cursor:pointer">${_escHtml(tarefa.banco)} – ${_escHtml(tarefa.agente)}</label>
+    </div>`;
+    contas.forEach(c=>{
+      const marcado=!filtro||filtro.has(c.numeroConta);
+      html+=`<label style="display:flex;align-items:center;gap:9px;padding:5px 10px 5px 26px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--e-text)" onmouseover="this.style.background='var(--e-ghost)'" onmouseout="this.style.background=''">
+        <input type="checkbox" ${marcado?'checked':''} onchange="_extrToggleConta('${key}','${_esc(c.numeroConta||'')}',this.checked)" style="accent-color:var(--e-lilac);cursor:pointer;width:13px;height:13px;flex-shrink:0">
+        <span style="font-family:monospace;font-weight:700">${_escHtml(c.sigla||'')}</span><span style="color:var(--e-muted)">${_escHtml(c.numeroConta||'—')}</span>
+      </label>`;
+    });
+    first=false;
+  });
+  if(!html) html=`<div style="padding:20px;text-align:center;font-size:12px;color:var(--e-muted)">—</div>`;
+  listEl.innerHTML=html;
+  relevantes.forEach(({key,contas})=>{
+    const filtro=_extrContaFiltro[key];
+    const el=document.getElementById('extr-cr-grp-'+key);
+    if(el){
+      const some=contas.some(c=>!filtro||filtro.has(c.numeroConta));
+      const all=contas.every(c=>!filtro||filtro.has(c.numeroConta));
+      el.indeterminate=some&&!all;
+    }
+  });
 }
 
 // Só é range-elegível se TODAS as contas selecionadas forem de um robô já
@@ -9159,6 +9320,13 @@ async function _loadUserJobs(){
 
 async function runExtratosJob(){
   if(_extrSelected.size===0||_activeJobCount()>=_MAX_JOBS) return;
+  // Restrição por conta expandida com tudo desmarcado (_extrContaFiltro[key]
+  // existe mas size===0) é ambígua — não existe "baixar nenhuma conta", então
+  // bloqueia em vez de mandar um job assim.
+  for(const key of _extrSelected){
+    const filtro=_extrContaFiltro[key];
+    if(filtro&&filtro.size===0){_toast(t('extr-contas-vazio-err'),3000);return;}
+  }
   let dateFrom,dateTo;
   if(_extrTipo==='pdf'){
     if(!_extrPdfMonth){_toast(t('err-selecione-mes'),3000);return;}
@@ -9179,7 +9347,13 @@ async function runExtratosJob(){
     if(!dateFrom){_toast(t('err-selecione-data'),3000);return;}
     dateTo=dateFrom;
   }
-  const contas=[..._extrSelected].map(key=>{const p=key.split('__');return{pais:p[0],banco:p[1],agente:p[2]};});
+  const contas=[..._extrSelected].map(key=>{
+    const p=key.split('__');
+    const c={pais:p[0],banco:p[1],agente:p[2]};
+    const filtro=_extrContaFiltro[key];
+    if(filtro&&filtro.size>0) c.numeros_conta=[...filtro];
+    return c;
+  });
   const jobId='extr_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
   const now=Date.now();
   const job={type:'download_extratos',status:'pending',requested_by:window._loggedEmail||'—',created_at:now,params:{contas,date_from:dateFrom,date_to:dateTo,tipo:_extrTipo,enviar_importador:_extrImportador}};
@@ -9777,6 +9951,16 @@ function _credDelClose(){
   if(chev) chev.style.transform='';
   document.removeEventListener('click',_credDelOutsideClick);
 }
+// Mesmo predicado usado no render da lista (_credDelRender) e no toggle do
+// grupo por país (_credDelToggleGroup) — precisa ser o MESMO em ambos, ou
+// o checkbox do país passa a marcar/desmarcar contas que a busca já
+// escondeu (o grupo deve agir só sobre o que está visível no filtro atual).
+function _credDelMatchesSearch(item,q){
+  if(!q) return true;
+  const paisLabel={'CO':t('cred-del-co'),'PE':t('cred-del-pe'),'AR':t('cred-del-ar'),'CL':t('cred-del-cl'),'BO':t('cred-del-bo'),'VE':t('cred-del-ve')};
+  const paisNome=(paisLabel[item.pais]||item.pais||'').toLowerCase();
+  return item.banco_nome.toLowerCase().includes(q)||item.agente.toLowerCase().includes(q)||paisNome.includes(q);
+}
 function _credDelRender(){
   const list=document.getElementById('cred-del-list');
   if(!list) return;
@@ -9784,8 +9968,7 @@ function _credDelRender(){
   const paisLabel={'CO':t('cred-del-co'),'PE':t('cred-del-pe'),'AR':t('cred-del-ar'),'CL':t('cred-del-cl'),'BO':t('cred-del-bo'),'VE':t('cred-del-ve')};
   const byPais={};
   _credDelItems.forEach(item=>{
-    const paisNome=(paisLabel[item.pais]||item.pais||'').toLowerCase();
-    if(q&&!item.banco_nome.toLowerCase().includes(q)&&!item.agente.toLowerCase().includes(q)&&!paisNome.includes(q)) return;
+    if(!_credDelMatchesSearch(item,q)) return;
     if(!byPais[item.pais]) byPais[item.pais]=[];
     byPais[item.pais].push(item);
   });
@@ -9825,7 +10008,8 @@ function _credDelToggleItem(key,checked){
   _credDelUpdateLabel();_credDelRender();_credUpdateSaveBtn();
 }
 function _credDelToggleGroup(pais,checked){
-  _credDelItems.filter(i=>i.pais===pais).forEach(({pais:p,banco_nome,agente})=>{
+  const q=(document.getElementById('cred-del-search')?.value||'').toLowerCase().trim();
+  _credDelItems.filter(i=>i.pais===pais&&_credDelMatchesSearch(i,q)).forEach(({pais:p,banco_nome,agente})=>{
     const key=`${p}|${banco_nome}|${agente}`;
     if(checked) _credDelSelected.add(key); else _credDelSelected.delete(key);
   });
