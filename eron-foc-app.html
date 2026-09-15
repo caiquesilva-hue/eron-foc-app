@@ -486,7 +486,16 @@
   .liq-m-btn:hover{background:var(--e-ghost);color:var(--e-text);}
   .liq-m-lbl{padding:0 14px;font-size:13px;font-weight:600;color:var(--e-text);min-width:122px;text-align:center;border-left:1px solid var(--e-pale);border-right:1px solid var(--e-pale);line-height:36px;white-space:nowrap;}
   .crono-sep{color:var(--e-muted);font-size:13px;flex-shrink:0;padding:0 2px;}
-  .cal-wrap{background:var(--e-surface);border:1px solid var(--e-pale);border-radius:12px;overflow:hidden;}
+  .cal-wrap{background:var(--e-surface);border:1px solid var(--e-pale);border-radius:12px;}
+  /* Nada de overflow:hidden aqui: essa div é ancestral das colunas
+     position:sticky (coluna Nome/Sigla e o cabeçalho, que ainda usa
+     will-change:transform). Recortar (clip) um elemento sticky/composto
+     por uma borda arredondada num ancestral força o navegador a recalcular
+     a máscara a cada frame de scroll em vez de só compor a camada — vira
+     "piscada" visível, sobretudo em Windows. Em vez de clipar aqui,
+     arredondamos direto as células de canto do cabeçalho abaixo. */
+  .cal-table thead tr:first-child th:first-child{border-top-left-radius:11px;}
+  .cal-table thead tr:first-child th:last-child{border-top-right-radius:11px;}
   .cal-scroll{overflow-x:scroll;}
   .cal-table{width:max-content;min-width:100%;border-collapse:collapse;}
   .cal-table thead{position:sticky;top:0;z-index:4;will-change:transform;}
@@ -3533,7 +3542,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='cb05fe47c96a';
+const APP_VERSION='8eacc08d1c96';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -10932,7 +10941,7 @@ function _ignoreSelectedGateways(){
   const overlay=document.createElement('div');
   overlay.id='ignore-gw-overlay';
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center';
-  overlay.innerHTML=`<div style="background:var(--e-card,#fff);border-radius:12px;padding:24px;max-width:440px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.22)">
+  overlay.innerHTML=`<div style="background:var(--e-surface);border-radius:12px;padding:24px;max-width:440px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.22)">
     <h3 style="margin:0 0 6px;font-size:15px;font-weight:700;color:var(--e-text)">${tn('ignore-gw-modal-title',items.length)}</h3>
     <p style="color:var(--e-muted,#6b7280);font-size:13px;margin:0 0 14px;line-height:1.5">${t('ignore-gw-modal-desc')}</p>
     <div style="background:var(--e-ghost,#f8f7ff);border-radius:8px;padding:10px 14px;max-height:150px;overflow-y:auto;margin-bottom:20px;border:1px solid var(--e-pale,#e5e7eb)">${listHtml}</div>
