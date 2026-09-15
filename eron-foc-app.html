@@ -3520,7 +3520,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='0308e4472f64';
+const APP_VERSION='4381b732b3de';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -8648,7 +8648,7 @@ const EXTR_PAIS={CO:{flag:'🇨🇴',name:'Colombia'},AR:{flag:'🇦🇷',name:'
 // Robôs já aprovados no automacao_download_extratos (SUPORTA_RANGE=True) —
 // só esses ganham o toggle "Range de datas?" na tela de Baixa automática.
 // Nome tem que bater exatamente com a chave usada em _MAPA_* no main.py.
-const RANGE_SUPPORTED_BANCOS=new Set(['BICE','Industrial','Bancoomeva','BCI']);
+const RANGE_SUPPORTED_BANCOS=new Set(['BICE','Industrial','Bancoomeva','BCI','BCP']);
 let _extrSelected=new Set();
 // Restrição opcional por conta dentro de um banco+agente já selecionado —
 // { [chaveExtr]: Set<numeroConta> }. Uma entrada só existe quando o
@@ -8754,14 +8754,31 @@ function _extrMatchesSearch(tarefa,q){
 // Contas cadastradas (Cadastro > Contas) que pertencem a um banco+agente da
 // lista de robôs — mesma normalização de agente já usada por
 // _accOutrasContasMesmoAgente (ignora prefixo de país, ex: "PE.Malisac").
+// Auditoria de setembro/2026 no automacao_download_extratos: vários robôs
+// navegam até a conta pela POSIÇÃO dela na lista, não pelo número — filtrar
+// a lista antes de baixar faz o robô abrir a conta ERRADA da tela mas
+// salvar com o rótulo da conta pedida (confirmado ao vivo no Bancoomeva).
+// O backend (executar_banco/_CONTA_FILTRO_SEGURO + _CONTA_FILTRO_INTERNO em
+// main.py) já ignora o filtro pra qualquer banco fora das duas listas
+// auditadas — aqui só evita oferecer a restrição pra quem ela não teria
+// efeito nenhum (senão o usuário acha que restringiu e o robô baixa tudo
+// do mesmo jeito). Bancoomeva entrou depois de corrigido pra pular contas
+// sem perder a navegação por posição (extrair_extratos com apenas=).
+function _extrNormBanco(s){
+  return (s||'').trim().toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+}
+const _EXTR_CONTA_FILTRO_SEGURO=new Set(['INDUSTRIAL','BICE','BOGOTA','BANCO DE BOGOTA','CAJA SOCIAL',
+  'COLTEFINANCIERA','DAVIVIENDA','AV VILLAS','BANBIF','BANCOLOMBIA','BBVA ARGENTINA','BBVA COLOMBIA','BCI',
+  'BANCOOMEVA','BCP']);
 function _extrContasDoAgente(tarefa){
+  if(!_EXTR_CONTA_FILTRO_SEGURO.has(_extrNormBanco(tarefa.banco))) return [];
   // Nome do banco em /Cadastro > Bancos é texto livre — pode divergir em
   // maiúsculas/espaços do nome fixo usado em EXTR_TAREFAS (ex: "Bancolombia"
   // vs "bancolombia "), então compara normalizado, não igualdade exata
   // (mesmo cuidado que o robô já toma em _conta_bate/_normalizar_texto).
-  const bcNorm=(tarefa.banco||'').trim().toUpperCase();
+  const bcNorm=_extrNormBanco(tarefa.banco);
   const agNorm=(tarefa.agente||'').toUpperCase().replace(/^[A-Z]+\./,'');
-  return store.contas.filter(c=>(c.banco||'').trim().toUpperCase()===bcNorm&&c.status!=='encerrada'&&
+  return store.contas.filter(c=>_extrNormBanco(c.banco)===bcNorm&&c.status!=='encerrada'&&
     (c.agente||'').toUpperCase().replace(/^[A-Z]+\./,'')===agNorm);
 }
 function _extrRenderList(){
