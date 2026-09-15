@@ -487,15 +487,6 @@
   .liq-m-lbl{padding:0 14px;font-size:13px;font-weight:600;color:var(--e-text);min-width:122px;text-align:center;border-left:1px solid var(--e-pale);border-right:1px solid var(--e-pale);line-height:36px;white-space:nowrap;}
   .crono-sep{color:var(--e-muted);font-size:13px;flex-shrink:0;padding:0 2px;}
   .cal-wrap{background:var(--e-surface);border:1px solid var(--e-pale);border-radius:12px;}
-  /* Nada de overflow:hidden aqui: essa div é ancestral das colunas
-     position:sticky (coluna Nome/Sigla e o cabeçalho, que ainda usa
-     will-change:transform). Recortar (clip) um elemento sticky/composto
-     por uma borda arredondada num ancestral força o navegador a recalcular
-     a máscara a cada frame de scroll em vez de só compor a camada — vira
-     "piscada" visível, sobretudo em Windows. Em vez de clipar aqui,
-     arredondamos direto as células de canto do cabeçalho abaixo. */
-  .cal-table thead tr:first-child th:first-child{border-top-left-radius:11px;}
-  .cal-table thead tr:first-child th:last-child{border-top-right-radius:11px;}
   .cal-scroll{overflow-x:scroll;}
   .cal-table{width:max-content;min-width:100%;border-collapse:collapse;}
   .cal-table thead{position:sticky;top:0;z-index:4;will-change:transform;}
@@ -574,20 +565,7 @@
   }
   :root[data-theme="dark"] tbody tr.row-encerrada{--e-row-bg:#1d1836;}
   :root[data-theme="dark"] tbody tr.row-encerrada:hover{--e-row-bg:#2a2348;}
-  .cal-sticky{position:sticky;left:0;background:var(--e-row-bg);z-index:2;border-right:1px solid var(--e-pale);}
-  /* border-bottom direto na célula (não só herdado da <tr> via
-     border-collapse): por ser a mesma cor/espessura declarada nas outras
-     células da linha, o border-collapse funde tudo numa única borda
-     compartilhada — sem duplicar e sem desalinhar com as demais colunas
-     (diferente de box-shadow, que é interno à própria célula e não
-     participa dessa grade). will-change:transform saiu daqui de propósito:
-     só o cabeçalho (thead th.cal-sticky) é movido via JS em
-     _initCalStickyCorner — nas linhas do corpo ele só força a célula pra
-     uma camada composta à parte sem necessidade nenhuma, e é essa camada
-     que fazia a borda de 1px sumir em monitores não-Retina (a tela do Mac,
-     sendo Retina, disfarçava o problema). */
-  .cal-table tbody td.cal-sticky{border-bottom:1px solid var(--e-pale);}
-  .cal-table tbody tr:last-child td.cal-sticky{border-bottom:none;}
+  .cal-sticky{position:sticky;left:0;background:var(--e-row-bg);z-index:2;border-right:1px solid var(--e-pale);will-change:transform;}
   /* O hover acima muda via custom property (--e-row-bg), que num elemento
      position:sticky recalcula com um frame ou dois de atraso em relação ao
      resto da linha (camada de composição própria) — dá a sensação de a
@@ -600,7 +578,7 @@
     :root:not([data-theme="light"]) tbody tr.row-encerrada:hover .cal-sticky{background:#2a2348;}
   }
   :root[data-theme="dark"] tbody tr.row-encerrada:hover .cal-sticky{background:#2a2348;}
-  .cal-table thead th.cal-sticky{background:var(--e-ghost);z-index:5;will-change:transform;}
+  .cal-table thead th.cal-sticky{background:var(--e-ghost);z-index:5;}
   .col-head-btns{position:absolute;right:3px;top:50%;transform:translateY(-50%);display:none;align-items:center;gap:1px;}
   th:hover .col-head-btns,.col-head-btns.has-pin{display:flex;}
   .col-hide-btn,.col-pin-btn{background:none;border:none;padding:2px 3px;border-radius:3px;cursor:pointer;color:var(--e-muted);line-height:1;display:flex;align-items:center;transition:color .12s;}
@@ -3542,7 +3520,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='8eacc08d1c96';
+const APP_VERSION='1f39f66884e3';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
