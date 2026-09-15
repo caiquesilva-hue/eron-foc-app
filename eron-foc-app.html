@@ -565,7 +565,15 @@
   }
   :root[data-theme="dark"] tbody tr.row-encerrada{--e-row-bg:#1d1836;}
   :root[data-theme="dark"] tbody tr.row-encerrada:hover{--e-row-bg:#2a2348;}
-  .cal-sticky{position:sticky;left:0;background:var(--e-row-bg);z-index:2;border-right:1px solid var(--e-pale);will-change:transform;}
+  /* border-bottom explícito na própria célula (não só herdado da <tr> via
+     border-collapse): célula sticky pinta numa camada própria, e o
+     navegador às vezes não repassa pra ela a borda "compartilhada" que o
+     border-collapse calcula a partir da linha — some só na coluna Nome/
+     Sigla, mesmo com a linha toda tendo a divisão. Setando aqui direto,
+     as tabelas cronograma (Accounts, Conciliações, Cierre, Custos — todas
+     usam esta mesma classe) ficam padronizadas. */
+  .cal-sticky{position:sticky;left:0;background:var(--e-row-bg);z-index:2;border-right:1px solid var(--e-pale);border-bottom:1px solid var(--e-pale);will-change:transform;}
+  .cal-table tbody tr:last-child td.cal-sticky{border-bottom:none;}
   /* O hover acima muda via custom property (--e-row-bg), que num elemento
      position:sticky recalcula com um frame ou dois de atraso em relação ao
      resto da linha (camada de composição própria) — dá a sensação de a
@@ -3520,7 +3528,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='4381b732b3de';
+const APP_VERSION='868b87d08352';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
