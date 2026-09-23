@@ -316,7 +316,14 @@
   .ph-badge{padding:4px 14px;border-radius:99px;background:rgba(151,111,244,.1);color:var(--e-purple);font-size:12px;font-weight:500;}
 
   /* MODAL */
-  .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(28,22,64,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;padding:16px;}
+  /* backdrop-filter:blur tirado de propósito: desfocar o fundo em tempo
+     real é uma das operações mais caras de GPU que existem, e esse overlay
+     fica sobre páginas com tabelas de 500+ linhas — sob interação intensa
+     (scroll, digitação) isso pode disputar orçamento de renderização com o
+     próprio conteúdo do modal, fazendo ele sumir até tudo ficar ocioso e o
+     Chrome dar conta de repintar. O escurecido (background semi-transparente)
+     sozinho já cumpre o efeito visual sem esse custo. */
+  .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(28,22,64,.80);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;padding:16px;}
   .modal-overlay.open{opacity:1;pointer-events:all;}
   .modal-card{background:var(--e-surface);border-radius:16px;width:480px;max-width:100%;max-height:calc(100vh - 64px);display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.18);transform:translateY(10px);transition:transform .2s;overflow:hidden;}
   .modal-overlay.open .modal-card{transform:translateY(0);}
@@ -486,10 +493,26 @@
   .liq-m-btn:hover{background:var(--e-ghost);color:var(--e-text);}
   .liq-m-lbl{padding:0 14px;font-size:13px;font-weight:600;color:var(--e-text);min-width:122px;text-align:center;border-left:1px solid var(--e-pale);border-right:1px solid var(--e-pale);line-height:36px;white-space:nowrap;}
   .crono-sep{color:var(--e-muted);font-size:13px;flex-shrink:0;padding:0 2px;}
-  .cal-wrap{background:var(--e-surface);border:1px solid var(--e-pale);border-radius:12px;}
+  .cal-wrap{background:var(--e-surface);border:1px solid var(--e-pale);border-radius:12px;position:relative;}
+  /* O cabeçalho (thead) é um retângulo reto que encosta na borda arredondada
+     do wrap, então a pontinha quadrada dele "vaza" por cima da curva nos
+     dois cantos de cima. Usamos um pseudo-elemento comum pra pintar por
+     cima só essa pontinha — sem mexer em nada position:sticky/will-change
+     (a piscada generalizada que víamos era causada pelo backdrop-filter
+     dos modais e pelo will-change:transform introduzido no dark mode,
+     ambos já corrigidos — nada a ver com esta técnica).
+     O gradiente tem 3 zonas, medidas a partir do canto verdadeiro do wrap
+     (raio externo = 12px, igual ao border-radius do wrap; raio interno =
+     11px, raio externo menos a espessura de 1px da borda): até 11px fica
+     transparente (não mexe no cabeçalho); de 11 a 12px pinta com a cor da
+     borda (--e-pale), redesenhando o traço que a curva original teria;
+     dali pra fora vira --e-bg, a cor real por trás do card. */
+  .cal-wrap::before,.cal-wrap::after{content:'';position:absolute;top:-1px;width:12px;height:12px;z-index:6;pointer-events:none;}
+  .cal-wrap::before{left:-1px;background:radial-gradient(circle at 12px 12px,transparent 11px,var(--e-pale) 11px,var(--e-pale) 12px,var(--e-bg) 12px);}
+  .cal-wrap::after{right:-1px;background:radial-gradient(circle at 0 12px,transparent 11px,var(--e-pale) 11px,var(--e-pale) 12px,var(--e-bg) 12px);}
   .cal-scroll{overflow-x:scroll;}
   .cal-table{width:max-content;min-width:100%;border-collapse:collapse;}
-  .cal-table thead{position:sticky;top:0;z-index:4;will-change:transform;}
+  .cal-table thead{position:sticky;top:0;z-index:4;}
   .cal-table thead th{padding:8px 10px;text-align:center;font-size:11px;font-weight:600;color:var(--e-muted);text-transform:uppercase;letter-spacing:.06em;background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap;}
   .cal-table thead tr:last-child th{border-top:none;}
   .cal-table thead th.col-info{text-align:left;padding:8px 46px 8px 14px;}
@@ -565,7 +588,16 @@
   }
   :root[data-theme="dark"] tbody tr.row-encerrada{--e-row-bg:#1d1836;}
   :root[data-theme="dark"] tbody tr.row-encerrada:hover{--e-row-bg:#2a2348;}
-  .cal-sticky{position:sticky;left:0;background:var(--e-row-bg);z-index:2;border-right:1px solid var(--e-pale);will-change:transform;}
+  /* will-change:transform NÃO fica aqui: essa classe também é usada nas
+     células do corpo (uma por linha — numa tabela de 500+ linhas, isso é
+     centenas de camadas de GPU promovidas à toa). Foi adicionado aqui
+     durante o desenvolvimento do dark mode (14/09), tentando resolver o
+     atraso de 1-2 frames do hover via --e-row-bg (comentário abaixo) — mas
+     essa combinação (position:sticky + will-change:transform +
+     border-collapse:collapse, multiplicada por linha) é exatamente o que
+     faz o Chrome piscar. Só o cabeçalho (thead th.cal-sticky, mais abaixo)
+     realmente precisa disso — é o único movido via JS (_initCalStickyCorner). */
+  .cal-sticky{position:sticky;left:0;background:var(--e-row-bg);z-index:2;border-right:1px solid var(--e-pale);}
   /* O hover acima muda via custom property (--e-row-bg), que num elemento
      position:sticky recalcula com um frame ou dois de atraso em relação ao
      resto da linha (camada de composição própria) — dá a sensação de a
@@ -578,7 +610,7 @@
     :root:not([data-theme="light"]) tbody tr.row-encerrada:hover .cal-sticky{background:#2a2348;}
   }
   :root[data-theme="dark"] tbody tr.row-encerrada:hover .cal-sticky{background:#2a2348;}
-  .cal-table thead th.cal-sticky{background:var(--e-ghost);z-index:5;}
+  .cal-table thead th.cal-sticky{background:var(--e-ghost);z-index:5;will-change:transform;}
   .col-head-btns{position:absolute;right:3px;top:50%;transform:translateY(-50%);display:none;align-items:center;gap:1px;}
   th:hover .col-head-btns,.col-head-btns.has-pin{display:flex;}
   .col-hide-btn,.col-pin-btn{background:none;border:none;padding:2px 3px;border-radius:3px;cursor:pointer;color:var(--e-muted);line-height:1;display:flex;align-items:center;transition:color .12s;}
@@ -3520,7 +3552,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='1f39f66884e3';
+const APP_VERSION='7a544a55b5bb';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -8648,7 +8680,7 @@ const EXTR_PAIS={CO:{flag:'🇨🇴',name:'Colombia'},AR:{flag:'🇦🇷',name:'
 // Robôs já aprovados no automacao_download_extratos (SUPORTA_RANGE=True) —
 // só esses ganham o toggle "Range de datas?" na tela de Baixa automática.
 // Nome tem que bater exatamente com a chave usada em _MAPA_* no main.py.
-const RANGE_SUPPORTED_BANCOS=new Set(['BICE','Industrial','Bancoomeva','BCI','BCP','BBVA Argentina','BBVA Colombia','BBVA']);
+const RANGE_SUPPORTED_BANCOS=new Set(['BICE','Industrial','Bancoomeva','BCI','BCP','BBVA Argentina','BBVA Colombia','BBVA','Banbif']);
 let _extrSelected=new Set();
 // Restrição opcional por conta dentro de um banco+agente já selecionado —
 // { [chaveExtr]: Set<numeroConta> }. Uma entrada só existe quando o
@@ -10916,19 +10948,16 @@ function _ignoreSelectedGateways(){
     return {type,id,label:e.name?id+' — '+e.name:id};
   });
   const listHtml=items.map(it=>`<div style="padding:2px 0;font-size:12px;font-family:ui-monospace,monospace;color:var(--e-text)">${_esc(it.label)}</div>`).join('');
-  const overlay=document.createElement('div');
-  overlay.id='ignore-gw-overlay';
-  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center';
-  overlay.innerHTML=`<div style="background:var(--e-surface);border-radius:12px;padding:24px;max-width:440px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.22)">
-    <h3 style="margin:0 0 6px;font-size:15px;font-weight:700;color:var(--e-text)">${tn('ignore-gw-modal-title',items.length)}</h3>
-    <p style="color:var(--e-muted,#6b7280);font-size:13px;margin:0 0 14px;line-height:1.5">${t('ignore-gw-modal-desc')}</p>
-    <div style="background:var(--e-ghost,#f8f7ff);border-radius:8px;padding:10px 14px;max-height:150px;overflow-y:auto;margin-bottom:20px;border:1px solid var(--e-pale,#e5e7eb)">${listHtml}</div>
-    <div style="display:flex;gap:10px;justify-content:flex-end">
-      <button onclick="document.getElementById('ignore-gw-overlay').remove()" style="padding:8px 18px;border:1px solid var(--e-pale,#e5e7eb);border-radius:8px;background:none;color:var(--e-text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">${t('btn-cancel')}</button>
-      <button onclick="_confirmIgnoreGateways()" style="padding:8px 18px;border:none;border-radius:8px;background:var(--e-warn-accent);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">${t('btn-confirmar')}</button>
-    </div>
-  </div>`;
-  document.body.appendChild(overlay);
+  // Antes isso era um overlay criado na hora via document.createElement e
+  // inserido no <body> (position:fixed cobrindo a tela inteira a cada
+  // clique) — esse padrão dispara um bug de GPU do Chrome (descarta tiles
+  // de containers com overflow-y:auto), causando desde metade da tela sem
+  // renderizar até uma faixa preta sobrando embaixo. O modal padrão do
+  // sistema (_ynShow/modal-yesno) já existe fixo no HTML e só alterna uma
+  // classe — sem criar/inserir elemento novo — e não sofre desse bug.
+  const body=`<p style="color:var(--e-muted);font-size:13px;margin:0 0 14px;line-height:1.5">${t('ignore-gw-modal-desc')}</p>
+    <div style="background:var(--e-ghost);border-radius:8px;padding:10px 14px;max-height:150px;overflow-y:auto;border:1px solid var(--e-pale)">${listHtml}</div>`;
+  _ynShow('⚠️',tn('ignore-gw-modal-title',items.length),'',body,_confirmIgnoreGateways,null,t('btn-confirmar'),t('btn-cancel'));
 }
 function _confirmIgnoreGateways(){
   if(!store.ignoredGatewayIds) store.ignoredGatewayIds={cashin:[],cashout:[],refunds:[],chargebacks:[]};
@@ -10938,7 +10967,6 @@ function _confirmIgnoreGateways(){
     if(!store.ignoredGatewayIds[type].includes(id)) store.ignoredGatewayIds[type].push(id);
   }
   _unlinkedGwSelected.clear();
-  document.getElementById('ignore-gw-overlay')?.remove();
   saveStore(); _fbSync('ignoredGatewayIds');
   _renderUnlinkedGateways();
   _toast(t('toast-gateways-ignorados'),2500);
