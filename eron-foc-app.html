@@ -755,7 +755,7 @@
   .cierre-table thead th{padding:9px 12px;text-align:left;font-size:10px;font-weight:600;color:var(--e-muted);text-transform:uppercase;letter-spacing:.07em;background:var(--e-ghost);border-bottom:1px solid var(--e-pale);white-space:nowrap;position:sticky;top:0;z-index:2;}
   .cierre-table tbody tr{border-bottom:1px solid var(--e-pale);transition:background .1s;}
   .cierre-table tbody tr:last-child{border-bottom:none;}
-  .cierre-table tbody tr:hover{background:rgba(241,241,254,.5);}
+  .cierre-table tbody tr:hover{background:var(--e-ghost);}
   .cierre-table tbody tr.row-concluido{opacity:.45;filter:grayscale(.4);}
   .cierre-table tbody tr.row-concluido:hover{opacity:.6;}
   .cierre-table td{padding:7px 12px;font-size:12px;color:var(--e-text);vertical-align:middle;white-space:nowrap;}
@@ -845,6 +845,17 @@
     td{padding:8px 10px;font-size:12px;}
     .cal-table thead th{padding:6px 8px;font-size:10px;}
     .cal-table td{padding:5px 10px;font-size:11px;}
+    .cal-scroll,.cierre-scroll,.table-scroll{-webkit-overflow-scrolling:touch;}
+
+    /* --- Accounts/Cierre/Conciliações (cronograma) são uma coluna flex de
+       altura fixa (sem scroll de página) — mesmo com os filtros colapsados,
+       sobrava pouca altura pra tabela do calendário. Em mobile é mais
+       natural rolar a página toda: os wraps da tabela ganham uma altura
+       generosa e fixa, e a página em si passa a rolar normalmente. --- */
+    #page-cronograma-accounts.active,
+    #page-cronograma-cierre.active,
+    #page-cronograma-conciliacoes.active{display:block;overflow-y:auto;}
+    #crono-accounts-wrap,.cierre-outer,#crono-conc-cal-wrap{flex:none;height:64vh;min-height:340px;}
 
     /* --- modais: form vira full-screen, confirm fica card centralizado --- */
     .modal-overlay{padding:0;}
@@ -874,6 +885,14 @@
        botões de ação vão para uma linha própria, com espaço de sobra --- */
     .page-header{flex-wrap:wrap;}
     .page-header-left{width:100%;}
+    /* o grupo de botões de ação é a 2ª linha do header (já quebrado acima);
+       sozinho numa linha, justify-content:space-between do .page-header
+       original alinharia ele à esquerda — empurra pra direita, igual ao
+       desktop, sem mudar a estrutura existente. */
+    .page-header-left + div{margin-left:auto;}
+    /* os dois botões de ação (Alterar em massa / Adicionar conta) tinham
+       paddings/font-sizes diferentes e ficavam com alturas desiguais */
+    .btn-bulk-apply{padding:12px 18px;font-size:14px;min-height:44px;}
 
     /* --- textos de botão quebrando palavra por palavra ficam feios;
        os valores de tradução (pt-BR/es) têm um \n no ponto de quebra
@@ -3675,7 +3694,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='ab96125cdbbe';
+const APP_VERSION='2574b703e963';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -11180,10 +11199,21 @@ function _renderUnlinkedGateways(){
 
 function _initCalStickyCorner(tbl,scrollEl,savedSL){
   if(!tbl||!scrollEl) return;
+  // querySelectorAll roda de novo a cada chamada (colunas fixadas via
+  // _applyPinnedSticky depois do init precisam continuar sendo achadas),
+  // mas só no máximo uma vez por frame (rAF) em vez de a cada disparo do
+  // evento — em touch scroll no mobile o scroll dispara MUITO mais eventos
+  // por segundo que com mouse wheel no desktop, e repetir query+style a
+  // cada um deles travava a rolagem da tabela.
   const applyX=x=>{tbl.querySelectorAll('thead th.cal-sticky,thead th[data-pin-left]').forEach(th=>{th.style.transform='translateX('+x+'px)';});};
   if(savedSL) applyX(savedSL);
   if(scrollEl._calStickyHandler) scrollEl.removeEventListener('scroll',scrollEl._calStickyHandler);
-  const handler=()=>applyX(scrollEl.scrollLeft);
+  let ticking=false;
+  const handler=()=>{
+    if(ticking) return;
+    ticking=true;
+    requestAnimationFrame(()=>{applyX(scrollEl.scrollLeft);ticking=false;});
+  };
   scrollEl._calStickyHandler=handler;
   scrollEl.addEventListener('scroll',handler,{passive:true});
 }
