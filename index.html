@@ -82,8 +82,15 @@
      (os outros ~30 usos eram só texto, já viraram var(--e-mid)) — roxo
      escuro sólido quase some contra o fundo já escuro do dark mode. */
   :root[data-theme="dark"] #cred-save-btn{background:var(--e-purple);}
+  /* Notas informativas (BCP/Gmail) em Atualização de Credenciais — cores
+     fixas claras (lilás/verde) viravam um retângulo bem claro destoando
+     do resto do formulário já escuro. */
+  :root[data-theme="dark"] #cred-bcp-note-box{background:rgba(151,111,244,.14);border-color:rgba(151,111,244,.4);color:var(--e-mid);}
+  :root[data-theme="dark"] #cred-gmail-note-box{background:rgba(34,197,94,.14);border-color:rgba(34,197,94,.4);color:#4ade80;}
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]) #cred-save-btn{background:var(--e-purple);}
+    :root:not([data-theme="light"]) #cred-bcp-note-box{background:rgba(151,111,244,.14);border-color:rgba(151,111,244,.4);color:var(--e-mid);}
+    :root:not([data-theme="light"]) #cred-gmail-note-box{background:rgba(34,197,94,.14);border-color:rgba(34,197,94,.4);color:#4ade80;}
   }
   html,body{height:100%;font-family:system-ui,-apple-system,sans-serif;background:var(--e-bg);}
 
@@ -783,8 +790,12 @@
   .cierre-stat{background:var(--e-surface);border:1px solid var(--e-pale);border-radius:10px;padding:7px 14px;display:flex;align-items:center;gap:8px;}
   .cierre-stat-num{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;}
   .cierre-stat-lbl{font-size:11px;color:var(--e-muted);font-weight:500;}
+  /* "Sem apontamento" (nada preenchido ainda) fica no cinza neutro;
+     "Pendente" já tem apontamento escrito e aguarda resolução, então usa o
+     roxo da marca pra não se confundir com o cinza — a escala fica
+     cinza → roxo → âmbar (verificando) → verde (concluída). */
   .cierre-stat-sem-ap .cierre-stat-num{color:var(--e-muted);}
-  .cierre-stat-pendente .cierre-stat-num{color:var(--e-muted);}
+  .cierre-stat-pendente .cierre-stat-num{color:var(--e-mid);}
   .cierre-stat-verificando .cierre-stat-num{color:var(--e-warn-text);}
   .cierre-stat-concluido .cierre-stat-num{color:#15803d;}
 .day-cell.locked-cell{cursor:not-allowed!important;opacity:.85;}
@@ -1168,7 +1179,7 @@
       <span data-i18n="btn-incluir-liquidacao">Incluir liquidação</span>
     </button>
   </div>
-  <div style="display:flex;align-items:flex-start;gap:10px;background:#f5f3ff;border:1px solid rgba(151,111,244,.22);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--e-sub);line-height:1.55">
+  <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(151,111,244,.08);border:1px solid rgba(151,111,244,.22);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--e-sub);line-height:1.55">
     <span style="flex-shrink:0;margin-top:1px">ℹ️</span>
     <span data-i18n-html="liq-ger-info-html">Conciliações do tipo <strong>Processadores</strong> e <strong>Mista</strong> são incluídas automaticamente a partir de <strong>Gerencial › Conciliações</strong>. Conciliações do tipo <strong>Chargeback</strong> e <strong>Refunds</strong> não estão contempladas aqui. Configure o tipo de liquidação para cada uma.</span>
   </div>
@@ -1465,6 +1476,7 @@
         <button class="freq-toggle" data-val="3" data-i18n="liq-tipo-3" onclick="event.stopPropagation();this.classList.toggle('active');_liqTipoUpdateLabel();renderCronogramaLiquidacoes()">3 · Fatura</button>
         <button class="freq-toggle" data-val="4" data-i18n="liq-tipo-4" onclick="event.stopPropagation();this.classList.toggle('active');_liqTipoUpdateLabel();renderCronogramaLiquidacoes()">4 · Forjada</button>
         <button class="freq-toggle" data-val="5" data-i18n="liq-tipo-5" onclick="event.stopPropagation();this.classList.toggle('active');_liqTipoUpdateLabel();renderCronogramaLiquidacoes()">5 · Sem Liquidação</button>
+        <button class="freq-toggle" data-val="__none__" data-i18n="lbl-nao-configurado" onclick="event.stopPropagation();this.classList.toggle('active');_liqTipoUpdateLabel();renderCronogramaLiquidacoes()">— não configurado —</button>
       </div>
     </div>
     <div class="freq-dd" id="liq-f-status-dd">
@@ -2022,16 +2034,31 @@
         <label class="form-label"><span data-i18n="lbl-sigla">Sigla Clearyn</span><span class="req">*</span></label>
         <input class="form-input mono-in" type="text" id="acc-sigla" placeholder="Ex: BB_3 BR.Geral">
       </div>
+      <!-- Uma única .form-row (grid 1fr 1fr com auto-flow) em vez de duas:
+           assim, quando o campo condicional "Dia de conferência" aparece
+           (frequência semanal), todos os campos seguintes deslizam uma
+           posição sozinhos, sem precisar remontar o layout via JS. -->
       <div class="form-row">
         <div class="form-field">
           <label class="form-label"><span data-i18n="lbl-tipo">Frequência</span><span class="req">*</span></label>
-          <select class="form-select" id="acc-tipo">
+          <select class="form-select" id="acc-tipo" onchange="_accToggleDiaConf()">
             <option value="" data-i18n="sel-select">Selecione...</option>
             <option value="T1">T1</option>
             <option value="T2">T2</option>
             <option value="Diário" data-i18n="freq-diario">Diário</option>
             <option value="1 vez ao mês" data-i18n="freq-mensal">1 vez ao mês</option>
             <option value="1 vez na semana" data-i18n="freq-semanal">1 vez na semana</option>
+          </select>
+        </div>
+        <div class="form-field" id="acc-dia-conf-field" style="display:none">
+          <label class="form-label"><span data-i18n="lbl-dia-conf">Dia de conferência</span><span class="req">*</span></label>
+          <select class="form-select" id="acc-dia-conf">
+            <option value="" data-i18n="sel-select">Selecione...</option>
+            <option value="1" data-i18n="dow-seg">Segunda-feira</option>
+            <option value="2" data-i18n="dow-ter">Terça-feira</option>
+            <option value="3" data-i18n="dow-qua">Quarta-feira</option>
+            <option value="4" data-i18n="dow-qui">Quinta-feira</option>
+            <option value="5" data-i18n="dow-sex">Sexta-feira</option>
           </select>
         </div>
         <div class="form-field">
@@ -2044,8 +2071,6 @@
             <option value="Somente download" data-i18n="tipo-sdl">Somente download</option>
           </select>
         </div>
-      </div>
-      <div class="form-row">
         <div class="form-field">
           <label class="form-label"><span data-i18n="lbl-num-conta">Número da conta</span><span class="req">*</span></label>
           <input class="form-input mono-in" type="text" id="acc-num-conta" placeholder="Ex: 6538-2">
@@ -2542,13 +2567,24 @@
         </div>
         <div id="bulk-freq-select-wrap" style="margin-top:10px">
           <label class="form-label" data-i18n="lbl-nova-freq">Nova frequência</label>
-          <select id="bulk-freq-select" class="form-input" style="width:100%">
+          <select id="bulk-freq-select" class="form-input" style="width:100%" onchange="_toggleBulkDiaConf()">
             <option value="T1">T1</option>
             <option value="T2">T2</option>
             <option value="Diário" data-i18n="freq-diario">Diário</option>
             <option value="1 vez ao mês" data-i18n="freq-mensal">1 vez ao mês</option>
             <option value="1 vez na semana" data-i18n="freq-semanal">1 vez na semana</option>
           </select>
+          <div id="bulk-dia-conf-wrap" style="margin-top:10px;display:none">
+            <label class="form-label" data-i18n="lbl-dia-conf">Dia de conferência</label>
+            <select id="bulk-dia-conf" class="form-input" style="width:100%">
+              <option value="" data-i18n="sel-select">Selecione...</option>
+              <option value="1" data-i18n="dow-seg">Segunda-feira</option>
+              <option value="2" data-i18n="dow-ter">Terça-feira</option>
+              <option value="3" data-i18n="dow-qua">Quarta-feira</option>
+              <option value="4" data-i18n="dow-qui">Quinta-feira</option>
+              <option value="5" data-i18n="dow-sex">Sexta-feira</option>
+            </select>
+          </div>
         </div>
       </div>
       <div class="form-field" style="border-top:1px solid var(--e-pale);padding-top:12px">
@@ -2951,6 +2987,7 @@ const i18n = {
     'btn-cancel':'Cancelar','btn-save':'Salvar','btn-confirm-encerrar':'Confirmar encerramento',
     'lbl-pais':'País','lbl-agente':'Agente','lbl-banco':'Banco',
     'lbl-sigla':'Sigla Clearyn','lbl-tipo':'Frequência','lbl-tipo-conta':'Tipo de conta','lbl-responsavel':'Responsável',
+    'lbl-grupo-concs':'Conciliações vinculadas','lbl-dia-conf':'Dia de conferência','dow-seg':'Segunda-feira','dow-ter':'Terça-feira','dow-qua':'Quarta-feira','dow-qui':'Quinta-feira','dow-sex':'Sexta-feira',
     'lbl-num-conta':'Número da conta','lbl-agencia':'Agência',
     'lbl-obs':'Observações','lbl-freq':'Frequência','crono-all-freqs':'Todas as frequências','col-pin':'Fixar coluna','col-unpin':'Desafixar coluna',
     'lbl-encerrar':'Encerrar conta','encerrar-desc':'Marca a conta como inativa permanentemente.',
@@ -3041,7 +3078,7 @@ const i18n = {
     'confirm-irreversivel':'Esta ação não pode ser desfeita.',
     'lbl-nao-configurado':'— não configurado —','lbl-pais-sg':'país','lbl-agente-sg':'agente','lbl-banco-sg':'banco','lbl-processador-sg':'processador',
     'op-cashin':'Cashin','op-cashout':'Cashout',
-    'btn-bulk-freq-label':'Alterar em\nmassa','acc-search-ph':'Buscar país, agente, banco, sigla...',
+    'btn-bulk-freq-label':'Alterar em\nmassa','acc-search-ph':'Buscar país, agente, banco, sigla, frequência...',
     'modal-bulk-freq-title':'Alterar em massa','lbl-nova-freq':'Nova frequência',
     'lbl-bulk-alterar-freq':'Alterar frequência','lbl-bulk-encerrar':'Encerrar estas contas','bulk-encerrar-desc':'Marca todas as contas filtradas como inativas.',
     'bulk-encerrar-confirm-titulo':'Confirmar encerramento em massa','bulk-encerrar-confirm-count-1':'{n} conta será encerrada:','bulk-encerrar-confirm-count-n':'{n} contas serão encerradas:',
@@ -3070,7 +3107,7 @@ const i18n = {
     'sync-badge-syncing':'↑ Sincronizando…','sync-badge-synced':'✓ Sincronizado','sync-badge-offline':'● Offline — clique para reconectar','err-ambiente-nao-reconhecido':'Ambiente não reconhecido.','err-firebase-ambiente-prefix':'O Firebase do ambiente "','err-firebase-ambiente-nao-config':'" ainda não está configurado.\nEntre em contato com o administrador para configurar.','err-continuar-logado-prefix':'⚠️ Não foi possível continuar logado em ','err-continuar-logado-suffix':'. Faça login novamente.',
     'err-salvar-ambiente-prefix':'⚠️ Erro ao salvar no ambiente ','err-salvar-firebase-prefix':'⚠️ Erro ao salvar no Firebase (','err-salvar-firebase-mid':'): ','err-salvar-firebase-suffix':'. Verifique as regras do banco de dados.',
     'err-acesso-restrito-admin':'Acesso restrito a administradores.','msg-sigla-normalizada-sg':'sigla normalizada','msg-sigla-normalizada-pl':'siglas normalizadas','msg-sigla-normalizada-suffix':' (agente adicionado)','msg-duplicata-removida-sg':'duplicata removida','msg-duplicata-removida-pl':'duplicatas removidas','msg-import-concluida-title':'Importação concluída!\n\nAdicionados:\n','msg-ja-existentes-ignorados':'Já existentes foram ignorados.',
-    'vol-ranking-col-usd':'USD Total','vol-ranking-col-tier':'Tier','vol-ranking-sem-volume-prefix':'Sem volume ($0): ','btn-ocultar-ranking':'Ocultar Ranking','vol-import-dados-atuais-prefix':'Dados atuais: ','vol-import-nenhum-dado':'Nenhum dado importado ainda.','msg-entradas-refine-busca-suffix':' entradas — refine a busca','sel-mes-ph':'Selecionar mês...','tt-forcar-conclusao-job':'Forçar conclusão do job','tt-remover-card':'Remover card','err-forcar-conclusao':'Erro ao forçar conclusão.','job-term-sucesso':'Sucesso','job-term-com-erro':'Com erro','err-selecione-mes':'Selecione um mês.','err-selecione-data':'Selecione uma data.','err-range-invalido':'A data final deve ser igual ou posterior à inicial.',
+    'vol-ranking-col-usd':'USD Total','vol-ranking-col-tier':'Tier','vol-ranking-sem-volume-prefix':'Sem volume ($0): ','btn-ocultar-ranking':'Ocultar Ranking','vol-import-dados-atuais-prefix':'Dados atuais: ','vol-import-nenhum-dado':'Nenhum dado importado ainda.','msg-entradas-refine-busca-suffix':' entradas — refine a busca','sel-mes-ph':'Selecionar mês...','tt-forcar-conclusao-job':'Forçar conclusão do job','tt-remover-card':'Remover card','err-forcar-conclusao':'Erro ao forçar conclusão.','job-term-sucesso':'Sucesso','job-term-com-erro':'Com erro','err-selecione-mes':'Selecione um mês.','err-selecione-data':'Selecione uma data.','err-dia-conf-obrigatorio':'Selecione o dia de conferência.','err-range-invalido':'A data final deve ser igual ou posterior à inicial.',
     'err-informe-email':'Informe seu email.','err-usuario-nao-cadastrado':'Usuário não cadastrado. Solicite acesso ao administrador.','modal-primeiro-acesso-title':'🔐 Primeiro acesso','modal-primeiro-acesso-desc':'Configure sua senha para continuar.','err-senha-incorreta':'Senha incorreta.','err-login-generico':'Erro ao entrar. Tente novamente.',
     'del-sub-liquidacao-manual':'Esta liquidação manual será removida permanentemente.','del-sub-liquidacao-auto':'Esta liquidação será ocultada da lista.',
     'lbl-nome-completo':'Nome completo','lbl-sigla-pessoal':'Sigla pessoal','lbl-perfil-acesso':'Perfil de acesso','lbl-senha-inicial':'Senha inicial',
@@ -3197,6 +3234,7 @@ const i18n = {
     'btn-cancel':'Cancel','btn-save':'Save','btn-confirm-encerrar':'Confirm closure',
     'lbl-pais':'Country','lbl-agente':'Agent','lbl-banco':'Bank',
     'lbl-sigla':'Clearyn Code','lbl-tipo':'Frequency','lbl-tipo-conta':'Account type','lbl-responsavel':'Responsible',
+    'lbl-grupo-concs':'Linked reconciliations','lbl-dia-conf':'Review day','dow-seg':'Monday','dow-ter':'Tuesday','dow-qua':'Wednesday','dow-qui':'Thursday','dow-sex':'Friday',
     'lbl-num-conta':'Account number','lbl-agencia':'Branch',
     'lbl-obs':'Observations','lbl-freq':'Frequency','crono-all-freqs':'All frequencies','col-pin':'Pin column','col-unpin':'Unpin column',
     'lbl-encerrar':'Close account','encerrar-desc':'Permanently marks this account as inactive.',
@@ -3279,7 +3317,7 @@ const i18n = {
     'confirm-irreversivel':'This action cannot be undone.',
     'lbl-nao-configurado':'— not configured —','lbl-pais-sg':'country','lbl-agente-sg':'agent','lbl-banco-sg':'bank','lbl-processador-sg':'processor',
     'op-cashin':'Cashin','op-cashout':'Cashout',
-    'btn-bulk-freq-label':'Bulk edit','acc-search-ph':'Search country, agent, bank, sigla...',
+    'btn-bulk-freq-label':'Bulk edit','acc-search-ph':'Search country, agent, bank, sigla, frequency...',
     'modal-bulk-freq-title':'Bulk edit','lbl-nova-freq':'New frequency',
     'lbl-bulk-alterar-freq':'Change frequency','lbl-bulk-encerrar':'Close these accounts','bulk-encerrar-desc':'Marks all filtered accounts as inactive.',
     'bulk-encerrar-confirm-titulo':'Confirm bulk closure','bulk-encerrar-confirm-count-1':'{n} account will be closed:','bulk-encerrar-confirm-count-n':'{n} accounts will be closed:',
@@ -3308,7 +3346,7 @@ const i18n = {
     'sync-badge-syncing':'↑ Syncing…','sync-badge-synced':'✓ Synced','sync-badge-offline':'● Offline — click to reconnect','err-ambiente-nao-reconhecido':'Environment not recognized.','err-firebase-ambiente-prefix':'The Firebase for environment "','err-firebase-ambiente-nao-config':'" is not configured yet.\nContact the administrator to set it up.','err-continuar-logado-prefix':'⚠️ Could not stay logged in to ','err-continuar-logado-suffix':'. Please log in again.',
     'err-salvar-ambiente-prefix':'⚠️ Error saving in environment ','err-salvar-firebase-prefix':'⚠️ Error saving to Firebase (','err-salvar-firebase-mid':'): ','err-salvar-firebase-suffix':'. Check the database rules.',
     'err-acesso-restrito-admin':'Access restricted to administrators.','msg-sigla-normalizada-sg':'sigla normalized','msg-sigla-normalizada-pl':'siglas normalized','msg-sigla-normalizada-suffix':' (agent added)','msg-duplicata-removida-sg':'duplicate removed','msg-duplicata-removida-pl':'duplicates removed','msg-import-concluida-title':'Import complete!\n\nAdded:\n','msg-ja-existentes-ignorados':'Existing ones were ignored.',
-    'vol-ranking-col-usd':'Total USD','vol-ranking-col-tier':'Tier','vol-ranking-sem-volume-prefix':'No volume ($0): ','btn-ocultar-ranking':'Hide Ranking','vol-import-dados-atuais-prefix':'Current data: ','vol-import-nenhum-dado':'No data imported yet.','msg-entradas-refine-busca-suffix':' entries — refine your search','sel-mes-ph':'Select month...','tt-forcar-conclusao-job':'Force job completion','tt-remover-card':'Remove card','err-forcar-conclusao':'Error forcing completion.','job-term-sucesso':'Success','job-term-com-erro':'With errors','err-selecione-mes':'Select a month.','err-selecione-data':'Select a date.','err-range-invalido':'The end date must be on or after the start date.',
+    'vol-ranking-col-usd':'Total USD','vol-ranking-col-tier':'Tier','vol-ranking-sem-volume-prefix':'No volume ($0): ','btn-ocultar-ranking':'Hide Ranking','vol-import-dados-atuais-prefix':'Current data: ','vol-import-nenhum-dado':'No data imported yet.','msg-entradas-refine-busca-suffix':' entries — refine your search','sel-mes-ph':'Select month...','tt-forcar-conclusao-job':'Force job completion','tt-remover-card':'Remove card','err-forcar-conclusao':'Error forcing completion.','job-term-sucesso':'Success','job-term-com-erro':'With errors','err-selecione-mes':'Select a month.','err-selecione-data':'Select a date.','err-dia-conf-obrigatorio':'Select the review day.','err-range-invalido':'The end date must be on or after the start date.',
     'err-informe-email':'Enter your email.','err-usuario-nao-cadastrado':'User not registered. Request access from the administrator.','modal-primeiro-acesso-title':'🔐 First access','modal-primeiro-acesso-desc':'Set your password to continue.','err-senha-incorreta':'Incorrect password.','err-login-generico':'Error logging in. Please try again.',
     'del-sub-liquidacao-manual':'This manual settlement will be permanently removed.','del-sub-liquidacao-auto':'This settlement will be hidden from the list.',
     'lbl-nome-completo':'Full name','lbl-sigla-pessoal':'Personal sigla','lbl-perfil-acesso':'Access profile','lbl-senha-inicial':'Initial password',
@@ -3436,6 +3474,7 @@ const i18n = {
     'btn-cancel':'Cancelar','btn-save':'Guardar','btn-confirm-encerrar':'Confirmar cierre',
     'lbl-pais':'País','lbl-agente':'Agente','lbl-banco':'Banco',
     'lbl-sigla':'Sigla Clearyn','lbl-tipo':'Frecuencia','lbl-tipo-conta':'Tipo de cuenta','lbl-responsavel':'Responsable',
+    'lbl-grupo-concs':'Conciliaciones vinculadas','lbl-dia-conf':'Día de conferencia','dow-seg':'Lunes','dow-ter':'Martes','dow-qua':'Miércoles','dow-qui':'Jueves','dow-sex':'Viernes',
     'lbl-num-conta':'Número de cuenta','lbl-agencia':'Agencia',
     'lbl-obs':'Observaciones','lbl-freq':'Frecuencia','crono-all-freqs':'Todas las frecuencias','col-pin':'Fijar columna','col-unpin':'Desfijar columna',
     'lbl-encerrar':'Cerrar cuenta','encerrar-desc':'Marca la cuenta como inactiva permanentemente.',
@@ -3518,7 +3557,7 @@ const i18n = {
     'confirm-irreversivel':'Esta acción no se puede deshacer.',
     'lbl-nao-configurado':'— no configurado —','lbl-pais-sg':'país','lbl-agente-sg':'agente','lbl-banco-sg':'banco','lbl-processador-sg':'procesador',
     'op-cashin':'Cashin','op-cashout':'Cashout',
-    'btn-bulk-freq-label':'Editar en\nmasa','acc-search-ph':'Buscar país, agente, banco, sigla...',
+    'btn-bulk-freq-label':'Editar en\nmasa','acc-search-ph':'Buscar país, agente, banco, sigla, frecuencia...',
     'modal-bulk-freq-title':'Editar en masa','lbl-nova-freq':'Nueva frecuencia',
     'lbl-bulk-alterar-freq':'Cambiar frecuencia','lbl-bulk-encerrar':'Cerrar estas cuentas','bulk-encerrar-desc':'Marca todas las cuentas filtradas como inactivas.',
     'bulk-encerrar-confirm-titulo':'Confirmar cierre masivo','bulk-encerrar-confirm-count-1':'{n} cuenta será cerrada:','bulk-encerrar-confirm-count-n':'{n} cuentas serán cerradas:',
@@ -3547,7 +3586,7 @@ const i18n = {
     'sync-badge-syncing':'↑ Sincronizando…','sync-badge-synced':'✓ Sincronizado','sync-badge-offline':'● Offline — clic para reconectar','err-ambiente-nao-reconhecido':'Entorno no reconocido.','err-firebase-ambiente-prefix':'El Firebase del entorno "','err-firebase-ambiente-nao-config':'" aún no está configurado.\nContacte al administrador para configurarlo.','err-continuar-logado-prefix':'⚠️ No se pudo seguir conectado en ','err-continuar-logado-suffix':'. Inicie sesión de nuevo.',
     'err-salvar-ambiente-prefix':'⚠️ Error al guardar en el entorno ','err-salvar-firebase-prefix':'⚠️ Error al guardar en Firebase (','err-salvar-firebase-mid':'): ','err-salvar-firebase-suffix':'. Verifique las reglas de la base de datos.',
     'err-acesso-restrito-admin':'Acceso restringido a administradores.','msg-sigla-normalizada-sg':'sigla normalizada','msg-sigla-normalizada-pl':'siglas normalizadas','msg-sigla-normalizada-suffix':' (agente agregado)','msg-duplicata-removida-sg':'duplicado eliminado','msg-duplicata-removida-pl':'duplicados eliminados','msg-import-concluida-title':'¡Importación completada!\n\nAgregados:\n','msg-ja-existentes-ignorados':'Los existentes fueron ignorados.',
-    'vol-ranking-col-usd':'USD Total','vol-ranking-col-tier':'Tier','vol-ranking-sem-volume-prefix':'Sin volumen ($0): ','btn-ocultar-ranking':'Ocultar Ranking','vol-import-dados-atuais-prefix':'Datos actuales: ','vol-import-nenhum-dado':'Aún no se ha importado ningún dato.','msg-entradas-refine-busca-suffix':' entradas — refine la búsqueda','sel-mes-ph':'Seleccionar mes...','tt-forcar-conclusao-job':'Forzar conclusión del job','tt-remover-card':'Quitar tarjeta','err-forcar-conclusao':'Error al forzar la conclusión.','job-term-sucesso':'Éxito','job-term-com-erro':'Con error','err-selecione-mes':'Seleccione un mes.','err-selecione-data':'Seleccione una fecha.','err-range-invalido':'La fecha final debe ser igual o posterior a la inicial.',
+    'vol-ranking-col-usd':'USD Total','vol-ranking-col-tier':'Tier','vol-ranking-sem-volume-prefix':'Sin volumen ($0): ','btn-ocultar-ranking':'Ocultar Ranking','vol-import-dados-atuais-prefix':'Datos actuales: ','vol-import-nenhum-dado':'Aún no se ha importado ningún dato.','msg-entradas-refine-busca-suffix':' entradas — refine la búsqueda','sel-mes-ph':'Seleccionar mes...','tt-forcar-conclusao-job':'Forzar conclusión del job','tt-remover-card':'Quitar tarjeta','err-forcar-conclusao':'Error al forzar la conclusión.','job-term-sucesso':'Éxito','job-term-com-erro':'Con error','err-selecione-mes':'Seleccione un mes.','err-selecione-data':'Seleccione una fecha.','err-dia-conf-obrigatorio':'Seleccione el día de conferencia.','err-range-invalido':'La fecha final debe ser igual o posterior a la inicial.',
     'err-informe-email':'Ingrese su email.','err-usuario-nao-cadastrado':'Usuario no registrado. Solicite acceso al administrador.','modal-primeiro-acesso-title':'🔐 Primer acceso','modal-primeiro-acesso-desc':'Configure su contraseña para continuar.','err-senha-incorreta':'Contraseña incorrecta.','err-login-generico':'Error al iniciar sesión. Intenta de nuevo.',
     'del-sub-liquidacao-manual':'Esta liquidación manual será eliminada permanentemente.','del-sub-liquidacao-auto':'Esta liquidación será ocultada de la lista.',
     'lbl-nome-completo':'Nombre completo','lbl-sigla-pessoal':'Sigla personal','lbl-perfil-acesso':'Perfil de acceso','lbl-senha-inicial':'Contraseña inicial',
@@ -3694,7 +3733,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='2574b703e963';
+const APP_VERSION='5ca6993ef52c';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -3908,6 +3947,7 @@ function _qcOpen(kind,fieldId,afterCreate){
     body.innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="qc-nome" placeholder="Ex: CO.Colprocesa"></div>`;
   } else if(kind==='grupo'){
     _qcEditGrupoIdx=-1;
+    _selectedGrupoConcs=[]; // grupo novo começa sem conciliação vinculada
     _qcRenderGrupoForm('','','');
   }
   document.getElementById('qc-submit').onclick=_qcSubmit;
@@ -3928,7 +3968,15 @@ function _qcRenderGrupoForm(prefillNome,prefillPais,prefillResp){
   const respOpts=store.responsaveis.map(r=>`<option value="${r.email}">${r.nome} [${r.sigla||'?'}]</option>`).join('');
   body.innerHTML=`<div class="form-field"><label class="form-label">${t('lbl-nome')}<span class="req">*</span></label><input class="form-input" id="qc-nome" placeholder="Ex: Chile" value="${_esc(prefillNome||'')}"></div>
     <div class="form-field"><label class="form-label">${t('lbl-pais')}<span class="req">*</span></label>${_ssFieldHtml('qc-pais',t('sel-select'))}</div>
-    <div class="form-field"><label class="form-label">${t('conc-col-resp')}</label><select class="form-select" id="qc-responsavel"><option value="">${t('sel-nenhum')}</option>${respOpts}</select></div>`;
+    <div class="form-field"><label class="form-label">${t('conc-col-resp')}</label><select class="form-select" id="qc-responsavel"><option value="">${t('sel-nenhum')}</option>${respOpts}</select></div>
+    <div class="form-field">
+      <label class="form-label">${t('lbl-grupo-concs')}</label>
+      <div class="contas-ms-wrap">
+        <div class="contas-ms-search"><input type="text" placeholder="${t('ph-buscar')}" id="grupo-conc-search" oninput="renderGrupoConcList()"></div>
+        <div class="contas-ms-list" id="grupo-conc-list"></div>
+        <div class="contas-ms-tags" id="grupo-conc-tags"></div>
+      </div>
+    </div>`;
   _ssInit('qc-pais',store.paises.map(p=>({value:p,label:countryFlag(p)+' '+p})),{
     onCreateNew:()=>{
       const keepNome=document.getElementById('qc-nome')?.value||'';
@@ -3949,7 +3997,55 @@ function _qcRenderGrupoForm(prefillNome,prefillPais,prefillResp){
   });
   _ssSetValue('qc-pais',prefillPais||'');
   if(prefillResp) setTimeout(()=>{const s=document.getElementById('qc-responsavel');if(s)s.value=prefillResp;},0);
+  // _selectedGrupoConcs é module-level de propósito: o form inteiro é
+  // re-renderizado quando se cria um país novo pelo "+" (ver onCreateNew
+  // acima), e assim a seleção de conciliações sobrevive a esse ciclo.
+  renderGrupoConcList(); renderGrupoConcTags();
   document.getElementById('qc-submit').onclick=_qcSubmit;
+}
+// ─── Vincular conciliações a um grupo (mesmo padrão de "Contas vinculadas"
+// do modal de conciliação: busca + checkboxes + chips) ───
+let _selectedGrupoConcs=[];
+function _concKeyGrupo(c){ return (c.id||c.nome||'').replace(/['"]/g,''); }
+function renderGrupoConcList(){
+  const list=document.getElementById('grupo-conc-list');
+  if(!list) return;
+  const q=(document.getElementById('grupo-conc-search')?.value||'').toLowerCase();
+  const paisSel=(document.getElementById('qc-pais')?.value||'').trim();
+  const grupoAtualId=_qcEditGrupoIdx>=0?(store.gruposConciliacao[_qcEditGrupoIdx]?.id||''):'';
+  // Mostra conciliações ativas do país do grupo que ainda não pertencem a
+  // OUTRO grupo (as deste grupo continuam na lista, marcadas).
+  const items=(store.conciliacoes||[]).filter(c=>{
+    if(c.status==='encerrada') return false;
+    if(paisSel&&c.pais!==paisSel) return false;
+    if(c.grupoId&&c.grupoId!==grupoAtualId) return false;
+    return true;
+  }).map(c=>({key:_concKeyGrupo(c),label:c.nome,sub:`${c.pais||'—'} · ${c.agente||'—'}`}));
+  const filtered=q?items.filter(i=>`${i.label} ${i.sub}`.toLowerCase().includes(q)):items;
+  if(!filtered.length){list.innerHTML=`<div style="padding:8px 12px;font-size:12px;color:var(--e-muted)">${items.length?t('empty-nenhum-resultado'):t('empty-nenhum-item')}</div>`;return;}
+  list.innerHTML=filtered.map(i=>{
+    const checked=_selectedGrupoConcs.includes(i.key);
+    const safe=i.key.replace(/'/g,"\\'");
+    return `<label class="contas-ms-item">
+      <input type="checkbox" value="${_escHtml(i.key)}" ${checked?'checked':''} onchange="toggleGrupoConc('${safe}',this.checked)">
+      <span class="contas-ms-sigla">${_escHtml(i.label)}</span>
+      <span class="contas-ms-sub">${_escHtml(i.sub)}</span>
+    </label>`;
+  }).join('');
+}
+function toggleGrupoConc(key,checked){
+  if(checked&&!_selectedGrupoConcs.includes(key)) _selectedGrupoConcs.push(key);
+  else if(!checked) _selectedGrupoConcs=_selectedGrupoConcs.filter(k=>k!==key);
+  renderGrupoConcTags();
+}
+function renderGrupoConcTags(){
+  const tags=document.getElementById('grupo-conc-tags');
+  if(!tags) return;
+  tags.innerHTML=_selectedGrupoConcs.map(k=>{
+    const c=(store.conciliacoes||[]).find(x=>_concKeyGrupo(x)===k);
+    const safe=k.replace(/'/g,"\\'");
+    return `<span class="contas-tag">${_escHtml(c?c.nome:k)}<button type="button" onclick="toggleGrupoConc('${safe}',false);renderGrupoConcList();renderGrupoConcTags()">×</button></span>`;
+  }).join('');
 }
 // Abre o formulário de grupo em modo completo (Cadastro > Conciliações
 // agrupadas) — mesma UI do "+ criar novo" inline, mas com suporte a edição.
@@ -3958,6 +4054,7 @@ function _qcOpenGrupoFull(editIdx=-1){
   _qcEditGrupoIdx=editIdx;
   const isEdit=editIdx>=0;
   const g=isEdit?store.gruposConciliacao[editIdx]:{};
+  _selectedGrupoConcs=isEdit?(store.conciliacoes||[]).filter(c=>c.grupoId===g.id).map(_concKeyGrupo):[];
   _qcCtx={kind:'grupo',fieldId:null,afterCreate:null};
   _qcRenderGrupoForm(g.nome||'',g.pais||'',g.responsavel||'');
   openModal('modal-quick-create');
@@ -4002,15 +4099,28 @@ function _qcSubmit(){
       newValue=g.id;
       _logArgsGrupo=['cadastro-modulos','add-grupo',{nome,pais}];
     }
+    // Aplica as conciliações vinculadas: marca as selecionadas com este
+    // grupo e desvincula as que saíram da seleção (só as que estavam
+    // neste grupo — nunca mexe em conciliação de outro grupo).
+    let _concsAlteradas=0;
+    (store.conciliacoes||[]).forEach(c=>{
+      const k=_concKeyGrupo(c);
+      const deveEstar=_selectedGrupoConcs.includes(k);
+      if(deveEstar&&c.grupoId!==newValue){c.grupoId=newValue;_concsAlteradas++;}
+      else if(!deveEstar&&c.grupoId===newValue){delete c.grupoId;_concsAlteradas++;}
+    });
     // _fbSync ANTES de logAudit: logAudit grava em store/auditLog e isso
     // dispara o listener raiz do Firebase de forma síncrona — sem
     // _ownWrites['gruposConciliacao'] já ativo (setado dentro de _fbSync),
     // _applyFbData sobrescrevia a edição com a versão antiga ainda no
     // servidor (mesmo cuidado já documentado em submitCadastro).
     saveStore(); _fbSync('gruposConciliacao');
+    if(_concsAlteradas) _fbSync('conciliacoes');
     logAudit(..._logArgsGrupo);
     renderCadastro('grupo'); updateCounts();
+    if(_concsAlteradas){ renderCronogramaConciliacoes(); renderGerencialConciliacoes(); }
     _qcEditGrupoIdx=-1;
+    _selectedGrupoConcs=[];
   }
   closeModal('modal-quick-create');
   _toast(`✓ ${t('qc-criado-sucesso').replace('{nome}',nome)}`,2500);
@@ -4282,6 +4392,8 @@ function openEditAccount(idx){
   document.getElementById('acc-num-conta').value=c.numeroConta||'';
   document.getElementById('acc-agencia').value=c.agencia||'';
   document.getElementById('acc-tipo').value=c.tipo;
+  document.getElementById('acc-dia-conf').value=c.diaConferencia||'';
+  _accToggleDiaConf();
   document.getElementById('acc-tipo-conta').value=c.tipoConta||'';
   const _obsEl=document.getElementById('acc-obs');
   _obsEl.value=c.obs||'';
@@ -4343,6 +4455,8 @@ function resetAccountForm(){
   document.getElementById('acc-agencia').value='';
   document.getElementById('acc-agencia-field').style.display='none';
   document.getElementById('acc-tipo').value='';
+  document.getElementById('acc-dia-conf').value='';
+  _accToggleDiaConf();
   document.getElementById('acc-tipo-conta').value='';
   document.getElementById('acc-obs').value='';
   const toggle=document.getElementById('acc-encerrar');
@@ -4468,6 +4582,8 @@ function submitAccountForm(){
   const pais=document.getElementById('acc-pais').value;
   const required=['acc-pais','acc-agente','acc-banco','acc-sigla','acc-num-conta','acc-tipo','acc-tipo-conta'];
   if(pais==='Brasil') required.push('acc-agencia');
+  // Dia de conferência só existe (e só é obrigatório) na frequência semanal.
+  if(document.getElementById('acc-tipo').value==='1 vez na semana') required.push('acc-dia-conf');
   const isRetroativo=document.getElementById('acc-retroativo-toggle')?.checked||false;
   if(isRetroativo) required.push('acc-retroativo-mes');
   if(!validate(required)) return;
@@ -4481,6 +4597,10 @@ function submitAccountForm(){
     numeroConta:document.getElementById('acc-num-conta').value.trim(),
     agencia:pais==='Brasil'?document.getElementById('acc-agencia').value.trim():'',
     tipo:document.getElementById('acc-tipo').value,
+    // 1-5 (seg-sex), só para frequência semanal — dia em que a conferência
+    // é feita. O dia de DADOS considerado é sempre o D-1 desse dia.
+    diaConferencia:document.getElementById('acc-tipo').value==='1 vez na semana'
+      ?document.getElementById('acc-dia-conf').value:'',
     tipoConta:document.getElementById('acc-tipo-conta').value,
     status:encerrado?'encerrada':'ativa',
     obs:document.getElementById('acc-obs').value.trim(),
@@ -4960,7 +5080,7 @@ function renderAccountsTable(){
   const q=(document.getElementById('acc-search')||{}).value?.toLowerCase()||'';
   const sf=(document.getElementById('acc-filter-status')||{}).value||'';
   let list=store.contas.filter(c=>{
-    const mq=_matchesInSearch([c.pais,c.agente,c.banco,c.sigla].map(v=>(v||'').toLowerCase()),q);
+    const mq=_matchesInSearch([c.pais,c.agente,c.banco,c.sigla,c.tipo].map(v=>(v||'').toLowerCase()),q);
     const ms=!sf||c.status===sf;
     return mq&&ms;
   });
@@ -5007,7 +5127,7 @@ function _bulkFilteredContas(){
   const q=(document.getElementById('acc-search')||{}).value?.toLowerCase()||'';
   const sf=(document.getElementById('acc-filter-status')||{}).value||'';
   return store.contas.filter(c=>{
-    const mq=_matchesInSearch([c.pais,c.agente,c.banco,c.sigla].map(v=>(v||'').toLowerCase()),q);
+    const mq=_matchesInSearch([c.pais,c.agente,c.banco,c.sigla,c.tipo].map(v=>(v||'').toLowerCase()),q);
     const ms=!sf||c.status===sf;
     return mq&&ms;
   });
@@ -5016,6 +5136,15 @@ function _toggleBulkFreqSelect(checked){
   const wrap=document.getElementById('bulk-freq-select-wrap');
   if(wrap) wrap.style.display=checked?'':'none';
 }
+// Mesma regra do formulário de conta: dia de conferência só faz sentido
+// (e só é pedido) quando a nova frequência é semanal.
+function _toggleBulkDiaConf(){
+  const wrap=document.getElementById('bulk-dia-conf-wrap');
+  if(!wrap) return;
+  const semanal=document.getElementById('bulk-freq-select')?.value==='1 vez na semana';
+  wrap.style.display=semanal?'':'none';
+  if(!semanal){const sel=document.getElementById('bulk-dia-conf');if(sel) sel.value='';}
+}
 function openBulkFreq(){
   const list=_bulkFilteredContas();
   const desc=document.getElementById('bulk-freq-desc');
@@ -5023,6 +5152,9 @@ function openBulkFreq(){
   const freqToggle=document.getElementById('bulk-alterar-freq-toggle');
   if(freqToggle) freqToggle.checked=true;
   _toggleBulkFreqSelect(true);
+  const diaSel=document.getElementById('bulk-dia-conf');
+  if(diaSel) diaSel.value='';
+  _toggleBulkDiaConf();
   const encToggle=document.getElementById('bulk-encerrar-toggle');
   if(encToggle) encToggle.checked=false;
   openModal('modal-bulk-freq');
@@ -5031,30 +5163,34 @@ function openBulkFreq(){
 // Firebase revertendo a escrita local por uma corrida de sincronização já
 // observada em produção nesse fluxo especificamente) — encerrar contas não
 // teve esse problema relatado, então não replica a retentativa ali.
-function _applyBulkFreqSomente(list,novaFreq){
+function _applyBulkFreqSomente(list,novaFreq,novoDia){
   if(!novaFreq||!list.length) return;
+  // Trocar pra semanal grava o dia escolhido; sair de semanal limpa o
+  // campo pra não deixar dia órfão numa conta que não é mais semanal.
+  const _dia=novaFreq==='1 vez na semana'?(novoDia||''):'';
   let changed=0;
-  list.forEach(c=>{const idx=store.contas.indexOf(c);if(idx>=0){store.contas[idx].tipo=novaFreq;changed++;}});
+  list.forEach(c=>{const idx=store.contas.indexOf(c);if(idx>=0){store.contas[idx].tipo=novaFreq;store.contas[idx].diaConferencia=_dia;changed++;}});
   if(!changed) return;
-  logAudit('gerencial','bulk-freq',{novaFreq,count:changed});
+  logAudit('gerencial','bulk-freq',{novaFreq,diaConferencia:_dia,count:changed});
   saveStore(); _fbSync('contas');
   closeModal('modal-bulk-freq');
   renderAccountsTable();
   renderCronogramaAccounts();
   _toast(`✓ ${changed} ${changed!==1?t('count-contas'):t('count-conta')} → ${novaFreq}`);
-  const _siglasTipo=list.map(c=>({sigla:c.sigla,tipo:novaFreq}));
+  const _siglasTipo=list.map(c=>({sigla:c.sigla,tipo:novaFreq,dia:_dia}));
   const _reapply=()=>{
     let fixed=0;
-    _siglasTipo.forEach(({sigla,tipo})=>{
+    _siglasTipo.forEach(({sigla,tipo,dia})=>{
       const acc=store.contas.find(c=>c.sigla===sigla);
       if(acc&&acc.tipo!==tipo){acc.tipo=tipo;fixed++;}
+      if(acc&&(acc.diaConferencia||'')!==dia){acc.diaConferencia=dia;fixed++;}
     });
     if(fixed>0){saveStore();_fbSync('contas');renderAccountsTable();renderCronogramaAccounts();}
   };
   setTimeout(_reapply,1500);
   setTimeout(_reapply,4000);
 }
-let _bulkPendingFreq=null,_bulkPendingList=null;
+let _bulkPendingFreq=null,_bulkPendingList=null,_bulkPendingDia='';
 function _renderBulkEncerrarConfirmList(list){
   const countEl=document.getElementById('bulk-encerrar-confirm-count');
   if(countEl) countEl.textContent=tn('bulk-encerrar-confirm-count',list.length);
@@ -5070,29 +5206,33 @@ function submitBulkFreq(){
   const wantEncerrar=document.getElementById('bulk-encerrar-toggle')?.checked;
   if(!wantFreq&&!wantEncerrar) return;
   const novaFreq=wantFreq?(document.getElementById('bulk-freq-select')?.value||null):null;
+  const novoDia=document.getElementById('bulk-dia-conf')?.value||'';
+  if(novaFreq==='1 vez na semana'&&!novoDia){_toast(t('err-dia-conf-obrigatorio'),3000);return;}
   const list=_bulkFilteredContas();
   if(!list.length) return;
   if(wantEncerrar){
     const ativas=list.filter(c=>c.status!=='encerrada');
-    if(!ativas.length){ _applyBulkFreqSomente(list,novaFreq); return; }
+    if(!ativas.length){ _applyBulkFreqSomente(list,novaFreq,novoDia); return; }
     _bulkPendingFreq=novaFreq;
+    _bulkPendingDia=novoDia;
     _bulkPendingList=list;
     _renderBulkEncerrarConfirmList(ativas);
     closeModal('modal-bulk-freq');
     openModal('modal-bulk-encerrar-confirm');
     return;
   }
-  _applyBulkFreqSomente(list,novaFreq);
+  _applyBulkFreqSomente(list,novaFreq,novoDia);
 }
 function confirmBulkEncerrar(){
   const list=_bulkPendingList||[];
   const novaFreq=_bulkPendingFreq;
-  _bulkPendingList=null;_bulkPendingFreq=null;
+  const novoDia=novaFreq==='1 vez na semana'?(_bulkPendingDia||''):'';
+  _bulkPendingList=null;_bulkPendingFreq=null;_bulkPendingDia='';
   let changedFreq=0,changedEnc=0;
   list.forEach(c=>{
     const idx=store.contas.indexOf(c);
     if(idx<0) return;
-    if(novaFreq){store.contas[idx].tipo=novaFreq;changedFreq++;}
+    if(novaFreq){store.contas[idx].tipo=novaFreq;store.contas[idx].diaConferencia=novoDia;changedFreq++;}
     if(store.contas[idx].status!=='encerrada'){
       store.contas[idx].status='encerrada';
       if(!store.contas[idx].dataEncerramento) store.contas[idx].dataEncerramento=Date.now();
@@ -5350,6 +5490,35 @@ function isActiveDay(date, freq){
   const d=date.getDate();
   if(freq==='1 vez ao mês') return true;
   return true; // Diário, T1, T2 e qualquer outro = todos os dias ativos
+}
+// Mostra/esconde o "Dia de conferência" no formulário de conta — só faz
+// sentido na frequência semanal.
+function _accToggleDiaConf(){
+  const campo=document.getElementById('acc-dia-conf-field');
+  if(!campo) return;
+  const semanal=document.getElementById('acc-tipo')?.value==='1 vez na semana';
+  campo.style.display=semanal?'':'none';
+  if(!semanal){const sel=document.getElementById('acc-dia-conf');if(sel) sel.value='';}
+}
+// Conta semanal: a conferência acontece no dia escolhido (diaConferencia,
+// 1=seg..5=sex) e sempre olha o movimento de D-1. Então o único dia que de
+// fato é preenchido na semana é o anterior ao dia de conferência (ex:
+// conferência na sexta => dia de dados = quinta).
+// Esta função devolve a data (YYYY-MM-DD) da ÚLTIMA ocorrência desse dia de
+// dados que já passou, contando a partir de `refD1` (o D-1 de hoje). Como
+// esse alvo continua o mesmo durante toda a semana, o status daquele dia
+// acaba replicado nos demais dias — e só vira "pendente" de novo quando a
+// próxima ocorrência chega sem ter sido preenchida.
+function _diaDadosSemanal(conta,refD1){
+  const diaConf=parseInt(conta.diaConferencia,10);
+  if(!diaConf) return null; // conta semanal sem dia definido: comportamento antigo
+  const alvo=(diaConf+6)%7; // dia de dados = dia de conferência - 1
+  const d=new Date(refD1.getFullYear(),refD1.getMonth(),refD1.getDate());
+  for(let i=0;i<7;i++){
+    if(d.getDay()===alvo) break;
+    d.setDate(d.getDate()-1);
+  }
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 function dayDotClass(freq){ return {T1:'active-t1',T2:'active-t2','Diário':'active-diario','1 vez ao mês':'active-once','1 vez na semana':'active-semanal'}[freq]||''; }
 function buildCronoDates(){
@@ -5799,6 +5968,16 @@ function renderCronogramaAccounts(){
         if(e) return e.status;
       }
       return 'pendente';
+    }
+    if(c.tipo==='1 vez na semana'){
+      // Só o D-1 do dia de conferência é preenchido; o status dele vale pra
+      // semana toda (ver _diaDadosSemanal). Sem dia definido, cai no
+      // comportamento padrão abaixo.
+      const dataAlvo=_diaDadosSemanal(c,_d1obj);
+      if(dataAlvo){
+        const e=store.cronogramaData[`${ck}_${dataAlvo}`];
+        return e?e.status:'pendente';
+      }
     }
     const e=store.cronogramaData[`${ck}_${d1Str}`];
     if(e) return e.status;
@@ -6434,6 +6613,11 @@ function _getFilteredCronoContext(){
         const dim=new Date(yr,prev.getMonth()+1,0).getDate();
         d1Status='pendente';
         for(let di=1;di<=dim;di++){const entry=store.cronogramaData[`${ck}_${yr}-${mo}-${String(di).padStart(2,'0')}`];if(entry){d1Status=entry.status;break;}}
+      } else if(c.tipo==='1 vez na semana'&&_diaDadosSemanal(c,_d1)){
+        // Mesma regra do Acompanhamento (_getD1s): olha o D-1 do dia de
+        // conferência, não o "ontem" genérico.
+        const entry=store.cronogramaData[`${ck}_${_diaDadosSemanal(c,_d1)}`];
+        d1Status=entry?entry.status:'pendente';
       } else {
         const e=store.cronogramaData[`${ck}_${_d1s}`];
         d1Status=e?e.status:(isActiveDay(_d1,c.tipo)?'pendente':null);
@@ -9746,7 +9930,7 @@ function _initSearchableSelect(selectId,placeholder){
     const opt=[...sel.options].find(o=>o.value===sel.value);
     const placeholderOpt=sel.options[0];
     label.textContent=(opt&&sel.value)?opt.textContent:(placeholderOpt?.textContent||'');
-    label.style.color=sel.value?'#111827':'#6b7280';
+    label.style.color=sel.value?'var(--e-text)':'var(--e-muted)';
   };
   const renderList=()=>{
     const q=search.value.toLowerCase().trim();
@@ -13889,7 +14073,7 @@ function _liqTipoUpdateLabel(){
   const b=document.getElementById('liq-f-tipo-btn');
   if(!b) return;
   if(!active.length){b.textContent=t('liq-all-tipos');b.classList.remove('has-active');}
-  else if(active.length===1){b.textContent=LIQ_TIPOS[active[0]]?.short||active[0];b.classList.add('has-active');}
+  else if(active.length===1){b.textContent=active[0]==='__none__'?t('lbl-nao-configurado'):(LIQ_TIPOS[active[0]]?.short||active[0]);b.classList.add('has-active');}
   else{b.textContent=active.length+' selecionados';b.classList.add('has-active');}
 }
 function _initLiqFilters(){
@@ -14093,7 +14277,11 @@ function renderCronogramaLiquidacoes(){
   let list=_liqConcilList();
   if(activePaises.length) list=list.filter(c=>activePaises.includes(c.pais));
   if(activeAgentes.length) list=list.filter(c=>activeAgentes.includes(c.agente));
-  if(activeTipos.length) list=list.filter(c=>activeTipos.includes(_liqGetConfig(_liqConcId(c)).tipo_liq));
+  // __none__ = liquidações ainda sem tipo configurado (tipo_liq vazio).
+  if(activeTipos.length) list=list.filter(c=>{
+    const tl=_liqGetConfig(_liqConcId(c)).tipo_liq||'';
+    return tl?activeTipos.includes(tl):activeTipos.includes('__none__');
+  });
   if(activeStatus.length){
     if(activeStatus.includes('none')&&activeStatus.length===1) list=list.filter(c=>!_liqGetStatus(_liqConcId(c),'liq'));
     else if(activeStatus.includes('none')) list=list.filter(c=>{const s=_liqGetStatus(_liqConcId(c),'liq'); return !s||activeStatus.includes(s.v);});
