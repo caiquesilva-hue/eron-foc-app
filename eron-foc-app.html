@@ -3735,7 +3735,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='959ad0b32d7f';
+const APP_VERSION='cf121242d724';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -5493,6 +5493,20 @@ function isActiveDay(date, freq){
   if(freq==='1 vez ao mês') return true;
   return true; // Diário, T1, T2 e qualquer outro = todos os dias ativos
 }
+// Data de criação "efetiva" para decidir a partir de qual período a conta/
+// conciliação aparece no cronograma. Criada no DIA 1: conta também para o
+// mês anterior — na prática ela já existe pro fechamento do mês que acabou
+// de encerrar, e cadastrar no primeiro dia útil é o fluxo normal da
+// operação. Isso também protege contra a virada de mês por fuso horário:
+// um registro criado 30/09 23:00 em Brasília é 01/10 02:00 em UTC, e
+// quem abrisse o app num fuso à frente (ex: Europa) via o createdAt cair
+// em outubro e perdia a linha no cronograma de setembro.
+function _createdAtEfetivo(obj){
+  if(!obj||!obj.createdAt) return null;
+  const d=new Date(obj.createdAt);
+  if(d.getDate()===1) return new Date(d.getFullYear(),d.getMonth()-1,1).getTime();
+  return obj.createdAt;
+}
 // Mostra/esconde o "Dia de conferência" no formulário de conta — só faz
 // sentido na frequência semanal.
 function _accToggleDiaConf(){
@@ -5991,7 +6005,9 @@ function renderCronogramaAccounts(){
       if(!c.dataEncerramento) return false;
       if(_rangeStart!==null&&_rangeStart>_closureEnd(c)) return false;
     }
-    if(_rangeEnd!==null&&c.createdAt&&c.createdAt>_rangeEnd) return false;
+    // _createdAtEfetivo: criada no dia 1 vale também para o mês anterior.
+    const _criadaEf=_createdAtEfetivo(c);
+    if(_rangeEnd!==null&&_criadaEf!==null&&_criadaEf>_rangeEnd) return false;
     if(activePaises.length&&!activePaises.includes(c.pais)) return false;
     if(activeAgentes.length&&!activeAgentes.includes(c.agente)) return false;
     if(activeBancos.length&&!activeBancos.includes(c.banco)) return false;
@@ -13406,7 +13422,9 @@ function renderCronogramaConciliacoes(){
       if(!c.dataEncerramento) return false;
       if(_rangeStart!==null&&_rangeStart>_concClosureEnd(c)) return false;
     }
-    if(_rangeEnd!==null&&c.createdAt&&c.createdAt>_rangeEnd) return false;
+    // _createdAtEfetivo: criada no dia 1 vale também para o mês anterior.
+    const _criadaEf=_createdAtEfetivo(c);
+    if(_rangeEnd!==null&&_criadaEf!==null&&_criadaEf>_rangeEnd) return false;
     return true;
   }).map(c=>{
     // Conciliação já encerrada: o "Acompanhamento" reflete isso agora mesmo,
