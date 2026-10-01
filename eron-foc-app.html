@@ -3733,7 +3733,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='5ca6993ef52c';
+const APP_VERSION='be844eae436a';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -9586,7 +9586,8 @@ function _renderJobCard(jobId,job){
   const m=_jobMonitors.get(jobId);
   const status=job.status||'pending';
   const _logKeys=job.logs?Object.keys(job.logs):[];
-  const _rk=status+'|'+_logKeys.length+'|'+(_logKeys[_logKeys.length-1]||'');
+  const _shotKeys=job.screenshots?Object.keys(job.screenshots):[];
+  const _rk=status+'|'+_logKeys.length+'|'+(_logKeys[_logKeys.length-1]||'')+'|'+_shotKeys.length;
   if(m&&_rk===m.lastKey) return;
   if(m) m.lastKey=_rk;
   const badge=document.getElementById('jm-badge-'+jobId);
@@ -9614,9 +9615,38 @@ function _renderJobCard(jobId,job){
     const _tsBody=_mkG(_ts.success,'🟢 '+t('job-term-sucesso'),'#4ade80')+_mkG(_ts.noMov,'🟡 '+t('d1-sem-mov'),'#fbbf24')+_mkG(_ts.errors,'🔴 '+t('job-term-com-erro'),'#f87171');
     if(_tsBody) _termSummaryHtml=`<div style="background:#0f172a;border-radius:8px;padding:12px 14px;margin-top:8px;font-family:'SFMono-Regular',Consolas,monospace;font-size:12px;line-height:1.7;border-top:1px solid #1e293b">${_tsBody}</div>`;
   }
-  content.innerHTML=`${_summaryHtml}${_bannerHtml}${_logSection}${_termSummaryHtml}`;
+  let _shotsHtml='';
+  if(_shotKeys.length){
+    const _thumbs=_shotKeys.sort().map(k=>{
+      const sh=job.screenshots[k]||{};
+      return `<div style="display:inline-block;margin:8px 10px 0 0;vertical-align:top;max-width:180px"><img src="${_escHtml(sh.img||'')}" alt="screenshot" onclick="_openJobShot('${jobId}','${k}')" style="display:block;width:180px;height:auto;border-radius:6px;border:1px solid #334155;cursor:zoom-in"><div style="font-size:11px;color:#94a3b8;margin-top:3px;line-height:1.4">📸 ${_escHtml(sh.ts||'')} · ${_escHtml(sh.banco||'')}${sh.agente?' ('+_escHtml(sh.agente)+')':''}${sh.motivo?'<br>'+_escHtml(sh.motivo):''}</div></div>`;
+    }).join('');
+    _shotsHtml=`<div style="background:#0f172a;border-radius:8px;padding:8px 14px 12px;margin-top:8px"><div style="font-size:12px;color:#f87171;font-weight:700">📸 Screenshots dos erros</div>${_thumbs}</div>`;
+    window._jobShots=window._jobShots||{};
+    window._jobShots[jobId]=job.screenshots;
+  }
+  content.innerHTML=`${_summaryHtml}${_bannerHtml}${_logSection}${_termSummaryHtml}${_shotsHtml}`;
   const box=document.getElementById('jm-log-'+jobId);
   if(box) box.scrollTop=box.scrollHeight;
+}
+
+function _openJobShot(jobId,key){
+  const sh=((window._jobShots||{})[jobId]||{})[key];
+  if(!sh||!sh.img) return;
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;cursor:zoom-out';
+  const cap=document.createElement('div');
+  cap.style.cssText='color:#e2e8f0;font-size:13px;margin-bottom:10px;text-align:center';
+  cap.textContent='📸 '+(sh.ts||'')+' · '+(sh.banco||'')+(sh.agente?' ('+sh.agente+')':'')+(sh.motivo?' — '+sh.motivo:'');
+  const im=document.createElement('img');
+  im.src=sh.img;
+  im.style.cssText='max-width:96vw;max-height:88vh;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.6)';
+  ov.appendChild(cap);ov.appendChild(im);
+  const close=()=>{ov.remove();document.removeEventListener('keydown',onKey);};
+  const onKey=e=>{if(e.key==='Escape')close();};
+  ov.addEventListener('click',close);
+  document.addEventListener('keydown',onKey);
+  document.body.appendChild(ov);
 }
 
 function _stopJobMonitor(jobId){
