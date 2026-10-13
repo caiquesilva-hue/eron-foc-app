@@ -442,6 +442,9 @@
   .d1-stat-sem-mov .d1-stat-num{color:var(--e-mid);}
   .d1-stat-sem-acesso .d1-stat-num{color:#dc2626;}
   .d1-stat-conta-encerrada .d1-stat-num{color:#475569;}
+  .d1-stat-atrasada .d1-stat-num{color:#475569;}
+  .conc-stat-lbl-stack{display:flex;flex-direction:column;align-items:flex-start;gap:1px;}
+  .conc-stat-sub{font-size:9px;color:var(--e-muted);line-height:1.2;}
   .d1-stat-pendente .d1-stat-num{color:var(--e-warn-accent);}
   .d1-stat-ag-extrato .d1-stat-num{color:#0369a1;}
   .d1-stat-pronto-conc .d1-stat-num{color:#1d4ed8;}
@@ -596,6 +599,29 @@
   }
   :root[data-theme="dark"] tbody tr.row-encerrada{--e-row-bg:#1d1836;}
   :root[data-theme="dark"] tbody tr.row-encerrada:hover{--e-row-bg:#2a2348;}
+  /* Conciliação atrasada (volume pendente > 0 e 5+ dias em D-1 sem marcação
+     Concluída/Sem Movimento — ver _concAtrasoDias): fundo no tom do hover
+     padrão (--e-ghost) e hover um pouco mais escuro, só nessas linhas.
+     Pinta cada <td>, não a <tr>: fundo na <tr> o Chrome não repinta direito
+     nesta tabela (sticky + scroll) — a célula que recebia hover ficava
+     branca e não voltava. */
+  tbody tr.row-atrasada{--e-row-bg:var(--e-ghost);}
+  tbody tr.row-atrasada:hover{--e-row-bg:#e4e2fb;}
+  tbody tr.row-atrasada>td{background:var(--e-ghost);}
+  tbody tr.row-atrasada:hover>td{background:#e4e2fb;}
+  tbody tr.row-atrasada>td.day-cell:hover{background:#d9d6f8;}
+  /* .day-cell tem transition:background .1s — com o fundo pintado por
+     célula, as datas chegariam 100ms depois das colunas de info/Nome (que
+     mudam na hora). Desliga só aqui pra linha inteira trocar junto. */
+  tbody tr.row-atrasada>td{transition:none;}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) tbody tr.row-atrasada:hover{--e-row-bg:#271f4a;}
+    :root:not([data-theme="light"]) tbody tr.row-atrasada:hover>td{background:#271f4a;}
+    :root:not([data-theme="light"]) tbody tr.row-atrasada>td.day-cell:hover{background:#31285c;}
+  }
+  :root[data-theme="dark"] tbody tr.row-atrasada:hover{--e-row-bg:#271f4a;}
+  :root[data-theme="dark"] tbody tr.row-atrasada:hover>td{background:#271f4a;}
+  :root[data-theme="dark"] tbody tr.row-atrasada>td.day-cell:hover{background:#31285c;}
   /* will-change:transform NÃO fica aqui: essa classe também é usada nas
      células do corpo (uma por linha — numa tabela de 500+ linhas, isso é
      centenas de camadas de GPU promovidas à toa). Foi adicionado aqui
@@ -618,6 +644,11 @@
     :root:not([data-theme="light"]) tbody tr.row-encerrada:hover .cal-sticky{background:#2a2348;}
   }
   :root[data-theme="dark"] tbody tr.row-encerrada:hover .cal-sticky{background:#2a2348;}
+  tbody tr.row-atrasada:hover .cal-sticky{background:#e4e2fb;}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) tbody tr.row-atrasada:hover .cal-sticky{background:#271f4a;}
+  }
+  :root[data-theme="dark"] tbody tr.row-atrasada:hover .cal-sticky{background:#271f4a;}
   .cal-table thead th.cal-sticky{background:var(--e-ghost);z-index:5;will-change:transform;}
   .col-head-btns{position:absolute;right:3px;top:50%;transform:translateY(-50%);display:none;align-items:center;gap:1px;}
   th:hover .col-head-btns,.col-head-btns.has-pin{display:flex;}
@@ -1627,7 +1658,7 @@
     <div class="d1-stat-card conc-stat-card d1-stat-pronto-conc"><div class="conc-stat-top"><div class="d1-stat-num" id="conc-d1-pronto">—</div><div class="d1-stat-lbl" data-i18n="status-pronto-conciliacao">Pronto p/ Conc.</div></div><div class="d1-stat-vol" id="conc-d1-pronto-vol"></div></div>
     <div class="d1-stat-card conc-stat-card d1-stat-sem-mov"><div class="conc-stat-top"><div class="d1-stat-num" id="conc-d1-sem-mov">—</div><div class="d1-stat-lbl" data-i18n="d1-sem-mov">Sem Movimento</div></div><div class="d1-stat-vol" id="conc-d1-sem-mov-vol"></div></div>
     <div class="d1-stat-card conc-stat-card d1-stat-sem-acesso"><div class="conc-stat-top"><div class="d1-stat-num" id="conc-d1-sem-acesso">—</div><div class="d1-stat-lbl" data-i18n="status-sem-acesso">Sem Acesso</div></div><div class="d1-stat-vol" id="conc-d1-sem-acesso-vol"></div></div>
-    <div class="d1-stat-card conc-stat-card d1-stat-conta-encerrada"><div class="conc-stat-top"><div class="d1-stat-num" id="conc-d1-conta-encerrada">—</div><div class="d1-stat-lbl" data-i18n="status-conta-encerrada">Conta Encerrada</div></div><div class="d1-stat-vol" id="conc-d1-conta-encerrada-vol"></div></div>
+    <div class="d1-stat-card conc-stat-card d1-stat-atrasada"><div class="conc-stat-top"><div class="d1-stat-num" id="conc-d1-atrasada">—</div><div class="conc-stat-lbl-stack"><div class="d1-stat-lbl" data-i18n="conc-atrasadas">Conciliações Atrasadas</div><div class="conc-stat-sub" data-i18n="conc-atrasadas-sub">(mais que 5 dias)</div></div></div><div class="d1-stat-vol" id="conc-d1-atrasada-vol"></div></div>
     <div class="d1-stat-card conc-stat-card d1-stat-pendente"><div class="conc-stat-top"><div class="d1-stat-num" id="conc-d1-pendente">—</div><div class="d1-stat-lbl" data-i18n="status-pendente">Pendente</div></div><div class="d1-stat-vol" id="conc-d1-pendente-vol"></div></div>
     <div class="d1-stat-card" style="flex-direction:row;align-items:center;gap:14px;padding:10px 20px;">
       <div style="display:flex;flex-direction:column;gap:3px;text-align:left">
@@ -3059,7 +3090,7 @@ const i18n = {
     'freq-diario':'Diário','freq-mensal':'1 vez ao mês','freq-semanal':'1 vez na semana',
     'cierre-verificando':'Verificando','status-pendente':'Pendente','status-concluido':'Concluída','status-sem-mov':'Sem Mov.','status-sem-acesso':'Sem Acesso','status-ag-extrato':'Ag. Extrato',
     'status-elaborando':'Em Elaboração','crono-elab-abbr':'Elab','status-encerrada-abbr':'EN',
-    'status-pronto-conciliacao':'Pronto p/ Conc.','status-conta-encerrada':'Conta Encerrada',
+    'status-pronto-conciliacao':'Pronto p/ Conc.','status-conta-encerrada':'Conta Encerrada','conc-atrasadas':'Conciliações Atrasadas','conc-atrasadas-sub':'(mais que 5 dias)',
     'tipo-bancos':'Bancos','tipo-processadores':'Processadores','tipo-mista':'Mista','tipo-controle':'Somente controle',
     'update-banner-msg':'Uma nova versão do app está disponível.','update-banner-btn':'Atualizar',
     'crono-all-tops':'Todos os TOPs','top-acima-50':'Acima TOP 50','crono-sem-top':'Sem TOP','crono-analista':'Analista',
@@ -3298,7 +3329,7 @@ const i18n = {
     'freq-diario':'Daily','freq-mensal':'1× / month','freq-semanal':'1× / week',
     'cierre-verificando':'Verifying','status-pendente':'Pending','status-concluido':'Completed','status-sem-mov':'No mov.','status-sem-acesso':'No access','status-ag-extrato':'Aw. stmt',
     'status-elaborando':'In Progress','crono-elab-abbr':'Elab','status-encerrada-abbr':'CL',
-    'status-pronto-conciliacao':'Ready to Reconcile','status-conta-encerrada':'Account Closed',
+    'status-pronto-conciliacao':'Ready to Reconcile','status-conta-encerrada':'Account Closed','conc-atrasadas':'Overdue Reconciliations','conc-atrasadas-sub':'(more than 5 days)',
     'tipo-bancos':'Banks','tipo-processadores':'Processors','tipo-mista':'Mixed','tipo-controle':'Control only',
     'update-banner-msg':'A new version of the app is available.','update-banner-btn':'Update',
     'crono-all-tops':'All TOPs','top-acima-50':'Above TOP 50','crono-sem-top':'No TOP','crono-analista':'Analyst',
@@ -3538,7 +3569,7 @@ const i18n = {
     'freq-diario':'Diario','freq-mensal':'1× al mes','freq-semanal':'1× por sem.',
     'status-pendente':'Pendiente','status-concluido':'Concluida','status-sem-mov':'Sin mov.','status-sem-acesso':'Sin acceso','status-ag-extrato':'Ag. extracto',
     'status-elaborando':'En Elaboración','crono-elab-abbr':'Elab','status-encerrada-abbr':'CE',
-    'status-pronto-conciliacao':'Listo p/ Concil.','status-conta-encerrada':'Cuenta Cerrada',
+    'status-pronto-conciliacao':'Listo p/ Concil.','status-conta-encerrada':'Cuenta Cerrada','conc-atrasadas':'Conciliaciones Atrasadas','conc-atrasadas-sub':'(más de 5 días)',
     'tipo-bancos':'Bancos','tipo-processadores':'Procesadores','tipo-mista':'Mixta','tipo-controle':'Solo control',
     'update-banner-msg':'Hay una nueva versión de la app disponible.','update-banner-btn':'Actualizar',
     'crono-all-tops':'Todos los TOPs','top-acima-50':'Arriba TOP 50','crono-sem-top':'Sin TOP','crono-analista':'Analista',
@@ -3735,7 +3766,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='cf121242d724';
+const APP_VERSION='adac3605fc87';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -12021,7 +12052,7 @@ function downloadConcilCSV(){
     const rEmail=_getConcilResp(c);
     const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;
     const vol=(store.volumeRankings?.combined||{})[concId]?.usd||0;
-    const d1r=c.status==='encerrada'?{status:'encerrada'}:_getConcilStatus(c,d1Str);
+    const d1r=c.status==='encerrada'?{status:'encerrada'}:_getConcilStatus(_concStatusSrc(c),d1Str);
     const prioridade=_computeVolumePrioridade(concId)||'';
     return [c.nome,c.pais||'',c.agente||'',fmtV(vol),rUser?.sigla||'',prioridade,TIPO_LBL[c.tipo]||c.tipo||'',c.frequencia||'',STATUS_LBL[d1r.status]||''];
   })];
@@ -12149,6 +12180,14 @@ function _onConcilCSVFile(inp){
 }
 
 // ─── CRONOGRAMA CONCILIAÇÕES ─────────────────────────────────────
+// De onde vem o status do dia de uma conciliação: filha de grupo (feature
+// experimental, staging) herda o da mãe — é no grupo que o analista marca,
+// as filhas só espelham (mesma regra do __mirrorGrupo nas linhas). Usado
+// pelos tiles, filtro Acompanhamento e CSV pra baterem com o que a linha mostra.
+function _concStatusSrc(c){
+  if(!_GRUPOS_UI_ENABLED||!c.grupoId) return c;
+  return (store.gruposConciliacao||[]).find(g=>g.id===c.grupoId)||c;
+}
 function _getConcilStatus(conc,dateStr){
   const manualKey=`${conc.id||conc.nome}_${dateStr}`;
   const manual=store.cronogramaConciliacoes[manualKey];
@@ -12708,7 +12747,12 @@ function _rebuildCombinedRanking(){
     // antes de o tipo virar controle (defesa em profundidade; a UI já impede
     // configurar volume pra esse tipo, ver _syncConcTipoUI).
     if(conc.tipo==='controle') continue;
-    const sinceDate=_lastConcluidoDate(conc);
+    // Filha de grupo: a conclusão é marcada no grupo (ver _concStatusSrc) —
+    // vale a mais recente entre a do grupo e a dela própria (marcações de
+    // antes de entrar no grupo continuam valendo como corte).
+    let sinceDate=_lastConcluidoDate(conc);
+    const _grp=_concStatusSrc(conc);
+    if(_grp!==conc){const gd=_lastConcluidoDate(_grp);if(gd&&(!sinceDate||gd>sinceDate)) sinceDate=gd;}
     const cashinIds=map.cashinIds||(map.cashinId?[map.cashinId]:[]);
     const cashoutIds=map.cashoutIds||(map.cashoutId?[map.cashoutId]:[]);
     const refundIds=map.refundIds||[];
@@ -13310,7 +13354,7 @@ function _renderGrupoHeaderRow(grupo,children,ri,_ord,days,fmtD,statusCfg,chipHt
     return `<td class="sel-cell" ${_sr} style="font-size:11px;color:var(--e-muted);text-align:center">—</td>`;
   }).join('');
   const dayCellsHtml=_renderConcDayCellsHtml(grupo,days,fmtD,statusCfg,true);
-  return `<tr class="row-ativa${isExpanded?' row-grupo-header':''}" data-grupo-id="${_esc(grupo.id)}" style="font-weight:600">
+  return `<tr class="row-ativa${isExpanded?' row-grupo-header':''}${_isGrupoAtrasado(grupo,children,d1Str)?' row-atrasada':''}" data-grupo-id="${_esc(grupo.id)}" style="font-weight:600">
     <td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:700;white-space:nowrap;cursor:pointer" onclick="_toggleGrupoExpand('${grupo.id}')">
       <span style="display:inline-block;width:14px;color:var(--e-purple)">${isExpanded?'▼':'▶'}</span>📁 ${_esc(grupo.nome)}
     </td>${colHtml}${dayCellsHtml}
@@ -13351,9 +13395,75 @@ function _renderConcRowHtml(conc,ri,_ord,days,fmtD,statusCfg,chipHtml,d1Str){
   const _ctx={respCell,priorCell,concTipoChipHtml,freqCell:_freqCell,d1ChipHtml};
   const _nomeIndent=_mirrorGrupo?'padding-left:26px;':'';
   const _grupoParentAttr=_mirrorGrupo?` data-grupo-parent="${_esc(_mirrorGrupo.id)}"`:'';
-  return `<tr class="row-${conc.status||'ativa'}${_mirrorGrupo?' row-grupo-child':''}"${_grupoParentAttr}><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:600;white-space:nowrap;${_nomeIndent}">${_concNomeInner}</td>${_ord.map((d,i)=>d.c(conc,ri,i+1,_ctx)).join('')}${cells}</tr>`;
+  const _atrasoCls=_isConcAtrasada(conc,d1Str)?' row-atrasada':'';
+  return `<tr class="row-${conc.status||'ativa'}${_mirrorGrupo?' row-grupo-child':''}${_atrasoCls}"${_grupoParentAttr}><td class="cal-sticky sel-cell" data-sr="${ri}" data-sc="0" style="font-size:12px;font-weight:600;white-space:nowrap;${_nomeIndent}">${_concNomeInner}</td>${_ord.map((d,i)=>d.c(conc,ri,i+1,_ctx)).join('')}${cells}</tr>`;
+}
+// Conciliações atrasadas: conciliação ativa com o valor da coluna Volume
+// Pendente > 0 (ao vivo, ou o congelado quando o ao vivo zera — ver
+// _concVolumeStatus) e 5+ dias corridos, contados em D-1, desde a última
+// marcação manual Concluída ou Sem Movimento no cronograma (todo o
+// histórico, independe do filtro de datas). Sem nenhuma marcação, conta a
+// partir da criação; sem marcação E sem data de criação, basta ter volume.
+// Grupos: as marcações são as da mãe (é onde o analista preenche — as filhas
+// só espelham) e o volume é a soma das filhas.
+const _CONC_ATRASO_DIAS=5;
+let _concLastMarkIdx=null;
+// Índice id (sem aspas) -> última data YYYY-MM-DD marcada concluido/
+// sem_movimento. Reconstruído a cada render (uma passada só nas chaves, em
+// vez de varrer tudo por conciliação). Chaves podem ter o id cru ou sem
+// aspas (ver _lastConcluidoDate) — normaliza tirando as aspas.
+function _buildConcLastMarkIdx(){
+  const idx={};
+  const src=store.cronogramaConciliacoes||{};
+  for(const k in src){
+    const v=src[k];
+    if(!v||(v.status!=='concluido'&&v.status!=='sem_movimento')) continue;
+    const d=k.slice(-10);
+    if(k.charAt(k.length-11)!=='_'||!/^\d{4}-\d{2}-\d{2}$/.test(d)) continue;
+    const id=k.slice(0,-11).replace(/['"]/g,'');
+    if(!idx[id]||d>idx[id]) idx[id]=d;
+  }
+  _concLastMarkIdx=idx;
+  return idx;
+}
+// Dias (D-1 menos a data de referência) ou null quando não dá pra calcular.
+// marksId: id de onde vêm as marcações (a própria conciliação ou a mãe do
+// grupo); createdAt: fallback quando nunca houve marcação.
+function _concAtrasoDias(marksId,createdAt,d1Str){
+  const idx=_concLastMarkIdx||_buildConcLastMarkIdx();
+  let ref=idx[String(marksId).replace(/['"]/g,'')]||null;
+  if(!ref&&createdAt){
+    const c=new Date(createdAt);
+    if(!isNaN(c)) ref=`${c.getFullYear()}-${String(c.getMonth()+1).padStart(2,'0')}-${String(c.getDate()).padStart(2,'0')}`;
+  }
+  if(!ref) return null;
+  const [y1,m1,d1]=d1Str.split('-').map(Number),[y2,m2,d2]=ref.split('-').map(Number);
+  return Math.round((Date.UTC(y1,m1-1,d1)-Date.UTC(y2,m2-1,d2))/86400000);
+}
+function _concColUsd(conc){
+  const st=_concVolumeStatus(conc);
+  return st.kind==='valor'?(st.val||0):0;
+}
+// Criação de um grupo: grupos não guardam createdAt — usa a filha mais antiga.
+function _grupoCreatedAt(grupo){
+  const ts=(store.conciliacoes||[]).filter(c=>c.grupoId===grupo.id&&c.createdAt).map(c=>c.createdAt);
+  return grupo.createdAt||(ts.length?Math.min(...ts):null);
+}
+function _isConcAtrasada(conc,d1Str){
+  if(conc.status==='encerrada') return false;
+  if(_concColUsd(conc)<=0) return false;
+  const grupo=conc.grupoId?(store.gruposConciliacao||[]).find(g=>g.id===conc.grupoId):null;
+  const dias=grupo?_concAtrasoDias(grupo.id,_grupoCreatedAt(grupo),d1Str):_concAtrasoDias(conc.id||conc.nome,conc.createdAt,d1Str);
+  return dias===null||dias>=_CONC_ATRASO_DIAS;
+}
+function _isGrupoAtrasado(grupo,children,d1Str){
+  const usd=(children||[]).filter(c=>c.status!=='encerrada').reduce((s,c)=>s+_concColUsd(c),0);
+  if(usd<=0) return false;
+  const dias=_concAtrasoDias(grupo.id,_grupoCreatedAt(grupo),d1Str);
+  return dias===null||dias>=_CONC_ATRASO_DIAS;
 }
 function renderCronogramaConciliacoes(){
+  _buildConcLastMarkIdx();
   const emptyEl=document.getElementById('crono-conc-empty');
   const calWrap=document.getElementById('crono-conc-cal-wrap');
   const tbl=document.getElementById('crono-conc-cal-table');
@@ -13430,14 +13540,14 @@ function renderCronogramaConciliacoes(){
     // Conciliação já encerrada: o "Acompanhamento" reflete isso agora mesmo,
     // não o status derivado de ontem (não faz sentido mostrar "Pendente"
     // pra algo que já foi encerrado hoje).
-    const d1r=c.status==='encerrada'?{status:'encerrada'}:_getConcilStatus(c,d1Str);
+    const d1r=c.status==='encerrada'?{status:'encerrada'}:_getConcilStatus(_concStatusSrc(c),d1Str);
     return {c,d1Status:d1r.status};
   });
 
   // stat counters over unfiltered-by-d1 list (matching país/agente/resp/search/prior)
   const d1C={concluido:0,pronto_conciliacao:0,sem_movimento:0,sem_acesso:0,conta_encerrada:0,elaborando:0,encerrada:0,pendente:0};
   const d1V={concluido:0,pronto_conciliacao:0,sem_movimento:0,sem_acesso:0,conta_encerrada:0,elaborando:0,encerrada:0,pendente:0};
-  let _contaEncCount=0,_contaEncVol=0;
+  let _contaEncVol=0,_atrasoCount=0,_atrasoVol=0;
   listWithD1.forEach(({c,d1Status})=>{
     if(activePaises.length&&!activePaises.includes(c.pais)) return;
     if(activeAgentes.length&&!activeAgentes.includes(c.agente)) return;
@@ -13445,7 +13555,8 @@ function renderCronogramaConciliacoes(){
     if(activeFreqs.length&&!activeFreqs.includes(c.frequencia||'')) return;
     if(activeResps.length){const rEmail=_getConcilResp(c);const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;if(!rUser||!activeResps.includes(rUser.sigla)) return;}
     if(activeAnlts.length){
-      const concId=(c.id||c.nome).replace(/['"]/g,'');
+      const _src=_concStatusSrc(c);
+      const concId=(_src.id||_src.nome).replace(/['"]/g,'');
       const hit=days.some(d=>{const e=store.cronogramaConciliacoes[`${concId}_${fmtD(d)}`];return e&&activeAnlts.includes(e.sigla);});
       if(!hit) return;
     }
@@ -13468,11 +13579,13 @@ function renderCronogramaConciliacoes(){
     // volume ao vivo. Nenhum outro tile usa esse valor congelado.
     const _concluidoVol=_bucket==='concluido'?((store.volumeRankings?.priorityFixed||{})[_cid]?.usd??_cUsd):_cUsd;
     d1V[_bucket]+=_concluidoVol;
-    // Tile "Conta Encerrada": só entra quem tem volume pendente de verdade —
-    // conta/conciliação encerrada sem volume pendente fica de fora da conta.
+    // Volume de conta/conciliação encerrada (o tile "Conta Encerrada" saiu,
+    // mas esse volume continua somando no "Volume em Aberto"): só entra quem
+    // tem volume pendente de verdade.
     if((_bucket==='conta_encerrada'||_bucket==='encerrada')&&_cUsd>0){
-      _contaEncCount++; _contaEncVol+=_cUsd;
+      _contaEncVol+=_cUsd;
     }
+    if(_isConcAtrasada(c,d1Str)){ _atrasoCount++; _atrasoVol+=_concColUsd(c); }
   });
   const _upd=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
   const _fmtV=v=>v>0?'$'+Math.round(v).toLocaleString('en-US'):'';
@@ -13482,7 +13595,7 @@ function renderCronogramaConciliacoes(){
   _upd('conc-d1-sem-mov',d1C.sem_movimento);_upd('conc-d1-sem-mov-vol',_fmtV(d1V.sem_movimento));
   _upd('conc-d1-sem-acesso',d1C.sem_acesso);_upd('conc-d1-sem-acesso-vol',_fmtV(d1V.sem_acesso));
   _upd('conc-d1-pendente',d1C.pendente);_upd('conc-d1-pendente-vol',_fmtV(d1V.pendente));
-  _upd('conc-d1-conta-encerrada',_contaEncCount);_upd('conc-d1-conta-encerrada-vol',_fmtV(_contaEncVol));
+  _upd('conc-d1-atrasada',_atrasoCount);_upd('conc-d1-atrasada-vol',_fmtV(_atrasoVol));
   const _totalRisk=d1V.pendente+d1V.pronto_conciliacao+d1V.sem_acesso+_contaEncVol;
   const _riskT=Math.min(1,_totalRisk/2_000_000);
   const _riskEl=document.getElementById('conc-risk-vol');
@@ -13499,7 +13612,8 @@ function renderCronogramaConciliacoes(){
     if(activeFreqs.length&&!activeFreqs.includes(c.frequencia||'')) return false;
     if(activeResps.length){const rEmail=_getConcilResp(c);const rUser=rEmail?store.responsaveis.find(r=>r.email===rEmail):null;if(!rUser||!activeResps.includes(rUser.sigla)) return false;}
     if(activeAnlts.length){
-      const concId=(c.id||c.nome).replace(/['"]/g,'');
+      const _src=_concStatusSrc(c);
+      const concId=(_src.id||_src.nome).replace(/['"]/g,'');
       const hit=days.some(d=>{const e=store.cronogramaConciliacoes[`${concId}_${fmtD(d)}`];return e&&activeAnlts.includes(e.sigla);});
       if(!hit) return false;
     }
