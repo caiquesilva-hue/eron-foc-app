@@ -429,6 +429,9 @@
   .d1-toggle.active.dt-pronto-conc{border-color:#1d4ed8;background:#dbeafe;color:#1d4ed8;}
   .d1-toggle.active.dt-elaborando{border-color:#0e7490;background:#cffafe;color:#0e7490;}
   .d1-toggle.active.dt-atrasada{border-color:#475569;background:#f1f5f9;color:#475569;}
+  /* "Conciliações Atrasadas" é o rótulo mais longo do dropdown — sem isso
+     quebra em duas linhas quando desmarcado (o painel encolhe pro conteúdo). */
+  #crono-conc-d1-filter .d1-toggle{white-space:nowrap;}
   .crono-d1-panel{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
   .d1-stat-card{background:var(--e-surface);border:1px solid var(--e-pale);border-radius:10px;padding:8px 14px;display:flex;align-items:center;gap:8px;}
   .d1-stat-num{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;}
@@ -3768,7 +3771,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='5d80c4d3149d';
+const APP_VERSION='29397f7b207a';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
