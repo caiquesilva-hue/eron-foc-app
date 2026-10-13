@@ -54,7 +54,7 @@
     :root:not([data-theme="light"]) .chip-pronto,:root:not([data-theme="light"]) .d1-toggle.active.dt-pronto-conc,:root:not([data-theme="light"]) .prior-top20{background:rgba(96,165,250,.16);color:#60a5fa;border-color:rgba(96,165,250,.45);}
     :root:not([data-theme="light"]) .chip-tipo-bancos,:root:not([data-theme="light"]) .chip-bbpix,:root:not([data-theme="light"]) .d1-toggle.active.dt-ag-extrato{background:rgba(56,189,248,.16);color:#38bdf8;border-color:rgba(56,189,248,.45);}
     :root:not([data-theme="light"]) .chip-elaborando,:root:not([data-theme="light"]) .d1-toggle.active.dt-elaborando{background:rgba(34,211,238,.16);color:#22d3ee;border-color:rgba(34,211,238,.45);}
-    :root:not([data-theme="light"]) .chip-slate,:root:not([data-theme="light"]) .chip-tipo-controle,:root:not([data-theme="light"]) .chip-liq-5{background:rgba(148,163,184,.14);color:#94a3b8;border-color:rgba(148,163,184,.4);}
+    :root:not([data-theme="light"]) .chip-slate,:root:not([data-theme="light"]) .d1-toggle.active.dt-atrasada,:root:not([data-theme="light"]) .chip-tipo-controle,:root:not([data-theme="light"]) .chip-liq-5{background:rgba(148,163,184,.14);color:#94a3b8;border-color:rgba(148,163,184,.4);}
     :root:not([data-theme="light"]) .chip-tipo-proc,:root:not([data-theme="light"]) .chip-operacional,:root:not([data-theme="light"]) .chip-liq-1,:root:not([data-theme="light"]) .d1-toggle.active.dt-sem-mov{background:rgba(167,139,250,.16);color:#c4b5fd;border-color:rgba(167,139,250,.45);}
     :root:not([data-theme="light"]) .chip-liq-4{background:rgba(251,146,60,.16);color:#fb923c;border-color:rgba(251,146,60,.45);}
   }
@@ -75,7 +75,7 @@
     :root[data-theme="dark"] .chip-pronto,:root[data-theme="dark"] .d1-toggle.active.dt-pronto-conc,:root[data-theme="dark"] .prior-top20{background:rgba(96,165,250,.16);color:#60a5fa;border-color:rgba(96,165,250,.45);}
     :root[data-theme="dark"] .chip-tipo-bancos,:root[data-theme="dark"] .chip-bbpix,:root[data-theme="dark"] .d1-toggle.active.dt-ag-extrato{background:rgba(56,189,248,.16);color:#38bdf8;border-color:rgba(56,189,248,.45);}
     :root[data-theme="dark"] .chip-elaborando,:root[data-theme="dark"] .d1-toggle.active.dt-elaborando{background:rgba(34,211,238,.16);color:#22d3ee;border-color:rgba(34,211,238,.45);}
-    :root[data-theme="dark"] .chip-slate,:root[data-theme="dark"] .chip-tipo-controle,:root[data-theme="dark"] .chip-liq-5{background:rgba(148,163,184,.14);color:#94a3b8;border-color:rgba(148,163,184,.4);}
+    :root[data-theme="dark"] .chip-slate,:root[data-theme="dark"] .d1-toggle.active.dt-atrasada,:root[data-theme="dark"] .chip-tipo-controle,:root[data-theme="dark"] .chip-liq-5{background:rgba(148,163,184,.14);color:#94a3b8;border-color:rgba(148,163,184,.4);}
     :root[data-theme="dark"] .chip-tipo-proc,:root[data-theme="dark"] .chip-operacional,:root[data-theme="dark"] .chip-liq-1,:root[data-theme="dark"] .d1-toggle.active.dt-sem-mov{background:rgba(167,139,250,.16);color:#c4b5fd;border-color:rgba(167,139,250,.45);}
     :root[data-theme="dark"] .chip-liq-4{background:rgba(251,146,60,.16);color:#fb923c;border-color:rgba(251,146,60,.45);}
   /* Botão "Salvar" de credenciais é o único lugar com #5b21b6 como FUNDO
@@ -428,6 +428,7 @@
   .d1-toggle.active.dt-ag-extrato{border-color:#0369a1;background:#e0f2fe;color:#0369a1;}
   .d1-toggle.active.dt-pronto-conc{border-color:#1d4ed8;background:#dbeafe;color:#1d4ed8;}
   .d1-toggle.active.dt-elaborando{border-color:#0e7490;background:#cffafe;color:#0e7490;}
+  .d1-toggle.active.dt-atrasada{border-color:#475569;background:#f1f5f9;color:#475569;}
   .crono-d1-panel{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
   .d1-stat-card{background:var(--e-surface);border:1px solid var(--e-pale);border-radius:10px;padding:8px 14px;display:flex;align-items:center;gap:8px;}
   .d1-stat-num{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;}
@@ -443,7 +444,7 @@
   .d1-stat-sem-acesso .d1-stat-num{color:#dc2626;}
   .d1-stat-conta-encerrada .d1-stat-num{color:#475569;}
   .d1-stat-atrasada .d1-stat-num{color:#475569;}
-  .conc-stat-lbl-stack{display:flex;flex-direction:column;align-items:flex-start;gap:1px;}
+  .conc-stat-lbl-stack{display:flex;flex-direction:column;align-items:center;gap:1px;}
   .conc-stat-sub{font-size:9px;color:var(--e-muted);line-height:1.2;}
   .d1-stat-pendente .d1-stat-num{color:var(--e-warn-accent);}
   .d1-stat-ag-extrato .d1-stat-num{color:#0369a1;}
@@ -1615,6 +1616,7 @@
         <button class="d1-toggle dt-sem-mov" data-d1="sem_movimento" data-i18n="d1-sem-mov" onclick="event.stopPropagation();toggleConcD1Filter(this)">Sem Movimento</button>
         <button class="d1-toggle dt-sem-acesso" data-d1="sem_acesso" data-i18n="status-sem-acesso" onclick="event.stopPropagation();toggleConcD1Filter(this)">Sem Acesso</button>
         <button class="d1-toggle dt-pendente" data-d1="pendente" data-i18n="status-pendente" onclick="event.stopPropagation();toggleConcD1Filter(this)">Pendente</button>
+        <button class="d1-toggle dt-atrasada" data-d1="atrasada" data-i18n="conc-atrasadas" onclick="event.stopPropagation();toggleConcD1Filter(this)">Conciliações Atrasadas</button>
       </div>
     </div>
     <div class="freq-dd" id="crono-conc-f-tipo-dd">
@@ -3766,7 +3768,7 @@ function _dateLocale(){ return {'pt-BR':'pt-BR','en':'en-US','es':'es-ES'}[curre
 
 // Carimbo de versão — deploy.sh substitui esse valor pelo timestamp do
 // deploy a cada publicação (ver _checkAppVersion, mais abaixo neste arquivo).
-const APP_VERSION='adac3605fc87';
+const APP_VERSION='5d80c4d3149d';
 // Feature "Conciliação agrupada" (+ dropdown pesquisável de País/Agente/
 // Banco com "+ criar novo") — nasceu travada a _currentEnv==='staging' pra
 // testes; agora liberada pra todos os ambientes. Único ponto pra travar de
@@ -13624,7 +13626,10 @@ function renderCronogramaConciliacoes(){
       else if(activePriors.includes('__none__')){if(vol&&!activePriors.includes(vol)) return false;}
       else{if(!vol||!activePriors.includes(vol)) return false;}
     }
-    if(activeD1.length&&!activeD1.includes(d1Status)) return false;
+    // "Conciliações Atrasadas" não é um status do dia (é ortogonal a ele):
+    // entra como mais uma opção do OU — com só ela marcada, traz só as
+    // atrasadas (ver _isConcAtrasada).
+    if(activeD1.length&&!activeD1.includes(d1Status)&&!(activeD1.includes('atrasada')&&_isConcAtrasada(c,d1Str))) return false;
     if(!_volMatch(c)) return false;
     if(searchQ&&!_matchesInSearch([c.nome,c.pais,c.agente,_concVolumeStatus(c).text].map(v=>(v||'').toLowerCase()),searchQ)) return false;
     return true;
